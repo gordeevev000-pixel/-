@@ -1,0 +1,549 @@
+//@version=6
+// ═══════════════════════════════════════════════════════════════════════════════
+//  SPRING · движок отскоков для фьючерсов и индексов
+//
+//  Score = 100 · gain · G · ( 0.20·S + 0.22·P + 0.28·R + 0.13·I + 0.17·N )
+//
+//    S — растяжение от средней, одновременно в σ и в ATR
+//    P — истощение: климакс объёма + затухание импульса + хвост свечи
+//    R — возврат: свип уровня и реклейм  ← ТРИГГЕР, считается строго по текущему бару
+//    I — дивергенция: RSI + дельта объёма (CVD) + коррелирующий инструмент
+//    N — уровни: конфлюэнс в допуске 0.28 ATR
+//    G — режим: множитель 0…1, гасит сетапы против сильного тренда и в разгоне волы
+//
+//  Контекст копится на экстремуме, триггер приходит позже, поэтому S/P/I/N берутся
+//  как максимум за окно контекста, а R — только по текущему бару. Если требовать
+//  совпадения всего на одном баре, сигналов не будет вообще.
+//
+//  Состояния: FLAT → WATCH → ARMED → TRIGGER.
+//  ARMED означает «контекст готов, идеальный возврат прямо сейчас дал бы вход».
+//
+//  Порог входа 70 — не из головы: см. таблицу калибровки внизу панели. Прогоните
+//  её на своём инструменте. Если винрейт и средний R не растут вместе со скором —
+//  на этом инструменте модель не работает, какой бы стройной она ни была.
+// ═══════════════════════════════════════════════════════════════════════════════
+
+indicator("SPRING · движок отскоков", "SPRING", overlay = false,
+     max_lines_count = 500, max_labels_count = 500, max_boxes_count = 500)
+
+// ── входные параметры ──────────────────────────────────────────────────────────
+gCore = "Ядро"
+meanLen   = input.int(20, "Средняя, к которой возвращается цена", minval = 3, group = gCore)
+meanType  = input.string("EMA", "Тип средней", options = ["EMA", "SMA", "VWMA"], group = gCore)
+atrLen    = input.int(14, "ATR", minval = 2, group = gCore)
+ctxLen    = input.int(12, "Окно контекста (максимум S/P/I/N)", minval = 1, group = gCore)
+gain      = input.float(1.22, "gain — нормировка скора", minval = 0.5, maxval = 3.0, step = 0.01, group = gCore)
+thrEntry  = input.float(70.0, "Порог входа", minval = 1, maxval = 100, step = 0.5, group = gCore)
+thrWatch  = input.float(55.0, "Порог наблюдения", minval = 1, maxval = 100, step = 0.5, group = gCore)
+confirmed = input.bool(true, "Сигналы только по закрытым барам", group = gCore,
+     tooltip = "Выключить — сигнал появится внутри формирующегося бара и может исчезнуть.")
+
+gW = "Веса компонентов"
+wS = input.float(0.20, "S · растяжение", minval = 0, maxval = 1, step = 0.01, group = gW)
+wP = input.float(0.22, "P · истощение",  minval = 0, maxval = 1, step = 0.01, group = gW)
+wR = input.float(0.28, "R · возврат",    minval = 0, maxval = 1, step = 0.01, group = gW)
+wI = input.float(0.13, "I · дивергенция",minval = 0, maxval = 1, step = 0.01, group = gW)
+wN = input.float(0.17, "N · уровни",     minval = 0, maxval = 1, step = 0.01, group = gW)
+
+gS = "S · растяжение"
+sFullZ = input.float(2.5, "Полное растяжение, σ",   minval = 0.2, step = 0.1, group = gS)
+sFullA = input.float(2.5, "Полное растяжение, ATR", minval = 0.2, step = 0.1, group = gS)
+
+gP = "P · истощение"
+volLen   = input.int(20, "Окно среднего объёма", minval = 2, group = gP)
+volFull  = input.float(2.5, "Климакс объёма, × среднего", minval = 1.1, step = 0.1, group = gP)
+fadeLen  = input.int(8, "Окно затухания импульса", minval = 2, group = gP)
+pwVol    = input.float(0.42, "Вес климакса объёма", minval = 0, maxval = 1, step = 0.01, group = gP)
+pwFade   = input.float(0.30, "Вес затухания",       minval = 0, maxval = 1, step = 0.01, group = gP)
+pwWick   = input.float(0.28, "Вес хвоста",          minval = 0, maxval = 1, step = 0.01, group = gP)
+
+gR = "R · возврат (триггер)"
+sweepLen   = input.int(10, "Окно свипа ликвидности", minval = 2, group = gR)
+pierceATR  = input.float(0.5, "Полный прокол уровня, ATR", minval = 0.05, step = 0.05, group = gR)
+
+gI = "I · дивергенция"
+rsiLen   = input.int(14, "RSI", minval = 2, group = gI)
+divLen   = input.int(20, "Окно дивергенции", minval = 3, group = gI)
+divRsi   = input.float(8.0, "Полная дивергенция RSI, пунктов", minval = 1, step = 0.5, group = gI)
+divVol   = input.float(3.0, "Полная дивергенция CVD, × среднего объёма", minval = 0.2, step = 0.1, group = gI)
+useCorr  = input.bool(false, "Учитывать коррелирующий инструмент", group = gI)
+corrSym  = input.string("", "Коррелирующий инструмент (тикер целиком)", group = gI,
+     tooltip = "Например NQ1! для ES1!. Пусто — коррелят не учитывается.")
+divCorr  = input.float(0.5, "Полная дивергенция коррелята, %", minval = 0.01, step = 0.01, group = gI)
+
+gN = "N · уровни"
+tolATR    = input.float(0.28, "Допуск конфлюэнса, ATR", minval = 0.02, step = 0.01, group = gN)
+levEmaLen = input.int(200, "Медленная EMA", minval = 10, group = gN)
+swingLen  = input.int(60, "Окно свинга для фибо", minval = 5, group = gN)
+fibRatio  = input.float(0.786, "Уровень фибо", minval = 0.1, maxval = 0.99, step = 0.001, group = gN)
+roundStep = input.float(0.0, "Шаг круглых уровней (0 = авто)", minval = 0, group = gN)
+wEma      = input.float(0.30, "Вес EMA",            minval = 0, maxval = 1, step = 0.01, group = gN)
+wVwap     = input.float(0.27, "Вес VWAP сессии",    minval = 0, maxval = 1, step = 0.01, group = gN)
+wPd       = input.float(0.25, "Вес хай/лоу дня",    minval = 0, maxval = 1, step = 0.01, group = gN)
+wRound    = input.float(0.20, "Вес круглого числа", minval = 0, maxval = 1, step = 0.01, group = gN)
+wFib      = input.float(0.23, "Вес фибо",           minval = 0, maxval = 1, step = 0.01, group = gN)
+nFull     = input.float(0.90, "Полный конфлюэнс, сумма весов", minval = 0.1, step = 0.05, group = gN)
+
+gG = "G · режим"
+erLen     = input.int(20, "Окно эффективности хода", minval = 3, group = gG)
+erLo      = input.float(0.20, "Тренда ещё нет, ER", minval = 0, maxval = 1, step = 0.01, group = gG)
+erHi      = input.float(0.60, "Тренд в полную силу, ER", minval = 0.05, maxval = 1, step = 0.01, group = gG)
+slopeLen  = input.int(10, "Окно наклона EMA", minval = 1, group = gG)
+volRegLen = input.int(50, "Окно нормы волатильности", minval = 5, group = gG)
+volCalm   = input.float(1.5, "Спокойная вола, ATR/норма", minval = 0.5, step = 0.1, group = gG)
+volWild   = input.float(3.0, "Разгон волы, ATR/норма",    minval = 0.6, step = 0.1, group = gG)
+gMin      = input.float(0.35, "Минимум множителя", minval = 0.0, maxval = 1, step = 0.05, group = gG)
+
+gPlan = "План сделки"
+stopLen    = input.int(5, "Окно свинга для стопа", minval = 1, group = gPlan)
+stopATR    = input.float(0.50, "Запас за свинг, ATR", minval = 0, step = 0.05, group = gPlan)
+t2R        = input.float(2.60, "Цель T2, в R", minval = 0.2, step = 0.1, group = gPlan)
+retestATR  = input.float(0.30, "Лимитка на ретесте: от стопа, ATR", minval = 0, step = 0.05, group = gPlan)
+minRR      = input.float(0.50, "Минимальный R:R до T1", minval = 0, step = 0.05, group = gPlan)
+maxBars    = input.int(12, "Тайм-стоп, баров", minval = 1, group = gPlan)
+cooldown   = input.int(3, "Пауза после сделки, баров", minval = 0, group = gPlan)
+useT2      = input.bool(false, "Половина на T1, остаток на T2 (стоп в безубыток)", group = gPlan)
+
+gCal = "Калибровка"
+calibOn   = input.bool(true, "Считать таблицу калибровки", group = gCal)
+calThr    = input.float(50.0, "Нижний порог для калибровки", minval = 1, maxval = 100, step = 1, group = gCal,
+     tooltip = "Симулятор берёт все сделки от этого скора, чтобы было видно, с какого диапазона начинается эдж. В сигналы и алерты попадают только сделки от порога входа.")
+costTicks = input.float(2.0, "Комиссия и проскальзывание, тиков на сделку", minval = 0, step = 0.5, group = gCal)
+
+gV = "Вид"
+showPlan  = input.bool(true, "План сделки на графике", group = gV)
+showComps = input.bool(true, "Таблица компонентов", group = gV)
+showCal   = input.bool(true, "Таблица калибровки", group = gV)
+cLong     = input.color(#0B7A69, "Лонг",  group = gV, inline = "c")
+cShort    = input.color(#B8412F, "Шорт",  group = gV, inline = "c")
+cBrass    = input.color(#A9701C, "Акцент", group = gV, inline = "c")
+
+// ── утилиты ────────────────────────────────────────────────────────────────────
+f_clamp(float x, float lo, float hi) => math.max(lo, math.min(hi, x))
+f_01(float x) => f_clamp(x, 0.0, 1.0)
+f_hit(float lvl, float probe, float tol) => na(lvl) ? 0.0 : math.abs(probe - lvl) <= tol ? 1.0 : 0.0
+
+// ── общие ряды ─────────────────────────────────────────────────────────────────
+rng    = math.max(high - low, syminfo.mintick)
+vol    = nz(volume, 0.0)
+volMa  = ta.sma(vol, volLen)
+hasVol = volMa > 0
+
+atr   = ta.atr(atrLen)
+bEma  = ta.ema(close, meanLen)
+bSma  = ta.sma(close, meanLen)
+bVwma = ta.vwma(close, meanLen)
+basis = meanType == "SMA" ? bSma : meanType == "VWMA" ? bVwma : bEma
+sd = ta.stdev(close, meanLen)
+
+imp   = math.abs(close - close[1])
+impPk = ta.highest(imp, fadeLen)
+
+refL = ta.lowest(low, sweepLen)[1]
+refH = ta.highest(high, sweepLen)[1]
+
+rsi   = ta.rsi(close, rsiLen)
+delta = vol * ((close - low) - (high - close)) / rng
+cvd   = ta.cum(delta)
+
+loW    = ta.lowest(low, divLen)[1]
+hiW    = ta.highest(high, divLen)[1]
+rsiLoW = ta.lowest(rsi, divLen)[1]
+rsiHiW = ta.highest(rsi, divLen)[1]
+cvdLoW = ta.lowest(cvd, divLen)[1]
+cvdHiW = ta.highest(cvd, divLen)[1]
+
+corrTicker = corrSym == "" ? syminfo.tickerid : corrSym
+corrP      = request.security(corrTicker, timeframe.period, close, lookahead = barmerge.lookahead_off)
+corrLoW    = ta.lowest(corrP, divLen)[1]
+corrHiW    = ta.highest(corrP, divLen)[1]
+
+// уровни
+emaLvl = ta.ema(close, levEmaLen)
+
+// VWAP сессии считаем руками — ta.vwap падает на инструментах без объёма
+var float cumPV = 0.0
+var float cumV  = 0.0
+if timeframe.change("D")
+    cumPV := 0.0
+    cumV  := 0.0
+cumPV += hlc3 * vol
+cumV  += vol
+avwap = cumV > 0 ? cumPV / cumV : na
+
+[pdh, pdl] = request.security(syminfo.tickerid, "D", [high[1], low[1]], lookahead = barmerge.lookahead_on)
+
+swHi     = ta.highest(high, swingLen)
+swLo     = ta.lowest(low, swingLen)
+fibLong  = swHi - (swHi - swLo) * fibRatio
+fibShort = swLo + (swHi - swLo) * fibRatio
+rstep    = roundStep > 0 ? roundStep : math.pow(10, math.floor(math.log10(math.max(close, 1.0))) - 2) * 5
+
+// режим
+er       = math.abs(close - close[erLen]) / math.max(math.sum(math.abs(close - close[1]), erLen), 1e-9)
+trendDir = close > emaLvl and emaLvl > emaLvl[slopeLen] ? 1 : close < emaLvl and emaLvl < emaLvl[slopeLen] ? -1 : 0
+volRat   = atr / math.max(ta.sma(atr, volRegLen), 1e-9)
+
+// свинги для стопа
+swStopLo = ta.lowest(low, stopLen)
+swStopHi = ta.highest(high, stopLen)
+
+// ── компоненты для одной стороны ───────────────────────────────────────────────
+f_dir(int d) =>
+    // S · растяжение: считается только «в свою сторону» — лонг ждёт цену под средней
+    devZ = sd  > 0 ? (close - basis) / sd  : 0.0
+    devA = atr > 0 ? (close - basis) / atr : 0.0
+    sZ   = d == 1 ? math.max(0.0, -devZ) : math.max(0.0, devZ)
+    sA   = d == 1 ? math.max(0.0, -devA) : math.max(0.0, devA)
+    S    = f_01(math.min(sZ / sFullZ, sA / sFullA))
+
+    // P · истощение
+    pV = hasVol ? f_01((vol / volMa - 1.0) / math.max(volFull - 1.0, 0.1)) : 0.5
+    pF = impPk > 0 ? f_01(1.0 - imp / impPk) : 0.0
+    pW = f_01((d == 1 ? close - low : high - close) / rng)
+    P  = f_01(pwVol * pV + pwFade * pF + pwWick * pW)
+
+    // R · возврат — только текущий бар
+    ref    = d == 1 ? refL : refH
+    pierce = d == 1 ? math.max(0.0, refL - low) : math.max(0.0, high - refH)
+    pN     = atr > 0 ? f_01(pierce / (pierceATR * atr)) : 0.0
+    back   = d == 1 ? close > ref : close < ref
+    cpos   = f_01((d == 1 ? close - low : high - close) / rng)
+    R      = back ? f_01(0.55 * cpos + 0.45 * pN) : 0.0
+
+    // I · дивергенция — только на новом экстремуме
+    newExt = d == 1 ? low < loW : high > hiW
+    iR = d == 1 ? f_01((rsi - rsiLoW) / divRsi) : f_01((rsiHiW - rsi) / divRsi)
+    iC = not hasVol ? 0.0 :
+       d == 1 ? f_01((cvd - cvdLoW) / math.max(volMa * divVol, 1e-9))
+              : f_01((cvdHiW - cvd) / math.max(volMa * divVol, 1e-9))
+    iX = not useCorr ? 0.0 :
+       d == 1 ? f_01((corrP - corrLoW) / math.max(math.abs(corrLoW) * divCorr / 100.0, 1e-9))
+              : f_01((corrHiW - corrP) / math.max(math.abs(corrHiW) * divCorr / 100.0, 1e-9))
+    iBase = hasVol ? 0.6 * iR + 0.4 * iC : iR
+    I     = newExt ? f_01(useCorr ? 0.75 * iBase + 0.25 * iX : iBase) : 0.0
+
+    // N · конфлюэнс уровней вокруг экстремума бара
+    probe = d == 1 ? low : high
+    tol   = tolATR * atr
+    rnd   = rstep > 0 ? math.round(probe / rstep) * rstep : na
+    fib   = d == 1 ? fibLong : fibShort
+    wsum  = f_hit(emaLvl, probe, tol) * wEma
+          + f_hit(avwap, probe, tol) * wVwap
+          + math.max(f_hit(pdh, probe, tol), f_hit(pdl, probe, tol)) * wPd
+          + f_hit(rnd, probe, tol) * wRound
+          + f_hit(fib, probe, tol) * wFib
+    N = f_01(wsum / nFull)
+
+    // G · режим: против сильного тренда и в разгоне волы скор душится
+    against = (d == 1 and trendDir < 0) or (d == -1 and trendDir > 0)
+    gT = against ? f_clamp(1.0 - (er - erLo) / math.max(erHi - erLo, 1e-9), gMin, 1.0) : 1.0
+    gV = f_clamp(1.0 - (volRat - volCalm) / math.max(volWild - volCalm, 1e-9), gMin, 1.0)
+    G  = f_clamp(math.min(gT, gV), gMin, 1.0)
+
+    [S, P, R, I, N, G]
+
+[Sl0, Pl0, Rl, Il0, Nl0, Gl] = f_dir(1)
+[Ss0, Ps0, Rs, Is0, Ns0, Gs] = f_dir(-1)
+
+// контекст: S/P/I/N — максимум за окно, R — строго текущий бар
+Sl = ta.highest(Sl0, ctxLen)
+Pl = ta.highest(Pl0, ctxLen)
+Il = ta.highest(Il0, ctxLen)
+Nl = ta.highest(Nl0, ctxLen)
+Ss = ta.highest(Ss0, ctxLen)
+Ps = ta.highest(Ps0, ctxLen)
+Is = ta.highest(Is0, ctxLen)
+Ns = ta.highest(Ns0, ctxLen)
+
+f_score(float S, float P, float R, float I, float N, float G) =>
+    100.0 * gain * G * (wS * S + wP * P + wR * R + wI * I + wN * N)
+
+scL  = f_score(Sl, Pl, Rl, Il, Nl, Gl)
+scS  = f_score(Ss, Ps, Rs, Is, Ns, Gs)
+potL = f_score(Sl, Pl, 1.0, Il, Nl, Gl)
+potS = f_score(Ss, Ps, 1.0, Is, Ns, Gs)
+
+side  = scL >= scS ? 1 : -1
+score = math.max(scL, scS)
+pot   = side == 1 ? potL : potS
+
+cS = side == 1 ? Sl : Ss
+cP = side == 1 ? Pl : Ps
+cR = side == 1 ? Rl : Rs
+cI = side == 1 ? Il : Is
+cN = side == 1 ? Nl : Ns
+cG = side == 1 ? Gl : Gs
+
+state = score >= thrEntry ? "TRIGGER" : pot >= thrEntry ? "ARMED" : pot >= thrWatch ? "WATCH" : "FLAT"
+withTrend = (side == 1 and trendDir > 0) or (side == -1 and trendDir < 0)
+playbook  = withTrend ? "TREND_DIP" : er < erLo ? "RANGE_FADE" : "COUNTER_CLIMAX"
+
+// ── план сделки по текущему бару ───────────────────────────────────────────────
+planEntry  = close
+planStop   = side == 1 ? swStopLo - stopATR * atr : swStopHi + stopATR * atr
+planRisk   = math.max(math.abs(planEntry - planStop), syminfo.mintick)
+planT1     = basis
+planT2     = side == 1 ? planEntry + t2R * planRisk : planEntry - t2R * planRisk
+planRR     = (side == 1 ? planT1 - planEntry : planEntry - planT1) / planRisk
+planRetest = side == 1 ? planStop + retestATR * atr : planStop - retestATR * atr
+planSize   = math.round(math.min(100.0, score / math.max(planRisk / atr, 0.1)))
+
+// ── симулятор сделок: он же источник калибровки ────────────────────────────────
+var int   tSide   = 0
+var float tEntry  = na
+var float tStop   = na
+var float tT1     = na
+var float tT2     = na
+var float tRisk   = na
+var float tScore  = na
+var int   tBar    = na
+var bool  tLive   = false
+var bool  tT1done = false
+var int   lastExit = -100000
+
+var array<int>   calN    = array.new_int(6, 0)
+var array<int>   calWin  = array.new_int(6, 0)
+var array<float> calR    = array.new_float(6, 0.0)
+var array<float> calPos  = array.new_float(6, 0.0)
+var array<float> calNeg  = array.new_float(6, 0.0)
+var array<int>   calBars = array.new_int(6, 0)
+
+var float cumR  = 0.0
+var float peakR = 0.0
+var float ddR   = 0.0
+var int   liveN = 0
+var int   liveW = 0
+var float liveR = 0.0
+var int   subN  = 0
+var float subRt = 0.0
+
+f_bucket(float sc) => sc < 50 ? 0 : sc < 58 ? 1 : sc < 66 ? 2 : sc < 74 ? 3 : sc < 82 ? 4 : 5
+
+f_rec(float r, int bars, float sc) =>
+    b = f_bucket(sc)
+    array.set(calN,    b, array.get(calN, b) + 1)
+    array.set(calR,    b, array.get(calR, b) + r)
+    array.set(calBars, b, array.get(calBars, b) + bars)
+    if r > 0
+        array.set(calWin, b, array.get(calWin, b) + 1)
+        array.set(calPos, b, array.get(calPos, b) + r)
+    else
+        array.set(calNeg, b, array.get(calNeg, b) - r)
+    b
+
+inTrade = tSide != 0
+barsOk  = not confirmed or barstate.isconfirmed
+effThr  = calibOn ? math.min(calThr, thrEntry) : thrEntry
+
+float exitR    = na
+bool  justOut  = false
+
+if inTrade and bar_index > tBar
+    float rr1  = math.abs(tT1 - tEntry) / tRisk
+    float cst  = costTicks * syminfo.mintick / tRisk
+    bool stopHit = tSide == 1 ? low  <= tStop : high >= tStop
+    bool t1Hit   = tSide == 1 ? high >= tT1   : low  <= tT1
+    bool t2Hit   = tSide == 1 ? high >= tT2   : low  <= tT2
+    bool tmo     = bar_index - tBar >= maxBars
+    float stopR  = (tStop - tEntry) * tSide / tRisk
+    if stopHit
+        exitR := (tT1done ? 0.5 * rr1 + 0.5 * stopR : stopR) - cst
+    else if not useT2 and t1Hit
+        exitR := rr1 - cst
+    else if useT2 and t1Hit and not tT1done
+        tT1done := true
+        tStop   := tEntry
+        if t2Hit
+            exitR := 0.5 * rr1 + 0.5 * t2R - cst
+    else if useT2 and tT1done and t2Hit
+        exitR := 0.5 * rr1 + 0.5 * t2R - cst
+    else if tmo
+        float mkt = (close - tEntry) * tSide / tRisk
+        exitR := (tT1done ? 0.5 * rr1 + 0.5 * mkt : mkt) - cst
+    if not na(exitR)
+        f_rec(exitR, bar_index - tBar, tScore)
+        cumR  += exitR
+        peakR := math.max(peakR, cumR)
+        ddR   := math.min(ddR, cumR - peakR)
+        if tLive
+            liveN += 1
+            liveR += exitR
+            liveW += exitR > 0 ? 1 : 0
+        else
+            subN  += 1
+            subRt += exitR
+        tSide    := 0
+        tT1done  := false
+        lastExit := bar_index
+        justOut  := true
+
+cdOk    = bar_index - lastExit >= cooldown
+canFire = not inTrade and not justOut and cdOk and barsOk and score >= effThr and planRR >= minRR and not na(atr)
+fired   = false
+live    = false
+
+if canFire
+    tSide   := side
+    tEntry  := planEntry
+    tStop   := planStop
+    tT1     := planT1
+    tT2     := planT2
+    tRisk   := planRisk
+    tScore  := score
+    tBar    := bar_index
+    tLive   := score >= thrEntry
+    tT1done := false
+    fired   := true
+    live    := tLive
+
+liveLong  = fired and live and tSide == 1
+liveShort = fired and live and tSide == -1
+
+// ── панель скора ───────────────────────────────────────────────────────────────
+scCol = state == "TRIGGER" ? (side == 1 ? cLong : cShort) : state == "ARMED" ? cBrass : color.new(cBrass, 45)
+plot(score, "Скор (заливка)", color = color.new(cBrass, 84), style = plot.style_area, linewidth = 1)
+plot(score, "Скор", color = scCol, linewidth = 2)
+plot(pot, "Потенциал", color = color.new(cBrass, 60), linewidth = 1, display = display.pane)
+hline(thrEntry, "Порог входа", color = #B8412F, linestyle = hline.style_dashed)
+hline(thrWatch, "Порог наблюдения", color = color.new(color.gray, 40), linestyle = hline.style_dotted)
+hline(0, "0", color = color.new(color.gray, 70))
+plotshape(fired and live ? score : na, "Триггер", shape.circle, location.absolute,
+     color = side == 1 ? cLong : cShort, size = size.tiny)
+
+// ── отметки и план на графике ──────────────────────────────────────────────────
+plotshape(liveLong, "Сигнал LONG", shape.triangleup, location.belowbar,
+     color = cLong, size = size.small, force_overlay = true)
+plotshape(liveShort, "Сигнал SHORT", shape.triangledown, location.abovebar,
+     color = cShort, size = size.small, force_overlay = true)
+plot(basis, "Средняя", color = color.new(color.gray, 25), linewidth = 1,
+     style = plot.style_line, force_overlay = true)
+
+var line  lnE  = na
+var line  lnS  = na
+var line  lnT1 = na
+var line  lnT2 = na
+var line  lnRT = na
+var label lbl  = na
+var box   bxR  = na
+var box   bxT  = na
+
+if showPlan and fired and live
+    line.delete(lnE)
+    line.delete(lnS)
+    line.delete(lnT1)
+    line.delete(lnT2)
+    line.delete(lnRT)
+    label.delete(lbl)
+    box.delete(bxR)
+    box.delete(bxT)
+    cSide = tSide == 1 ? cLong : cShort
+    lnE  := line.new(bar_index, tEntry, bar_index + 1, tEntry, color = color.new(cSide, 0), width = 2, force_overlay = true)
+    lnS  := line.new(bar_index, tStop,  bar_index + 1, tStop,  color = cShort, style = line.style_dashed, force_overlay = true)
+    lnT1 := line.new(bar_index, tT1,    bar_index + 1, tT1,    color = cLong,  style = line.style_dashed, force_overlay = true)
+    lnT2 := line.new(bar_index, tT2,    bar_index + 1, tT2,    color = cLong,  style = line.style_dotted, force_overlay = true)
+    lnRT := line.new(bar_index, planRetest, bar_index + 1, planRetest, color = cBrass, style = line.style_dotted, force_overlay = true)
+    bxR  := box.new(bar_index, math.max(tEntry, tStop), bar_index + 1, math.min(tEntry, tStop),
+             border_color = color.new(cShort, 70), bgcolor = color.new(cShort, 88), force_overlay = true)
+    bxT  := box.new(bar_index, math.max(tEntry, tT2), bar_index + 1, math.min(tEntry, tT2),
+             border_color = color.new(cLong, 70), bgcolor = color.new(cLong, 90), force_overlay = true)
+    lbl  := label.new(bar_index, tSide == 1 ? low : high,
+             text = str.format("{0} · {1}\nскор {2,number,#.#}  ·  R:R {3,number,#.##}  ·  размер {4,number,#}%\nвход {5}   стоп {6}\nT1 {7}   T2 {8}\nлимитка на ретесте {9}   ATR {10}",
+                 tSide == 1 ? "LONG" : "SHORT", playbook, tScore, planRR, planSize,
+                 str.tostring(tEntry, format.mintick), str.tostring(tStop, format.mintick),
+                 str.tostring(tT1, format.mintick), str.tostring(tT2, format.mintick),
+                 str.tostring(planRetest, format.mintick), str.tostring(atr, format.mintick)),
+             style = tSide == 1 ? label.style_label_up : label.style_label_down,
+             color = color.new(cSide, 88), textcolor = chart.fg_color, size = size.small,
+             textalign = text.align_left, force_overlay = true)
+
+if showPlan and inTrade and not na(lnE)
+    line.set_x2(lnE,  bar_index + 1)
+    line.set_x2(lnS,  bar_index + 1)
+    line.set_x2(lnT1, bar_index + 1)
+    line.set_x2(lnT2, bar_index + 1)
+    line.set_x2(lnRT, bar_index + 1)
+    box.set_right(bxR, bar_index + 1)
+    box.set_right(bxT, bar_index + 1)
+
+// ── таблица компонентов ────────────────────────────────────────────────────────
+var table tC = table.new(position.top_right, 4, 13, border_width = 1)
+
+f_row(table t, int r, string k, string v, string w, string c, color bg) =>
+    table.cell(t, 0, r, k, text_color = chart.fg_color, text_size = size.tiny, text_halign = text.align_left,  bgcolor = bg)
+    table.cell(t, 1, r, v, text_color = chart.fg_color, text_size = size.tiny, text_halign = text.align_right, bgcolor = bg)
+    table.cell(t, 2, r, w, text_color = color.gray,     text_size = size.tiny, text_halign = text.align_right, bgcolor = bg)
+    table.cell(t, 3, r, c, text_color = chart.fg_color, text_size = size.tiny, text_halign = text.align_right, bgcolor = bg)
+    r
+
+if showComps and barstate.islast
+    bgH = color.new(color.gray, 85)
+    f_row(tC, 0, "КОМПОНЕНТ", "ЗНАЧ", "ВЕС", "ВКЛАД", bgH)
+    f_row(tC, 1, "S растяжение",  str.tostring(cS, "#.00"), str.tostring(wS, "#.00"), str.tostring(wS * cS, "#.000"), na)
+    f_row(tC, 2, "P истощение",   str.tostring(cP, "#.00"), str.tostring(wP, "#.00"), str.tostring(wP * cP, "#.000"), na)
+    f_row(tC, 3, "R возврат",     str.tostring(cR, "#.00"), str.tostring(wR, "#.00"), str.tostring(wR * cR, "#.000"), color.new(cBrass, 88))
+    f_row(tC, 4, "I дивергенция", str.tostring(cI, "#.00"), str.tostring(wI, "#.00"), str.tostring(wI * cI, "#.000"), na)
+    f_row(tC, 5, "N уровни",      str.tostring(cN, "#.00"), str.tostring(wN, "#.00"), str.tostring(wN * cN, "#.000"), na)
+    f_row(tC, 6, "Σ вкладов", "", "",
+         str.tostring(wS * cS + wP * cP + wR * cR + wI * cI + wN * cN, "#.000"), bgH)
+    f_row(tC, 7, "G режим", str.tostring(cG, "#.00"), "×", "", na)
+    f_row(tC, 8, "gain", str.tostring(gain, "#.00"), "×", "", na)
+    f_row(tC, 9, "СКОР", str.tostring(score, "#.0"), "", state, color.new(state == "TRIGGER" ? (side == 1 ? cLong : cShort) : cBrass, 80))
+    f_row(tC, 10, "Сторона / плейбук", side == 1 ? "LONG" : "SHORT", "", playbook, na)
+    f_row(tC, 11, "Потенциал", str.tostring(pot, "#.0"), "", pot >= thrEntry ? "готов" : "—", na)
+    f_row(tC, 12, "Позиция", inTrade ? (tSide == 1 ? "LONG" : "SHORT") : "—", "",
+         inTrade ? str.tostring(bar_index - tBar) + " бар" : "", na)
+
+// ── таблица калибровки ─────────────────────────────────────────────────────────
+var table tK = table.new(position.bottom_right, 6, 9, border_width = 1)
+
+f_krow(table t, int r, string a, string b, string c, string d, string e, string f, color bg) =>
+    table.cell(t, 0, r, a, text_color = chart.fg_color, text_size = size.tiny, text_halign = text.align_left,  bgcolor = bg)
+    table.cell(t, 1, r, b, text_color = chart.fg_color, text_size = size.tiny, text_halign = text.align_right, bgcolor = bg)
+    table.cell(t, 2, r, c, text_color = chart.fg_color, text_size = size.tiny, text_halign = text.align_right, bgcolor = bg)
+    table.cell(t, 3, r, d, text_color = chart.fg_color, text_size = size.tiny, text_halign = text.align_right, bgcolor = bg)
+    table.cell(t, 4, r, e, text_color = chart.fg_color, text_size = size.tiny, text_halign = text.align_right, bgcolor = bg)
+    table.cell(t, 5, r, f, text_color = color.gray,     text_size = size.tiny, text_halign = text.align_right, bgcolor = bg)
+    r
+
+if calibOn and showCal and barstate.islast
+    bgH = color.new(color.gray, 85)
+    f_krow(tK, 0, "ДИАПАЗОН", "СДЕЛОК", "ВИНРЕЙТ", "ПФ", "СРЕДНИЙ R", "БАРОВ", bgH)
+    names = array.from("< 50", "50-57", "58-65", "66-73", "74-81", "82-100")
+    bestR = -1e9
+    for i = 0 to 5
+        if array.get(calN, i) > 0
+            bestR := math.max(bestR, array.get(calR, i) / array.get(calN, i))
+    for i = 0 to 5
+        int n = array.get(calN, i)
+        float r = n > 0 ? array.get(calR, i) / n : na
+        float wr = n > 0 ? 100.0 * array.get(calWin, i) / n : na
+        float pf = array.get(calNeg, i) > 0 ? array.get(calPos, i) / array.get(calNeg, i) : na
+        float bs = n > 0 ? array.get(calBars, i) * 1.0 / n : na
+        bool hot = n > 0 and not na(r) and math.abs(r - bestR) < 1e-9
+        f_krow(tK, i + 1, array.get(names, i), str.tostring(n),
+             n > 0 ? str.tostring(wr, "#.0") + "%" : "—",
+             na(pf) ? "—" : str.tostring(pf, "#.00"),
+             n > 0 ? str.tostring(r, "#.000") : "—",
+             n > 0 ? str.tostring(bs, "#.0") : "—",
+             hot ? color.new(cBrass, 82) : na)
+    f_krow(tK, 7, "≥ порога " + str.tostring(thrEntry, "#"), str.tostring(liveN),
+         liveN > 0 ? str.tostring(100.0 * liveW / liveN, "#.0") + "%" : "—", "",
+         liveN > 0 ? str.tostring(liveR / liveN, "#.000") : "—", "", bgH)
+    f_krow(tK, 8, "всего R " + str.tostring(cumR, "#.0"), "просадка",
+         str.tostring(ddR, "#.00") + "R", "ниже порога",
+         str.tostring(subN) + " сд.",
+         subN > 0 ? str.tostring(subRt / subN, "#.000") : "—", bgH)
+
+// ── алерты ─────────────────────────────────────────────────────────────────────
+alertcondition(liveLong,  "SPRING · LONG",  "SPRING: сигнал LONG")
+alertcondition(liveShort, "SPRING · SHORT", "SPRING: сигнал SHORT")
+alertcondition(fired and live, "SPRING · любой сигнал", "SPRING: сигнал на вход")
+
+if fired and live
+    alert(str.format("SPRING {0} {1} · {2} · скор {3,number,#.#} | вход {4} стоп {5} T1 {6} T2 {7} | R:R {8,number,#.##} размер {9,number,#}% | лимитка на ретесте {10}",
+         syminfo.ticker, timeframe.period, tSide == 1 ? "LONG" : "SHORT", tScore,
+         str.tostring(tEntry, format.mintick), str.tostring(tStop, format.mintick),
+         str.tostring(tT1, format.mintick), str.tostring(tT2, format.mintick),
+         planRR, planSize, str.tostring(planRetest, format.mintick)),
+         alert.freq_once_per_bar_close)
