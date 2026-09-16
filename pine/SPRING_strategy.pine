@@ -9,6 +9,10 @@
 //  Вход по закрытию бара-триггера, стоп за свингом, T1 на средней, T2 = 2.6R,
 //  тайм-стоп. Комиссию и проскальзывание задайте во вкладке «Свойства» —
 //  без них любой отскоковый бэктест врёт в свою пользу.
+//
+//  Фильтры скальпинга (издержки, старший таймфрейм, сессия, лимит сделок в день,
+//  выход на закрытии сессии) повторяют индикатор один в один — иначе бэктест
+//  считал бы не ту систему, сигналы которой вы видите на графике.
 // ═══════════════════════════════════════════════════════════════════════════════
 
 strategy("SPRING · стратегия", "SPRING S", overlay = true,
@@ -96,6 +100,30 @@ maxBars    = input.int(12, "Тайм-стоп, баров", minval = 1, group = 
 cooldown   = input.int(3, "Пауза после сделки, баров", minval = 0, group = gPlan)
 useT2      = input.bool(false, "Половина на T1, остаток на T2 (стоп в безубыток)", group = gPlan)
 
+gF = "Фильтры скальпинга"
+useSess   = input.bool(false, "Торговать только в сессии", group = gF)
+sessStr   = input.session("0930-1600", "Сессия", group = gF)
+useBlack  = input.bool(false, "Не торговать в окне", group = gF)
+blackStr  = input.session("0930-0945", "Окно без торговли", group = gF,
+     tooltip = "Первые минуты после открытия и последние перед закрытием — самые дорогие бары для отскока.")
+closeSess = input.bool(true, "Закрывать позицию на выходе из сессии", group = gF)
+tzSel     = input.string("биржа", "Часовой пояс фильтров", group = gF,
+     options = ["биржа", "UTC", "America/New_York", "Europe/Moscow", "Europe/London", "Asia/Tokyo"])
+maxPerDay = input.int(0, "Максимум сделок в день (0 — без лимита)", minval = 0, group = gF)
+
+gHtf = "Старший таймфрейм"
+htfMode  = input.string("мягко", "Сигнал против старшего тренда", options = ["выкл", "мягко", "жёстко"], group = gHtf)
+htfTf    = input.timeframe("15", "Таймфрейм", group = gHtf)
+htfLen   = input.int(50, "EMA старшего ТФ", minval = 3, group = gHtf)
+htfSlope = input.int(3, "Окно наклона EMA старшего ТФ", minval = 1, group = gHtf)
+htfPen   = input.float(0.70, "Штраф к скору в режиме «мягко»", minval = 0.1, maxval = 1.0, step = 0.05, group = gHtf)
+
+gCost = "Издержки"
+costTicks = input.float(2.0, "Комиссия и проскальзывание, тиков на сделку", minval = 0, step = 0.5, group = gCost,
+     tooltip = "Только для фильтра издержек. Сам бэктест считает комиссию и проскальзывание по вкладке «Свойства» — задайте там те же цифры.")
+useCost   = input.bool(true, "Отсекать сигналы, которые не окупают издержки", group = gCost)
+minT1Cost = input.float(3.0, "T1 дальше стоимости сделки, ×", minval = 0.5, step = 0.5, group = gCost)
+
 gV = "Вид"
 showPlan  = input.bool(true, "План сделки на графике", group = gV)
 cLong     = input.color(#0B7A69, "Лонг",  group = gV, inline = "c")
@@ -172,6 +200,20 @@ volRat   = atr / math.max(ta.sma(atr, volRegLen), 1e-9)
 swStopLo = ta.lowest(low, stopLen)
 swStopHi = ta.highest(high, stopLen)
 
+// старший таймфрейм: [1] внутри request.security — последний ЗАКРЫТЫЙ бар старшего ТФ
+[htfC, htfE, htfEp] = request.security(syminfo.tickerid, htfTf,
+     [close[1], ta.ema(close, htfLen)[1], ta.ema(close, htfLen)[1 + htfSlope]],
+     lookahead = barmerge.lookahead_off)
+htfDir = na(htfE) or na(htfEp) ? 0 :
+     htfC > htfE and htfE > htfEp ?  1 :
+     htfC < htfE and htfE < htfEp ? -1 : 0
+
+// время: сессия и окно-исключение
+tz      = tzSel == "биржа" ? syminfo.timezone : tzSel
+inSess  = not useSess or not na(time(timeframe.period, sessStr, tz))
+inBlack = useBlack and not na(time(timeframe.period, blackStr, tz))
+timeOk  = inSess and not inBlack
+
 // ── компоненты для одной стороны ───────────────────────────────────────────────
 f_dir(int d) =>
     // S · растяжение: считается только «в свою сторону» — лонг ждёт цену под средней
@@ -223,7 +265,10 @@ f_dir(int d) =>
     against = (d == 1 and trendDir < 0) or (d == -1 and trendDir > 0)
     gT = against ? f_clamp(1.0 - (er - erLo) / math.max(erHi - erLo, 1e-9), gMin, 1.0) : 1.0
     gV = f_clamp(1.0 - (volRat - volCalm) / math.max(volWild - volCalm, 1e-9), gMin, 1.0)
-    G  = f_clamp(math.min(gT, gV), gMin, 1.0)
+    // старший ТФ против сделки: «мягко» душит скор, «жёстко» снимает сигнал на гейте
+    againstH = (d == 1 and htfDir < 0) or (d == -1 and htfDir > 0)
+    gH = htfMode == "мягко" and againstH ? htfPen : 1.0
+    G  = f_clamp(math.min(gT, gV), gMin, 1.0) * gH
 
     [S, P, R, I, N, G]
 
@@ -273,6 +318,18 @@ planRR     = (side == 1 ? planT1 - planEntry : planEntry - planT1) / planRisk
 planRetest = side == 1 ? planStop + retestATR * atr : planStop - retestATR * atr
 planSize   = math.round(math.min(100.0, score / math.max(planRisk / atr, 0.1)))
 
+// издержки: costTicks — цена круга. Выигрыш она уменьшает, проигрыш увеличивает
+costPx    = costTicks * syminfo.mintick
+distT1    = side == 1 ? planT1 - planEntry : planEntry - planT1
+planRRnet = (distT1 - costPx) / (planRisk + costPx)
+costOk    = not useCost or (distT1 >= minT1Cost * costPx and planRRnet >= minRR)
+htfVeto   = htfMode == "жёстко" and ((side == 1 and htfDir < 0) or (side == -1 and htfDir > 0))
+
+var int dayTrades = 0
+if timeframe.change("D")
+    dayTrades := 0
+dayOk = maxPerDay == 0 or dayTrades < maxPerDay
+
 
 // ── торговые параметры ─────────────────────────────────────────────────────────
 gT = "Исполнение"
@@ -296,7 +353,8 @@ inWindow = time >= fromDate and time <= toDate
 sideOk  = (side == 1 and useLong) or (side == -1 and useShort)
 barsOk  = not confirmed or barstate.isconfirmed
 canFire = inWindow and sideOk and barsOk and strategy.position_size == 0 and
-     score >= thrEntry and planRR >= minRR and not na(atr)
+     timeOk and dayOk and not htfVeto and
+     score >= thrEntry and (useCost ? costOk : planRR >= minRR) and not na(atr)
 
 // размер позиции: риск в деньгах / риск в пунктах, при желании взвешенный скором
 riskMoney = strategy.equity * riskPct / 100.0
@@ -311,6 +369,9 @@ var float eT2    = na
 var int   eBar   = na
 
 if canFire
+    // считаем сигналы, а не исполнения: непойманная лимитка на ретесте тоже
+    // забирает дневной лимит, как забрала бы внимание трейдера
+    dayTrades += 1
     ePrice := useRetest ? planRetest : planEntry
     eStop  := planStop
     eT1    := planT1
@@ -352,6 +413,9 @@ if inPos
     // тайм-стоп: сетап не отработал за отведённые бары — выходим по рынку
     if bar_index - eBar >= maxBars
         strategy.close_all(comment = "тайм-стоп")
+    // конец сессии: скальперская сделка не переносится через закрытие
+    if useSess and closeSess and not inSess
+        strategy.close_all(comment = "конец сессии")
 
 // ── картинка ───────────────────────────────────────────────────────────────────
 plot(basis, "Средняя", color = color.new(color.gray, 25))

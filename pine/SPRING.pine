@@ -21,6 +21,18 @@
 //  Порог входа 70 — не из головы: см. таблицу калибровки внизу панели. Прогоните
 //  её на своём инструменте. Если винрейт и средний R не растут вместе со скором —
 //  на этом инструменте модель не работает, какой бы стройной она ни была.
+//
+//  Скальперский контур поверх ядра:
+//    · фильтр издержек — сигнал не выдаётся, если после спреда и комиссии до цели
+//      остаётся меньше, чем требует минимальный R:R (главный убийца скальпинга);
+//    · старший таймфрейм — «мягко» душит скор против старшего тренда, «жёстко»
+//      снимает сигнал совсем;
+//    · сессия, окно-исключение, лимит сделок в день, выход на закрытии сессии;
+//    · таблица по часам — в каких часах эдж есть, а в каких его нет;
+//    · отложенная проверка — последние N% истории считаются отдельной строкой:
+//      если там эдж исчез, порог и веса подогнаны под прошлое.
+//  Фильтры действуют и на симулятор, поэтому таблицы показывают тот режим,
+//  в котором вы действительно торгуете.
 // ═══════════════════════════════════════════════════════════════════════════════
 
 indicator("SPRING · движок отскоков", "SPRING", overlay = false,
@@ -104,16 +116,43 @@ maxBars    = input.int(12, "Тайм-стоп, баров", minval = 1, group = 
 cooldown   = input.int(3, "Пауза после сделки, баров", minval = 0, group = gPlan)
 useT2      = input.bool(false, "Половина на T1, остаток на T2 (стоп в безубыток)", group = gPlan)
 
-gCal = "Калибровка"
+gF = "Фильтры скальпинга"
+useSess   = input.bool(false, "Торговать только в сессии", group = gF)
+sessStr   = input.session("0930-1600", "Сессия", group = gF)
+useBlack  = input.bool(false, "Не торговать в окне", group = gF)
+blackStr  = input.session("0930-0945", "Окно без торговли", group = gF,
+     tooltip = "Первые минуты после открытия и последние перед закрытием — самые дорогие бары для отскока: спред шире, уровни ещё не сформированы, а за закрытием сделку держать некуда.")
+closeSess = input.bool(true, "Закрывать позицию на выходе из сессии", group = gF)
+tzSel     = input.string("биржа", "Часовой пояс фильтров", group = gF,
+     options = ["биржа", "UTC", "America/New_York", "Europe/Moscow", "Europe/London", "Asia/Tokyo"])
+maxPerDay = input.int(0, "Максимум сделок в день (0 — без лимита)", minval = 0, group = gF,
+     tooltip = "Лимит считается по всем сделкам симулятора, а не только по живым: иначе таблица калибровки покажет режим, в котором вы не торгуете.")
+
+gHtf = "Старший таймфрейм"
+htfMode  = input.string("мягко", "Сигнал против старшего тренда", options = ["выкл", "мягко", "жёстко"], group = gHtf,
+     tooltip = "«Мягко» — скор умножается на штраф, сигнал остаётся возможным. «Жёстко» — сигнал против старшего тренда не выдаётся вообще.")
+htfTf    = input.timeframe("15", "Таймфрейм", group = gHtf)
+htfLen   = input.int(50, "EMA старшего ТФ", minval = 3, group = gHtf)
+htfSlope = input.int(3, "Окно наклона EMA старшего ТФ", minval = 1, group = gHtf)
+htfPen   = input.float(0.70, "Штраф к скору в режиме «мягко»", minval = 0.1, maxval = 1.0, step = 0.05, group = gHtf)
+
+gCal = "Издержки и калибровка"
+costTicks = input.float(2.0, "Комиссия и проскальзывание, тиков на сделку", minval = 0, step = 0.5, group = gCal)
+useCost   = input.bool(true, "Отсекать сигналы, которые не окупают издержки", group = gCal,
+     tooltip = "R:R пересчитывается после издержек, а до T1 требуется минимум N стоимостей сделки. На скальпинге это главный фильтр: половина красивых отскоков не покрывает спред и комиссию.")
+minT1Cost = input.float(3.0, "T1 дальше стоимости сделки, ×", minval = 0.5, step = 0.5, group = gCal)
 calibOn   = input.bool(true, "Считать таблицу калибровки", group = gCal)
 calThr    = input.float(50.0, "Нижний порог для калибровки", minval = 1, maxval = 100, step = 1, group = gCal,
      tooltip = "Симулятор берёт все сделки от этого скора, чтобы было видно, с какого диапазона начинается эдж. В сигналы и алерты попадают только сделки от порога входа.")
-costTicks = input.float(2.0, "Комиссия и проскальзывание, тиков на сделку", minval = 0, step = 0.5, group = gCal)
+oosPct    = input.int(30, "Отложить на проверку последние, % истории", minval = 10, maxval = 60, group = gCal,
+     tooltip = "Строки «в выборке / вне выборки» считают сделки от порога входа отдельно на первой части истории и на отложенной последней. Если вне выборки эдж исчез — порог и веса подогнаны под прошлое.")
+minN      = input.int(5, "Минимум сделок, чтобы строке верить", minval = 1, group = gCal)
 
 gV = "Вид"
 showPlan  = input.bool(true, "План сделки на графике", group = gV)
 showComps = input.bool(true, "Таблица компонентов", group = gV)
 showCal   = input.bool(true, "Таблица калибровки", group = gV)
+showHours = input.bool(true, "Таблица по часам", group = gV)
 cLong     = input.color(#0B7A69, "Лонг",  group = gV, inline = "c")
 cShort    = input.color(#B8412F, "Шорт",  group = gV, inline = "c")
 cBrass    = input.color(#A9701C, "Акцент", group = gV, inline = "c")
@@ -188,6 +227,22 @@ volRat   = atr / math.max(ta.sma(atr, volRegLen), 1e-9)
 swStopLo = ta.lowest(low, stopLen)
 swStopHi = ta.highest(high, stopLen)
 
+// старший таймфрейм: [1] внутри request.security — берём последний ЗАКРЫТЫЙ бар
+// старшего ТФ, чтобы направление не переобувалось внутри формирующегося
+[htfC, htfE, htfEp] = request.security(syminfo.tickerid, htfTf,
+     [close[1], ta.ema(close, htfLen)[1], ta.ema(close, htfLen)[1 + htfSlope]],
+     lookahead = barmerge.lookahead_off)
+htfDir = na(htfE) or na(htfEp) ? 0 :
+     htfC > htfE and htfE > htfEp ?  1 :
+     htfC < htfE and htfE < htfEp ? -1 : 0
+
+// время: сессия, окно-исключение, час входа для разреза по часам
+tz      = tzSel == "биржа" ? syminfo.timezone : tzSel
+inSess  = not useSess or not na(time(timeframe.period, sessStr, tz))
+inBlack = useBlack and not na(time(timeframe.period, blackStr, tz))
+timeOk  = inSess and not inBlack
+curHour = hour(time, tz)
+
 // ── компоненты для одной стороны ───────────────────────────────────────────────
 f_dir(int d) =>
     // S · растяжение: считается только «в свою сторону» — лонг ждёт цену под средней
@@ -239,7 +294,10 @@ f_dir(int d) =>
     against = (d == 1 and trendDir < 0) or (d == -1 and trendDir > 0)
     gT = against ? f_clamp(1.0 - (er - erLo) / math.max(erHi - erLo, 1e-9), gMin, 1.0) : 1.0
     gV = f_clamp(1.0 - (volRat - volCalm) / math.max(volWild - volCalm, 1e-9), gMin, 1.0)
-    G  = f_clamp(math.min(gT, gV), gMin, 1.0)
+    // старший ТФ против сделки: «мягко» душит скор, «жёстко» снимает сигнал на гейте
+    againstH = (d == 1 and htfDir < 0) or (d == -1 and htfDir > 0)
+    gH = htfMode == "мягко" and againstH ? htfPen : 1.0
+    G  = f_clamp(math.min(gT, gV), gMin, 1.0) * gH
 
     [S, P, R, I, N, G]
 
@@ -289,6 +347,22 @@ planRR     = (side == 1 ? planT1 - planEntry : planEntry - planT1) / planRisk
 planRetest = side == 1 ? planStop + retestATR * atr : planStop - retestATR * atr
 planSize   = math.round(math.min(100.0, score / math.max(planRisk / atr, 0.1)))
 
+// издержки: что остаётся от движения после спреда и комиссии. costTicks — цена круга
+// (вход + выход): выигрыш она уменьшает, проигрыш увеличивает — отсюда и знаки
+costPx    = costTicks * syminfo.mintick
+distT1    = side == 1 ? planT1 - planEntry : planEntry - planT1
+planRRnet = (distT1 - costPx) / (planRisk + costPx)
+costOk    = not useCost or (distT1 >= minT1Cost * costPx and planRRnet >= minRR)
+htfVeto   = htfMode == "жёстко" and ((side == 1 and htfDir < 0) or (side == -1 and htfDir > 0))
+
+var int dayTrades = 0
+if timeframe.change("D")
+    dayTrades := 0
+dayOk = maxPerDay == 0 or dayTrades < maxPerDay
+
+// граница отложенной проверки: сделки правее неё не участвовали в подборе порога
+splitBar = math.floor(last_bar_index * (1.0 - oosPct / 100.0))
+
 // ── симулятор сделок: он же источник калибровки ────────────────────────────────
 var int   tSide   = 0
 var float tEntry  = na
@@ -298,6 +372,8 @@ var float tT2     = na
 var float tRisk   = na
 var float tScore  = na
 var int   tBar    = na
+var int   tHour   = 0
+var bool  tOos    = false
 var bool  tLive   = false
 var bool  tT1done = false
 var int   lastExit = -100000
@@ -317,6 +393,23 @@ var int   liveW = 0
 var float liveR = 0.0
 var int   subN  = 0
 var float subRt = 0.0
+
+// разрез по часам входа: на скальпинге час дня решает не меньше, чем сам сетап
+var array<int>   hrN = array.new_int(24, 0)
+var array<int>   hrW = array.new_int(24, 0)
+var array<float> hrR = array.new_float(24, 0.0)
+
+// отложенная проверка: первая часть истории против последней
+var int   wfIsN   = 0
+var int   wfIsW   = 0
+var float wfIsR   = 0.0
+var float wfIsPos = 0.0
+var float wfIsNeg = 0.0
+var int   wfOsN   = 0
+var int   wfOsW   = 0
+var float wfOsR   = 0.0
+var float wfOsPos = 0.0
+var float wfOsNeg = 0.0
 
 f_bucket(float sc) => sc < 50 ? 0 : sc < 58 ? 1 : sc < 66 ? 2 : sc < 74 ? 3 : sc < 82 ? 4 : 5
 
@@ -345,7 +438,8 @@ if inTrade and bar_index > tBar
     bool stopHit = tSide == 1 ? low  <= tStop : high >= tStop
     bool t1Hit   = tSide == 1 ? high >= tT1   : low  <= tT1
     bool t2Hit   = tSide == 1 ? high >= tT2   : low  <= tT2
-    bool tmo     = bar_index - tBar >= maxBars
+    bool sessEnd = useSess and closeSess and not inSess
+    bool tmo     = bar_index - tBar >= maxBars or sessEnd
     float stopR  = (tStop - tEntry) * tSide / tRisk
     if stopHit
         exitR := (tT1done ? 0.5 * rr1 + 0.5 * stopR : stopR) - cst
@@ -370,6 +464,27 @@ if inTrade and bar_index > tBar
             liveN += 1
             liveR += exitR
             liveW += exitR > 0 ? 1 : 0
+            int h = nz(tHour, 0)
+            array.set(hrN, h, array.get(hrN, h) + 1)
+            array.set(hrR, h, array.get(hrR, h) + exitR)
+            if exitR > 0
+                array.set(hrW, h, array.get(hrW, h) + 1)
+            if tOos
+                wfOsN += 1
+                wfOsR += exitR
+                if exitR > 0
+                    wfOsW   += 1
+                    wfOsPos += exitR
+                else
+                    wfOsNeg -= exitR
+            else
+                wfIsN += 1
+                wfIsR += exitR
+                if exitR > 0
+                    wfIsW   += 1
+                    wfIsPos += exitR
+                else
+                    wfIsNeg -= exitR
         else
             subN  += 1
             subRt += exitR
@@ -379,7 +494,8 @@ if inTrade and bar_index > tBar
         justOut  := true
 
 cdOk    = bar_index - lastExit >= cooldown
-canFire = not inTrade and not justOut and cdOk and barsOk and score >= effThr and planRR >= minRR and not na(atr)
+canFire = not inTrade and not justOut and cdOk and barsOk and timeOk and dayOk and not htfVeto and
+     score >= effThr and (useCost ? costOk : planRR >= minRR) and not na(atr)
 fired   = false
 live    = false
 
@@ -392,10 +508,13 @@ if canFire
     tRisk   := planRisk
     tScore  := score
     tBar    := bar_index
+    tHour   := curHour
+    tOos    := bar_index > splitBar
     tLive   := score >= thrEntry
     tT1done := false
     fired   := true
     live    := tLive
+    dayTrades += 1
 
 liveLong  = fired and live and tSide == 1
 liveShort = fired and live and tSide == -1
@@ -467,7 +586,7 @@ if showPlan and inTrade and not na(lnE)
     box.set_right(bxT, bar_index + 1)
 
 // ── таблица компонентов ────────────────────────────────────────────────────────
-var table tC = table.new(position.top_right, 4, 13, border_width = 1)
+var table tC = table.new(position.top_right, 4, 15, border_width = 1)
 
 f_row(table t, int r, string k, string v, string w, string c, color bg) =>
     table.cell(t, 0, r, k, text_color = chart.fg_color, text_size = size.tiny, text_halign = text.align_left,  bgcolor = bg)
@@ -493,9 +612,16 @@ if showComps and barstate.islast
     f_row(tC, 11, "Потенциал", str.tostring(pot, "#.0"), "", pot >= thrEntry ? "готов" : "—", na)
     f_row(tC, 12, "Позиция", inTrade ? (tSide == 1 ? "LONG" : "SHORT") : "—", "",
          inTrade ? str.tostring(bar_index - tBar) + " бар" : "", na)
+    f_row(tC, 13, "R:R до / после издержек", str.tostring(planRR, "#.00"), "→",
+         str.tostring(planRRnet, "#.00"), planRRnet < minRR ? color.new(cShort, 88) : na)
+    blockTxt = not timeOk ? "время" : htfVeto ? "старший ТФ" : not dayOk ? "лимит дня" :
+         useCost and not costOk ? "издержки" : inTrade ? "в позиции" : "—"
+    f_row(tC, 14, "Блокирует вход", blockTxt, "HTF",
+         htfDir == 1 ? "тренд ↑" : htfDir == -1 ? "тренд ↓" : "боковик",
+         blockTxt == "—" ? na : color.new(color.gray, 88))
 
 // ── таблица калибровки ─────────────────────────────────────────────────────────
-var table tK = table.new(position.bottom_right, 6, 9, border_width = 1)
+var table tK = table.new(position.bottom_right, 6, 12, border_width = 1)
 
 f_krow(table t, int r, string a, string b, string c, string d, string e, string f, color bg) =>
     table.cell(t, 0, r, a, text_color = chart.fg_color, text_size = size.tiny, text_halign = text.align_left,  bgcolor = bg)
@@ -535,15 +661,73 @@ if calibOn and showCal and barstate.islast
          str.tostring(subN) + " сд.",
          subN > 0 ? str.tostring(subRt / subN, "#.000") : "—", bgH)
 
+    // отложенная проверка: те же сделки от порога, но первая часть истории отдельно
+    // от последней. Расхождение здесь — единственный дешёвый способ увидеть подгонку
+    f_krow(tK, 9, "первые " + str.tostring(100 - oosPct) + "%", str.tostring(wfIsN),
+         wfIsN > 0 ? str.tostring(100.0 * wfIsW / wfIsN, "#.0") + "%" : "—",
+         wfIsNeg > 0 ? str.tostring(wfIsPos / wfIsNeg, "#.00") : "—",
+         wfIsN > 0 ? str.tostring(wfIsR / wfIsN, "#.000") : "—", "в выборке", na)
+    bool oosBad = wfOsN >= minN and wfIsN >= minN and wfOsR / math.max(wfOsN, 1) <= 0 and wfIsR / math.max(wfIsN, 1) > 0
+    f_krow(tK, 10, "последние " + str.tostring(oosPct) + "%", str.tostring(wfOsN),
+         wfOsN > 0 ? str.tostring(100.0 * wfOsW / wfOsN, "#.0") + "%" : "—",
+         wfOsNeg > 0 ? str.tostring(wfOsPos / wfOsNeg, "#.00") : "—",
+         wfOsN > 0 ? str.tostring(wfOsR / wfOsN, "#.000") : "—", "вне выборки",
+         oosBad ? color.new(cShort, 80) : na)
+
+    // подсказка по порогу: нижняя граница самого нижнего диапазона, начиная с которого
+    // средний R остаётся положительным и во всех диапазонах выше
+    edges = array.from(calThr, 50.0, 58.0, 66.0, 74.0, 82.0)
+    int bestIdx = -1
+    for i = 5 to 0
+        bool okAll = true
+        int  nTot  = 0
+        for j = i to 5
+            int nj = array.get(calN, j)
+            nTot += nj
+            // диапазон с горсткой сделок не голосует ни за, ни против
+            if nj >= minN and array.get(calR, j) / nj <= 0
+                okAll := false
+        if okAll and nTot >= minN
+            bestIdx := i
+    f_krow(tK, 11, "подсказка по порогу", "", "", "",
+         bestIdx < 0 ? "плюса нет ни в одном диапазоне" : "≈ " + str.tostring(array.get(edges, bestIdx), "#") + " и выше",
+         "в выборке", color.new(cBrass, 88))
+
+// ── таблица по часам ───────────────────────────────────────────────────────────
+// час входа по выбранному часовому поясу, только сделки от порога входа.
+// Обычно две-три строки из этой таблицы и дают весь результат дня.
+var table tH = table.new(position.bottom_left, 4, 25, border_width = 1)
+
+if calibOn and showHours and barstate.islast
+    table.clear(tH, 0, 0, 3, 24)
+    bgH2 = color.new(color.gray, 85)
+    table.cell(tH, 0, 0, "ЧАС", text_color = chart.fg_color, text_size = size.tiny, bgcolor = bgH2)
+    table.cell(tH, 1, 0, "СДЕЛОК", text_color = chart.fg_color, text_size = size.tiny, bgcolor = bgH2)
+    table.cell(tH, 2, 0, "ВИНРЕЙТ", text_color = chart.fg_color, text_size = size.tiny, bgcolor = bgH2)
+    table.cell(tH, 3, 0, "СРЕДНИЙ R", text_color = chart.fg_color, text_size = size.tiny, bgcolor = bgH2)
+    int r = 1
+    for i = 0 to 23
+        int n = array.get(hrN, i)
+        if n >= minN and r <= 24
+            float ar = array.get(hrR, i) / n
+            color bgr = ar > 0 ? color.new(cLong, 85) : color.new(cShort, 85)
+            table.cell(tH, 0, r, (i < 10 ? "0" : "") + str.tostring(i) + ":00", text_color = chart.fg_color, text_size = size.tiny, bgcolor = bgr)
+            table.cell(tH, 1, r, str.tostring(n), text_color = chart.fg_color, text_size = size.tiny, text_halign = text.align_right, bgcolor = bgr)
+            table.cell(tH, 2, r, str.tostring(100.0 * array.get(hrW, i) / n, "#.0") + "%", text_color = chart.fg_color, text_size = size.tiny, text_halign = text.align_right, bgcolor = bgr)
+            table.cell(tH, 3, r, str.tostring(ar, "#.000"), text_color = chart.fg_color, text_size = size.tiny, text_halign = text.align_right, bgcolor = bgr)
+            r += 1
+    if r == 1
+        table.cell(tH, 0, 1, "мало сделок в каждом часе", text_color = color.gray, text_size = size.tiny)
+
 // ── алерты ─────────────────────────────────────────────────────────────────────
 alertcondition(liveLong,  "SPRING · LONG",  "SPRING: сигнал LONG")
 alertcondition(liveShort, "SPRING · SHORT", "SPRING: сигнал SHORT")
 alertcondition(fired and live, "SPRING · любой сигнал", "SPRING: сигнал на вход")
 
 if fired and live
-    alert(str.format("SPRING {0} {1} · {2} · скор {3,number,#.#} | вход {4} стоп {5} T1 {6} T2 {7} | R:R {8,number,#.##} размер {9,number,#}% | лимитка на ретесте {10}",
+    alert(str.format("SPRING {0} {1} · {2} · скор {3,number,#.#} | вход {4} стоп {5} T1 {6} T2 {7} | R:R {8,number,#.##} (после издержек {11,number,#.##}) размер {9,number,#}% | лимитка на ретесте {10}",
          syminfo.ticker, timeframe.period, tSide == 1 ? "LONG" : "SHORT", tScore,
          str.tostring(tEntry, format.mintick), str.tostring(tStop, format.mintick),
          str.tostring(tT1, format.mintick), str.tostring(tT2, format.mintick),
-         planRR, planSize, str.tostring(planRetest, format.mintick)),
+         planRR, planSize, str.tostring(planRetest, format.mintick), planRRnet),
          alert.freq_once_per_bar_close)
