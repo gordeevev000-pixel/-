@@ -1,0 +1,739 @@
+//@version=6
+// ═══════════════════════════════════════════════════════════════════════════════
+//  ORIGIN · стратегия для бэктеста
+//
+//  Тот же движок зон, что и в индикаторе ORIGIN (ядро скопировано один в один),
+//  но сделки исполняет движок TradingView — чтобы получить нативный отчёт:
+//  эквити, просадку, профит-фактор, список сделок.
+//
+//  Вход по триггеру в зоне, стоп за зоной (или за экстремумом ноги, если он
+//  дальше) с запасом в ATR, T1 на ближайшей ликвидности, T2 = 3R, тайм-стоп.
+//  Комиссию и проскальзывание задайте во вкладке «Свойства» — без них любой
+//  бэктест по зонам врёт в свою пользу: зона всегда «почти» отработала.
+// ═══════════════════════════════════════════════════════════════════════════════
+
+strategy("ORIGIN · стратегия", "ORIGIN S", overlay = true,
+     default_qty_type = strategy.percent_of_equity, default_qty_value = 10,
+     initial_capital = 100000, commission_type = strategy.commission.percent,
+     commission_value = 0.005, slippage = 2, pyramiding = 0,
+     calc_on_every_tick = false, process_orders_on_close = true,
+     max_boxes_count = 500, max_lines_count = 500, max_labels_count = 500, max_bars_back = 500)
+
+// ── ядро ───────────────────────────────────────────────────────────────────────
+gCore = "Ядро"
+atrLen    = input.int(14, "ATR", minval = 2, group = gCore)
+pivotLen  = input.int(6, "Пивот структуры, баров с каждой стороны", minval = 2, maxval = 50, group = gCore,
+     tooltip = "Свинг подтверждается через столько баров — это же задержка появления зоны. Больше — крупнее структура и реже зоны.")
+gain      = input.float(1.15, "gain — нормировка Q", minval = 0.5, maxval = 3.0, step = 0.01, group = gCore)
+thrEntry  = input.float(70.0, "Порог входа Q", minval = 1, maxval = 100, step = 0.5, group = gCore)
+thrShow   = input.float(50.0, "Порог рождения зоны Q", minval = 1, maxval = 100, step = 0.5, group = gCore,
+     tooltip = "Зона слабее этого порога вообще не создаётся — ни на графике, ни в памяти, ни в калибровке.")
+confirmed = input.bool(true, "Сигналы только по закрытым барам", group = gCore,
+     tooltip = "Выключить — сигнал появится внутри формирующегося бара и может исчезнуть.")
+
+// ── зоны ───────────────────────────────────────────────────────────────────────
+gZ = "Зоны"
+zoneMode   = input.string("Свеча", "Границы зоны", options = ["Свеча", "Тело", "Кластер"], group = gZ,
+     tooltip = "Свеча — весь диапазон origin-свечи. Тело — только тело (уже и точнее). Кластер — подряд идущие свечи того же цвета.")
+legMax     = input.int(24, "Максимум баров в ноге", minval = 3, maxval = 200, group = gZ)
+obBack     = input.int(3, "Поиск origin-свечи от экстремума, баров", minval = 0, maxval = 10, group = gZ,
+     tooltip = "Если свеча экстремума оказалась не той стороны, скрипт отходит назад на столько баров в поисках последней свечи против импульса.")
+minLegATR  = input.float(1.2, "Минимальный импульс ноги, ATR", minval = 0.1, step = 0.1, group = gZ)
+zoneMaxATR = input.float(2.0, "Максимальная ширина зоны, ATR", minval = 0.2, step = 0.1, group = gZ,
+     tooltip = "Широкая зона — это не зона, а признание, что цену взять негде: стоп за такой зоной съедает весь R.")
+keepZones  = input.int(6, "Живых зон на сторону", minval = 1, maxval = 20, group = gZ)
+mitMode    = input.string("Закрытие", "Зона считается пробитой по", options = ["Закрытие", "Фитиль"], group = gZ)
+breakerOn  = input.bool(true, "Пробитую зону превращать в breaker", group = gZ,
+     tooltip = "Пробитый спрос становится сопротивлением и наоборот — классический breaker block.")
+maxAge     = input.int(400, "Срок жизни зоны, баров", minval = 20, group = gZ)
+dedupOn    = input.bool(true, "Схлопывать наложенные зоны", group = gZ)
+
+// ── веса компонентов ───────────────────────────────────────────────────────────
+gW = "Веса компонентов"
+wD = input.float(0.24, "D · импульс",     minval = 0, maxval = 1, step = 0.01, group = gW)
+wL = input.float(0.20, "L · ликвидность", minval = 0, maxval = 1, step = 0.01, group = gW)
+wI = input.float(0.16, "I · имбаланс",    minval = 0, maxval = 1, step = 0.01, group = gW)
+wB = input.float(0.18, "B · структура",   minval = 0, maxval = 1, step = 0.01, group = gW)
+wV = input.float(0.10, "V · усилие",      minval = 0, maxval = 1, step = 0.01, group = gW)
+wC = input.float(0.12, "C · контекст",    minval = 0, maxval = 1, step = 0.01, group = gW)
+
+// ── D · импульс ────────────────────────────────────────────────────────────────
+gD = "D · импульс"
+dFullATR  = input.float(4.5, "Полный ход ноги, ATR", minval = 0.5, step = 0.1, group = gD)
+dSpeed    = input.float(0.55, "Полная скорость, ATR на бар", minval = 0.05, step = 0.05, group = gD)
+dBodyFull = input.float(0.62, "Полная доля тел в ноге", minval = 0.1, maxval = 1, step = 0.01, group = gD)
+dwRange   = input.float(0.42, "Вес хода",     minval = 0, maxval = 1, step = 0.01, group = gD)
+dwSpeed   = input.float(0.33, "Вес скорости", minval = 0, maxval = 1, step = 0.01, group = gD)
+dwBody    = input.float(0.25, "Вес тел",      minval = 0, maxval = 1, step = 0.01, group = gD)
+
+// ── L · ликвидность ────────────────────────────────────────────────────────────
+gL = "L · ликвидность"
+sweepLen   = input.int(20, "Окно свипа", minval = 3, group = gL)
+sweepFull  = input.float(0.60, "Полный прокол уровня, ATR", minval = 0.05, step = 0.05, group = gL)
+eqTolATR   = input.float(0.15, "Допуск равных хай/лоу, ATR", minval = 0.02, step = 0.01, group = gL)
+poolFull   = input.int(3, "Полный пул: сколько равных уровней", minval = 1, maxval = 10, group = gL)
+lwSweep    = input.float(0.50, "Вес прокола",  minval = 0, maxval = 1, step = 0.01, group = gL)
+lwReclaim  = input.float(0.20, "Вес реклейма", minval = 0, maxval = 1, step = 0.01, group = gL)
+lwPool     = input.float(0.30, "Вес пула",     minval = 0, maxval = 1, step = 0.01, group = gL)
+
+// ── I · имбаланс ───────────────────────────────────────────────────────────────
+gI = "I · имбаланс"
+fvgFull = input.float(0.60, "Полный FVG, ATR", minval = 0.05, step = 0.05, group = gI)
+fvgNeed = input.bool(false, "Без FVG зону не создавать", group = gI,
+     tooltip = "Жёсткий фильтр: сетапов станет в разы меньше, но каждый будет с разрывом внутри импульса.")
+
+// ── B · структура ──────────────────────────────────────────────────────────────
+gB = "B · структура"
+bosFull = input.float(0.50, "Полный запас за уровнем, ATR", minval = 0.05, step = 0.05, group = gB)
+bosBase = input.float(0.55, "База для BOS (у CHoCH — 1.00)", minval = 0, maxval = 1, step = 0.05, group = gB,
+     tooltip = "BOS — продолжение тренда, CHoCH — первый слом против него. Разворотные зоны рождаются на CHoCH.")
+
+// ── V · усилие ─────────────────────────────────────────────────────────────────
+gV = "V · усилие"
+volLen  = input.int(20, "Окно среднего объёма", minval = 2, group = gV)
+volFull = input.float(1.80, "Климакс объёма, × среднего", minval = 1.1, step = 0.1, group = gV)
+
+// ── C · контекст ───────────────────────────────────────────────────────────────
+gC = "C · контекст"
+rangeLen  = input.int(120, "Окно торгового диапазона (премиум/дисконт)", minval = 20, group = gC)
+htfOn     = input.bool(true, "Учитывать старший таймфрейм", group = gC)
+htfTf     = input.timeframe("60", "Старший таймфрейм", group = gC)
+htfLen    = input.int(50, "EMA старшего таймфрейма", minval = 3, group = gC)
+emaLen    = input.int(200, "Медленная EMA", minval = 10, group = gC)
+tolATR    = input.float(0.30, "Допуск конфлюэнса, ATR", minval = 0.02, step = 0.01, group = gC)
+roundStep = input.float(0.0, "Шаг круглых уровней (0 = авто)", minval = 0, group = gC)
+cwPd      = input.float(0.40, "Вес дисконт/премиум", minval = 0, maxval = 1, step = 0.01, group = gC)
+cwHtf     = input.float(0.35, "Вес старшего ТФ",     minval = 0, maxval = 1, step = 0.01, group = gC)
+cwLvl     = input.float(0.25, "Вес уровней",         minval = 0, maxval = 1, step = 0.01, group = gC)
+
+// ── F · свежесть ───────────────────────────────────────────────────────────────
+gF = "F · свежесть"
+touchDecay = input.float(0.62, "Множитель за каждое повторное касание", minval = 0.1, maxval = 1, step = 0.01, group = gF,
+     tooltip = "Первое касание не штрафуется — это и есть тест, ради которого зона рисовалась. Штраф начинается со второго.")
+ageFull    = input.int(250, "Возраст полного затухания, баров", minval = 20, group = gF)
+ageFloor   = input.float(0.55, "Минимум множителя за возраст", minval = 0.1, maxval = 1, step = 0.05, group = gF)
+brkPenalty = input.float(0.85, "Множитель для breaker", minval = 0.1, maxval = 1, step = 0.05, group = gF)
+
+// ── вход и план ────────────────────────────────────────────────────────────────
+gP = "Вход и план"
+entryMode = input.string("Реакция", "Триггер входа", options = ["Лимит от края", "Реакция", "Микро-CHoCH"], group = gP,
+     tooltip = "Лимит — заявка на краю зоны, исполняется касанием. Реакция — бар зашёл в зону и закрылся выше её середины хвостом вниз. Микро-CHoCH — после касания цена ломает микроструктуру.")
+wickMin   = input.float(0.35, "Реакция: минимальный хвост, доля бара", minval = 0, maxval = 1, step = 0.05, group = gP)
+microLen  = input.int(5, "Микроструктура, баров", minval = 2, group = gP)
+armWin    = input.int(8, "Окно подтверждения после касания, баров", minval = 1, group = gP)
+stopATR   = input.float(0.35, "Запас за зону, ATR", minval = 0, step = 0.05, group = gP)
+t1Mode    = input.string("Ликвидность", "Цель T1", options = ["Ликвидность", "Равновесие", "Фиксированный R"], group = gP,
+     tooltip = "Ликвидность — ближайший противоположный свинг, где стоят чужие стопы, но не ближе минимального R:R: цель, до которой рукой подать, целью не считается. Равновесие — середина торгового диапазона.")
+t1R       = input.float(1.50, "T1, в R (для фиксированного и как запасной вариант)", minval = 0.2, step = 0.1, group = gP)
+t2R       = input.float(3.00, "Цель T2, в R", minval = 0.3, step = 0.1, group = gP)
+minRR     = input.float(1.00, "Минимальный R:R до T1", minval = 0, step = 0.1, group = gP)
+maxBarsIn = input.int(30, "Тайм-стоп, баров", minval = 1, group = gP)
+cooldown  = input.int(2, "Пауза после сделки, баров", minval = 0, group = gP)
+useT2     = input.bool(true, "Половина на T1, остаток на T2 (стоп в безубыток)", group = gP)
+dirFilter = input.string("Обе", "Разрешённые стороны", options = ["Обе", "По старшему ТФ", "По структуре"], group = gP)
+nearATR   = input.float(0.50, "Подход к зоне: дистанция для алерта, ATR", minval = 0.05, step = 0.05, group = gP)
+
+// ── вид ────────────────────────────────────────────────────────────────────────
+gVw = "Вид"
+showZones  = input.bool(true, "Зоны", group = gVw)
+showLabels = input.bool(true, "Подписи зон", group = gVw)
+showStruct = input.bool(true, "Структура: BOS / CHoCH", group = gVw)
+showFvg    = input.bool(true, "Имбаланс внутри импульса", group = gVw)
+showPlan   = input.bool(true, "План сделки", group = gVw)
+extendBars = input.int(12, "Продление зон вправо, баров", minval = 0, maxval = 100, group = gVw)
+cBull      = input.color(#0B7A69, "Спрос",  group = gVw, inline = "c")
+cBear      = input.color(#B8412F, "Предложение", group = gVw, inline = "c")
+cBrass     = input.color(#A9701C, "Акцент", group = gVw, inline = "c")
+
+// ── утилиты ────────────────────────────────────────────────────────────────────
+f_clamp(float x, float lo, float hi) => math.max(lo, math.min(hi, x))
+f_01(float x) => f_clamp(nz(x), 0.0, 1.0)
+f_hit(float lvl, float probe, float tol) => na(lvl) ? 0.0 : math.abs(probe - lvl) <= tol ? 1.0 : 0.0
+
+// ── зона ───────────────────────────────────────────────────────────────────────
+// Всё, что известно про зону, живёт в одном объекте: границы, компоненты качества,
+// история касаний и свои рисунки. Дальше по скрипту зоны — просто массив объектов.
+type Zone
+    bool  ok        = false
+    int   dir       = 0          // 1 — спрос (лонговая), -1 — предложение
+    bool  breaker   = false
+    bool  choch     = false
+    float top       = na
+    float bot       = na
+    float legExt    = na         // экстремум ноги: истинная точка инвалидации
+    float fvgTop    = na
+    float fvgBot    = na
+    int   fvgBar    = 0
+    int   bornBar   = 0
+    int   originBar = 0
+    float base      = 0.0        // Q на момент рождения
+    float qD        = 0.0
+    float qL        = 0.0
+    float qI        = 0.0
+    float qB        = 0.0
+    float qV        = 0.0
+    float qC        = 0.0
+    int   touches   = 0
+    int   armedBar  = -100000
+    int   readyBar  = 0
+    bool  outside   = true
+    box   bx
+    box   bxf
+    label lb
+
+// ── общие ряды ─────────────────────────────────────────────────────────────────
+atr     = ta.atr(atrLen)
+rng     = math.max(high - low, syminfo.mintick)
+vol     = nz(volume, 0.0)
+volMa   = ta.sma(vol, volLen)
+hasVol  = volMa > 0
+emaSlow = ta.ema(close, emaLen)
+
+// VWAP сессии считаем руками — ta.vwap падает на инструментах без объёма
+var float cumPV = 0.0
+var float cumV  = 0.0
+if timeframe.change("D")
+    cumPV := 0.0
+    cumV  := 0.0
+cumPV += hlc3 * vol
+cumV  += vol
+avwap = cumV > 0 ? cumPV / cumV : na
+
+rstep = roundStep > 0 ? roundStep : math.pow(10, math.floor(math.log10(math.max(close, 1.0))) - 2) * 5
+
+priorLow  = ta.lowest(low, sweepLen)[1]
+priorHigh = ta.highest(high, sweepLen)[1]
+
+rangeHi = ta.highest(high, rangeLen)
+rangeLo = ta.lowest(low, rangeLen)
+eqLvl   = (rangeHi + rangeLo) / 2.0
+pdPos   = rangeHi > rangeLo ? (close - rangeLo) / (rangeHi - rangeLo) : 0.5
+
+microHi = ta.highest(high, microLen)[1]
+microLo = ta.lowest(low, microLen)[1]
+
+htfC    = request.security(syminfo.tickerid, htfTf, close, lookahead = barmerge.lookahead_off)
+htfE    = request.security(syminfo.tickerid, htfTf, ta.ema(close, htfLen), lookahead = barmerge.lookahead_off)
+htfBias = not htfOn or na(htfC) or na(htfE) ? 0 : htfC > htfE ? 1 : htfC < htfE ? -1 : 0
+
+// ── структура: подтверждённые свинги ───────────────────────────────────────────
+ph = ta.pivothigh(high, pivotLen, pivotLen)
+pl = ta.pivotlow(low, pivotLen, pivotLen)
+
+var float upLvl  = na
+var int   upBar  = na
+var bool  upOpen = false
+var float dnLvl  = na
+var int   dnBar  = na
+var bool  dnOpen = false
+var int   bias   = 0
+
+// пулы ликвидности: последние подтверждённые свинги, вокруг которых стоят стопы
+var array<float> poolHi = array.new_float()
+var array<float> poolLo = array.new_float()
+
+if not na(ph)
+    upLvl  := ph
+    upBar  := bar_index - pivotLen
+    upOpen := true
+    array.push(poolHi, ph)
+    if array.size(poolHi) > 24
+        array.shift(poolHi)
+if not na(pl)
+    dnLvl  := pl
+    dnBar  := bar_index - pivotLen
+    dnOpen := true
+    array.push(poolLo, pl)
+    if array.size(poolLo) > 24
+        array.shift(poolLo)
+
+// ── сборка зоны от слома структуры ─────────────────────────────────────────────
+// dir = 1  — импульс вверх пробил свинг-хай, ищем свечу предложения у низа ноги.
+// dir = -1 — импульс вниз пробил свинг-лоу, ищем свечу спроса у верха ноги.
+f_build(int dir, float lvl, int lvlBar, bool choch) =>
+    Zone z = Zone.new()
+    int win = math.min(math.max(math.min(legMax, bar_index - nz(lvlBar, bar_index)), 2), math.max(bar_index - 3, 2))
+
+    // 1. экстремум ноги — точка, откуда импульс стартовал
+    float ext  = dir == 1 ? low : high
+    int   extK = 0
+    for k = 0 to win
+        float v = dir == 1 ? low[k] : high[k]
+        if not na(v) and (dir == 1 ? v < ext : v > ext)
+            ext  := v
+            extK := k
+
+    // 2. origin-свеча: последняя свеча против импульса на экстремуме или чуть раньше
+    int  o     = extK
+    bool found = false
+    for j = 0 to obBack
+        int kk = extK + j
+        if not found and kk <= win
+            bool opp = dir == 1 ? close[kk] < open[kk] : close[kk] > open[kk]
+            if opp
+                o     := kk
+                found := true
+
+    // 3. границы
+    float zTop = math.max(open[o], close[o])
+    float zBot = math.min(open[o], close[o])
+    if zoneMode != "Тело"
+        zTop := high[o]
+        zBot := low[o]
+    if zoneMode == "Кластер"
+        bool halt = false
+        for j = 1 to 4
+            int kk = o + j
+            if not halt and kk <= win
+                bool same = dir == 1 ? close[kk] < open[kk] : close[kk] > open[kk]
+                if same
+                    zTop := math.max(zTop, high[kk])
+                    zBot := math.min(zBot, low[kk])
+                else
+                    halt := true
+            else
+                halt := true
+    float wdt = zTop - zBot
+
+    // 4. D · импульс
+    float legMove = dir == 1 ? close - ext : ext - close
+    float dR = f_01(legMove / math.max(dFullATR * atr, 1e-9))
+    float dS = f_01((legMove / math.max(extK, 1)) / math.max(dSpeed * atr, 1e-9))
+    float bodySum  = 0.0
+    float rangeSum = 0.0
+    for k = 0 to math.max(extK, 1)
+        bodySum  += math.abs(close[k] - open[k])
+        rangeSum += math.max(high[k] - low[k], syminfo.mintick)
+    float dB = f_01((rangeSum > 0 ? bodySum / rangeSum : 0.0) / math.max(dBodyFull, 0.05))
+    float D  = f_01(dwRange * dR + dwSpeed * dS + dwBody * dB)
+
+    // 5. L · ликвидность: свип перед разворотом и равные уровни вокруг экстремума
+    float prior  = dir == 1 ? priorLow[extK] : priorHigh[extK]
+    float pierce = na(prior) ? 0.0 : dir == 1 ? math.max(0.0, prior - low[extK]) : math.max(0.0, high[extK] - prior)
+    float lS = f_01(pierce / math.max(sweepFull * atr, 1e-9))
+    bool  rec = na(prior) ? false : dir == 1 ? close[extK] > prior : close[extK] < prior
+    float lR = rec and pierce > 0 ? 1.0 : 0.0
+    float tolEq = eqTolATR * atr
+    int   eqN   = 0
+    array<float> pool = poolHi
+    if dir == 1
+        pool := poolLo
+    if array.size(pool) > 0
+        for i = 0 to array.size(pool) - 1
+            if math.abs(array.get(pool, i) - ext) <= tolEq
+                eqN += 1
+    float lP = f_01(eqN * 1.0 / math.max(poolFull, 1))
+    float L  = f_01(lwSweep * lS + lwReclaim * lR + lwPool * lP)
+
+    // 6. I · имбаланс: самый крупный FVG внутри ноги, который ещё не закрыт
+    float fvgSize = 0.0
+    float fTop    = na
+    float fBot    = na
+    int   fBar    = 0
+    float runMin  = 1e18
+    float runMax  = -1e18
+    for k = 0 to math.max(extK - 1, 0)
+        float g = dir == 1 ? low[k] - high[k + 2] : low[k + 2] - high[k]
+        bool alive = dir == 1 ? runMin > high[k + 2] : runMax < low[k + 2]
+        if g > fvgSize and alive
+            fvgSize := g
+            fTop    := dir == 1 ? low[k] : low[k + 2]
+            fBot    := dir == 1 ? high[k + 2] : high[k]
+            fBar    := bar_index - (k + 2)
+        runMin := math.min(runMin, low[k])
+        runMax := math.max(runMax, high[k])
+    float I = f_01(fvgSize / math.max(fvgFull * atr, 1e-9))
+
+    // 7. B · структура: чем это было и с каким запасом
+    float depth = dir == 1 ? close - lvl : lvl - close
+    float bD = f_01(depth / math.max(bosFull * atr, 1e-9))
+    float B  = f_01((choch ? 1.0 : bosBase) * (0.55 + 0.45 * bD))
+
+    // 8. V · усилие: объём origin-свечи и средний объём ноги против нормы
+    float vO = hasVol ? f_01((vol[o] / math.max(volMa[o], 1e-9) - 1.0) / math.max(volFull - 1.0, 0.1)) : 0.5
+    float legVol = 0.0
+    for k = 0 to math.max(extK, 1)
+        legVol += vol[k]
+    float vLeg = legVol / math.max(extK + 1, 1)
+    float vL = hasVol ? f_01((vLeg / math.max(volMa, 1e-9) - 1.0) / math.max(volFull - 1.0, 0.1)) : 0.5
+    float V  = f_01(0.55 * vO + 0.45 * vL)
+
+    // 9. C · контекст: дисконт/премиум, старший ТФ, конфлюэнс уровней
+    float mid = (zTop + zBot) / 2.0
+    float pos = rangeHi > rangeLo ? (mid - rangeLo) / (rangeHi - rangeLo) : 0.5
+    float cP  = dir == 1 ? f_01((0.55 - pos) / 0.35) : f_01((pos - 0.45) / 0.35)
+    float cH  = not htfOn or htfBias == 0 ? 0.5 : htfBias == dir ? 1.0 : 0.0
+    float tol = tolATR * atr
+    float probe = dir == 1 ? zTop : zBot
+    float rnd = rstep > 0 ? math.round(probe / rstep) * rstep : na
+    float cL  = f_01((0.40 * f_hit(emaSlow, probe, tol) + 0.35 * f_hit(avwap, probe, tol) + 0.25 * f_hit(rnd, probe, tol)) / 0.55)
+    float C   = f_01(cwPd * cP + cwHtf * cH + cwLvl * cL)
+
+    // 10. итог
+    z.dir       := dir
+    z.choch     := choch
+    z.top       := zTop
+    z.bot       := zBot
+    z.legExt    := ext
+    z.fvgTop    := fTop
+    z.fvgBot    := fBot
+    z.fvgBar    := fBar
+    z.bornBar   := bar_index
+    z.readyBar  := bar_index
+    z.originBar := bar_index - o
+    z.qD        := D
+    z.qL        := L
+    z.qI        := I
+    z.qB        := B
+    z.qV        := V
+    z.qC        := C
+    z.base      := math.min(100.0, 100.0 * gain * (wD * D + wL * L + wI * I + wB * B + wV * V + wC * C))
+    z.ok        := not na(atr) and atr > 0 and wdt > 0 and wdt <= zoneMaxATR * atr and legMove >= minLegATR * atr and (not fvgNeed or fvgSize > 0) and z.base >= thrShow
+    z
+
+// ── реестр зон ─────────────────────────────────────────────────────────────────
+var array<Zone> zones = array.new<Zone>()
+
+// Живое качество: база, приглушённая свежестью. Первое касание не штрафуется —
+// это и есть тест, ради которого зона рисовалась. Штраф идёт со второго.
+f_live(Zone z) =>
+    float ageF = f_clamp(1.0 - (bar_index - z.bornBar) * 1.0 / math.max(ageFull, 1), ageFloor, 1.0)
+    float touF = math.pow(touchDecay, math.max(z.touches - 1, 0))
+    float brkF = z.breaker ? brkPenalty : 1.0
+    math.min(100.0, z.base * ageF * touF * brkF)
+
+f_kill(Zone z) =>
+    box.delete(z.bx)
+    box.delete(z.bxf)
+    label.delete(z.lb)
+    true
+
+f_draw(Zone z) =>
+    if showZones
+        color cz = z.dir == 1 ? cBull : cBear
+        z.bx := box.new(z.originBar, z.top, bar_index + extendBars, z.bot,
+             border_color = color.new(cz, 40), border_width = 1, bgcolor = color.new(cz, 86))
+        if showFvg and not na(z.fvgTop) and not na(z.fvgBot)
+            z.bxf := box.new(z.fvgBar, z.fvgTop, bar_index + extendBars, z.fvgBot,
+                 border_color = color.new(cBrass, 75), border_width = 1, bgcolor = color.new(cBrass, 92))
+        if showLabels
+            z.lb := label.new(bar_index + extendBars, (z.top + z.bot) / 2.0, "",
+                 style = label.style_label_left, color = color.new(cz, 100), textcolor = chart.fg_color,
+                 size = size.tiny, textalign = text.align_left)
+    true
+
+// Новая зона вытесняет наложенную зону той же стороны, если она сильнее, и не
+// добавляется, если наложенная сильнее. Иначе график зарастает копиями одного уровня.
+f_push(Zone z) =>
+    bool add = true
+    if dedupOn and array.size(zones) > 0
+        for i = array.size(zones) - 1 to 0
+            if add
+                Zone o = array.get(zones, i)
+                if o.dir == z.dir
+                    float ov = math.min(o.top, z.top) - math.max(o.bot, z.bot)
+                    float mw = math.max(math.min(o.top - o.bot, z.top - z.bot), syminfo.mintick)
+                    if ov > 0 and ov / mw > 0.5
+                        if f_live(o) >= z.base
+                            add := false
+                        else
+                            f_kill(o)
+                            array.remove(zones, i)
+    if add
+        array.push(zones, z)
+        int cnt = 0
+        for i = 0 to array.size(zones) - 1
+            Zone o = array.get(zones, i)
+            if o.dir == z.dir
+                cnt += 1
+        if cnt > keepZones
+            int   worst = -1
+            float wq    = 1e18
+            for i = 0 to array.size(zones) - 1
+                Zone o = array.get(zones, i)
+                if o.dir == z.dir
+                    float q = f_live(o)
+                    if q < wq
+                        wq    := q
+                        worst := i
+            if worst >= 0
+                f_kill(array.get(zones, worst))
+                array.remove(zones, worst)
+    add
+
+// ── отрисовка структуры ────────────────────────────────────────────────────────
+var array<line>  stL = array.new<line>()
+var array<label> stB = array.new<label>()
+
+f_struct(float lvl, int lvlBar, bool ch, int dir) =>
+    if showStruct
+        color cc = dir == 1 ? cBull : cBear
+        line ln = line.new(lvlBar, lvl, bar_index, lvl, color = color.new(cc, 25), style = line.style_dashed, width = 1)
+        label lb = label.new(bar_index, lvl, ch ? "CHoCH" : "BOS",
+             style = dir == 1 ? label.style_label_down : label.style_label_up,
+             color = color.new(cc, 82), textcolor = chart.fg_color, size = size.tiny)
+        array.push(stL, ln)
+        array.push(stB, lb)
+        if array.size(stL) > 12
+            line.delete(array.shift(stL))
+            label.delete(array.shift(stB))
+    true
+
+// ── слом структуры: здесь рождаются зоны ───────────────────────────────────────
+bool  zoneBorn = false
+float zoneBornQ = 0.0
+int   zoneBornDir = 0
+
+warm = bar_index > pivotLen + math.max(legMax, 30)
+
+if warm and upOpen and not na(upLvl) and close > upLvl
+    bool ch = bias <= 0
+    f_struct(upLvl, nz(upBar, bar_index), ch, 1)
+    Zone z = f_build(1, upLvl, nz(upBar, bar_index), ch)
+    if z.ok
+        if f_push(z)
+            f_draw(z)
+            zoneBorn    := true
+            zoneBornQ   := z.base
+            zoneBornDir := 1
+    upOpen := false
+    bias   := 1
+
+if warm and dnOpen and not na(dnLvl) and close < dnLvl
+    bool ch = bias >= 0
+    f_struct(dnLvl, nz(dnBar, bar_index), ch, -1)
+    Zone z = f_build(-1, dnLvl, nz(dnBar, bar_index), ch)
+    if z.ok
+        if f_push(z)
+            f_draw(z)
+            zoneBorn    := true
+            zoneBornQ   := z.base
+            zoneBornDir := -1
+    dnOpen := false
+    bias   := -1
+
+// ── сопровождение зон: касания, пробой, breaker, возраст ───────────────────────
+bool  nearHot  = false
+float nearGap  = 1e18
+int   nearDir  = 0
+float nearQ    = 0.0
+
+if array.size(zones) > 0
+    for i = array.size(zones) - 1 to 0
+        Zone z = array.get(zones, i)
+        bool kill = bar_index - z.bornBar > maxAge
+
+        bool inside = high >= z.bot and low <= z.top
+        if inside and z.outside
+            z.touches  += 1
+            z.armedBar := bar_index
+        z.outside := not inside
+
+        bool brk = z.dir == 1 ? (mitMode == "Закрытие" ? close < z.bot : low < z.bot)
+             : (mitMode == "Закрытие" ? close > z.top : high > z.top)
+        if brk and not kill
+            if breakerOn and not z.breaker
+                z.breaker  := true
+                z.dir      := -z.dir
+                z.touches  := 0
+                z.outside  := true
+                z.readyBar := bar_index
+            else
+                kill := true
+
+        float q = f_live(z)
+        if q < thrShow * 0.6
+            kill := true
+
+        if kill
+            f_kill(z)
+            array.remove(zones, i)
+        else
+            float gap = (z.dir == 1 ? close - z.top : z.bot - close) / math.max(atr, 1e-9)
+            if q >= thrEntry and gap > 0 and gap < nearGap
+                nearGap := gap
+                nearDir := z.dir
+                nearQ   := q
+                nearHot := gap <= nearATR
+            if showZones and not na(z.bx)
+                color cz = z.dir == 1 ? cBull : cBear
+                float t  = f_01((q - thrShow) / math.max(100.0 - thrShow, 1.0))
+                int   tr = math.max(0, math.min(95, int(88 - 26 * t)))
+                box.set_right(z.bx, bar_index + extendBars)
+                box.set_bgcolor(z.bx, color.new(cz, tr))
+                box.set_border_color(z.bx, color.new(cz, math.max(tr - 45, 0)))
+                box.set_border_style(z.bx, z.breaker ? line.style_dashed : line.style_solid)
+                if not na(z.bxf)
+                    box.set_right(z.bxf, bar_index + extendBars)
+                if not na(z.lb)
+                    label.set_xy(z.lb, bar_index + extendBars, (z.top + z.bot) / 2.0)
+                    label.set_text(z.lb, str.format("{0} {1} · Q {2,number,#}{3}", z.breaker ? "BRK" : "OB",
+                         z.dir == 1 ? "LONG" : "SHORT", q, z.touches > 1 ? " · тест " + str.tostring(z.touches) : ""))
+                    label.set_textcolor(z.lb, color.new(cz, 0))
+
+// ── цели по ликвидности ────────────────────────────────────────────────────────
+// Ближайший противоположный свинг: там стоят чужие стопы, туда цена и идёт. Свинги
+// ближе minDist пропускаем — цель, до которой рукой подать, целью не считается.
+f_pool(int dir, float ref, float minDist) =>
+    float best = na
+    array<float> pool = poolLo
+    if dir == 1
+        pool := poolHi
+    if array.size(pool) > 0
+        for i = 0 to array.size(pool) - 1
+            float v = array.get(pool, i)
+            if dir == 1 ? v > ref + minDist : v < ref - minDist
+                best := na(best) ? v : dir == 1 ? math.min(best, v) : math.max(best, v)
+    best
+
+// ── триггер входа по зоне ──────────────────────────────────────────────────────
+// Возвращает цену входа или na, если триггера на этом баре нет.
+f_trig(Zone z) =>
+    bool  ok = false
+    float e  = na
+    float zMid = (z.top + z.bot) / 2.0
+    if z.dir == 1
+        bool touch = low <= z.top and close > z.bot
+        if entryMode == "Лимит от края"
+            // открытие ниже зоны означает, что лимитку перепрыгнули, а зону проехали
+            ok := touch and open > z.bot
+            e  := math.min(open, z.top)
+        else if entryMode == "Реакция"
+            float wick = (math.min(open, close) - low) / rng
+            ok := touch and close > zMid and wick >= wickMin
+            e  := close
+        else
+            ok := z.armedBar > 0 and bar_index - z.armedBar <= armWin and close > microHi and close > z.bot
+            e  := close
+    else
+        bool touch = high >= z.bot and close < z.top
+        if entryMode == "Лимит от края"
+            ok := touch and open < z.top
+            e  := math.max(open, z.bot)
+        else if entryMode == "Реакция"
+            float wick = (high - math.max(open, close)) / rng
+            ok := touch and close < zMid and wick >= wickMin
+            e  := close
+        else
+            ok := z.armedBar > 0 and bar_index - z.armedBar <= armWin and close < microLo and close < z.top
+            e  := close
+    ok ? e : na
+
+// ── торговые параметры ─────────────────────────────────────────────────────────
+gT = "Исполнение"
+useLong  = input.bool(true, "Торговать лонги", group = gT, inline = "s")
+useShort = input.bool(true, "Торговать шорты", group = gT, inline = "s")
+riskPct  = input.float(0.5, "Риск на сделку, % депозита", minval = 0.01, step = 0.05, group = gT,
+     tooltip = "Размер позиции считается от расстояния до стопа, а не фиксированным лотом.")
+scaleByQ = input.bool(true, "Масштабировать размер качеством зоны (Q / риск в ATR)", group = gT)
+minQty   = input.float(1.0, "Минимальный размер позиции", minval = 0.0, step = 0.001, group = gT,
+     tooltip = "Для фьючерсов 1 контракт. Для крипты можно 0.001. Если расчётный размер меньше — берётся этот.")
+
+gDt = "Период теста"
+fromDate = input.time(timestamp("01 Jan 2015 00:00 +0000"), "С", group = gDt)
+toDate   = input.time(timestamp("01 Jan 2099 00:00 +0000"), "По", group = gDt)
+inWindow = time >= fromDate and time <= toDate
+
+// ── поиск сигнала ──────────────────────────────────────────────────────────────
+inPos  = strategy.position_size != 0
+barsOk = not confirmed or barstate.isconfirmed
+
+var int lastExit = -100000
+if not inPos and inPos[1]
+    lastExit := bar_index
+
+int    bestIdx = -1
+float  bestQ   = 0.0
+float  bestE   = na
+string bestTag = ""
+
+if not inPos and barsOk and inWindow and bar_index - lastExit >= cooldown and not na(atr) and array.size(zones) > 0
+    for i = 0 to array.size(zones) - 1
+        Zone z = array.get(zones, i)
+        float q = f_live(z)
+        bool dirOk  = dirFilter == "Обе" or (dirFilter == "По старшему ТФ" ? z.dir == htfBias : z.dir == bias)
+        bool sideOk = (z.dir == 1 and useLong) or (z.dir == -1 and useShort)
+        if q >= thrEntry and dirOk and sideOk and bar_index > z.readyBar
+            float ep = f_trig(z)
+            if not na(ep) and q > bestQ
+                bestQ   := q
+                bestE   := ep
+                bestIdx := i
+                bestTag := (z.breaker ? "BRK" : "OB") + (z.choch ? " CHoCH" : " BOS")
+
+int   pDir   = 0
+float pEntry = na
+float pStop  = na
+float pT1    = na
+float pT2    = na
+float pRisk  = na
+float pRR    = na
+
+if bestIdx >= 0
+    Zone z = array.get(zones, bestIdx)
+    pDir   := z.dir
+    pEntry := bestE
+    pStop  := z.dir == 1 ? math.min(z.bot, z.legExt) - stopATR * atr : math.max(z.top, z.legExt) + stopATR * atr
+    pRisk  := math.max(math.abs(pEntry - pStop), syminfo.mintick)
+    float liq = f_pool(z.dir, pEntry, minRR * pRisk)
+    float fix = pEntry + z.dir * t1R * pRisk
+    pT1 := t1Mode == "Ликвидность" ? (na(liq) ? fix : liq) : t1Mode == "Равновесие" ? eqLvl : fix
+    if (z.dir == 1 and pT1 <= pEntry + 0.05 * pRisk) or (z.dir == -1 and pT1 >= pEntry - 0.05 * pRisk)
+        pT1 := fix
+    pT2 := pEntry + z.dir * t2R * pRisk
+    pRR := math.abs(pT1 - pEntry) / pRisk
+
+canFire = bestIdx >= 0 and not na(pRR) and pRR >= minRR
+
+// размер позиции: риск в деньгах / риск в пунктах, при желании взвешенный качеством
+riskMoney = strategy.equity * riskPct / 100.0
+sizeMult  = scaleByQ ? f_clamp(bestQ / math.max(pRisk / atr, 0.1) / 100.0, 0.1, 1.0) : 1.0
+qtyRaw    = riskMoney * sizeMult / math.max(pRisk * syminfo.pointvalue, 1e-9)
+qty       = math.max(qtyRaw, minQty)
+
+var float eStop = na
+var float eT1   = na
+var float eT2   = na
+var int   eBar  = na
+
+if canFire
+    eStop := pStop
+    eT1   := pT1
+    eT2   := pT2
+    eBar  := bar_index
+    if pDir == 1
+        strategy.entry("L", strategy.long, qty = qty, comment = "ORIGIN L " + str.tostring(bestQ, "#") + " " + bestTag)
+    else
+        strategy.entry("S", strategy.short, qty = qty, comment = "ORIGIN S " + str.tostring(bestQ, "#") + " " + bestTag)
+
+// ── выход ──────────────────────────────────────────────────────────────────────
+var bool t1Done = false
+if not inPos
+    t1Done := false
+if inPos
+    dirPos = strategy.position_size > 0 ? 1 : -1
+    t1Done := t1Done or (dirPos == 1 ? high >= eT1 : low <= eT1)
+    stop2  = t1Done ? strategy.position_avg_price : eStop
+    if useT2
+        strategy.exit("L1", "L", qty_percent = 50, stop = eStop, limit = eT1)
+        strategy.exit("L2", "L", stop = stop2, limit = eT2)
+        strategy.exit("S1", "S", qty_percent = 50, stop = eStop, limit = eT1)
+        strategy.exit("S2", "S", stop = stop2, limit = eT2)
+    else
+        strategy.exit("LX", "L", stop = eStop, limit = eT1)
+        strategy.exit("SX", "S", stop = eStop, limit = eT1)
+    // тайм-стоп: зона не отработала за отведённые бары — выходим по рынку
+    if bar_index - eBar >= maxBarsIn
+        strategy.close_all(comment = "тайм-стоп")
+
+// ── картинка ───────────────────────────────────────────────────────────────────
+plot(inPos ? eStop : na, "Стоп", color = cBear, style = plot.style_linebr)
+plot(inPos ? eT1 : na,   "T1",   color = cBull, style = plot.style_linebr)
+plot(inPos ? eT2 : na,   "T2",   color = color.new(cBull, 45), style = plot.style_linebr)
+plotshape(canFire and pDir == 1,  "LONG",  shape.triangleup,   location.belowbar, cBull, size = size.small)
+plotshape(canFire and pDir == -1, "SHORT", shape.triangledown, location.abovebar, cBear, size = size.small)
+plotshape(zoneBorn and zoneBornQ >= thrEntry and zoneBornDir == 1,  "Новая сильная зона спроса",
+     shape.circle, location.belowbar, color.new(cBull, 25), size = size.tiny)
+plotshape(zoneBorn and zoneBornQ >= thrEntry and zoneBornDir == -1, "Новая сильная зона предложения",
+     shape.circle, location.abovebar, color.new(cBear, 25), size = size.tiny)
+bgcolor(nearHot ? color.new(nearDir == 1 ? cBull : cBear, 93) : na, title = "Подход к сильной зоне")
