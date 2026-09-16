@@ -32,3 +32,15 @@
 
 World Trade Statistical Review 2023 (WTO); World Economic Outlook, April 2022 (IMF); Global
 Trade Update, June 2023 (UNCTAD); материалы WEF 2016–2021. Полный список — в разделе 14 сайта.
+
+## Публикация через GitHub Pages
+
+Ветка подготовлена к раздаче через Pages: в корне лежат `index.html` (переадресация на
+`doklad/`) и пустой `.nojekyll`, чтобы GitHub отдавал файлы как есть, без обработки Jekyll.
+
+Включение — в настройках репозитория: **Settings → Pages → Source: Deploy from a branch**,
+ветка `claude/presentation-website-design-bxyh98`, папка `/ (root)`, **Save**. Через минуту-две
+сайт поднимется по адресу `https://gordeevev000-pixel.github.io/-/`, доклад — там же или по
+`/doklad/`. Репозиторий публичный, так что ссылка откроется у любого без входа в аккаунт.
+
+Корневой `index.html` нужен только для Pages: он ничего не делает, кроме переадресации.
