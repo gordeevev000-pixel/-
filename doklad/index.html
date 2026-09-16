@@ -246,11 +246,38 @@ strong{font-weight:600}
 footer{border-top:1px solid var(--rule); padding-block:30px 46px; color:var(--ink-3); font-size:13px}
 footer .wrap{display:flex; flex-wrap:wrap; gap:12px 24px; align-items:baseline; justify-content:space-between}
 
+@page{ size:A4; margin:13mm 12mm 14mm }
 @media print{
   .topbar,.rail,.tbtn{display:none!important}
-  body{background:#fff; color:#000; font-size:11pt}
-  .spread{break-inside:avoid; padding-block:18px}
+  html,body{background:#fff}
+  body{color:var(--ink); font-size:10.4pt; line-height:1.5}
+  p,li{orphans:3; widows:3}
+  .cover{border-bottom:none}
+  .cover__grid{padding-block:0; min-height:0; align-content:start; break-after:page; break-inside:avoid}
+  .cover h1{font-size:34pt}
+  .cover__lead{font-size:12pt; max-width:34ch}
+  .cover__art{min-height:0; justify-content:flex-start; margin-top:3mm}
+  .cover__art svg{max-width:62mm; max-height:42mm}
+  .spread{break-before:auto; break-inside:auto; border-top:1px solid var(--rule);
+          padding-block:5mm 0; margin-top:6mm; scroll-margin-top:0}
+  .spread__grid{gap:0}
+  .spread__meta{position:static; break-after:avoid; margin-bottom:2mm}
+  .spread h2{font-size:17pt; margin-bottom:9px; break-after:avoid}
+  .spread h3{font-size:11pt}
+  .lead{font-size:11pt; max-width:none}
+  .stack{gap:4.5mm}
+  .card,.row,.q,.fig,.tl__i,.bib li{break-inside:avoid}
+  .chart,.dgm,.thesis,.figrow{break-inside:avoid}
+  .card p,.row__v,.q p{font-size:9.6pt}
+  .chart svg,.dgm svg{max-height:74mm}
+  /* overflow:hidden обрезает содержимое на разрыве страницы, фон контейнера
+     оставляет серую полосу — в печати рисуем разделители самими строками */
+  .rows,.qs,.figrow{overflow:visible}
+  .rows,.qs{background:none; gap:0; border-color:var(--rule-soft)}
+  .row,.q{border-bottom:1px solid var(--rule-soft)}
+  .row:last-child,.q:last-child{border-bottom:none}
   .card,.chart,.dgm,.thesis{box-shadow:none}
+  footer{break-before:avoid; border-top:1px solid var(--rule); margin-top:18px; padding-block:12px 0}
 }
 </style>
 </head>
