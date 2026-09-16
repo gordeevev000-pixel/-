@@ -250,145 +250,148 @@ if not na(pl)
 // ── сборка зоны от слома структуры ─────────────────────────────────────────────
 // dir = 1  — импульс вверх пробил свинг-хай, ищем свечу предложения у низа ноги.
 // dir = -1 — импульс вниз пробил свинг-лоу, ищем свечу спроса у верха ноги.
-f_build(int dir, float lvl, int lvlBar, bool choch) =>
+f_build(bool enable, int dir, float lvl, int lvlBar, bool choch) =>
+    // Pine требует, чтобы функция с обращением к истории вызывалась на каждом баре,
+    // поэтому сам вызов вынесен в глобальную область, а работа идёт под флагом enable.
     Zone z = Zone.new()
-    int win = math.min(math.max(math.min(legMax, bar_index - nz(lvlBar, bar_index)), 2), math.max(bar_index - 3, 2))
+    if enable
+        int win = math.min(math.max(math.min(legMax, bar_index - nz(lvlBar, bar_index)), 2), math.max(bar_index - 3, 2))
 
-    // 1. экстремум ноги — точка, откуда импульс стартовал
-    float ext  = dir == 1 ? low : high
-    int   extK = 0
-    for k = 0 to win
-        float v = dir == 1 ? low[k] : high[k]
-        if not na(v) and (dir == 1 ? v < ext : v > ext)
-            ext  := v
-            extK := k
+        // 1. экстремум ноги — точка, откуда импульс стартовал
+        float ext  = dir == 1 ? low : high
+        int   extK = 0
+        for k = 0 to win
+            float v = dir == 1 ? low[k] : high[k]
+            if not na(v) and (dir == 1 ? v < ext : v > ext)
+                ext  := v
+                extK := k
 
-    // 2. origin-свеча: последняя свеча против импульса на экстремуме или чуть раньше
-    int  o     = extK
-    bool found = false
-    for j = 0 to obBack
-        int kk = extK + j
-        if not found and kk <= win
-            bool opp = dir == 1 ? close[kk] < open[kk] : close[kk] > open[kk]
-            if opp
-                o     := kk
-                found := true
+        // 2. origin-свеча: последняя свеча против импульса на экстремуме или чуть раньше
+        int  o     = extK
+        bool found = false
+        for j = 0 to obBack
+            int kk = extK + j
+            if not found and kk <= win
+                bool opp = dir == 1 ? close[kk] < open[kk] : close[kk] > open[kk]
+                if opp
+                    o     := kk
+                    found := true
 
-    // 3. границы
-    float zTop = math.max(open[o], close[o])
-    float zBot = math.min(open[o], close[o])
-    if zoneMode != "Тело"
-        zTop := high[o]
-        zBot := low[o]
-    if zoneMode == "Кластер"
-        bool halt = false
-        for j = 1 to 4
-            int kk = o + j
-            if not halt and kk <= win
-                bool same = dir == 1 ? close[kk] < open[kk] : close[kk] > open[kk]
-                if same
-                    zTop := math.max(zTop, high[kk])
-                    zBot := math.min(zBot, low[kk])
+        // 3. границы
+        float zTop = math.max(open[o], close[o])
+        float zBot = math.min(open[o], close[o])
+        if zoneMode != "Тело"
+            zTop := high[o]
+            zBot := low[o]
+        if zoneMode == "Кластер"
+            bool halt = false
+            for j = 1 to 4
+                int kk = o + j
+                if not halt and kk <= win
+                    bool same = dir == 1 ? close[kk] < open[kk] : close[kk] > open[kk]
+                    if same
+                        zTop := math.max(zTop, high[kk])
+                        zBot := math.min(zBot, low[kk])
+                    else
+                        halt := true
                 else
                     halt := true
-            else
-                halt := true
-    float wdt = zTop - zBot
+        float wdt = zTop - zBot
 
-    // 4. D · импульс
-    float legMove = dir == 1 ? close - ext : ext - close
-    float dR = f_01(legMove / math.max(dFullATR * atr, 1e-9))
-    float dS = f_01((legMove / math.max(extK, 1)) / math.max(dSpeed * atr, 1e-9))
-    float bodySum  = 0.0
-    float rangeSum = 0.0
-    for k = 0 to math.max(extK, 1)
-        bodySum  += math.abs(close[k] - open[k])
-        rangeSum += math.max(high[k] - low[k], syminfo.mintick)
-    float dB = f_01((rangeSum > 0 ? bodySum / rangeSum : 0.0) / math.max(dBodyFull, 0.05))
-    float D  = f_01(dwRange * dR + dwSpeed * dS + dwBody * dB)
+        // 4. D · импульс
+        float legMove = dir == 1 ? close - ext : ext - close
+        float dR = f_01(legMove / math.max(dFullATR * atr, 1e-9))
+        float dS = f_01((legMove / math.max(extK, 1)) / math.max(dSpeed * atr, 1e-9))
+        float bodySum  = 0.0
+        float rangeSum = 0.0
+        for k = 0 to math.max(extK, 1)
+            bodySum  += math.abs(close[k] - open[k])
+            rangeSum += math.max(high[k] - low[k], syminfo.mintick)
+        float dB = f_01((rangeSum > 0 ? bodySum / rangeSum : 0.0) / math.max(dBodyFull, 0.05))
+        float D  = f_01(dwRange * dR + dwSpeed * dS + dwBody * dB)
 
-    // 5. L · ликвидность: свип перед разворотом и равные уровни вокруг экстремума
-    float prior  = dir == 1 ? priorLow[extK] : priorHigh[extK]
-    float pierce = na(prior) ? 0.0 : dir == 1 ? math.max(0.0, prior - low[extK]) : math.max(0.0, high[extK] - prior)
-    float lS = f_01(pierce / math.max(sweepFull * atr, 1e-9))
-    bool  rec = na(prior) ? false : dir == 1 ? close[extK] > prior : close[extK] < prior
-    float lR = rec and pierce > 0 ? 1.0 : 0.0
-    float tolEq = eqTolATR * atr
-    int   eqN   = 0
-    array<float> pool = poolHi
-    if dir == 1
-        pool := poolLo
-    if array.size(pool) > 0
-        for i = 0 to array.size(pool) - 1
-            if math.abs(array.get(pool, i) - ext) <= tolEq
-                eqN += 1
-    float lP = f_01(eqN * 1.0 / math.max(poolFull, 1))
-    float L  = f_01(lwSweep * lS + lwReclaim * lR + lwPool * lP)
+        // 5. L · ликвидность: свип перед разворотом и равные уровни вокруг экстремума
+        float prior  = dir == 1 ? priorLow[extK] : priorHigh[extK]
+        float pierce = na(prior) ? 0.0 : dir == 1 ? math.max(0.0, prior - low[extK]) : math.max(0.0, high[extK] - prior)
+        float lS = f_01(pierce / math.max(sweepFull * atr, 1e-9))
+        bool  rec = na(prior) ? false : dir == 1 ? close[extK] > prior : close[extK] < prior
+        float lR = rec and pierce > 0 ? 1.0 : 0.0
+        float tolEq = eqTolATR * atr
+        int   eqN   = 0
+        array<float> pool = poolHi
+        if dir == 1
+            pool := poolLo
+        if array.size(pool) > 0
+            for i = 0 to array.size(pool) - 1
+                if math.abs(array.get(pool, i) - ext) <= tolEq
+                    eqN += 1
+        float lP = f_01(eqN * 1.0 / math.max(poolFull, 1))
+        float L  = f_01(lwSweep * lS + lwReclaim * lR + lwPool * lP)
 
-    // 6. I · имбаланс: самый крупный FVG внутри ноги, который ещё не закрыт
-    float fvgSize = 0.0
-    float fTop    = na
-    float fBot    = na
-    int   fBar    = 0
-    float runMin  = 1e18
-    float runMax  = -1e18
-    for k = 0 to math.max(extK - 1, 0)
-        float g = dir == 1 ? low[k] - high[k + 2] : low[k + 2] - high[k]
-        bool alive = dir == 1 ? runMin > high[k + 2] : runMax < low[k + 2]
-        if g > fvgSize and alive
-            fvgSize := g
-            fTop    := dir == 1 ? low[k] : low[k + 2]
-            fBot    := dir == 1 ? high[k + 2] : high[k]
-            fBar    := bar_index - (k + 2)
-        runMin := math.min(runMin, low[k])
-        runMax := math.max(runMax, high[k])
-    float I = f_01(fvgSize / math.max(fvgFull * atr, 1e-9))
+        // 6. I · имбаланс: самый крупный FVG внутри ноги, который ещё не закрыт
+        float fvgSize = 0.0
+        float fTop    = na
+        float fBot    = na
+        int   fBar    = 0
+        float runMin  = 1e18
+        float runMax  = -1e18
+        for k = 0 to math.max(extK - 1, 0)
+            float g = dir == 1 ? low[k] - high[k + 2] : low[k + 2] - high[k]
+            bool alive = dir == 1 ? runMin > high[k + 2] : runMax < low[k + 2]
+            if g > fvgSize and alive
+                fvgSize := g
+                fTop    := dir == 1 ? low[k] : low[k + 2]
+                fBot    := dir == 1 ? high[k + 2] : high[k]
+                fBar    := bar_index - (k + 2)
+            runMin := math.min(runMin, low[k])
+            runMax := math.max(runMax, high[k])
+        float I = f_01(fvgSize / math.max(fvgFull * atr, 1e-9))
 
-    // 7. B · структура: чем это было и с каким запасом
-    float depth = dir == 1 ? close - lvl : lvl - close
-    float bD = f_01(depth / math.max(bosFull * atr, 1e-9))
-    float B  = f_01((choch ? 1.0 : bosBase) * (0.55 + 0.45 * bD))
+        // 7. B · структура: чем это было и с каким запасом
+        float depth = dir == 1 ? close - lvl : lvl - close
+        float bD = f_01(depth / math.max(bosFull * atr, 1e-9))
+        float B  = f_01((choch ? 1.0 : bosBase) * (0.55 + 0.45 * bD))
 
-    // 8. V · усилие: объём origin-свечи и средний объём ноги против нормы
-    float vO = hasVol ? f_01((vol[o] / math.max(volMa[o], 1e-9) - 1.0) / math.max(volFull - 1.0, 0.1)) : 0.5
-    float legVol = 0.0
-    for k = 0 to math.max(extK, 1)
-        legVol += vol[k]
-    float vLeg = legVol / math.max(extK + 1, 1)
-    float vL = hasVol ? f_01((vLeg / math.max(volMa, 1e-9) - 1.0) / math.max(volFull - 1.0, 0.1)) : 0.5
-    float V  = f_01(0.55 * vO + 0.45 * vL)
+        // 8. V · усилие: объём origin-свечи и средний объём ноги против нормы
+        float vO = hasVol ? f_01((vol[o] / math.max(volMa[o], 1e-9) - 1.0) / math.max(volFull - 1.0, 0.1)) : 0.5
+        float legVol = 0.0
+        for k = 0 to math.max(extK, 1)
+            legVol += vol[k]
+        float vLeg = legVol / math.max(extK + 1, 1)
+        float vL = hasVol ? f_01((vLeg / math.max(volMa, 1e-9) - 1.0) / math.max(volFull - 1.0, 0.1)) : 0.5
+        float V  = f_01(0.55 * vO + 0.45 * vL)
 
-    // 9. C · контекст: дисконт/премиум, старший ТФ, конфлюэнс уровней
-    float mid = (zTop + zBot) / 2.0
-    float pos = rangeHi > rangeLo ? (mid - rangeLo) / (rangeHi - rangeLo) : 0.5
-    float cP  = dir == 1 ? f_01((0.55 - pos) / 0.35) : f_01((pos - 0.45) / 0.35)
-    float cH  = not htfOn or htfBias == 0 ? 0.5 : htfBias == dir ? 1.0 : 0.0
-    float tol = tolATR * atr
-    float probe = dir == 1 ? zTop : zBot
-    float rnd = rstep > 0 ? math.round(probe / rstep) * rstep : na
-    float cL  = f_01((0.40 * f_hit(emaSlow, probe, tol) + 0.35 * f_hit(avwap, probe, tol) + 0.25 * f_hit(rnd, probe, tol)) / 0.55)
-    float C   = f_01(cwPd * cP + cwHtf * cH + cwLvl * cL)
+        // 9. C · контекст: дисконт/премиум, старший ТФ, конфлюэнс уровней
+        float mid = (zTop + zBot) / 2.0
+        float pos = rangeHi > rangeLo ? (mid - rangeLo) / (rangeHi - rangeLo) : 0.5
+        float cP  = dir == 1 ? f_01((0.55 - pos) / 0.35) : f_01((pos - 0.45) / 0.35)
+        float cH  = not htfOn or htfBias == 0 ? 0.5 : htfBias == dir ? 1.0 : 0.0
+        float tol = tolATR * atr
+        float probe = dir == 1 ? zTop : zBot
+        float rnd = rstep > 0 ? math.round(probe / rstep) * rstep : na
+        float cL  = f_01((0.40 * f_hit(emaSlow, probe, tol) + 0.35 * f_hit(avwap, probe, tol) + 0.25 * f_hit(rnd, probe, tol)) / 0.55)
+        float C   = f_01(cwPd * cP + cwHtf * cH + cwLvl * cL)
 
-    // 10. итог
-    z.dir       := dir
-    z.choch     := choch
-    z.top       := zTop
-    z.bot       := zBot
-    z.legExt    := ext
-    z.fvgTop    := fTop
-    z.fvgBot    := fBot
-    z.fvgBar    := fBar
-    z.bornBar   := bar_index
-    z.readyBar  := bar_index
-    z.originBar := bar_index - o
-    z.qD        := D
-    z.qL        := L
-    z.qI        := I
-    z.qB        := B
-    z.qV        := V
-    z.qC        := C
-    z.base      := math.min(100.0, 100.0 * gain * (wD * D + wL * L + wI * I + wB * B + wV * V + wC * C))
-    z.ok        := not na(atr) and atr > 0 and wdt > 0 and wdt <= zoneMaxATR * atr and legMove >= minLegATR * atr and (not fvgNeed or fvgSize > 0) and z.base >= thrShow
+        // 10. итог
+        z.dir       := dir
+        z.choch     := choch
+        z.top       := zTop
+        z.bot       := zBot
+        z.legExt    := ext
+        z.fvgTop    := fTop
+        z.fvgBot    := fBot
+        z.fvgBar    := fBar
+        z.bornBar   := bar_index
+        z.readyBar  := bar_index
+        z.originBar := bar_index - o
+        z.qD        := D
+        z.qL        := L
+        z.qI        := I
+        z.qB        := B
+        z.qV        := V
+        z.qC        := C
+        z.base      := math.min(100.0, 100.0 * gain * (wD * D + wL * L + wI * I + wB * B + wV * V + wC * C))
+        z.ok        := not na(atr) and atr > 0 and wdt > 0 and wdt <= zoneMaxATR * atr and legMove >= minLegATR * atr and (not fvgNeed or fvgSize > 0) and z.base >= thrShow
     z
 
 // ── реестр зон ─────────────────────────────────────────────────────────────────
@@ -486,28 +489,34 @@ int   zoneBornDir = 0
 
 warm = bar_index > pivotLen + math.max(legMax, 30)
 
-if warm and upOpen and not na(upLvl) and close > upLvl
-    bool ch = bias <= 0
+bool upBreak = warm and upOpen and not na(upLvl) and close > upLvl
+bool dnBreak = warm and dnOpen and not na(dnLvl) and close < dnLvl
+bool chUp    = bias <= 0
+bool chDn    = bias >= 0
+
+Zone zUp = f_build(upBreak, 1, upLvl, nz(upBar, bar_index), chUp)
+Zone zDn = f_build(dnBreak, -1, dnLvl, nz(dnBar, bar_index), chDn)
+
+if upBreak
+    bool ch = chUp
     f_struct(upLvl, nz(upBar, bar_index), ch, 1)
-    Zone z = f_build(1, upLvl, nz(upBar, bar_index), ch)
-    if z.ok
-        if f_push(z)
-            f_draw(z)
+    if zUp.ok
+        if f_push(zUp)
+            f_draw(zUp)
             zoneBorn    := true
-            zoneBornQ   := z.base
+            zoneBornQ   := zUp.base
             zoneBornDir := 1
     upOpen := false
     bias   := 1
 
-if warm and dnOpen and not na(dnLvl) and close < dnLvl
-    bool ch = bias >= 0
+if dnBreak
+    bool ch = chDn
     f_struct(dnLvl, nz(dnBar, bar_index), ch, -1)
-    Zone z = f_build(-1, dnLvl, nz(dnBar, bar_index), ch)
-    if z.ok
-        if f_push(z)
-            f_draw(z)
+    if zDn.ok
+        if f_push(zDn)
+            f_draw(zDn)
             zoneBorn    := true
-            zoneBornQ   := z.base
+            zoneBornQ   := zDn.base
             zoneBornDir := -1
     dnOpen := false
     bias   := -1
