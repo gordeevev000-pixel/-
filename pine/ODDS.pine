@@ -1,0 +1,395 @@
+//@version=6
+// ═══════════════════════════════════════════════════════════════════════════════
+//  ODDS · эмпирические шансы отскока
+//
+//  Здесь нет весов, компонентов и «силы сигнала». Инструмент делает одно:
+//  раскладывает рынок на состояния и честно считает, чем на ЭТОМ инструменте
+//  заканчивались прошлые попадания в такое же состояние.
+//
+//  Разметка исхода — метод трёх барьеров:
+//    · на каждом закрытом баре ставится виртуальная сделка: цель +k·ATR,
+//      стоп −k·ATR, тайм-аут horizon баров;
+//    · через несколько баров становится ясно, что случилось раньше — и только
+//      тогда исход записывается в ячейку. Задним числом, без заглядывания;
+//    · барьеры симметричны, поэтому одна вероятность описывает обе стороны:
+//      p — шанс верхнего барьера, 1−p — нижнего. Асимметрия потребовала бы
+//      вдвое больше данных, а данные здесь — единственный ресурс.
+//
+//  Сделка, которую вы совершаете по сигналу, — ровно та, которую скрипт измерял:
+//  тот же стоп, та же цель, тот же тайм-аут. Статистика не про «а если бы».
+//
+//  Сигнал выдаётся, когда одновременно:
+//    · наблюдений в ячейке набрано не меньше минимума;
+//    · НИЖНЯЯ граница доверительного интервала Вильсона выше порога — то есть
+//      перевес не объясняется случайностью на этом объёме выборки;
+//    · матожидание в R перекрывает издержки с запасом.
+//
+//  Если интервал широкий — сигнала нет: данных мало, и это видно глазом.
+//  Если p̂ лежит около 0.5 во всех ячейках — отскок на инструменте не
+//  предсказуем, и это тоже видно сразу, а не через месяц торговли.
+// ═══════════════════════════════════════════════════════════════════════════════
+
+indicator("ODDS · эмпирические шансы отскока", "ODDS", overlay = false,
+     max_lines_count = 500, max_labels_count = 500, precision = 3)
+
+// ── сделка, которую измеряем ───────────────────────────────────────────────────
+gB = "Сделка, которую измеряем"
+kATR    = input.float(1.0, "Цель и стоп, ATR", minval = 0.1, step = 0.1, group = gB,
+     tooltip = "Барьеры симметричны: цель +k·ATR, стоп −k·ATR. Это не упрощение, а условие: только при симметрии одна вероятность описывает и лонг, и шорт.")
+horizon = input.int(12, "Тайм-аут, баров", minval = 2, maxval = 60, group = gB,
+     tooltip = "Если за это число баров не задет ни один барьер, исходом считается фактический результат по закрытию, пересчитанный в R.")
+atrLen  = input.int(14, "ATR", minval = 2, group = gB)
+
+// ── состояние ──────────────────────────────────────────────────────────────────
+gS = "Состояние"
+baseLen  = input.int(20, "Средняя и σ, баров", minval = 3, group = gS)
+zNear    = input.float(1.0, "Ближняя граница, σ", minval = 0.2, step = 0.1, group = gS)
+zFar     = input.float(2.0, "Дальняя граница, σ", minval = 0.4, step = 0.1, group = gS)
+useVol   = input.bool(true, "Учитывать режим волатильности", group = gS)
+volLen   = input.int(50, "Норма волатильности, баров", minval = 5, group = gS)
+volLo    = input.float(0.85, "Тихо: ATR/норма ниже", minval = 0.1, step = 0.05, group = gS)
+volHi    = input.float(1.25, "Разгон: ATR/норма выше", minval = 0.2, step = 0.05, group = gS)
+useTrend = input.bool(true, "Учитывать тренд старшего ТФ", group = gS)
+htfTf    = input.timeframe("60", "Таймфрейм тренда", group = gS)
+htfLen   = input.int(50, "EMA тренда", minval = 3, group = gS)
+useHour  = input.bool(false, "Учитывать время суток", group = gS,
+     tooltip = "Делит сутки на четыре шестичасовых блока. Каждое включённое измерение делит выборку — включайте, когда истории много.")
+tzSel    = input.string("биржа", "Часовой пояс", group = gS,
+     options = ["биржа", "UTC", "America/New_York", "Europe/Moscow", "Europe/London", "Asia/Tokyo"])
+
+// ── статистика ─────────────────────────────────────────────────────────────────
+gT = "Статистика"
+minObs    = input.int(30, "Минимум наблюдений в ячейке", minval = 5, group = gT)
+confSel   = input.string("90%", "Доверие", options = ["80%", "90%", "95%"], group = gT,
+     tooltip = "Чем выше доверие, тем строже нижняя граница и тем реже сигналы.")
+pThr      = input.float(0.55, "Порог вероятности", minval = 0.50, maxval = 0.95, step = 0.01, group = gT)
+costTicks = input.float(2.0, "Издержки, тиков на круг", minval = 0, step = 0.5, group = gT)
+minEdge   = input.float(0.05, "Минимальный эдж, R", minval = 0, step = 0.01, group = gT,
+     tooltip = "Сколько должно остаться от матожидания после издержек, чтобы сделка имела смысл.")
+halfLife  = input.int(0, "Полураспад наблюдений, баров (0 — помнить всё)", minval = 0, group = gT,
+     tooltip = "Экспоненциальное забывание: старые исходы весят меньше. Нужно, если инструмент за историю заметно менял характер.")
+obsStep   = input.int(1, "Ставить наблюдение раз в N баров", minval = 1, maxval = 60, group = gT,
+     tooltip = "Соседние бары дают почти одну и ту же сделку, поэтому наблюдения перекрываются и интервал выходит оптимистичнее правды. Шаг, равный тайм-ауту, делает наблюдения независимыми — ценой того, что их станет во столько же раз меньше.")
+
+// ── сигнал ─────────────────────────────────────────────────────────────────────
+gG = "Сигнал"
+useLong   = input.bool(true, "Лонги", group = gG, inline = "s")
+useShort  = input.bool(true, "Шорты", group = gG, inline = "s")
+cdBars    = input.int(5, "Пауза между сигналами, баров", minval = 0, group = gG)
+firstOnly = input.bool(true, "Только первый бар сигнала", group = gG)
+
+// ── вид ────────────────────────────────────────────────────────────────────────
+gV = "Вид"
+showMap   = input.bool(true, "Карта шансов", group = gV)
+mapX      = input.string("волатильность", "Ось карты", options = ["волатильность", "тренд", "время", "нет"], group = gV)
+showState = input.bool(true, "Таблица состояния", group = gV)
+showPlan  = input.bool(true, "План сделки на графике", group = gV)
+cUp  = input.color(#0E7C66, "Верх",      group = gV, inline = "c")
+cDn  = input.color(#B8412F, "Низ",       group = gV, inline = "c")
+cAcc = input.color(#A9701C, "Акцент",    group = gV, inline = "c")
+
+// ── утилиты ────────────────────────────────────────────────────────────────────
+f_clamp(float x, float lo, float hi) => math.max(lo, math.min(hi, x))
+
+// нижняя и верхняя границы Вильсона. Обычный интервал на доле врёт на малых
+// выборках и на p близких к 0 и 1 — здесь ровно тот случай
+f_wilson(float n, float k, float z) =>
+    float lb = 0.0
+    float ub = 1.0
+    if n > 0
+        float p = k / n
+        float d = 1.0 + z * z / n
+        float c = (p + z * z / (2.0 * n)) / d
+        float h = z / d * math.sqrt(math.max(p * (1.0 - p) / n + z * z / (4.0 * n * n), 0.0))
+        lb := math.max(0.0, c - h)
+        ub := math.min(1.0, c + h)
+    [lb, ub]
+
+zConf = confSel == "80%" ? 1.282 : confSel == "95%" ? 1.960 : 1.645
+lam   = halfLife > 0 ? math.pow(0.5, 1.0 / halfLife) : 1.0
+
+// ── ряды состояния ─────────────────────────────────────────────────────────────
+atr   = ta.atr(atrLen)
+basis = ta.ema(close, baseLen)
+sd    = ta.stdev(close, baseLen)
+z     = sd > 0 ? (close - basis) / sd : 0.0
+
+volRat = atr / math.max(ta.sma(atr, volLen), 1e-9)
+
+htfE  = request.security(syminfo.tickerid, htfTf, ta.ema(close, htfLen)[1], lookahead = barmerge.lookahead_off)
+htfEp = request.security(syminfo.tickerid, htfTf, ta.ema(close, htfLen)[4], lookahead = barmerge.lookahead_off)
+htfDir = na(htfE) or na(htfEp) ? 0 : htfE > htfEp ? 1 : htfE < htfEp ? -1 : 0
+
+tz = tzSel == "биржа" ? syminfo.timezone : tzSel
+
+// корзины. Размерности фиксированы, выключенное измерение схлопывается в одну
+nZ = 6
+nV = useVol   ? 3 : 1
+nT = useTrend ? 3 : 1
+nH = useHour  ? 4 : 1
+
+zB = z <= -zFar ? 0 : z <= -zNear ? 1 : z < 0 ? 2 : z < zNear ? 3 : z < zFar ? 4 : 5
+vB = not useVol   ? 0 : volRat < volLo ? 0 : volRat <= volHi ? 1 : 2
+tB = not useTrend ? 0 : htfDir + 1
+hB = not useHour  ? 0 : int(hour(time, tz) / 6)
+cell = ((zB * nV + vB) * nT + tB) * nH + hB
+
+// ── накопители по ячейкам ──────────────────────────────────────────────────────
+// 6 × 3 × 3 × 4 = 216 — максимум при всех включённых измерениях
+var array<float> cN   = array.new_float(216, 0.0)   // наблюдений (с учётом забывания)
+var array<float> cW   = array.new_float(216, 0.0)   // исходов вверх
+var array<float> cL   = array.new_float(216, 0.0)   // исходов вниз
+var array<float> cR   = array.new_float(216, 0.0)   // сумма исходов в R
+var array<int>   cBar = array.new_int(216, 0)       // бар последнего касания
+
+// забывание применяется лениво: в момент обращения к ячейке, а не ко всем 216
+f_decay(int idx) => lam < 1.0 ? math.pow(lam, bar_index - array.get(cBar, idx)) : 1.0
+
+f_record(int idx, float rr) =>
+    float f = f_decay(idx)
+    array.set(cN,   idx, array.get(cN, idx) * f + 1.0)
+    array.set(cW,   idx, array.get(cW, idx) * f + (rr > 0 ? 1.0 : 0.0))
+    array.set(cL,   idx, array.get(cL, idx) * f + (rr < 0 ? 1.0 : 0.0))
+    array.set(cR,   idx, array.get(cR, idx) * f + rr)
+    array.set(cBar, idx, bar_index)
+    idx
+
+// ── открытые наблюдения ────────────────────────────────────────────────────────
+// сделка, поставленная на баре i, проверяется начиная с бара i+1 — ровно как
+// живая позиция, открытая по закрытию. Одновременно открытых не больше horizon
+var array<int>   obCell = array.new_int(0)
+var array<float> obE    = array.new_float(0)
+var array<float> obUp   = array.new_float(0)
+var array<float> obDn   = array.new_float(0)
+var array<int>   obBar  = array.new_int(0)
+
+var float obsDone  = 0.0
+var float obsAmbig = 0.0
+
+if barstate.isconfirmed and array.size(obCell) > 0
+    for j = array.size(obCell) - 1 to 0
+        float up = array.get(obUp, j)
+        float dn = array.get(obDn, j)
+        bool  hitUp = high >= up
+        bool  hitDn = low  <= dn
+        bool  done  = false
+        float rr    = na
+        if hitUp and hitDn
+            // оба барьера на одном баре: по свечам не узнать, что было раньше.
+            // Выбрасываем наблюдение — иначе выбор в любую сторону перекосит шанс
+            obsAmbig += 1.0
+            done := true
+        else if hitUp
+            rr   := 1.0
+            done := true
+        else if hitDn
+            rr   := -1.0
+            done := true
+        else if bar_index - array.get(obBar, j) >= horizon
+            float e = array.get(obE, j)
+            rr   := f_clamp((close - e) / math.max(up - e, 1e-9), -1.0, 1.0)
+            done := true
+        if done
+            if not na(rr)
+                f_record(array.get(obCell, j), rr)
+                obsDone += 1.0
+            array.remove(obCell, j)
+            array.remove(obE,    j)
+            array.remove(obUp,   j)
+            array.remove(obDn,   j)
+            array.remove(obBar,  j)
+
+// ── чтение текущей ячейки ──────────────────────────────────────────────────────
+fC  = f_decay(cell)
+nC  = array.get(cN, cell) * fC
+wC  = array.get(cW, cell) * fC
+lC  = array.get(cL, cell) * fC
+rC  = array.get(cR, cell) * fC
+pUp = nC > 0 ? wC / nC : na
+eR  = nC > 0 ? rC / nC : na
+[lbU, ubU] = f_wilson(nC, wC, zConf)
+[lbD, ubD] = f_wilson(nC, lC, zConf)
+
+costR  = atr > 0 ? costTicks * syminfo.mintick / (kATR * atr) : 1e9
+enough = nC >= minObs
+
+longOk  = useLong  and enough and lbU >= pThr and ( eR - costR) >= minEdge
+shortOk = useShort and enough and lbD >= pThr and (-eR - costR) >= minEdge
+
+rawLong  = longOk  and not shortOk
+rawShort = shortOk and not longOk
+
+var int lastSig = -100000
+newLong  = rawLong  and (not firstOnly or not rawLong[1])
+newShort = rawShort and (not firstOnly or not rawShort[1])
+sigLong  = newLong  and bar_index - lastSig > cdBars and not na(atr)
+sigShort = newShort and bar_index - lastSig > cdBars and not na(atr)
+if sigLong or sigShort
+    lastSig := bar_index
+
+// ── постановка нового наблюдения ───────────────────────────────────────────────
+// после чтения статистики: сделка этого бара не может повлиять на свой же сигнал
+if barstate.isconfirmed and not na(atr) and atr > 0 and sd > 0 and bar_index % obsStep == 0
+    array.push(obCell, cell)
+    array.push(obE,    close)
+    array.push(obUp,   close + kATR * atr)
+    array.push(obDn,   close - kATR * atr)
+    array.push(obBar,  bar_index)
+
+// ── панель ─────────────────────────────────────────────────────────────────────
+pCol = na(pUp) ? cAcc : color.from_gradient(pUp, 0.40, 0.60, cDn, cUp)
+pl  = plot(lbU, "Нижняя граница", color = color.new(cAcc, 55), linewidth = 1)
+pu  = plot(ubU, "Верхняя граница", color = color.new(cAcc, 55), linewidth = 1)
+fill(pl, pu, color = color.new(cAcc, 88), title = "Доверительный интервал")
+plot(pUp, "p̂ верхнего барьера", color = pCol, linewidth = 2)
+hline(0.5, "Монетка", color = color.new(color.gray, 50), linestyle = hline.style_dotted)
+hline(pThr, "Порог лонга", color = #0E7C66, linestyle = hline.style_dashed)
+hline(1 - pThr, "Порог шорта", color = #B8412F, linestyle = hline.style_dashed)
+bgcolor(enough ? na : color.new(color.gray, 92), title = "Мало наблюдений")
+
+plotshape(sigLong  ? lbU : na, "Сигнал вверх", shape.circle, location.absolute, cUp, size = size.tiny)
+plotshape(sigShort ? ubU : na, "Сигнал вниз",  shape.circle, location.absolute, cDn, size = size.tiny)
+
+// ── отметки и план на графике ──────────────────────────────────────────────────
+plotshape(sigLong,  "LONG",  shape.triangleup,   location.belowbar, cUp, size = size.small, force_overlay = true)
+plotshape(sigShort, "SHORT", shape.triangledown, location.abovebar, cDn, size = size.small, force_overlay = true)
+plot(basis, "Средняя", color = color.new(color.gray, 30), force_overlay = true)
+
+var line  lnT = na
+var line  lnS = na
+var label lbP = na
+
+if showPlan and (sigLong or sigShort)
+    line.delete(lnT)
+    line.delete(lnS)
+    label.delete(lbP)
+    float tgt = sigLong ? close + kATR * atr : close - kATR * atr
+    float stp = sigLong ? close - kATR * atr : close + kATR * atr
+    lnT := line.new(bar_index, tgt, bar_index + horizon, tgt, color = cUp, style = line.style_dashed, force_overlay = true)
+    lnS := line.new(bar_index, stp, bar_index + horizon, stp, color = cDn, style = line.style_dashed, force_overlay = true)
+    lbP := label.new(bar_index, sigLong ? low : high,
+         text = str.format("{0} · p {1,number,#.##} (нижняя граница {2,number,#.##})\nнаблюдений {3,number,#}   E[R] {4,number,#.###}   издержки {5,number,#.##}R\nцель {6}   стоп {7}   тайм-аут {8} баров",
+             sigLong ? "LONG" : "SHORT",
+             sigLong ? pUp : 1 - pUp, sigLong ? lbU : lbD, nC,
+             sigLong ? eR : -eR, costR,
+             str.tostring(tgt, format.mintick), str.tostring(stp, format.mintick), horizon),
+         style = sigLong ? label.style_label_up : label.style_label_down,
+         color = color.new(sigLong ? cUp : cDn, 85), textcolor = chart.fg_color,
+         size = size.small, textalign = text.align_left, force_overlay = true)
+
+// ── таблица состояния ──────────────────────────────────────────────────────────
+var table tS = table.new(position.top_right, 3, 11, border_width = 1)
+
+f_srow(table t, int r, string a, string b, string c, color bg) =>
+    table.cell(t, 0, r, a, text_color = chart.fg_color, text_size = size.tiny, text_halign = text.align_left,  bgcolor = bg)
+    table.cell(t, 1, r, b, text_color = chart.fg_color, text_size = size.tiny, text_halign = text.align_right, bgcolor = bg)
+    table.cell(t, 2, r, c, text_color = color.gray,     text_size = size.tiny, text_halign = text.align_right, bgcolor = bg)
+    r
+
+if showState and barstate.islast
+    color bgH = color.new(color.gray, 85)
+    array<string> zName = array.from("≤ −" + str.tostring(zFar, "#.#") + "σ",
+         "−" + str.tostring(zFar, "#.#") + "…−" + str.tostring(zNear, "#.#") + "σ",
+         "−" + str.tostring(zNear, "#.#") + "…0", "0…+" + str.tostring(zNear, "#.#"),
+         "+" + str.tostring(zNear, "#.#") + "…+" + str.tostring(zFar, "#.#") + "σ",
+         "≥ +" + str.tostring(zFar, "#.#") + "σ")
+    float ready = 0.0
+    for i = 0 to 215
+        if array.get(cN, i) * f_decay(i) >= minObs
+            ready += 1.0
+    string verdict = not enough ? "мало наблюдений" :
+         longOk ? "LONG" : shortOk ? "SHORT" :
+         lbU >= pThr or lbD >= pThr ? "перевес есть, эдж съеден издержками" : "перевеса нет"
+    f_srow(tS, 0, "СОСТОЯНИЕ", "ЗНАЧЕНИЕ", "ЯЧЕЙКА", bgH)
+    f_srow(tS, 1, "растяжение", str.tostring(z, "#.00") + "σ", array.get(zName, zB), na)
+    f_srow(tS, 2, "волатильность", str.tostring(volRat, "#.00") + "×",
+         not useVol ? "—" : vB == 0 ? "тихо" : vB == 1 ? "норма" : "разгон", na)
+    f_srow(tS, 3, "тренд " + htfTf, htfDir == 1 ? "вверх" : htfDir == -1 ? "вниз" : "плоский",
+         not useTrend ? "—" : str.tostring(tB), na)
+    f_srow(tS, 4, "время", str.tostring(hour(time, tz)) + ":00",
+         not useHour ? "—" : str.tostring(hB * 6) + "–" + str.tostring(hB * 6 + 5), na)
+    f_srow(tS, 5, "наблюдений", str.tostring(nC, "#.0"), enough ? "хватает" : "нужно " + str.tostring(minObs), na)
+    f_srow(tS, 6, "p̂ вверх", na(pUp) ? "—" : str.tostring(pUp, "#.000"),
+         na(pUp) ? "" : str.tostring(lbU, "#.00") + "…" + str.tostring(ubU, "#.00"),
+         color.new(pCol, 85))
+    f_srow(tS, 7, "матожидание", na(eR) ? "—" : str.tostring(eR, "#.000") + "R",
+         "издержки " + str.tostring(costR, "#.00") + "R", na)
+    f_srow(tS, 8, "ВЕРДИКТ", verdict, "",
+         color.new(longOk ? cUp : shortOk ? cDn : color.gray, 82))
+    f_srow(tS, 9, "исходов записано", str.tostring(obsDone, "#"),
+         "спорных " + str.tostring(obsAmbig, "#"), na)
+    f_srow(tS, 10, "ячеек готово", str.tostring(ready, "#"),
+         "из " + str.tostring(nZ * nV * nT * nH), na)
+
+// ── карта шансов ───────────────────────────────────────────────────────────────
+// строки — растяжение, столбцы — выбранное измерение плюс «все».
+// Цвет — вероятность, число под ним — наблюдения. Бледная ячейка = данных мало
+var table tM = table.new(position.bottom_right, 6, 7, border_width = 1)
+
+if showMap and barstate.islast
+    table.clear(tM, 0, 0, 5, 6)
+    int nX = mapX == "волатильность" and useVol ? 3 :
+             mapX == "тренд" and useTrend ? 3 :
+             mapX == "время" and useHour ? 4 : 0
+    array<float> aN = array.new_float(30, 0.0)
+    array<float> aW = array.new_float(30, 0.0)
+    for i = 0 to 215
+        float fi = f_decay(i)
+        float n0 = array.get(cN, i) * fi
+        float w0 = array.get(cW, i) * fi
+        if n0 > 0
+            int h0 = i % nH
+            int q1 = int(i / nH)
+            int t0 = q1 % nT
+            int q2 = int(q1 / nT)
+            int v0 = q2 % nV
+            int z0 = int(q2 / nV)
+            if z0 <= 5
+                int xb = nX == 0 ? 0 : mapX == "волатильность" ? v0 : mapX == "тренд" ? t0 : h0
+                if nX > 0
+                    array.set(aN, z0 * 5 + xb, array.get(aN, z0 * 5 + xb) + n0)
+                    array.set(aW, z0 * 5 + xb, array.get(aW, z0 * 5 + xb) + w0)
+                array.set(aN, z0 * 5 + 4, array.get(aN, z0 * 5 + 4) + n0)
+                array.set(aW, z0 * 5 + 4, array.get(aW, z0 * 5 + 4) + w0)
+    array<string> xName = array.from("00–05", "06–11", "12–17", "18–23")
+    if mapX == "волатильность"
+        xName := array.from("тихо", "норма", "разгон", "")
+    else if mapX == "тренд"
+        xName := array.from("тренд вниз", "плоский", "тренд вверх", "")
+    array<string> zName2 = array.from("≤ −" + str.tostring(zFar, "#.#") + "σ",
+         "−" + str.tostring(zFar, "#.#") + "…−" + str.tostring(zNear, "#.#"),
+         "−" + str.tostring(zNear, "#.#") + "…0", "0…+" + str.tostring(zNear, "#.#"),
+         "+" + str.tostring(zNear, "#.#") + "…+" + str.tostring(zFar, "#.#"),
+         "≥ +" + str.tostring(zFar, "#.#") + "σ")
+    color bgH = color.new(color.gray, 85)
+    table.cell(tM, 0, 0, "ШАНС ВВЕРХ", text_color = chart.fg_color, text_size = size.tiny, bgcolor = bgH)
+    if nX > 0
+        for x = 0 to nX - 1
+            table.cell(tM, x + 1, 0, array.get(xName, x), text_color = chart.fg_color, text_size = size.tiny, bgcolor = bgH)
+    table.cell(tM, nX + 1, 0, "все", text_color = chart.fg_color, text_size = size.tiny, bgcolor = bgH)
+    for zr = 0 to 5
+        table.cell(tM, 0, zr + 1, array.get(zName2, zr), text_color = chart.fg_color, text_size = size.tiny,
+             text_halign = text.align_left, bgcolor = zr == zB ? color.new(cAcc, 75) : na)
+        for x = 0 to nX
+            int slot = x == nX ? zr * 5 + 4 : zr * 5 + x
+            float n0 = array.get(aN, slot)
+            float w0 = array.get(aW, slot)
+            string txt = n0 < 1 ? "—" : str.tostring(100.0 * w0 / n0, "#") + "%\n" + str.tostring(n0, "#")
+            color bgc = n0 < 1 ? na : color.new(color.from_gradient(w0 / n0, 0.40, 0.60, cDn, cUp), n0 >= minObs ? 30 : 78)
+            table.cell(tM, x + 1, zr + 1, txt, text_color = chart.fg_color, text_size = size.tiny,
+                 text_halign = text.align_center, bgcolor = bgc)
+
+// ── алерты ─────────────────────────────────────────────────────────────────────
+alertcondition(sigLong,  "ODDS · LONG",  "ODDS: шансы за лонг")
+alertcondition(sigShort, "ODDS · SHORT", "ODDS: шансы за шорт")
+alertcondition(sigLong or sigShort, "ODDS · любой сигнал", "ODDS: сигнал")
+
+if sigLong or sigShort
+    alert(str.format("ODDS {0} {1} · {2} | p {3,number,#.###} (граница {4,number,#.###}, n {5,number,#}) | E[R] {6,number,#.###} после издержек {7,number,#.###} | вход {8} цель {9} стоп {10} тайм-аут {11}",
+         syminfo.ticker, timeframe.period, sigLong ? "LONG" : "SHORT",
+         sigLong ? pUp : 1 - pUp, sigLong ? lbU : lbD, nC,
+         sigLong ? eR : -eR, (sigLong ? eR : -eR) - costR,
+         str.tostring(close, format.mintick),
+         str.tostring(sigLong ? close + kATR * atr : close - kATR * atr, format.mintick),
+         str.tostring(sigLong ? close - kATR * atr : close + kATR * atr, format.mintick), horizon),
+         alert.freq_once_per_bar_close)

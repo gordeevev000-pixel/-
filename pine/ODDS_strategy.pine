@@ -1,0 +1,224 @@
+//@version=6
+// ═══════════════════════════════════════════════════════════════════════════════
+//  ODDS · стратегия
+//
+//  То же ядро, что в индикаторе ODDS: разметка истории тремя барьерами, счётчики
+//  по ячейкам состояния, сигнал по нижней границе Вильсона. Разница одна —
+//  сделки исполняет движок TradingView, чтобы получить нативный отчёт.
+//
+//  Бэктест здесь честный по построению: статистика ячейки на каждом баре
+//  собрана ТОЛЬКО из наблюдений, чей исход уже закрылся к этому бару. Скрипт
+//  учится слева направо, как учился бы в реальном времени, и первые сотни баров
+//  торгует пусто — это не баг, а цена обучения на собственной истории.
+//
+//  Стоп, цель и тайм-аут в стратегии совпадают с барьерами, по которым считалась
+//  вероятность. Как только вы сдвинете стоп или цель — статистика перестанет
+//  описывать вашу сделку, и порог придётся считать заново.
+// ═══════════════════════════════════════════════════════════════════════════════
+
+strategy("ODDS · стратегия", "ODDS S", overlay = true,
+     default_qty_type = strategy.percent_of_equity, default_qty_value = 10,
+     initial_capital = 100000, commission_type = strategy.commission.percent,
+     commission_value = 0.005, slippage = 2, pyramiding = 0,
+     calc_on_every_tick = false, process_orders_on_close = true)
+
+// ── сделка, которую измеряем ───────────────────────────────────────────────────
+gB = "Сделка, которую измеряем"
+kATR    = input.float(1.0, "Цель и стоп, ATR", minval = 0.1, step = 0.1, group = gB)
+horizon = input.int(12, "Тайм-аут, баров", minval = 2, maxval = 60, group = gB)
+atrLen  = input.int(14, "ATR", minval = 2, group = gB)
+
+// ── состояние ──────────────────────────────────────────────────────────────────
+gS = "Состояние"
+baseLen  = input.int(20, "Средняя и σ, баров", minval = 3, group = gS)
+zNear    = input.float(1.0, "Ближняя граница, σ", minval = 0.2, step = 0.1, group = gS)
+zFar     = input.float(2.0, "Дальняя граница, σ", minval = 0.4, step = 0.1, group = gS)
+useVol   = input.bool(true, "Учитывать режим волатильности", group = gS)
+volLen   = input.int(50, "Норма волатильности, баров", minval = 5, group = gS)
+volLo    = input.float(0.85, "Тихо: ATR/норма ниже", minval = 0.1, step = 0.05, group = gS)
+volHi    = input.float(1.25, "Разгон: ATR/норма выше", minval = 0.2, step = 0.05, group = gS)
+useTrend = input.bool(true, "Учитывать тренд старшего ТФ", group = gS)
+htfTf    = input.timeframe("60", "Таймфрейм тренда", group = gS)
+htfLen   = input.int(50, "EMA тренда", minval = 3, group = gS)
+useHour  = input.bool(false, "Учитывать время суток", group = gS)
+tzSel    = input.string("биржа", "Часовой пояс", group = gS,
+     options = ["биржа", "UTC", "America/New_York", "Europe/Moscow", "Europe/London", "Asia/Tokyo"])
+
+// ── статистика ─────────────────────────────────────────────────────────────────
+gT = "Статистика"
+minObs    = input.int(30, "Минимум наблюдений в ячейке", minval = 5, group = gT)
+confSel   = input.string("90%", "Доверие", options = ["80%", "90%", "95%"], group = gT)
+pThr      = input.float(0.55, "Порог вероятности", minval = 0.50, maxval = 0.95, step = 0.01, group = gT)
+costTicks = input.float(2.0, "Издержки, тиков на круг", minval = 0, step = 0.5, group = gT,
+     tooltip = "Только для фильтра. Сам отчёт считает издержки по вкладке «Свойства» — поставьте там те же цифры.")
+minEdge   = input.float(0.05, "Минимальный эдж, R", minval = 0, step = 0.01, group = gT)
+halfLife  = input.int(0, "Полураспад наблюдений, баров (0 — помнить всё)", minval = 0, group = gT)
+obsStep   = input.int(1, "Ставить наблюдение раз в N баров", minval = 1, maxval = 60, group = gT,
+     tooltip = "Соседние бары дают почти одну и ту же сделку, поэтому наблюдения перекрываются и интервал выходит оптимистичнее правды. Шаг, равный тайм-ауту, делает наблюдения независимыми — ценой того, что их станет во столько же раз меньше.")
+
+// ── исполнение ─────────────────────────────────────────────────────────────────
+gX = "Исполнение"
+useLong  = input.bool(true, "Лонги", group = gX, inline = "s")
+useShort = input.bool(true, "Шорты", group = gX, inline = "s")
+riskPct  = input.float(0.5, "Риск на сделку, % депозита", minval = 0.01, step = 0.05, group = gX)
+minQty   = input.float(1.0, "Минимальный размер позиции", minval = 0.0, step = 0.001, group = gX)
+warmBars = input.int(500, "Не торговать первые N баров", minval = 0, group = gX,
+     tooltip = "Пока ячейки пустые, сигналов и так нет. Явный прогрев делает отчёт честнее: видно, что стратегия не торговала, пока не научилась.")
+fromDate = input.time(timestamp("01 Jan 2015 00:00 +0000"), "С", group = gX)
+toDate   = input.time(timestamp("01 Jan 2099 00:00 +0000"), "По", group = gX)
+
+// ── утилиты ────────────────────────────────────────────────────────────────────
+f_clamp(float x, float lo, float hi) => math.max(lo, math.min(hi, x))
+
+f_wilson(float n, float k, float z) =>
+    float lb = 0.0
+    float ub = 1.0
+    if n > 0
+        float p = k / n
+        float d = 1.0 + z * z / n
+        float c = (p + z * z / (2.0 * n)) / d
+        float h = z / d * math.sqrt(math.max(p * (1.0 - p) / n + z * z / (4.0 * n * n), 0.0))
+        lb := math.max(0.0, c - h)
+        ub := math.min(1.0, c + h)
+    [lb, ub]
+
+zConf = confSel == "80%" ? 1.282 : confSel == "95%" ? 1.960 : 1.645
+lam   = halfLife > 0 ? math.pow(0.5, 1.0 / halfLife) : 1.0
+
+// ── ряды состояния ─────────────────────────────────────────────────────────────
+atr    = ta.atr(atrLen)
+basis  = ta.ema(close, baseLen)
+sd     = ta.stdev(close, baseLen)
+z      = sd > 0 ? (close - basis) / sd : 0.0
+volRat = atr / math.max(ta.sma(atr, volLen), 1e-9)
+
+htfE  = request.security(syminfo.tickerid, htfTf, ta.ema(close, htfLen)[1], lookahead = barmerge.lookahead_off)
+htfEp = request.security(syminfo.tickerid, htfTf, ta.ema(close, htfLen)[4], lookahead = barmerge.lookahead_off)
+htfDir = na(htfE) or na(htfEp) ? 0 : htfE > htfEp ? 1 : htfE < htfEp ? -1 : 0
+
+tz = tzSel == "биржа" ? syminfo.timezone : tzSel
+
+nV = useVol   ? 3 : 1
+nT = useTrend ? 3 : 1
+nH = useHour  ? 4 : 1
+
+zB = z <= -zFar ? 0 : z <= -zNear ? 1 : z < 0 ? 2 : z < zNear ? 3 : z < zFar ? 4 : 5
+vB = not useVol   ? 0 : volRat < volLo ? 0 : volRat <= volHi ? 1 : 2
+tB = not useTrend ? 0 : htfDir + 1
+hB = not useHour  ? 0 : int(hour(time, tz) / 6)
+cell = ((zB * nV + vB) * nT + tB) * nH + hB
+
+// ── накопители ─────────────────────────────────────────────────────────────────
+var array<float> cN   = array.new_float(216, 0.0)
+var array<float> cW   = array.new_float(216, 0.0)
+var array<float> cL   = array.new_float(216, 0.0)
+var array<float> cR   = array.new_float(216, 0.0)
+var array<int>   cBar = array.new_int(216, 0)
+
+f_decay(int idx) => lam < 1.0 ? math.pow(lam, bar_index - array.get(cBar, idx)) : 1.0
+
+f_record(int idx, float rr) =>
+    float f = f_decay(idx)
+    array.set(cN,   idx, array.get(cN, idx) * f + 1.0)
+    array.set(cW,   idx, array.get(cW, idx) * f + (rr > 0 ? 1.0 : 0.0))
+    array.set(cL,   idx, array.get(cL, idx) * f + (rr < 0 ? 1.0 : 0.0))
+    array.set(cR,   idx, array.get(cR, idx) * f + rr)
+    array.set(cBar, idx, bar_index)
+    idx
+
+// ── открытые наблюдения ────────────────────────────────────────────────────────
+var array<int>   obCell = array.new_int(0)
+var array<float> obE    = array.new_float(0)
+var array<float> obUp   = array.new_float(0)
+var array<float> obDn   = array.new_float(0)
+var array<int>   obBar  = array.new_int(0)
+
+if barstate.isconfirmed and array.size(obCell) > 0
+    for j = array.size(obCell) - 1 to 0
+        float up = array.get(obUp, j)
+        float dn = array.get(obDn, j)
+        bool  hitUp = high >= up
+        bool  hitDn = low  <= dn
+        bool  done  = false
+        float rr    = na
+        if hitUp and hitDn
+            done := true
+        else if hitUp
+            rr   := 1.0
+            done := true
+        else if hitDn
+            rr   := -1.0
+            done := true
+        else if bar_index - array.get(obBar, j) >= horizon
+            float e = array.get(obE, j)
+            rr   := f_clamp((close - e) / math.max(up - e, 1e-9), -1.0, 1.0)
+            done := true
+        if done
+            if not na(rr)
+                f_record(array.get(obCell, j), rr)
+            array.remove(obCell, j)
+            array.remove(obE,    j)
+            array.remove(obUp,   j)
+            array.remove(obDn,   j)
+            array.remove(obBar,  j)
+
+// ── текущая ячейка и сигнал ────────────────────────────────────────────────────
+fC  = f_decay(cell)
+nC  = array.get(cN, cell) * fC
+wC  = array.get(cW, cell) * fC
+lC  = array.get(cL, cell) * fC
+rC  = array.get(cR, cell) * fC
+eR  = nC > 0 ? rC / nC : na
+[lbU, ubU] = f_wilson(nC, wC, zConf)
+[lbD, ubD] = f_wilson(nC, lC, zConf)
+
+costR  = atr > 0 ? costTicks * syminfo.mintick / (kATR * atr) : 1e9
+enough = nC >= minObs
+inWin  = time >= fromDate and time <= toDate and bar_index >= warmBars
+
+longOk  = useLong  and enough and lbU >= pThr and ( eR - costR) >= minEdge
+shortOk = useShort and enough and lbD >= pThr and (-eR - costR) >= minEdge
+goLong  = longOk  and not shortOk and inWin and strategy.position_size == 0 and not na(atr)
+goShort = shortOk and not longOk  and inWin and strategy.position_size == 0 and not na(atr)
+
+// ── постановка наблюдения (после сигнала) ──────────────────────────────────────
+if barstate.isconfirmed and not na(atr) and atr > 0 and sd > 0 and bar_index % obsStep == 0
+    array.push(obCell, cell)
+    array.push(obE,    close)
+    array.push(obUp,   close + kATR * atr)
+    array.push(obDn,   close - kATR * atr)
+    array.push(obBar,  bar_index)
+
+// ── исполнение ─────────────────────────────────────────────────────────────────
+riskPx = kATR * atr
+qty    = math.max(strategy.equity * riskPct / 100.0 / math.max(riskPx * syminfo.pointvalue, 1e-9), minQty)
+
+var float eStop = na
+var float eTgt  = na
+var int   eBar  = na
+
+if goLong
+    eStop := close - riskPx
+    eTgt  := close + riskPx
+    eBar  := bar_index
+    strategy.entry("L", strategy.long, qty = qty, comment = "p " + str.tostring(lbU, "#.00"))
+if goShort
+    eStop := close + riskPx
+    eTgt  := close - riskPx
+    eBar  := bar_index
+    strategy.entry("S", strategy.short, qty = qty, comment = "p " + str.tostring(lbD, "#.00"))
+
+// выход ровно по барьерам, которыми размечалась история
+if strategy.position_size != 0
+    strategy.exit("LX", "L", stop = eStop, limit = eTgt)
+    strategy.exit("SX", "S", stop = eStop, limit = eTgt)
+    if bar_index - eBar >= horizon
+        strategy.close_all(comment = "тайм-аут")
+
+// ── картинка ───────────────────────────────────────────────────────────────────
+plot(basis, "Средняя", color = color.new(color.gray, 30))
+plot(strategy.position_size != 0 ? eStop : na, "Стоп", color = #B8412F, style = plot.style_linebr)
+plot(strategy.position_size != 0 ? eTgt  : na, "Цель", color = #0E7C66, style = plot.style_linebr)
+plotshape(goLong,  "LONG",  shape.triangleup,   location.belowbar, #0E7C66, size = size.small)
+plotshape(goShort, "SHORT", shape.triangledown, location.abovebar, #B8412F, size = size.small)
+bgcolor(enough ? na : color.new(color.gray, 94), title = "Мало наблюдений в ячейке")
