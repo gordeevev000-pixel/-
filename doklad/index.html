@@ -1,0 +1,802 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Перезагрузка и полицентризм</title>
+<meta name="description" content="Доклад для обсуждения и дискуссии: Четвёртая промышленная революция и «Великая перезагрузка» К. Шваба в оптике полицентризма.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Unbounded:wght@500;600;700&display=swap">
+<style>
+/* ───────────────── токены ───────────────── */
+:root{
+  --bg:#E9EBEF; --bg-deep:#DFE2E8;
+  --panel:#F7F8FA; --panel-2:#FDFDFE; --inset:#E2E5EB;
+  --ink:#131A24; --ink-2:#414C5C; --ink-3:#6B7686;
+  --rule:#C8CED8; --rule-soft:#D8DCE4;
+  --accent:#A96B12; --accent-bright:#C98A20; --accent-soft:rgba(169,107,18,.10);
+  --blue:#2A4E86; --teal:#0F6E64; --crimson:#94382F; --plum:#5A4173;
+  --shadow:0 1px 2px rgba(19,26,36,.06), 0 12px 30px -18px rgba(19,26,36,.35);
+  --maxw:1180px;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#0E141D; --bg-deep:#0A0F16;
+    --panel:#151D27; --panel-2:#1B2531; --inset:#121A23;
+    --ink:#E8EDF4; --ink-2:#AFBAC8; --ink-3:#7B8797;
+    --rule:#26313E; --rule-soft:#1D2733;
+    --accent:#E3A73C; --accent-bright:#F0BC5E; --accent-soft:rgba(227,167,60,.12);
+    --blue:#7BA3E6; --teal:#44AE9B; --crimson:#DC7A6F; --plum:#A88BC9;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 18px 40px -24px rgba(0,0,0,.8);
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0E141D; --bg-deep:#0A0F16;
+  --panel:#151D27; --panel-2:#1B2531; --inset:#121A23;
+  --ink:#E8EDF4; --ink-2:#AFBAC8; --ink-3:#7B8797;
+  --rule:#26313E; --rule-soft:#1D2733;
+  --accent:#E3A73C; --accent-bright:#F0BC5E; --accent-soft:rgba(227,167,60,.12);
+  --blue:#7BA3E6; --teal:#44AE9B; --crimson:#DC7A6F; --plum:#A88BC9;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 18px 40px -24px rgba(0,0,0,.8);
+  color-scheme:dark;
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:"Golos Text","Helvetica Neue",Arial,sans-serif;
+  font-size:16px; line-height:1.62; -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+}
+h1,h2,h3{margin:0; text-wrap:balance; font-family:"Unbounded","Golos Text",Arial,sans-serif; letter-spacing:-.02em; font-weight:600}
+p{margin:0}
+a{color:inherit; text-underline-offset:3px; text-decoration-color:var(--accent)}
+a:focus-visible,button:focus-visible{outline:2px solid var(--accent-bright); outline-offset:3px; border-radius:2px}
+::selection{background:var(--accent-soft)}
+
+.mono{font-family:"IBM Plex Mono",ui-monospace,monospace}
+.eyebrow{
+  font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:11.5px;
+  letter-spacing:.16em; text-transform:uppercase; color:var(--ink-3);
+}
+
+/* ───────────────── каркас ───────────────── */
+.wrap{max-width:var(--maxw); margin:0 auto; padding-inline:clamp(16px,4vw,52px)}
+
+.topbar{
+  position:fixed; inset:0 0 auto 0; z-index:40;
+  padding:0 0 calc(env(safe-area-inset-top,0px)*0);
+  padding-top:env(safe-area-inset-top,0px);
+  background:color-mix(in srgb, var(--bg) 88%, transparent);
+  backdrop-filter:blur(10px); border-bottom:1px solid var(--rule-soft);
+}
+.topbar__in{display:flex; align-items:center; gap:14px; height:46px}
+.topbar__title{font-size:12px; letter-spacing:.12em; text-transform:uppercase; color:var(--ink-3); white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.topbar__title b{color:var(--ink); font-weight:600}
+.topbar__spacer{flex:1}
+.progress{position:absolute; left:0; bottom:-1px; height:2px; background:var(--accent); width:0}
+.tbtn{
+  appearance:none; border:1px solid var(--rule); background:var(--panel); color:var(--ink-2);
+  font-family:"IBM Plex Mono",monospace; font-size:11px; letter-spacing:.08em;
+  padding:5px 10px; border-radius:999px; cursor:pointer; white-space:nowrap;
+}
+.tbtn:hover{border-color:var(--accent); color:var(--ink)}
+
+.rail{
+  position:fixed; left:max(14px, calc(50vw - var(--maxw)/2 - 132px)); top:50%; transform:translateY(-50%);
+  z-index:30; display:none; flex-direction:column; gap:1px; width:132px;
+}
+@media (min-width:1320px){.rail{display:flex}}
+.rail a{
+  display:grid; grid-template-columns:22px 1fr; gap:8px; align-items:baseline;
+  font-family:"IBM Plex Mono",monospace; font-size:10.5px; letter-spacing:.06em;
+  color:var(--ink-3); text-decoration:none; padding:3px 0; border-left:1px solid transparent; padding-left:10px;
+}
+.rail a span:last-child{font-family:"Golos Text",sans-serif; font-size:11.5px; letter-spacing:0; line-height:1.3}
+.rail a:hover{color:var(--ink)}
+.rail a.is-on{color:var(--ink); border-left-color:var(--accent)}
+.rail a.is-on span:first-child{color:var(--accent)}
+
+/* ───────────────── обложка ───────────────── */
+.cover{position:relative; overflow:hidden; border-bottom:1px solid var(--rule)}
+.cover__grid{
+  display:grid; grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr); gap:clamp(24px,4vw,56px);
+  align-items:center; padding-block:clamp(72px,11vh,124px) clamp(40px,6vw,70px);
+}
+@media (max-width:920px){.cover__grid{grid-template-columns:1fr; align-items:start}}
+.cover h1{
+  font-size:clamp(31px,4.6vw,54px); line-height:1.06; font-weight:700; letter-spacing:-.035em;
+  margin-block:18px 0; max-width:15ch;
+}
+.cover h1 em{
+  font-style:normal; color:var(--accent); display:block; font-size:.62em;
+  font-weight:500; letter-spacing:-.02em; margin-top:.28em;
+}
+.cover__lead{
+  margin-top:22px; font-size:clamp(16px,1.6vw,19px); color:var(--ink-2); max-width:36ch; line-height:1.55;
+}
+.cover__kicker{display:flex; align-items:center; gap:12px; flex-wrap:wrap}
+.tag{
+  font-family:"IBM Plex Mono",monospace; font-size:11px; letter-spacing:.14em; text-transform:uppercase;
+  border:1px solid var(--rule); border-radius:999px; padding:4px 11px; color:var(--ink-2); background:var(--panel);
+}
+.tag--accent{border-color:var(--accent); color:var(--accent); background:var(--accent-soft)}
+.cover__meta{display:grid; gap:0; margin-top:34px; border-top:1px solid var(--rule)}
+.cover__meta div{display:grid; grid-template-columns:132px 1fr; gap:14px; padding:9px 0; border-bottom:1px solid var(--rule-soft); font-size:14px}
+.cover__meta dt,.cover__meta .k{font-family:"IBM Plex Mono",monospace; font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--ink-3); padding-top:3px}
+.cover__art{position:relative; min-height:260px; display:flex; align-items:center; justify-content:center}
+.cover__art svg{width:100%; max-width:100%; height:auto}
+.node{fill:var(--panel-2); stroke:var(--ink-3); stroke-width:1.2}
+.node--hot{fill:var(--accent-soft); stroke:var(--accent)}
+.link{stroke:var(--rule); stroke-width:1}
+.link--hot{stroke:var(--accent); stroke-width:1.2; stroke-dasharray:3 4}
+@media (prefers-reduced-motion:no-preference){
+  .pulse{animation:pulse 5.5s ease-in-out infinite}
+  .pulse:nth-child(2n){animation-delay:-1.8s}
+  .pulse:nth-child(3n){animation-delay:-3.4s}
+  @keyframes pulse{0%,100%{opacity:.45}50%{opacity:1}}
+}
+
+/* ───────────────── разворот ───────────────── */
+.spread{border-top:1px solid var(--rule); padding-block:clamp(46px,7vw,92px); scroll-margin-top:60px}
+.spread:first-of-type{border-top:none}
+.spread__grid{display:grid; grid-template-columns:128px minmax(0,1fr); gap:clamp(18px,3vw,44px)}
+@media (max-width:820px){.spread__grid{grid-template-columns:1fr; gap:14px}}
+.spread__meta{position:sticky; top:74px; align-self:start; display:flex; flex-direction:column; gap:6px}
+@media (max-width:820px){.spread__meta{position:static; flex-direction:row; align-items:baseline; gap:10px}}
+.spread__num{font-family:"IBM Plex Mono",monospace; font-size:12px; color:var(--accent); letter-spacing:.1em}
+.spread__label{font-family:"IBM Plex Mono",monospace; font-size:10.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-3); line-height:1.4}
+.spread h2{font-size:clamp(23px,3.1vw,36px); line-height:1.12; margin-bottom:18px}
+.spread h3{font-size:16px; letter-spacing:-.01em; font-weight:600; margin-bottom:6px}
+.lead{font-size:clamp(16px,1.35vw,18px); color:var(--ink-2); max-width:64ch; line-height:1.66}
+.body{max-width:66ch}
+.body p + p{margin-top:12px}
+.stack{display:flex; flex-direction:column; gap:clamp(18px,2.4vw,30px)}
+strong{font-weight:600}
+.hl{background:var(--accent-soft); box-shadow:0 -0.35em 0 0 var(--accent-soft) inset; padding:0 2px}
+
+/* ───────────────── компоненты ───────────────── */
+.thesis{
+  border-left:3px solid var(--accent); background:var(--panel); padding:clamp(18px,2.4vw,26px);
+  border-radius:0 6px 6px 0; box-shadow:var(--shadow);
+}
+.thesis .eyebrow{color:var(--accent)}
+.thesis p{font-size:clamp(17px,1.7vw,21px); line-height:1.5; margin-top:10px; letter-spacing:-.01em}
+
+.cols{display:grid; gap:14px}
+.cols--2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.cols--3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.cols--4{grid-template-columns:repeat(4,minmax(0,1fr))}
+@media (max-width:860px){.cols--3,.cols--4{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:560px){.cols--2,.cols--3,.cols--4{grid-template-columns:1fr}}
+
+.card{background:var(--panel); border:1px solid var(--rule-soft); border-radius:8px; padding:18px 18px 20px; display:flex; flex-direction:column; gap:7px}
+.card__k{font-family:"IBM Plex Mono",monospace; font-size:10.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-3)}
+.card p{font-size:14.5px; color:var(--ink-2); line-height:1.55}
+.card--bare{background:none; border:none; border-top:1px solid var(--rule); border-radius:0; padding:14px 0 0}
+
+.figrow{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:1px; background:var(--rule-soft); border:1px solid var(--rule-soft); border-radius:8px; overflow:hidden}
+@media (max-width:640px){.figrow{grid-template-columns:1fr}}
+.fig{background:var(--panel); padding:16px 18px 18px}
+.fig b{display:block; font-family:"Unbounded",sans-serif; font-weight:600; font-size:clamp(24px,3.4vw,34px); letter-spacing:-.03em; line-height:1; font-variant-numeric:tabular-nums}
+.fig .u{font-size:13px; color:var(--ink-3); font-family:"IBM Plex Mono",monospace}
+.fig p{font-size:13.5px; color:var(--ink-2); margin-top:8px; line-height:1.45}
+.fig--a b{color:var(--accent)} .fig--b b{color:var(--blue)} .fig--c b{color:var(--teal)}
+
+/* хронология */
+.tl{display:grid; gap:0; border-top:1px solid var(--rule)}
+.tl__i{display:grid; grid-template-columns:86px 1fr; gap:16px; padding:13px 0; border-bottom:1px solid var(--rule-soft); align-items:start}
+@media (max-width:560px){.tl__i{grid-template-columns:68px 1fr; gap:12px}}
+.tl__y{font-family:"IBM Plex Mono",monospace; font-size:13px; color:var(--accent); font-variant-numeric:tabular-nums; padding-top:2px}
+.tl__t{font-size:15px}
+.tl__t span{display:block; color:var(--ink-3); font-size:13.5px; margin-top:2px; line-height:1.5}
+.tl__i--key .tl__t b{box-shadow:0 -0.35em 0 0 var(--accent-soft) inset}
+
+/* сравнение / список рисков */
+.rows{display:grid; border:1px solid var(--rule-soft); border-radius:8px; overflow:hidden; background:var(--rule-soft); gap:1px}
+.row{background:var(--panel); display:grid; grid-template-columns:168px minmax(0,1fr); gap:16px; padding:14px 18px}
+@media (max-width:640px){.row{grid-template-columns:1fr; gap:4px}}
+.row__k{font-weight:600; font-size:14.5px}
+.row__v{font-size:14.5px; color:var(--ink-2)}
+.chip{
+  display:inline-block; font-family:"IBM Plex Mono",monospace; font-size:10px; letter-spacing:.1em;
+  text-transform:uppercase; padding:2px 8px; border-radius:999px; border:1px solid currentColor; margin-right:8px; vertical-align:1px;
+}
+.chip--hi{color:var(--crimson)} .chip--md{color:var(--accent)} .chip--lo{color:var(--teal)}
+
+/* графики */
+.chart{background:var(--panel); border:1px solid var(--rule-soft); border-radius:8px; padding:16px 16px 14px}
+.chart h3{font-family:"Golos Text",sans-serif; font-size:14.5px; margin-bottom:2px}
+.chart__sub{font-size:12.5px; color:var(--ink-3); margin-bottom:10px}
+.chart svg{display:block; width:100%; height:auto; max-width:100%; overflow:visible}
+.ax{stroke:var(--rule); stroke-width:1}
+.grid-l{stroke:var(--rule-soft); stroke-width:1}
+.tick{fill:var(--ink-3); font-family:"IBM Plex Mono",monospace; font-size:15px}
+.vlab{fill:var(--ink); font-family:"IBM Plex Mono",monospace; font-size:16px; font-weight:500}
+.xlab{fill:var(--ink-2); font-family:"IBM Plex Mono",monospace; font-size:16px}
+.b-goods{fill:var(--blue)} .b-serv{fill:var(--teal)} .b-pos{fill:var(--accent)} .b-neg{fill:var(--crimson)}
+.b-fore{fill:var(--accent-soft); stroke:var(--accent); stroke-width:1.2; stroke-dasharray:4 3}
+.legend{display:flex; flex-wrap:wrap; gap:14px; margin-top:10px; font-size:12.5px; color:var(--ink-2)}
+.legend i{display:inline-block; width:10px; height:10px; border-radius:2px; margin-right:6px; vertical-align:0}
+.src{font-size:12px; color:var(--ink-3); margin-top:10px; line-height:1.5}
+.dgm{background:var(--panel); border:1px solid var(--rule-soft); border-radius:8px; padding:16px}
+.dgm text{fill:var(--ink-2); font-family:"IBM Plex Mono",monospace; font-size:11px}
+.dgm .t-hd{fill:var(--ink); font-family:"Golos Text",sans-serif; font-size:13.5px; font-weight:600}
+.dgm .node{fill:var(--panel-2)}
+.dgm .node--hot{fill:color-mix(in srgb, var(--accent) 15%, var(--panel)); stroke:var(--accent); stroke-width:1.6}
+
+/* вопросы к дискуссии */
+.qs{display:grid; gap:1px; background:var(--rule-soft); border:1px solid var(--rule-soft); border-radius:8px; overflow:hidden}
+.q{background:var(--panel); display:grid; grid-template-columns:34px 1fr; gap:14px; padding:16px 18px; align-items:start}
+.q__n{font-family:"IBM Plex Mono",monospace; font-size:12px; color:var(--accent); padding-top:3px}
+.q p{font-size:15px; line-height:1.55}
+.q p span{display:block; color:var(--ink-3); font-size:13px; margin-top:5px}
+
+/* источники */
+.bib{display:grid; gap:20px}
+.bib h3{font-family:"Golos Text",sans-serif; font-size:13px; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-3); font-weight:600}
+.bib ol{margin:10px 0 0; padding-left:22px; display:grid; gap:9px}
+.bib li{font-size:14px; color:var(--ink-2); line-height:1.55}
+.bib li b{color:var(--ink); font-weight:600}
+.bib a{color:var(--blue); word-break:break-word}
+
+footer{border-top:1px solid var(--rule); padding-block:30px 46px; color:var(--ink-3); font-size:13px}
+footer .wrap{display:flex; flex-wrap:wrap; gap:12px 24px; align-items:baseline; justify-content:space-between}
+
+@media print{
+  .topbar,.rail,.tbtn{display:none!important}
+  body{background:#fff; color:#000; font-size:11pt}
+  .spread{break-inside:avoid; padding-block:18px}
+  .card,.chart,.dgm,.thesis{box-shadow:none}
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="wrap topbar__in">
+    <div class="topbar__title"><b>Четвёртая промышленная революция</b> &nbsp;и «Великая перезагрузка»</div>
+    <div class="topbar__spacer"></div>
+    <button class="tbtn" id="themeBtn" type="button" aria-label="Переключить тему">тема</button>
+    <button class="tbtn" id="printBtn" type="button">печать / PDF</button>
+  </div>
+  <div class="progress" id="progress"></div>
+</header>
+
+<nav class="rail" id="rail" aria-label="Разделы доклада">
+  <a href="#s01"><span class="mono">01</span><span>Вопрос доклада</span></a>
+  <a href="#s02"><span class="mono">02</span><span>Хронология</span></a>
+  <a href="#s03"><span class="mono">03</span><span>Что такое 4ПР</span></a>
+  <a href="#s04"><span class="mono">04</span><span>Четыре среза</span></a>
+  <a href="#s05"><span class="mono">05</span><span>Перезагрузка</span></a>
+  <a href="#s06"><span class="mono">06</span><span>Стейкхолдеры и ESG</span></a>
+  <a href="#s07"><span class="mono">07</span><span>Экономический фон</span></a>
+  <a href="#s08"><span class="mono">08</span><span>Цепочки стоимости</span></a>
+  <a href="#s09"><span class="mono">09</span><span>Риски и критика</span></a>
+  <a href="#s10"><span class="mono">10</span><span>Полицентризм</span></a>
+  <a href="#s11"><span class="mono">11</span><span>Следствия для России</span></a>
+  <a href="#s12"><span class="mono">12</span><span>Выводы</span></a>
+  <a href="#s13"><span class="mono">13</span><span>К дискуссии</span></a>
+  <a href="#s14"><span class="mono">14</span><span>Источники</span></a>
+</nav>
+
+<main>
+<section class="cover">
+  <div class="wrap cover__grid">
+    <div>
+      <div class="cover__kicker">
+        <span class="tag tag--accent">Тема 16</span>
+        <span class="tag">Доклад для обсуждения и дискуссии</span>
+      </div>
+      <h1>Четвёртая промышленная революция и «Великая перезагрузка»<em>в оптике полицентризма</em></h1>
+      <p class="cover__lead">Что в повестке К. Шваба описывает объективный технологический сдвиг, что — нормативный проект управления им, и почему второе разбивается о многополярную структуру мировой экономики.</p>
+      <div class="cover__meta">
+        <div><span class="k">Дисциплина</span><span>Мировая экономика и международные экономические отношения</span></div>
+        <div><span class="k">Первоисточник</span><span>Schwab K. Now is the time for a «Great Reset». WEF, 2020; The Fourth Industrial Revolution, 2016</span></div>
+        <div><span class="k">Опорная литература</span><span>В. В. Перская, М. А. Эскиндаров: «Многополярность» (2018), «Неизбежность изменений в условиях полицентризма» (2021), «Полицентризм» (2023)</span></div>
+        <div><span class="k">Данные</span><span>WTO · IMF · UNCTAD · WEF, 2022–2023</span></div>
+        <div><span class="k">Докладчик</span><span>Ф. И. О., группа</span></div>
+      </div>
+    </div>
+    <div class="cover__art" aria-hidden="true">
+      <svg viewBox="0 0 420 360" role="presentation">
+        <g class="link">
+          <line x1="70" y1="80" x2="190" y2="50"/><line x1="190" y1="50" x2="320" y2="95"/>
+          <line x1="70" y1="80" x2="120" y2="180"/><line x1="190" y1="50" x2="250" y2="165"/>
+          <line x1="320" y1="95" x2="250" y2="165"/><line x1="320" y1="95" x2="370" y2="200"/>
+          <line x1="120" y1="180" x2="250" y2="165"/><line x1="120" y1="180" x2="60" y2="285"/>
+          <line x1="60" y1="285" x2="200" y2="300"/><line x1="200" y1="300" x2="330" y2="275"/>
+          <line x1="250" y1="165" x2="370" y2="200"/><line x1="370" y1="200" x2="330" y2="275"/>
+        </g>
+        <g class="link link--hot">
+          <line x1="190" y1="50" x2="120" y2="180"/><line x1="120" y1="180" x2="200" y2="300"/>
+          <line x1="250" y1="165" x2="200" y2="300"/>
+        </g>
+        <g>
+          <circle class="node" cx="70" cy="80" r="14"/>
+          <circle class="node node--hot pulse" cx="190" cy="50" r="20"/>
+          <circle class="node" cx="320" cy="95" r="16"/>
+          <circle class="node node--hot pulse" cx="120" cy="180" r="22"/>
+          <circle class="node" cx="250" cy="165" r="13"/>
+          <circle class="node" cx="370" cy="200" r="11"/>
+          <circle class="node" cx="60" cy="285" r="15"/>
+          <circle class="node node--hot pulse" cx="200" cy="300" r="19"/>
+          <circle class="node" cx="330" cy="275" r="12"/>
+        </g>
+      </svg>
+    </div>
+  </div>
+</section>
+
+<section class="spread" id="s01">
+  <div class="wrap spread__grid">
+    <div class="spread__meta"><span class="spread__num">01</span><span class="spread__label">Вопрос<br>доклада</span></div>
+    <div class="stack">
+      <div>
+        <h2>Два разных понятия, которые принято произносить через запятую</h2>
+        <p class="lead">«Четвёртая промышленная революция» и «Великая перезагрузка» появились из одного источника — Всемирного экономического форума и лично К. Шваба, — но отвечают на разные вопросы. Первое понятие <strong>описывает</strong>: что происходит с технологической базой производства. Второе <strong>предписывает</strong>: как мировому сообществу следует перестроить экономику и институты. Смешение описания с предписанием и есть главный источник споров вокруг повестки.</p>
+      </div>
+      <div class="thesis">
+        <span class="eyebrow">Тезис доклада</span>
+        <p>Технологический сдвиг объективен и идёт независимо от чьей-либо воли. Проект его глобального управления — нет: он предполагает единый центр выработки правил, тогда как мировая экономика движется к полицентризму, где нормы рождаются из согласования национальных интересов, а не из универсального рецепта.</p>
+      </div>
+      <div class="cols cols--3">
+        <div class="card"><span class="card__k">Часть I · описание</span><h3>Что меняется</h3><p>Содержание 4ПР по Швабу: три признака революции, технологические кластеры, четыре среза воздействия — и контраргумент о «парадоксе производительности».</p></div>
+        <div class="card"><span class="card__k">Часть II · предписание</span><h3>Что предлагается</h3><p>Три компонента «Великой перезагрузки», механика стейкхолдерского капитализма и ESG, кто в этой конструкции субъект решения.</p></div>
+        <div class="card"><span class="card__k">Часть III · проверка</span><h3>Работает ли это</h3><p>Сверка с данными ВТО, МВФ и ЮНКТАД, поведение глобальных цепочек стоимости и рамка полицентризма как альтернатива единому сценарию.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="spread" id="s02">
+  <div class="wrap spread__grid">
+    <div class="spread__meta"><span class="spread__num">02</span><span class="spread__label">Хронология<br>понятий</span></div>
+    <div class="stack">
+      <div>
+        <h2>От Ганновера до Давоса: как повестка собиралась пятьдесят лет</h2>
+        <p class="lead">Ни один из двух терминов не возник внезапно. Полезно видеть, в какой момент технологическая метафора превратилась в программу действий.</p>
+      </div>
+      <div class="tl">
+        <div class="tl__i"><span class="tl__y">1971</span><span class="tl__t"><b>Основан Европейский форум менеджмента</b><span>С 1987 года — Всемирный экономический форум. Уже в первых документах Шваб формулирует идею, что фирма отвечает не только перед акционерами, но перед всеми заинтересованными сторонами.</span></span></div>
+        <div class="tl__i"><span class="tl__y">2011</span><span class="tl__t"><b>Industrie 4.0, Ганноверская ярмарка</b><span>Германская промышленная инициатива: киберфизические системы, интернет вещей, «умное» производство. Индустриальный прообраз будущей «четвёртой революции».</span></span></div>
+        <div class="tl__i tl__i--key"><span class="tl__y">2016</span><span class="tl__t"><b>Давос: «Mastering the Fourth Industrial Revolution»</b><span>Тема форума и одноимённая книга Шваба. Термин выходит за пределы инженерии и становится рамкой для разговора об обществе и управлении.</span></span></div>
+        <div class="tl__i"><span class="tl__y">2018</span><span class="tl__t"><b>«Shaping the Fourth Industrial Revolution»</b><span>Акцент смещается с самих технологий на то, кто и по каким правилам будет их направлять.</span></span></div>
+        <div class="tl__i"><span class="tl__y">2019</span><span class="tl__t"><b>Давосский манифест 2020</b><span>Обновлённая формула назначения компании: устойчивое создание стоимости для всех стейкхолдеров; параллельно разрабатываются единые метрики нефинансовой отчётности.</span></span></div>
+        <div class="tl__i tl__i--key"><span class="tl__y">2020</span><span class="tl__t"><b>Июнь: объявлена «Великая перезагрузка»</b><span>Пандемия подаётся как «узкое окно возможностей» для пересборки экономики. В июле выходит книга «COVID-19: The Great Reset» (К. Шваб, Т. Малльре), в 2021-м — «Stakeholder Capitalism».</span></span></div>
+        <div class="tl__i tl__i--key"><span class="tl__y">2022</span><span class="tl__t"><b>МВФ: «War Sets Back the Global Recovery»</b><span>Апрельский выпуск World Economic Outlook фиксирует разворот: вместо единого восстановления — санкционные режимы, разрыв платёжных и логистических контуров, фрагментация.</span></span></div>
+        <div class="tl__i"><span class="tl__y">2023</span><span class="tl__t"><b>Статистика ВТО и ЮНКТАД</b><span>Рекордные стоимостные объёмы мировой торговли 2022 года при скромном росте физических объёмов и начавшемся спаде 2023-го; цепочки поставок перестраиваются по региональному и «дружественному» принципу.</span></span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="spread" id="s03">
+  <div class="wrap spread__grid">
+    <div class="spread__meta"><span class="spread__num">03</span><span class="spread__label">Содержание<br>4ПР</span></div>
+    <div class="stack">
+      <div>
+        <h2>Почему Шваб настаивает, что это революция, а не продолжение третьей</h2>
+        <p class="lead">Аргумент строится на трёх признаках. Ни один из них не про конкретную технологию — все три про характер изменения.</p>
+      </div>
+      <div class="cols cols--3">
+        <div class="card"><span class="card__k">признак 01</span><h3>Скорость</h3><p>Изменения разворачиваются не линейно, а экспоненциально: новая технология распространяется быстрее, чем общество успевает выработать к ней правила.</p></div>
+        <div class="card"><span class="card__k">признак 02</span><h3>Широта и глубина</h3><p>Сливаются три ранее раздельных мира — цифровой, физический и биологический. Меняется не отдельная операция, а сам способ, которым создаётся продукт.</p></div>
+        <div class="card"><span class="card__k">признак 03</span><h3>Системность</h3><p>Преобразуются целые системы: отрасли, рынки труда, модели управления, отношения между странами. Локальные выигрыши оборачиваются структурными сдвигами.</p></div>
+      </div>
+      <div class="rows">
+        <div class="row"><span class="row__k">Цифровой кластер</span><span class="row__v">Искусственный интеллект и машинное обучение, большие данные, интернет вещей, облачные платформы, распределённые реестры.</span></div>
+        <div class="row"><span class="row__k">Физический кластер</span><span class="row__v">Робототехника и автономный транспорт, аддитивное производство, новые материалы, промышленная сенсорика.</span></div>
+        <div class="row"><span class="row__k">Биологический кластер</span><span class="row__v">Геномное редактирование, биоинженерия, персонализированная медицина, биотехнологии в сельском хозяйстве.</span></div>
+        <div class="row"><span class="row__k">Энергетический контур</span><span class="row__v">Накопители энергии, распределённая генерация, низкоуглеродные технологии — технологическая опора «зелёной» части повестки.</span></div>
+      </div>
+      <div class="card card--bare">
+        <span class="card__k">контраргумент, который стоит держать в докладе</span>
+        <h3>Парадокс производительности</h3>
+        <p>Если революция состоялась, она должна проявиться в статистике производительности труда. Пока устойчивого ускорения в развитых экономиках не видно: темпы роста совокупной факторной производительности остаются ниже показателей второй половины XX века. Отсюда осторожная позиция части исследователей: происходящее — зрелая фаза третьей, цифровой революции, а «четвёртая» — удачная рамка для разговора, а не установленный факт. Для дискуссии это ключевая развилка: от ответа зависит, нужна ли экстренная «перезагрузка» институтов.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="spread" id="s04">
+  <div class="wrap spread__grid">
+    <div class="spread__meta"><span class="spread__num">04</span><span class="spread__label">Четыре среза<br>воздействия</span></div>
+    <div class="stack">
+      <div>
+        <h2>Где именно технологический сдвиг становится экономической проблемой</h2>
+        <p class="lead">Шваб разбирает воздействие 4ПР по четырём уровням. Для доклада важно, что на каждом из них выигрыш и риск создаются одним и тем же механизмом.</p>
+      </div>
+      <div class="cols cols--2">
+        <div class="card"><span class="card__k">уровень · экономика</span><h3>Рост и занятость</h3><p>Автоматизация повышает производительность капитала и одновременно разрывает связь между ростом выпуска и ростом занятости. Выигрыш концентрируется у владельцев технологий и платформ, издержки адаптации ложатся на рынок труда.</p></div>
+        <div class="card"><span class="card__k">уровень · бизнес</span><h3>Модель фирмы</h3><p>Данные становятся активом, а платформа — способом присвоения ренты. Барьером входа оказывается не капитал, а доступ к данным и вычислениям; преимущество получает тот, кто быстрее перестраивает цепочку, а не тот, кто крупнее.</p></div>
+        <div class="card"><span class="card__k">уровень · государство</span><h3>Регулирование и суверенитет</h3><p>Скорость технологий обгоняет законодательный цикл. Возникают вопросы, которых раньше не было: чьей юрисдикции подчиняются данные, кто отвечает за решения алгоритма, где проходит граница технологического суверенитета.</p></div>
+        <div class="card"><span class="card__k">уровень · человек</span><h3>Общество и идентичность</h3><p>Приватность, цифровое неравенство, изменение содержания труда и требований к квалификации. Технологический разрыв между странами и внутри стран превращается в разрыв социальный.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="spread" id="s05">
+  <div class="wrap spread__grid">
+    <div class="spread__meta"><span class="spread__num">05</span><span class="spread__label">Великая<br>перезагрузка</span></div>
+    <div class="stack">
+      <div>
+        <h2>Три компонента программы, объявленной в июне 2020 года</h2>
+        <p class="lead">Логика Шваба такова: пандемия остановила мировую экономику, а значит — открыла редкое «окно», когда систему можно не чинить, а пересобрать. Программа сформулирована компактно и состоит из трёх взаимосвязанных направлений.</p>
+      </div>
+      <div class="cols cols--3">
+        <div class="card"><span class="card__k">компонент 01</span><h3>Направить рынок к более справедливым результатам</h3><p>Координация налоговой, регуляторной и торговой политики; пересмотр правил конкуренции и корпоративного управления; переход к «капитализму заинтересованных сторон» как норме, а не как добровольной практике.</p></div>
+        <div class="card"><span class="card__k">компонент 02</span><h3>Инвестиции в общие цели</h3><p>Государственные расходы и стимулы направляются не на восстановление прежней структуры, а на равенство и устойчивость: «зелёная» инфраструктура, энергопереход, здравоохранение, образование, увязка поддержки бизнеса с экологическими обязательствами.</p></div>
+        <div class="card"><span class="card__k">компонент 03</span><h3>Технологии 4ПР — на общее благо</h3><p>Достижения четвёртой промышленной революции используются для решения общественных задач: здравоохранение, климат, социальная сфера. Именно здесь оба понятия сцепляются в одну конструкцию.</p></div>
+      </div>
+      <div class="rows">
+        <div class="row"><span class="row__k">Что здесь описание</span><span class="row__v">Констатация: пандемия усилила неравенство, обнажила хрупкость цепочек поставок и зависимость систем здравоохранения от глобальной логистики. Это проверяемые факты.</span></div>
+        <div class="row"><span class="row__k">Что здесь предписание</span><span class="row__v">Вывод о том, что ответом должна стать скоординированная перестройка на основе единого набора принципов. Это уже нормативный выбор, а не следствие из данных.</span></div>
+        <div class="row"><span class="row__k">Ключевой вопрос</span><span class="row__v">Кто субъект «перезагрузки». У программы нет мандата: форум — это площадка, а не орган с полномочиями. Отсюда и претензия к легитимности, и волна конспирологических трактовок, которая сама стала фактором восприятия повестки.</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="spread" id="s06">
+  <div class="wrap spread__grid">
+    <div class="spread__meta"><span class="spread__num">06</span><span class="spread__label">Механика:<br>стейкхолдеры<br>и ESG</span></div>
+    <div class="stack">
+      <div>
+        <h2>Как программа переводится на язык корпоративного управления</h2>
+        <p class="lead">Экономическое ядро «перезагрузки» — смена критерия успеха фирмы. Вместо максимизации стоимости для акционеров предлагается устойчивое создание стоимости для всех заинтересованных сторон, а инструментом контроля становится нефинансовая отчётность.</p>
+      </div>
+      <div class="rows">
+        <div class="row"><span class="row__k">Критерий успеха</span><span class="row__v"><strong>Было:</strong> рыночная капитализация и прибыль на акцию. <br><strong>Предлагается:</strong> совокупный результат для акционеров, работников, поставщиков, потребителей, местных сообществ и среды.</span></div>
+        <div class="row"><span class="row__k">Горизонт решений</span><span class="row__v"><strong>Было:</strong> квартальная отчётность. <br><strong>Предлагается:</strong> долгосрочные обязательства, увязанные с климатическими и социальными целями.</span></div>
+        <div class="row"><span class="row__k">Инструмент</span><span class="row__v">ESG-метрики и единые показатели устойчивого создания стоимости; привязка вознаграждения менеджмента и стоимости заёмного капитала к нефинансовым результатам.</span></div>
+        <div class="row"><span class="row__k">Кто контролирует</span><span class="row__v">Не государство напрямую, а инвесторы, рейтинговые агентства и банки через стоимость и доступность финансирования. Регулирование переносится в контур частных стандартов.</span></div>
+      </div>
+      <div class="cols cols--3">
+        <div class="card"><span class="card__k">возражение 01</span><h3>Измеримость</h3><p>Единого стандарта нет, методики агентств расходятся, оценки одной и той же компании могут различаться кардинально. Там, где нет сопоставимости, нет и рынка.</p></div>
+        <div class="card"><span class="card__k">возражение 02</span><h3>Издержки соответствия</h3><p>Стоимость отчётности и сертификации фиксирована и потому регрессивна: она тяжелее ложится на компании развивающихся стран и малый бизнес.</p></div>
+        <div class="card"><span class="card__k">возражение 03</span><h3>Нетарифный барьер</h3><p>Экологические и социальные требования к импорту — включая углеродные корректировки — экономически работают как барьер доступа на рынок, независимо от их мотивации.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="spread" id="s07">
+  <div class="wrap spread__grid">
+    <div class="spread__meta"><span class="spread__num">07</span><span class="spread__label">Экономический<br>фон</span></div>
+    <div class="stack">
+      <div>
+        <h2>Что показывают цифры: рекорд в деньгах, торможение в товарах</h2>
+        <p class="lead">Программа «перезагрузки» формулировалась в 2020 году под ожидание скоординированного восстановления. Статистика 2022–2023 годов описывает другую траекторию — рост стоимостных показателей на фоне ценового шока и почти остановившийся рост физических объёмов торговли.</p>
+      </div>
+      <div class="figrow">
+        <div class="fig fig--a"><b>31,7</b> <span class="u">трлн долл.</span><p>Мировой экспорт товаров и коммерческих услуг в 2022 году — исторический максимум (ВТО).</p></div>
+        <div class="fig fig--b"><b>+2,7<span class="u">%</span></b><p>Прирост физического объёма торговли товарами в 2022 году — при росте стоимости примерно на 12%.</p></div>
+        <div class="fig fig--c"><b>3,6<span class="u">%</span></b><p>Прогноз роста мировой экономики на 2022 и 2023 годы против 6,1% в 2021-м (МВФ, апрель 2022).</p></div>
+      </div>
+      <div class="cols cols--2">
+        <div class="chart">
+          <h3>Мировой экспорт: товары и коммерческие услуги</h3>
+          <p class="chart__sub">трлн долл. США, 2019—2022</p>
+          <svg viewBox="0 0 640 300" role="img" aria-label="Столбчатая диаграмма мирового экспорта товаров и услуг с 2019 по 2022 год: 25,0; 22,5; 28,3 и 31,7 трлн долларов">
+            <line class="grid-l" x1="70" y1="62.9" x2="620" y2="62.9"/>
+            <line class="grid-l" x1="70" y1="128.6" x2="620" y2="128.6"/>
+            <line class="grid-l" x1="70" y1="194.3" x2="620" y2="194.3"/>
+            <text class="tick" x="58" y="66.9" text-anchor="end">30</text>
+            <text class="tick" x="58" y="132.6" text-anchor="end">20</text>
+            <text class="tick" x="58" y="198.3" text-anchor="end">10</text>
+            <text class="tick" x="58" y="264" text-anchor="end">0</text>
+            <rect class="b-goods" x="100.75" y="135.8" width="76" height="124.2"/>
+            <rect class="b-serv" x="100.75" y="95.7" width="76" height="40.1"/>
+            <text class="vlab" x="138.75" y="87" text-anchor="middle">25,0</text>
+            <rect class="b-goods" x="238.25" y="144.3" width="76" height="115.7"/>
+            <rect class="b-serv" x="238.25" y="112.1" width="76" height="32.2"/>
+            <text class="vlab" x="276.25" y="103" text-anchor="middle">22,5</text>
+            <rect class="b-goods" x="375.75" y="113.5" width="76" height="146.5"/>
+            <rect class="b-serv" x="375.75" y="74.1" width="76" height="39.4"/>
+            <text class="vlab" x="413.75" y="65" text-anchor="middle">28,3</text>
+            <rect class="b-goods" x="513.25" y="96.4" width="76" height="163.6"/>
+            <rect class="b-serv" x="513.25" y="51.7" width="76" height="44.7"/>
+            <text class="vlab" x="551.25" y="43" text-anchor="middle">31,7</text>
+            <line class="ax" x1="70" y1="260" x2="620" y2="260"/>
+            <text class="xlab" x="138.75" y="280" text-anchor="middle">2019</text>
+            <text class="xlab" x="276.25" y="280" text-anchor="middle">2020</text>
+            <text class="xlab" x="413.75" y="280" text-anchor="middle">2021</text>
+            <text class="xlab" x="551.25" y="280" text-anchor="middle">2022</text>
+          </svg>
+          <div class="legend"><span><i style="background:var(--blue)"></i>товары</span><span><i style="background:var(--teal)"></i>коммерческие услуги</span></div>
+          <p class="src">Источник: World Trade Statistical Review 2023, WTO. Значения округлены; 2020 год — провал пандемии, 2022-й — рекорд, во многом ценовой.</p>
+        </div>
+        <div class="chart">
+          <h3>Темпы роста мировой экономики</h3>
+          <p class="chart__sub">прирост мирового ВВП, % к предыдущему году</p>
+          <svg viewBox="0 0 640 290" role="img" aria-label="Диаграмма темпов роста мирового ВВП: минус 3,1 процента в 2020 году, 6,1 в 2021, 3,6 в 2022 и 3,6 в 2023 году по прогнозу">
+            <line class="grid-l" x1="70" y1="50" x2="620" y2="50"/>
+            <line class="grid-l" x1="70" y1="90" x2="620" y2="90"/>
+            <line class="grid-l" x1="70" y1="130" x2="620" y2="130"/>
+            <line class="grid-l" x1="70" y1="210" x2="620" y2="210"/>
+            <line class="grid-l" x1="70" y1="250" x2="620" y2="250"/>
+            <text class="tick" x="58" y="54" text-anchor="end">6</text>
+            <text class="tick" x="58" y="94" text-anchor="end">4</text>
+            <text class="tick" x="58" y="134" text-anchor="end">2</text>
+            <text class="tick" x="58" y="174" text-anchor="end">0</text>
+            <text class="tick" x="58" y="214" text-anchor="end">−2</text>
+            <text class="tick" x="58" y="254" text-anchor="end">−4</text>
+            <rect class="b-neg" x="107.75" y="170" width="62" height="62"/>
+            <text class="vlab" x="138.75" y="248" text-anchor="middle">−3,1</text>
+            <rect class="b-pos" x="245.25" y="48" width="62" height="122"/>
+            <text class="vlab" x="276.25" y="42" text-anchor="middle">6,1</text>
+            <rect class="b-pos" x="382.75" y="98" width="62" height="72"/>
+            <text class="vlab" x="413.75" y="92" text-anchor="middle">3,6</text>
+            <rect class="b-fore" x="520.25" y="98" width="62" height="72"/>
+            <text class="vlab" x="551.25" y="92" text-anchor="middle">3,6</text>
+            <line class="ax" x1="70" y1="170" x2="620" y2="170"/>
+            <text class="xlab" x="138.75" y="272" text-anchor="middle">2020</text>
+            <text class="xlab" x="276.25" y="272" text-anchor="middle">2021</text>
+            <text class="xlab" x="413.75" y="272" text-anchor="middle">2022</text>
+            <text class="xlab" x="551.25" y="272" text-anchor="middle">2023</text>
+          </svg>
+          <div class="legend"><span><i style="background:var(--accent)"></i>факт и оценка</span><span><i style="border:1.2px dashed var(--accent); background:var(--accent-soft)"></i>прогноз</span></div>
+          <p class="src">Источник: World Economic Outlook «War Sets Back the Global Recovery», IMF, апрель 2022. Прогноз на 2022—2023 годы понижен относительно январской оценки.</p>
+        </div>
+      </div>
+      <div class="card card--bare">
+        <span class="card__k">как это читать в докладе</span>
+        <p>Рекорд 2022 года сложился прежде всего из-за роста цен на энергоносители и продовольствие: стоимостные объёмы выросли двузначно, физические — на считанные проценты, а к 2023 году ЮНКТАД фиксирует сокращение товарной торговли при сохранении роста в услугах. Мировая экономика в этот момент решает не задачу «пересборки на общих принципах», а задачу приспособления к разрыву прежних связей.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="spread" id="s08">
+  <div class="wrap spread__grid">
+    <div class="spread__meta"><span class="spread__num">08</span><span class="spread__label">Цепочки<br>стоимости</span></div>
+    <div class="stack">
+      <div>
+        <h2>Глобальные цепочки стоимости как индикатор трансформации</h2>
+        <p class="lead">В. В. Перская и Л. И. Хомякова предлагают смотреть на ГЦС как на чувствительный индикатор изменений в мировой экономике: конфигурация цепочек показывает, по каким линиям на самом деле идёт интеграция — раньше, чем это фиксируют институты и декларации.</p>
+      </div>
+      <div class="cols cols--3">
+        <div class="card"><span class="card__k">сдвиг 01</span><h3>Регионализация</h3><p>Длинные трансконтинентальные цепочки укорачиваются. Приоритет смещается от минимальных издержек к надёжности поставки: производство переносится ближе к рынку сбыта или в соседние юрисдикции.</p></div>
+        <div class="card"><span class="card__k">сдвиг 02</span><h3>Политический отбор партнёра</h3><p>Размещение звена цепочки всё чаще определяется принадлежностью к политическому блоку, а не сравнительным преимуществом. Экономическая эффективность приносится в жертву предсказуемости доступа.</p></div>
+        <div class="card"><span class="card__k">сдвиг 03</span><h3>Перенос стоимости в услуги</h3><p>Добавленная стоимость всё больше создаётся в нематериальных звеньях — разработка, данные, логистика, сервис. Именно здесь технологии 4ПР дают наибольший эффект и наибольшую концентрацию.</p></div>
+      </div>
+      <div class="card card--bare">
+        <span class="card__k">следствие для тезиса доклада</span>
+        <p>Фрагментация цепочек — это не сбой, который «перезагрузка» должна устранить, а способ адаптации национальных экономик к возросшим рискам. Страна, встроенная в цепочку по чужим правилам, получает занятость и выручку, но не получает контроля над технологическим ядром. Отсюда встречное движение: попытки удержать внутри страны звенья с высокой добавленной стоимостью — и это движение противоположно логике единого глобального сценария.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="spread" id="s09">
+  <div class="wrap spread__grid">
+    <div class="spread__meta"><span class="spread__num">09</span><span class="spread__label">Риски<br>и критика</span></div>
+    <div class="stack">
+      <div>
+        <h2>Издержки, которые повестка признаёт, и те, которые обходит</h2>
+        <p class="lead">Часть рисков Шваб называет сам — неравенство, приватность, рынок труда. Другая часть возникает уже у самой программы как у способа управления и в её текстах не проблематизируется.</p>
+      </div>
+      <div class="rows">
+        <div class="row"><span class="row__k"><span class="chip chip--hi">высокий</span>Рынок труда</span><span class="row__v">Автоматизация вымывает середину квалификационного распределения. Новые рабочие места создаются, но в других отраслях, регионах и с другими требованиями — издержки переобучения не распределены.</span></div>
+        <div class="row"><span class="row__k"><span class="chip chip--hi">высокий</span>Цифровой разрыв</span><span class="row__v">Доступ к вычислениям, данным и инженерным школам распределён крайне неравномерно. Технологическая рента концентрируется в нескольких юрисдикциях, увеличивая разрыв между странами, а не сокращая его.</span></div>
+        <div class="row"><span class="row__k"><span class="chip chip--hi">высокий</span>Цена энергоперехода</span><span class="row__v">Для экономик с сырьевой и энергоёмкой структурой ускоренный переход означает списание действующих активов. Без механизма компенсации это перераспределение издержек, а не общая цель.</span></div>
+        <div class="row"><span class="row__k"><span class="chip chip--md">средний</span>Управление данными</span><span class="row__v">Правовой вакуум: трансграничные потоки данных, ответственность за алгоритмические решения, юрисдикция платформ. Регулирование отстаёт от технологии на цикл, и разрыв растёт.</span></div>
+        <div class="row"><span class="row__k"><span class="chip chip--md">средний</span>Кибербезопасность</span><span class="row__v">Чем плотнее связаны киберфизические системы, тем выше цена отказа одного звена. Критическая инфраструктура становится объектом экономического давления.</span></div>
+        <div class="row"><span class="row__k"><span class="chip chip--hi">высокий</span>Легитимность</span><span class="row__v">Программу формулирует площадка без представительного мандата. Дефицит процедуры порождает и содержательную критику, и волну конспирологии, которая затрудняет обсуждение по существу.</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="spread" id="s10">
+  <div class="wrap spread__grid">
+    <div class="spread__meta"><span class="spread__num">10</span><span class="spread__label">Рамка<br>полицентризма</span></div>
+    <div class="stack">
+      <div>
+        <h2>Альтернатива единому сценарию: согласование вместо предписания</h2>
+        <p class="lead">В работах В. В. Перской и М. А. Эскиндарова полицентризм описан не как простое умножение центров силы, а как иной способ производства правил: нормы возникают из согласования национальных интересов через институты, а не задаются одним центром и принимаются остальными.</p>
+      </div>
+      <div class="dgm">
+        <svg viewBox="0 0 640 280" role="img" aria-label="Схема: слева единый центр, задающий правила периферии; справа несколько взаимосвязанных центров, согласующих интересы">
+          <text class="t-hd" x="150" y="24" text-anchor="middle">Единый сценарий</text>
+          <text x="150" y="44" text-anchor="middle">правила задаёт центр</text>
+          <g class="link">
+            <line x1="150" y1="155" x2="235" y2="155"/><line x1="150" y1="155" x2="192.5" y2="228.6"/>
+            <line x1="150" y1="155" x2="107.5" y2="228.6"/><line x1="150" y1="155" x2="65" y2="155"/>
+            <line x1="150" y1="155" x2="107.5" y2="81.4"/><line x1="150" y1="155" x2="192.5" y2="81.4"/>
+          </g>
+          <circle class="node node--hot" cx="150" cy="155" r="26"/>
+          <circle class="node" cx="235" cy="155" r="11"/><circle class="node" cx="192.5" cy="228.6" r="11"/>
+          <circle class="node" cx="107.5" cy="228.6" r="11"/><circle class="node" cx="65" cy="155" r="11"/>
+          <circle class="node" cx="107.5" cy="81.4" r="11"/><circle class="node" cx="192.5" cy="81.4" r="11"/>
+          <line class="grid-l" x1="320" y1="40" x2="320" y2="250"/>
+          <text class="t-hd" x="470" y="24" text-anchor="middle">Полицентризм</text>
+          <text x="470" y="44" text-anchor="middle">правила рождаются из согласования</text>
+          <g class="link link--hot">
+            <line x1="546" y1="199" x2="470" y2="243"/><line x1="470" y1="243" x2="394" y2="199"/>
+            <line x1="394" y1="199" x2="394" y2="111"/><line x1="394" y1="111" x2="470" y2="67"/>
+            <line x1="470" y1="67" x2="546" y2="111"/><line x1="546" y1="111" x2="546" y2="199"/>
+            <line x1="394" y1="111" x2="546" y2="199"/><line x1="470" y1="67" x2="470" y2="243"/>
+            <line x1="546" y1="111" x2="394" y2="199"/>
+          </g>
+          <circle class="node node--hot" cx="546" cy="199" r="18"/><circle class="node node--hot" cx="470" cy="243" r="15"/>
+          <circle class="node node--hot" cx="394" cy="199" r="20"/><circle class="node node--hot" cx="394" cy="111" r="14"/>
+          <circle class="node node--hot" cx="470" cy="67" r="19"/><circle class="node node--hot" cx="546" cy="111" r="16"/>
+        </svg>
+      </div>
+      <div class="rows">
+        <div class="row"><span class="row__k">Источник норм</span><span class="row__v"><strong>Перезагрузка:</strong> универсальные принципы, выработанные экспертной средой и крупным бизнесом. <br><strong>Полицентризм:</strong> компромисс национальных интересов, закреплённый в договорах и институтах.</span></div>
+        <div class="row"><span class="row__k">Роль государства</span><span class="row__v"><strong>Перезагрузка:</strong> исполнитель согласованной повестки, партнёр корпораций. <br><strong>Полицентризм:</strong> самостоятельный субъект, отвечающий за собственную модель развития.</span></div>
+        <div class="row"><span class="row__k">Механизм</span><span class="row__v"><strong>Перезагрузка:</strong> стандарты, рейтинги, условия финансирования. <br><strong>Полицентризм:</strong> реформа неспециализированных международных организаций — ООН, ШОС — и региональные интеграционные контуры.</span></div>
+        <div class="row"><span class="row__k">Критерий успеха</span><span class="row__v"><strong>Перезагрузка:</strong> соответствие глобальным целям устойчивости. <br><strong>Полицентризм:</strong> реализация национальных приоритетов без разрушения общего экономического пространства.</span></div>
+        <div class="row"><span class="row__k">Отношение к биполярности</span><span class="row__v">Авторы называют биполярность призрачной: попытка разложить мир на два лагеря не описывает поведение участников, у которых интересы пересекаются по разным осям — торговой, технологической, энергетической, валютной.</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="spread" id="s11">
+  <div class="wrap spread__grid">
+    <div class="spread__meta"><span class="spread__num">11</span><span class="spread__label">Следствия<br>для России</span></div>
+    <div class="stack">
+      <div>
+        <h2>Что из тезиса следует практически</h2>
+        <p class="lead">Если технологический сдвиг объективен, а единый сценарий управления им — нет, то позиция состоит не в отказе от 4ПР и не в принятии «перезагрузки» целиком, а в раздельной работе с описанием и с предписанием.</p>
+      </div>
+      <div class="cols cols--2">
+        <div class="card"><span class="card__k">направление 01</span><h3>Технологический суверенитет, а не автаркия</h3><p>Контроль над критическими звеньями — вычисления, программное обеспечение, станкостроение, микроэлектроника — при сохранении открытости там, где кооперация выгодна и не создаёт зависимости.</p></div>
+        <div class="card"><span class="card__k">направление 02</span><h3>Региональные контуры торговли</h3><p>Переориентация на интеграционные площадки — ЕАЭС, ШОС, БРИКС — с собственными расчётными, логистическими и стандартизационными механизмами; вопрос не только маршрутов, но и того, чьи правила действуют.</p></div>
+        <div class="card"><span class="card__k">направление 03</span><h3>Своя методика устойчивости</h3><p>Участие в климатической повестке на условиях взаимного признания методик учёта — иначе экологические требования работают как нетарифный барьер для экспорта.</p></div>
+        <div class="card"><span class="card__k">направление 04</span><h3>Кадры под новую базу</h3><p>Инженерное и математическое образование, переобучение вытесняемых автоматизацией работников — именно здесь издержки 4ПР становятся социальными, а не только экономическими.</p></div>
+        <div class="card"><span class="card__k">направление 05</span><h3>Участие в выработке правил</h3><p>Стандарты в области данных, ИИ и цифровой торговли пишутся сейчас. Страна, не участвующая в их разработке, будет вынуждена принимать готовые вместе со встроенными в них преимуществами.</p></div>
+        <div class="card"><span class="card__k">направление 06</span><h3>Удержание добавленной стоимости</h3><p>Смещение в цепочках от сырьевых звеньев к переработке и сервису — единственный способ конвертировать участие в мировой торговле в технологическое развитие.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="spread" id="s12">
+  <div class="wrap spread__grid">
+    <div class="spread__meta"><span class="spread__num">12</span><span class="spread__label">Выводы</span></div>
+    <div class="stack">
+      <h2>Четыре вывода доклада</h2>
+      <div class="rows">
+        <div class="row"><span class="row__k">Вывод 1</span><span class="row__v">Четвёртая промышленная революция — рабочая рамка для описания технологического сдвига, но её «революционность» пока не подтверждена динамикой производительности. Это делает уместной осторожность, а не экстренные институциональные решения.</span></div>
+        <div class="row"><span class="row__k">Вывод 2</span><span class="row__v">«Великая перезагрузка» — нормативный проект, а не прогноз. Её диагноз в значительной части верен, но переход от диагноза к единому рецепту не вытекает из данных и не обеспечен мандатом.</span></div>
+        <div class="row"><span class="row__k">Вывод 3</span><span class="row__v">Статистика 2022—2023 годов описывает фрагментацию и регионализацию, а не скоординированную пересборку. Глобальные цепочки стоимости перестраиваются по критерию надёжности и политической близости.</span></div>
+        <div class="row"><span class="row__k">Вывод 4</span><span class="row__v">В полицентричной конфигурации правила возникают из согласования национальных интересов. Поэтому реалистичный сценарий — не одна перезагрузка, а конкуренция и взаимная подгонка нескольких национальных моделей освоения одних и тех же технологий.</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="spread" id="s13">
+  <div class="wrap spread__grid">
+    <div class="spread__meta"><span class="spread__num">13</span><span class="spread__label">К дискуссии</span></div>
+    <div class="stack">
+      <div>
+        <h2>Шесть вопросов, на которые доклад намеренно не даёт ответа</h2>
+        <p class="lead">Работа Шваба заявлена как доклад для обсуждения и дискуссии — ниже развилки, по которым позиции аудитории расходятся сильнее всего.</p>
+      </div>
+      <div class="qs">
+        <div class="q"><span class="q__n">01</span><p>Считать ли происходящее самостоятельной революцией — или зрелой фазой третьей, цифровой?<span>Проверяем: чем доказывается революционность, если производительность не ускоряется.</span></p></div>
+        <div class="q"><span class="q__n">02</span><p>Кто вправе формулировать глобальную повестку, если у площадки, которая её формулирует, нет представительного мандата?<span>Проверяем: соотношение экспертной компетентности и политической легитимности.</span></p></div>
+        <div class="q"><span class="q__n">03</span><p>Стейкхолдерский капитализм — это ограничение власти капитала или её расширение за счёт функций, ранее принадлежавших государству?<span>Проверяем: кто в итоге принимает решение о распределении.</span></p></div>
+        <div class="q"><span class="q__n">04</span><p>Совместима ли ускоренная климатическая повестка с правом развивающихся экономик на индустриализацию?<span>Проверяем: кто несёт издержки перехода и на каком основании.</span></p></div>
+        <div class="q"><span class="q__n">05</span><p>Фрагментация мировой торговли — это временный сбой или новая устойчивая конфигурация?<span>Проверяем: что именно сигнализируют данные ВТО и ЮНКТАД за 2022—2023 годы.</span></p></div>
+        <div class="q"><span class="q__n">06</span><p>Возможна ли общая технологическая повестка без единого центра — и какие институты способны её удерживать?<span>Проверяем: работоспособность реформы ООН и ШОС как механизма согласования.</span></p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="spread" id="s14">
+  <div class="wrap spread__grid">
+    <div class="spread__meta"><span class="spread__num">14</span><span class="spread__label">Источники</span></div>
+    <div class="stack">
+      <h2>Литература и данные</h2>
+      <div class="bib">
+        <div>
+          <h3>Первоисточник</h3>
+          <ol>
+            <li><b>Шваб К.</b> О Четвёртой промышленной революции и Великой перезагрузке (доклад для обсуждения и дискуссии). Тексты и выступления Всемирного экономического форума, 2016—2021: «The Fourth Industrial Revolution» (2016), «Shaping the Fourth Industrial Revolution» (2018), «Now is the time for a “Great Reset”» (WEF, июнь 2020), «COVID-19: The Great Reset» (совм. с Т. Малльре, 2020), «Stakeholder Capitalism» (2021).</li>
+          </ol>
+        </div>
+        <div>
+          <h3>Рекомендуемая литература</h3>
+          <ol>
+            <li><b>Перская В. В., Эскиндаров М. А.</b> Многополярность: институты и механизмы согласования национальных интересов. — М.: КНОРУС, 2018. — 538 с.</li>
+            <li><b>Перская В. В., Эскиндаров М. А.</b> Неизбежность изменений в условиях полицентризма. Призрачность биполярности и реформа неспециализированных международных организаций (ШОС и ООН). — М.: Курс, 2021. — 392 с.</li>
+            <li><b>Перская В. В., Эскиндаров М. А.</b> Полицентризм. — М.: Курс, 2023. — 288 с.</li>
+          </ol>
+        </div>
+        <div>
+          <h3>Дополнительная литература</h3>
+          <ol>
+            <li>World Trade Statistical Review 2023. The World Trade Organization. URL: <a href="https://www.wto.org/english/res_e/booksp_e/wtsr_2023_e.pdf">wto.org/english/res_e/booksp_e/wtsr_2023_e.pdf</a></li>
+            <li>World Economic Outlook: War Sets Back the Global Recovery. International Monetary Fund, April 2022.</li>
+            <li>Perskaya V. V., Khomyakova L. I. Global Value Chains as a Transformational Indicator of Changes in the Global Economy. DOI: 10.2991/aebmr.k.210218.004. URL: <a href="https://www.atlantis-press.com/proceedings/ermi-21/125952854">atlantis-press.com/proceedings/ermi-21/125952854</a></li>
+            <li>World Trade Statistical Review 2023. The World Trade Organization. URL: <a href="https://www.wto.org/english/res_e/booksp_e/wtsr_2023_e.pdf">wto.org/english/res_e/booksp_e/wtsr_2023_e.pdf</a></li>
+            <li>International trade: What you need to know this month. WEF, 2023. URL: <a href="https://www.weforum.org/agenda/2023/08/international-trade-what-you-need-to-know-august-2023/">weforum.org/agenda/2023/08/international-trade-what-you-need-to-know-august-2023</a></li>
+            <li>Global Trade Update, June 2023. UNCTAD. URL: <a href="https://unctad.org/publication/global-trade-update-june-2023">unctad.org/publication/global-trade-update-june-2023</a></li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>Учебный доклад · подготовлен по материалам курса и открытым данным ВТО, МВФ, ЮНКТАД и ВЭФ</span>
+    <span class="mono">навигация: ← → между разделами</span>
+  </div>
+</footer>
+
+<script>
+(function(){
+  var root = document.documentElement;
+
+  /* тема: системная по умолчанию, ручной выбор запоминается */
+  function store(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+  function read(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+  var saved = read('doklad-theme');
+  if (saved === 'dark' || saved === 'light') root.setAttribute('data-theme', saved);
+  var themeBtn = document.getElementById('themeBtn');
+  if (themeBtn) themeBtn.addEventListener('click', function(){
+    var isDark = root.getAttribute('data-theme') === 'dark' ||
+      (!root.hasAttribute('data-theme') && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    var next = isDark ? 'light' : 'dark';
+    root.setAttribute('data-theme', next);
+    store('doklad-theme', next);
+  });
+
+  var printBtn = document.getElementById('printBtn');
+  if (printBtn) printBtn.addEventListener('click', function(){ window.print(); });
+
+  /* прогресс чтения и подсветка раздела */
+  var bar = document.getElementById('progress');
+  var links = Array.prototype.slice.call(document.querySelectorAll('.rail a'));
+  var sections = links.map(function(a){ return document.getElementById(a.getAttribute('href').slice(1)); });
+  var ticking = false;
+
+  function paint(){
+    ticking = false;
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    if (bar) bar.style.width = (h > 0 ? Math.min(100, Math.max(0, window.scrollY / h * 100)) : 0) + '%';
+    var active = -1;
+    for (var i = 0; i < sections.length; i++){
+      if (sections[i] && sections[i].getBoundingClientRect().top <= 140) active = i;
+    }
+    for (var j = 0; j < links.length; j++) links[j].classList.toggle('is-on', j === active);
+  }
+  function onScroll(){ if (!ticking){ ticking = true; requestAnimationFrame(paint); } }
+  window.addEventListener('scroll', onScroll, {passive:true});
+  window.addEventListener('resize', onScroll, {passive:true});
+  paint();
+
+  /* стрелки влево/вправо — переход между разделами, вертикальный скролл не трогаем */
+  document.addEventListener('keydown', function(e){
+    if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    var t = e.target;
+    if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
+    var current = 0;
+    for (var i = 0; i < sections.length; i++){
+      if (sections[i] && sections[i].getBoundingClientRect().top <= 140) current = i + 1;
+    }
+    var next = e.key === 'ArrowRight' ? current : current - 2;
+    if (next < 0){ window.scrollTo({top:0, behavior:'smooth'}); e.preventDefault(); return; }
+    if (next > sections.length - 1) return;
+    if (sections[next]){ sections[next].scrollIntoView({behavior:'smooth', block:'start'}); e.preventDefault(); }
+  });
+})();
+</script>
+</body>
+</html>
