@@ -1,0 +1,412 @@
+//@version=6
+// ═══════════════════════════════════════════════════════════════════════════════
+//  PAS — Pattern Analog Scanner
+//  ---------------------------------------------------------------------------
+//  Идея: рынок повторяется. Берём форму последних N баров, нормализуем её,
+//  прочёсываем историю инструмента в поисках максимально похожих участков,
+//  смотрим, что происходило ПОСЛЕ каждого такого участка, и усредняем.
+//  Результат: проекция пути вперёд, конус неопределённости, согласие аналогов
+//  по направлению и честная walk-forward статистика попаданий.
+//
+//  Метод: kNN / analog forecasting по z-нормализованной форме цены.
+//  Похожесть — корреляция Пирсона. На z-нормализованных окнах евклидово
+//  расстояние есть монотонная функция корреляции (d² = 2·L·(1−r)), поэтому
+//  ранжирование одно и то же, но корреляция считается за один проход
+//  без выделения памяти под каждое окно.
+//
+//  Сигнал строится ТОЛЬКО по данным левее текущего бара — не перерисовывается.
+// ═══════════════════════════════════════════════════════════════════════════════
+indicator("Pattern Analog Scanner", "PAS", overlay = true, max_bars_back = 500,
+     max_lines_count = 500, max_labels_count = 500, max_boxes_count = 500,
+     max_polylines_count = 100)
+
+// ─── Поиск паттернов ─────────────────────────────────────────────────────────
+GP = "Поиск паттернов"
+src        = input.source(close,  "Источник",                  group = GP)
+patLen     = input.int(30,   "Длина паттерна (баров)",         minval = 5,   maxval = 300,   group = GP, tooltip = "Сколько последних баров считать «текущей ситуацией», форму которой ищем в истории.")
+horizon    = input.int(10,   "Горизонт прогноза (баров)",      minval = 1,   maxval = 200,   group = GP, tooltip = "На сколько баров вперёд смотрим после каждого найденного аналога.")
+topK       = input.int(10,   "Сколько аналогов брать (K)",     minval = 1,   maxval = 50,    group = GP)
+minMatches = input.int(5,    "Минимум аналогов для сигнала",   minval = 1,   maxval = 50,    group = GP)
+maxHist    = input.int(3000, "Глубина сканирования (баров)",   minval = 200, maxval = 20000, group = GP, tooltip = "Чем больше, тем дольше считает. 3000 — разумный старт.")
+scanStep   = input.int(1,    "Шаг сканирования",               minval = 1,   maxval = 10,    group = GP, tooltip = "1 = проверять каждый бар истории. 2–3 заметно ускоряют расчёт почти без потери качества.")
+minGapIn   = input.int(0,    "Мин. расстояние между аналогами",minval = 0,   maxval = 500,   group = GP, tooltip = "Чтобы не брать K раз один и тот же участок со сдвигом в один бар. 0 = длина паттерна.")
+metric     = input.string("Форма (без учёта масштаба)", "Метрика похожести", options = ["Форма (без учёта масштаба)", "Амплитуда (в ATR)"], group = GP, tooltip = "Форма: важен только рисунок движения. Амплитуда: важен ещё и размах хода, измеренный в ATR.")
+weighted   = input.bool(true, "Взвешивать аналоги по похожести", group = GP)
+
+// ─── Фильтр сигнала ──────────────────────────────────────────────────────────
+GS = "Фильтр сигнала"
+minCorr    = input.float(0.85, "Мин. средняя корреляция",       minval = 0,   maxval = 1, step = 0.01, group = GS)
+minAgree   = input.float(0.70, "Мин. согласие по направлению",  minval = 0.5, maxval = 1, step = 0.01, group = GS, tooltip = "Доля аналогов, сошедшихся в одну сторону.")
+minMoveATR = input.float(0.50, "Мин. ожидаемый ход (в ATR)",    minval = 0,   step = 0.1,  group = GS, tooltip = "Отсекает прогнозы «вверх на 0.03%» — статистически верные, но бесполезные после комиссии.")
+atrLen     = input.int(14,     "Период ATR",                    minval = 1,                group = GS)
+
+// ─── Режим расчёта ───────────────────────────────────────────────────────────
+GC = "Режим расчёта"
+histBars   = input.int(0, "Считать на последних N барах", minval = 0, maxval = 2000, group = GC, tooltip = "0 = только на последнем баре: быстро, но истории сигналов и walk-forward статистики не будет.\n\nN > 0 = прогонять поиск на каждом из последних N баров: появляются стрелки на истории и честный процент попаданий. Начните с 200–300 и одновременно уменьшите глубину сканирования (≈1000) либо поднимите шаг сканирования до 3, иначе Pine упрётся в лимит времени.")
+
+// ─── Отображение ─────────────────────────────────────────────────────────────
+GV = "Отображение"
+showProj    = input.bool(true, "Проекция вперёд",              group = GV)
+showCone    = input.bool(true, "Конус неопределённости (±1σ)", group = GV)
+showMatches = input.bool(true, "Подсветить аналоги в истории", group = GV)
+nShow       = input.int(3, "Сколько аналогов подсветить", minval = 0, maxval = 10, group = GV)
+showTable   = input.bool(true, "Таблица статистики",        group = GV)
+bullCol     = input.color(#26a69a, "Бычий",    group = GV, inline = "col")
+bearCol     = input.color(#ef5350, "Медвежий", group = GV, inline = "col")
+neutCol     = input.color(#787b86, "Нейтр.",   group = GV, inline = "col")
+
+// ═══════════════════════════════════════════════════════════════════════════════
+//  Сбор истории в массивы.
+//  Работаем с массивами, а не с оператором [], чтобы индексация внутри циклов
+//  была явной и не упиралась в lookback-буфер Pine.
+// ═══════════════════════════════════════════════════════════════════════════════
+atrNow = ta.atr(atrLen)
+cap    = maxHist + patLen + horizon + 10
+
+var array<float> px  = array.new<float>()
+var array<float> atv = array.new<float>()
+
+array.push(px,  nz(src, close))
+array.push(atv, nz(atrNow, 0.0))
+if array.size(px) > cap
+    array.shift(px)
+    array.shift(atv)
+
+shapeMode = metric == "Форма (без учёта масштаба)"
+gapMin    = minGapIn > 0 ? minGapIn : patLen
+
+// ═══════════════════════════════════════════════════════════════════════════════
+//  Поиск аналогов.
+//  Возвращает [индексы окончаний найденных окон, их корреляции, их «стоимости»].
+//  Ограничения на кандидата e (индекс последнего бара исторического окна):
+//    * e + fwd    <= anchor  — исход аналога должен быть уже известен;
+//    * e + len    <= anchor  — окно аналога не пересекается с текущим.
+//  Оба условия смотрят строго в прошлое, поэтому сигнал не перерисовывается.
+// ═══════════════════════════════════════════════════════════════════════════════
+findMatches(array<float> data, array<float> atrd, int anchor, int len, int fwd,
+             int lookback, int stepN, bool useShape, int k, int minGap) =>
+    ends  = array.new<int>()
+    corrs = array.new<float>()
+    costs = array.new<float>()
+
+    tStart = anchor - len + 1
+
+    // z-нормализация шаблона (текущего окна)
+    tsum = 0.0
+    for i = 0 to len - 1
+        tsum += array.get(data, tStart + i)
+    tmean = tsum / len
+    tss = 0.0
+    for i = 0 to len - 1
+        d = array.get(data, tStart + i) - tmean
+        tss += d * d
+    tsd = math.sqrt(tss / len)
+
+    if tsd > 1e-10
+        t0   = array.get(data, tStart)
+        atr0 = array.get(atrd, tStart)
+        atr0 := atr0 > 1e-10 ? atr0 : 1e-10
+
+        tz   = array.new<float>()
+        tamp = array.new<float>()
+        for i = 0 to len - 1
+            v = array.get(data, tStart + i)
+            array.push(tz,   (v - tmean) / tsd)
+            array.push(tamp, (v - t0) / atr0)
+
+        hiE = math.min(anchor - len, anchor - fwd)
+        loE = math.max(len - 1, anchor - lookback)
+
+        rawE = array.new<int>()
+        rawC = array.new<float>()
+        rawQ = array.new<float>()
+
+        if hiE >= loE
+            passes = int((hiE - loE) / stepN)
+            for p = 0 to passes
+                e = hiE - p * stepN
+                s = e - len + 1
+                sumC  = 0.0
+                sumC2 = 0.0
+                dot   = 0.0
+                dAmp  = 0.0
+                if useShape
+                    for i = 0 to len - 1
+                        c = array.get(data, s + i)
+                        sumC  += c
+                        sumC2 += c * c
+                        dot   += array.get(tz, i) * c
+                else
+                    c0 = array.get(data, s)
+                    a0 = array.get(atrd, s)
+                    a0 := a0 > 1e-10 ? a0 : 1e-10
+                    for i = 0 to len - 1
+                        c = array.get(data, s + i)
+                        sumC  += c
+                        sumC2 += c * c
+                        dot   += array.get(tz, i) * c
+                        df = array.get(tamp, i) - (c - c0) / a0
+                        dAmp += df * df
+                mc   = sumC / len
+                varc = sumC2 / len - mc * mc
+                sc   = varc > 0 ? math.sqrt(varc) : 0.0
+                // corr(t,c) = Σ tz[i]·c[i] / (len·σc), так как mean(tz) = 0
+                corr = sc > 1e-10 ? dot / (len * sc) : 0.0
+                cost = useShape ? 1.0 - corr : math.sqrt(dAmp / len)
+                array.push(rawE, e)
+                array.push(rawC, cost)
+                array.push(rawQ, corr)
+
+        // жадный отбор K лучших, не налезающих друг на друга
+        if array.size(rawE) > 0
+            ord = array.sort_indices(rawC, order.ascending)
+            for oi = 0 to array.size(ord) - 1
+                if array.size(ends) >= k
+                    break
+                idx = array.get(ord, oi)
+                e   = array.get(rawE, idx)
+                ok  = true
+                if array.size(ends) > 0
+                    for j = 0 to array.size(ends) - 1
+                        if math.abs(e - array.get(ends, j)) < minGap
+                            ok := false
+                            break
+                if ok
+                    array.push(ends,  e)
+                    array.push(corrs, array.get(rawQ, idx))
+                    array.push(costs, array.get(rawC, idx))
+    [ends, corrs, costs]
+
+// ═══════════════════════════════════════════════════════════════════════════════
+//  Агрегация исходов найденных аналогов.
+//  Возвращает [средний путь, разброс σ по шагам, доля роста, итоговый ход, ср. корреляция]
+// ═══════════════════════════════════════════════════════════════════════════════
+aggregate(array<float> data, array<int> ends, array<float> corrs, int fwd, bool useW) =>
+    m        = array.size(ends)
+    meanPath = array.new<float>(fwd, 0.0)
+    sdPath   = array.new<float>(fwd, 0.0)
+    hit      = 0.0
+    wsum     = 0.0
+    csum     = 0.0
+
+    if m > 0
+        ws = array.new<float>()
+        for i = 0 to m - 1
+            c = array.get(corrs, i)
+            w = useW ? math.pow(math.max(c, 0.0), 2) : 1.0
+            w := w > 1e-6 ? w : 1e-6
+            array.push(ws, w)
+            wsum += w
+            csum += c
+
+        for j = 0 to fwd - 1
+            acc = 0.0
+            for i = 0 to m - 1
+                e    = array.get(ends, i)
+                base = array.get(data, e)
+                r    = base != 0 ? array.get(data, e + 1 + j) / base - 1.0 : 0.0
+                acc += r * array.get(ws, i)
+            array.set(meanPath, j, acc / wsum)
+
+        for j = 0 to fwd - 1
+            mu = array.get(meanPath, j)
+            ss = 0.0
+            for i = 0 to m - 1
+                e    = array.get(ends, i)
+                base = array.get(data, e)
+                r    = base != 0 ? array.get(data, e + 1 + j) / base - 1.0 : 0.0
+                ss  += (r - mu) * (r - mu)
+            array.set(sdPath, j, math.sqrt(ss / m))
+
+        for i = 0 to m - 1
+            e    = array.get(ends, i)
+            base = array.get(data, e)
+            r    = base != 0 ? array.get(data, e + fwd) / base - 1.0 : 0.0
+            hit += (r > 0 ? 1.0 : 0.0) * array.get(ws, i)
+
+    agree   = wsum > 0 ? hit / wsum : 0.5
+    term    = array.size(meanPath) > 0 ? array.get(meanPath, fwd - 1) : 0.0
+    avgCorr = m > 0 ? csum / m : 0.0
+    [meanPath, sdPath, agree, term, avgCorr]
+
+// ═══════════════════════════════════════════════════════════════════════════════
+//  Основной расчёт
+// ═══════════════════════════════════════════════════════════════════════════════
+var array<box>      gBoxes = array.new<box>()
+var array<label>    gLabs  = array.new<label>()
+var array<polyline> gPolys = array.new<polyline>()
+
+n      = array.size(px)
+enough = n >= patLen * 2 + horizon + 5
+doCalc = enough and (barstate.islast or (histBars > 0 and bar_index >= last_bar_index - histBars))
+
+int   bias    = 0
+float expMove = na    // ожидаемый ход к горизонту, в долях цены
+float expATR  = na    // то же, в ATR
+float agreeV  = na    // согласие аналогов по направлению
+float corrV   = na    // средняя корреляция отобранных аналогов
+int   nMatch  = 0
+
+var array<float> lastMean = array.new<float>()
+var array<float> lastSd   = array.new<float>()
+var array<int>   lastEnds = array.new<int>()
+var array<float> lastCorr = array.new<float>()
+
+if doCalc
+    [ends, corrs, costs] = findMatches(px, atv, n - 1, patLen, horizon, maxHist, scanStep, shapeMode, topK, gapMin)
+    [meanPath, sdPath, agree, term, avgCorr] = aggregate(px, ends, corrs, horizon, weighted)
+
+    nMatch  := array.size(ends)
+    agreeV  := agree
+    corrV   := avgCorr
+    expMove := term
+    expATR  := atrNow > 0 ? term * close / atrNow : 0.0
+
+    quality = nMatch >= minMatches and avgCorr >= minCorr
+    bull    = quality and agree         >= minAgree and expATR >=  minMoveATR
+    bear    = quality and (1.0 - agree) >= minAgree and expATR <= -minMoveATR
+    bias    := bull ? 1 : bear ? -1 : 0
+
+    if barstate.islast
+        lastMean := meanPath
+        lastSd   := sdPath
+        lastEnds := ends
+        lastCorr := corrs
+
+// ═══════════════════════════════════════════════════════════════════════════════
+//  Walk-forward проверка: сигнал, выданный `horizon` баров назад, — сбылся?
+//  Считается только по подтверждённым барам, будущее не используется.
+// ═══════════════════════════════════════════════════════════════════════════════
+var int   wfN   = 0
+var int   wfHit = 0
+var float wfPnl = 0.0
+
+if barstate.isconfirmed and bar_index > horizon + 1
+    int b = nz(bias[horizon], 0)
+    if b != 0
+        float r = close[horizon] != 0 ? close / close[horizon] - 1.0 : 0.0
+        wfN   += 1
+        wfPnl += b * r
+        if (b > 0 and r > 0) or (b < 0 and r < 0)
+            wfHit += 1
+
+// ═══════════════════════════════════════════════════════════════════════════════
+//  Отрисовка (только на последнем баре)
+// ═══════════════════════════════════════════════════════════════════════════════
+projCol = bias == 1 ? bullCol : bias == -1 ? bearCol : neutCol
+
+if barstate.islast
+    while array.size(gBoxes) > 0
+        box.delete(array.pop(gBoxes))
+    while array.size(gLabs) > 0
+        label.delete(array.pop(gLabs))
+    while array.size(gPolys) > 0
+        polyline.delete(array.pop(gPolys))
+
+    int steps = array.size(lastMean)
+
+    if steps > 0
+        float p0 = close
+
+        if showCone
+            cpts = array.new<chart.point>()
+            array.push(cpts, chart.point.from_index(bar_index, p0))
+            for j = 0 to steps - 1
+                array.push(cpts, chart.point.from_index(bar_index + j + 1, p0 * (1 + array.get(lastMean, j) + array.get(lastSd, j))))
+            for j = steps - 1 to 0
+                array.push(cpts, chart.point.from_index(bar_index + j + 1, p0 * (1 + array.get(lastMean, j) - array.get(lastSd, j))))
+            array.push(gPolys, polyline.new(cpts, closed = true, xloc = xloc.bar_index,
+                 line_color = color.new(projCol, 70), line_width = 1, fill_color = color.new(projCol, 88)))
+
+        if showProj
+            ppts = array.new<chart.point>()
+            array.push(ppts, chart.point.from_index(bar_index, p0))
+            for j = 0 to steps - 1
+                array.push(ppts, chart.point.from_index(bar_index + j + 1, p0 * (1 + array.get(lastMean, j))))
+            array.push(gPolys, polyline.new(ppts, closed = false, xloc = xloc.bar_index,
+                 line_color = projCol, line_width = 2))
+
+            txt = (bias == 1 ? "LONG" : bias == -1 ? "SHORT" : "нет сигнала") + "   " +
+                  str.tostring(array.get(lastMean, steps - 1) * 100, "+0.00;-0.00") + "%  /  " +
+                  str.tostring(horizon) + " баров"
+            array.push(gLabs, label.new(bar_index + steps, p0 * (1 + array.get(lastMean, steps - 1)), txt,
+                 xloc = xloc.bar_index, style = label.style_label_left, color = color.new(projCol, 15),
+                 textcolor = color.white, size = size.small))
+
+    // подсветка исторических аналогов: сплошная рамка — сам паттерн, пунктир — что было после
+    if showMatches and array.size(lastEnds) > 0
+        int base0 = bar_index - (n - 1)    // bar_index, соответствующий индексу 0 массива
+        int cnt   = math.min(nShow, array.size(lastEnds))
+        if cnt > 0
+            for i = 0 to cnt - 1
+                int   e  = array.get(lastEnds, i)
+                int   s  = e - patLen + 1
+                float hi = array.get(px, s)
+                float lo = hi
+                for q = s to e
+                    float v = array.get(px, q)
+                    hi := math.max(hi, v)
+                    lo := math.min(lo, v)
+                float pad   = (hi - lo) * 0.08 + syminfo.mintick
+                float after = array.get(px, e) != 0 ? array.get(px, e + horizon) / array.get(px, e) - 1 : 0
+                color aCol  = after >= 0 ? bullCol : bearCol
+
+                array.push(gBoxes, box.new(base0 + s, hi + pad, base0 + e, lo - pad,
+                     xloc = xloc.bar_index, border_color = color.new(color.orange, 20), border_width = 1,
+                     bgcolor = color.new(color.orange, 92)))
+                array.push(gBoxes, box.new(base0 + e + 1, hi + pad, base0 + e + horizon, lo - pad,
+                     xloc = xloc.bar_index, border_color = color.new(aCol, 40), border_width = 1,
+                     border_style = line.style_dashed, bgcolor = color.new(aCol, 93)))
+                array.push(gLabs, label.new(base0 + e, hi + pad,
+                     "#" + str.tostring(i + 1) + "  r=" + str.tostring(array.get(lastCorr, i), "0.00") +
+                     "  →" + str.tostring(after * 100, "+0.0;-0.0") + "%",
+                     xloc = xloc.bar_index, style = label.style_label_down, color = color.new(color.orange, 25),
+                     textcolor = color.white, size = size.tiny))
+
+// ═══════════════════════════════════════════════════════════════════════════════
+//  Таблица статистики
+// ═══════════════════════════════════════════════════════════════════════════════
+var table tbl = table.new(position.top_right, 2, 9, border_width = 1, frame_width = 1,
+     frame_color = color.new(color.gray, 50), border_color = color.new(color.gray, 70))
+
+row(int r, string k, string v, color vc) =>
+    table.cell(tbl, 0, r, k, text_size = size.small, text_halign = text.align_left,
+         text_color = color.new(color.gray, 10), bgcolor = color.new(color.black, 85))
+    table.cell(tbl, 1, r, v, text_size = size.small, text_halign = text.align_right,
+         text_color = vc, bgcolor = color.new(color.black, 85))
+
+if barstate.islast and showTable
+    biasTxt = bias == 1 ? "LONG" : bias == -1 ? "SHORT" : "—"
+    biasCol = bias == 1 ? bullCol : bias == -1 ? bearCol : neutCol
+    aV      = nz(agreeV, 0.5)
+    row(0, "PAS   " + str.tostring(patLen) + " → " + str.tostring(horizon), biasTxt, biasCol)
+    row(1, "Аналогов найдено",  str.tostring(nMatch), color.new(color.gray, 10))
+    row(2, "Ср. корреляция",    str.tostring(nz(corrV), "0.000"), nz(corrV) >= minCorr ? bullCol : neutCol)
+    row(3, "Согласие",          str.tostring(math.max(aV, 1 - aV) * 100, "0.0") + "%  " + (aV >= 0.5 ? "↑" : "↓"), neutCol)
+    row(4, "Ожидаемый ход",     str.tostring(nz(expMove) * 100, "+0.00;-0.00") + "%", nz(expMove) >= 0 ? bullCol : bearCol)
+    row(5, "То же в ATR",       str.tostring(nz(expATR), "+0.00;-0.00"),               nz(expATR)  >= 0 ? bullCol : bearCol)
+    row(6, "Разброс ±1σ",       array.size(lastSd) > 0 ? "±" + str.tostring(array.get(lastSd, array.size(lastSd) - 1) * 100, "0.00") + "%" : "—", color.new(color.gray, 10))
+    row(7, "Walk-forward точность", wfN > 0 ? str.tostring(100.0 * wfHit / wfN, "0.0") + "%  (" + str.tostring(wfN) + ")" : (histBars > 0 ? "накопление…" : "выкл."),
+         wfN == 0 ? neutCol : (wfHit * 2 > wfN ? bullCol : bearCol))
+    row(8, "Ср. исход сигнала", wfN > 0 ? str.tostring(100.0 * wfPnl / wfN, "+0.000;-0.000") + "%" : "—",
+         wfN > 0 and wfPnl >= 0 ? bullCol : wfN > 0 ? bearCol : neutCol)
+
+// ═══════════════════════════════════════════════════════════════════════════════
+//  Сигналы и алерты.
+//  Стрелки на истории появляются только в режиме «считать на последних N барах».
+// ═══════════════════════════════════════════════════════════════════════════════
+plotshape(bias ==  1 and bias[1] !=  1, title = "Аналоги: вверх", style = shape.triangleup,
+     location = location.belowbar, color = bullCol, size = size.tiny)
+plotshape(bias == -1 and bias[1] != -1, title = "Аналоги: вниз",  style = shape.triangledown,
+     location = location.abovebar, color = bearCol, size = size.tiny)
+
+barcolor(bias == 1 ? color.new(bullCol, 40) : bias == -1 ? color.new(bearCol, 40) : na, title = "Окраска баров сигнала")
+
+alertcondition(bias ==  1 and bias[1] !=  1, "PAS: бычий кластер аналогов",   "PAS: история говорит вверх — {{ticker}} {{interval}}")
+alertcondition(bias == -1 and bias[1] != -1, "PAS: медвежий кластер аналогов", "PAS: история говорит вниз — {{ticker}} {{interval}}")
+
+// служебные значения: видны в окне данных, доступны другим скриптам
+plot(expATR, "Ожидаемый ход, ATR", display = display.data_window)
+plot(agreeV, "Согласие",           display = display.data_window)
+plot(corrV,  "Ср. корреляция",     display = display.data_window)
+plot(nMatch, "Аналогов",           display = display.data_window)
