@@ -260,8 +260,8 @@ Ss = ta.highest(Ss0, ctxLen)
 f_gate(int d) =>
     against = (d == 1 and trendDir < 0) or (d == -1 and trendDir > 0)
     gT = against ? f_clamp(1.0 - (er - erLo) / math.max(erHi - erLo, 1e-9), gMin, 1.0) : 1.0
-    gM = useMtf and mtfTotal > 0 ? 0.65 + 0.35 * (d == 1 ? mtfUpFr : mtfDnFr) : 1.0
-    f_clamp(math.min(gVol, math.min(gT, gM)), gMin, 1.0)
+    gX = useMtf and mtfTotal > 0 ? 0.65 + 0.35 * (d == 1 ? mtfUpFr : mtfDnFr) : 1.0
+    f_clamp(math.min(gVol, math.min(gT, gX)), gMin, 1.0)
 
 Gl = f_gate(1)
 Gs = f_gate(-1)
