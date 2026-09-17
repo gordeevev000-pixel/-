@@ -1,0 +1,397 @@
+//@version=6
+// ═══════════════════════════════════════════════════════════════════════════════
+//  GAINZ Suite · стратегия
+//
+//  Те же сигналы, что в pine/GAINZ.pine, но исполняет их движок TradingView:
+//  нативный отчёт с эквити, просадкой и списком сделок во вкладке «Тестер стратегий».
+//
+//  Ядро (компоненты, скор, порог, риск) скопировано из индикатора дословно —
+//  правки в логике надо повторять в обоих файлах.
+//
+//  Комиссия и проскальзывание заданы в настройках стратегии, а не в коде:
+//  свойства скрипта → «Комиссия» и «Проскальзывание». Без них любой отчёт
+//  на мелких таймфреймах врёт в плюс.
+// ═══════════════════════════════════════════════════════════════════════════════
+
+strategy("GAINZ Suite · стратегия", "GAINZ S", overlay = true,
+     initial_capital = 10000, default_qty_type = strategy.percent_of_equity, default_qty_value = 10,
+     commission_type = strategy.commission.percent, commission_value = 0.03, slippage = 2,
+     pyramiding = 0, calc_on_every_tick = false, process_orders_on_close = true,
+     max_lines_count = 500, max_labels_count = 500, max_boxes_count = 500)
+
+// ── ядро ───────────────────────────────────────────────────────────────────────
+gCore = "Ядро"
+sideMode  = input.string("Обе стороны", "Какие сигналы брать", group = gCore,
+     options = ["Обе стороны", "Только по тренду", "Только против тренда"])
+atrLen    = input.int(14, "ATR", minval = 2, group = gCore)
+ctxLen    = input.int(10, "Окно контекста (максимум M/E/B/S)", minval = 1, group = gCore)
+gain      = input.float(1.25, "gain — нормировка скора", minval = 0.5, maxval = 3.0, step = 0.01, group = gCore)
+thrBase   = input.float(70.0, "Порог сигнала", minval = 1, maxval = 100, step = 0.5, group = gCore)
+thrWatch  = input.float(55.0, "Порог наблюдения", minval = 1, maxval = 100, step = 0.5, group = gCore)
+adaptOn   = input.bool(true, "Порог подстраивается под волатильность", group = gCore,
+     tooltip = "На разгоне волатильности порог поднимается, в штиле — опускается. Это и есть «volatility-normalized thresholds» из описания оригинала.")
+adaptK    = input.float(0.35, "Сила подстройки", minval = 0, maxval = 1.5, step = 0.05, group = gCore)
+needPat   = input.bool(true, "Сигнал только на свече-паттерне", group = gCore,
+     tooltip = "Выключить — сигнал сможет появиться на любом баре, если хватает остальных компонентов.")
+confirmed = input.bool(true, "Сигналы только по закрытым барам", group = gCore,
+     tooltip = "Выключить — сигнал появится внутри формирующегося бара и может исчезнуть.")
+cooldown  = input.int(5, "Пауза между сигналами, баров", minval = 0, group = gCore)
+oneTrade  = input.bool(true, "Не давать новый сигнал, пока идёт сделка", group = gCore)
+
+gW = "Веса компонентов"
+wC = input.float(0.15, "C · свеча-триггер", minval = 0, maxval = 1, step = 0.01, group = gW,
+     tooltip = "Свеча-паттерн — это спусковой крючок, а не источник эджа: на калибровке крупное поглощение само по себе результат не улучшало. Поэтому вес небольшой, а наличие паттерна вынесено в отдельную галку.")
+wM = input.float(0.25, "M · импульс",       minval = 0, maxval = 1, step = 0.01, group = gW)
+wE = input.float(0.28, "E · RSI",           minval = 0, maxval = 1, step = 0.01, group = gW)
+wB = input.float(0.05, "B · стабильность",  minval = 0, maxval = 1, step = 0.01, group = gW)
+wS = input.float(0.27, "S · структура",     minval = 0, maxval = 1, step = 0.01, group = gW)
+
+gC = "C · свеча-триггер"
+engFull  = input.float(1.60, "Полное поглощение, тело / тело прошлого бара", minval = 1.01, step = 0.05, group = gC)
+pinMult  = input.float(1.50, "Пин-бар: хвост / тело", minval = 0.5, step = 0.1, group = gC)
+pinFull  = input.float(0.62, "Полный пин-бар: хвост / диапазон", minval = 0.2, maxval = 1, step = 0.01, group = gC)
+minBody  = input.float(0.25, "Минимальное тело, ATR", minval = 0.0, step = 0.05, group = gC)
+maxBody  = input.float(2.20, "Максимальное тело, ATR", minval = 0.3, step = 0.1, group = gC,
+     tooltip = "Свеча крупнее — это уже не разворот, а вынос. Вклад C падает.")
+volLen   = input.int(20, "Окно среднего объёма", minval = 2, group = gC)
+volConf  = input.float(1.40, "Подтверждение объёмом, × среднего", minval = 0.5, step = 0.1, group = gC)
+
+gM = "M · импульс"
+momLen   = input.int(9, "Окно хода", minval = 1, group = gM)
+momFull  = input.float(2.20, "Полное растяжение хода, ATR", minval = 0.2, step = 0.1, group = gM)
+macdF    = input.int(12, "MACD быстрая", minval = 1, group = gM)
+macdS    = input.int(26, "MACD медленная", minval = 2, group = gM)
+macdSig  = input.int(9, "MACD сигнальная", minval = 1, group = gM)
+momTurn  = input.float(0.12, "Полный разворот гистограммы, ATR за бар", minval = 0.01, step = 0.01, group = gM)
+
+gE = "E · RSI"
+rsiLen   = input.int(14, "RSI", minval = 2, group = gE)
+rsiBuy   = input.float(38.0, "Порог перепроданности", minval = 1, maxval = 50, step = 0.5, group = gE)
+rsiSell  = input.float(62.0, "Порог перекупленности", minval = 50, maxval = 99, step = 0.5, group = gE)
+rsiFull  = input.float(12.0, "Полный заход за порог, пунктов RSI", minval = 1, step = 0.5, group = gE)
+
+gB = "B · стабильность"
+stabLen  = input.int(20, "Окно стабильности", minval = 3, group = gB)
+
+gS = "S · структура"
+strLen    = input.int(12, "Окно свипа уровня", minval = 2, group = gS)
+sweepATR  = input.float(0.45, "Полный прокол уровня, ATR", minval = 0.05, step = 0.05, group = gS)
+emaFastL  = input.int(21, "Быстрая EMA", minval = 2, group = gS)
+emaSlowL  = input.int(100, "Медленная EMA", minval = 3, group = gS)
+tolATR    = input.float(0.60, "Откат к EMA считается касанием, ATR", minval = 0.05, step = 0.05, group = gS)
+
+gG = "G · режим"
+volRegLen = input.int(50, "Окно нормы волатильности", minval = 5, group = gG)
+volCalm   = input.float(1.40, "Спокойная вола, ATR / норма", minval = 0.5, step = 0.1, group = gG)
+volWild   = input.float(2.80, "Разгон волы, ATR / норма",    minval = 0.6, step = 0.1, group = gG)
+erLen     = input.int(20, "Окно эффективности хода (ER)", minval = 3, group = gG)
+erLo      = input.float(0.25, "Тренда ещё нет, ER", minval = 0, maxval = 1, step = 0.01, group = gG)
+erHi      = input.float(0.65, "Тренд в полную силу, ER", minval = 0.05, maxval = 1, step = 0.01, group = gG,
+     tooltip = "Против тренда скор душится тем сильнее, чем эффективнее ход. Плоский множитель «против тренда — всегда хуже» на калибровке резал как раз рабочие входы: душить надо не направление, а сильный тренд.")
+gMin      = input.float(0.35, "Минимум множителя", minval = 0.0, maxval = 1, step = 0.05, group = gG)
+
+gMTF = "Старшие таймфреймы"
+useMtf   = input.bool(true, "Учитывать тренд старших ТФ", group = gMTF)
+mtfHard  = input.bool(false, "Жёсткий фильтр: без согласия старших ТФ сигнала нет", group = gMTF)
+mtfMin   = input.float(0.5, "Минимум согласия для жёсткого фильтра", minval = 0, maxval = 1, step = 0.1, group = gMTF)
+tfA      = input.timeframe("15",  "ТФ 1", group = gMTF)
+tfB      = input.timeframe("60",  "ТФ 2", group = gMTF)
+tfC      = input.timeframe("240", "ТФ 3", group = gMTF)
+
+gR = "Риск: стоп и цели"
+slMode   = input.string("ATR", "Как считать стоп", options = ["ATR", "Процент", "Свинг"], group = gR)
+slMult   = input.float(1.50, "Стоп, ATR", minval = 0.1, step = 0.1, group = gR)
+slPct    = input.float(1.00, "Стоп, % от цены", minval = 0.01, step = 0.05, group = gR)
+swingLen = input.int(10, "Окно свинга для стопа", minval = 1, group = gR)
+swingBuf = input.float(0.35, "Запас за свинг, ATR", minval = 0, step = 0.05, group = gR)
+rr1      = input.float(1.50, "Цель TP1, в R", minval = 0.1, step = 0.1, group = gR)
+useTp2   = input.bool(true, "Вторая цель: половина на TP1, стоп в безубыток", group = gR)
+rr2      = input.float(3.00, "Цель TP2, в R", minval = 0.2, step = 0.1, group = gR)
+maxBars  = input.int(40, "Тайм-стоп, баров", minval = 1, group = gR)
+riskPct  = input.float(1.00, "Риск на сделку, % депозита", minval = 0.01, step = 0.05, group = gR)
+
+gV = "Вид"
+showSig   = input.bool(true, "Метки BUY / SELL", group = gV)
+showPrz   = input.bool(true, "Зоны разворота (PRZ)", group = gV)
+przATR    = input.float(0.55, "Высота зоны PRZ, ATR", minval = 0.05, step = 0.05, group = gV)
+przFwd    = input.int(12, "Длина зоны PRZ, баров", minval = 1, group = gV)
+showEma   = input.bool(true, "Показывать EMA", group = gV)
+showPanel = input.bool(true, "Панель", group = gV)
+panelPos  = input.string("Справа сверху", "Где панель", group = gV,
+     options = ["Справа сверху", "Справа снизу", "Слева сверху", "Слева снизу"])
+cLong     = input.color(#0B7A69, "Лонг",   group = gV, inline = "c")
+cShort    = input.color(#B8412F, "Шорт",   group = gV, inline = "c")
+cBrass    = input.color(#A9701C, "Акцент", group = gV, inline = "c")
+
+// ── утилиты ────────────────────────────────────────────────────────────────────
+f_clamp(float x, float lo, float hi) => math.max(lo, math.min(hi, x))
+f_01(float x) => f_clamp(x, 0.0, 1.0)
+f_gauge(float x) => str.repeat("█", math.max(0, int(math.round(f_01(x) * 6.0)))) + str.repeat("·", 6 - math.max(0, int(math.round(f_01(x) * 6.0))))
+
+// ── общие ряды ─────────────────────────────────────────────────────────────────
+rng   = math.max(high - low, syminfo.mintick)
+vol   = nz(volume, 0.0)
+volMa = ta.sma(vol, volLen)
+hasVol = volMa > 0
+
+atr    = ta.atr(atrLen)
+atrSafe = math.max(nz(atr), syminfo.mintick)
+bodyN  = math.abs(close - open) / atrSafe
+upWick = high - math.max(close, open)
+dnWick = math.min(close, open) - low
+
+rsi = ta.rsi(close, rsiLen)
+[_mLine, _mSig, macdHist] = ta.macd(close, macdF, macdS, macdSig)
+
+emaFast = ta.ema(close, emaFastL)
+emaSlow = ta.ema(close, emaSlowL)
+
+refL = ta.lowest(low, strLen)[1]
+refH = ta.highest(high, strLen)[1]
+
+swLo = ta.lowest(low, swingLen)
+swHi = ta.highest(high, swingLen)
+
+// B · стабильность: ровные диапазоны и предсказуемые тела
+rngMa   = ta.sma(rng, stabLen)
+rngSd   = ta.stdev(rng, stabLen)
+bodyAvg = ta.sma(math.abs(close - open) / rng, stabLen)
+stabB   = f_01(0.60 * f_01(1.0 - rngSd / math.max(rngMa, 1e-9)) + 0.40 * f_01(bodyAvg / 0.55))
+
+// режим волатильности и тренда
+er       = math.abs(close - close[erLen]) / math.max(math.sum(math.abs(close - close[1]), erLen), 1e-9)
+volRat   = atrSafe / math.max(ta.sma(atrSafe, volRegLen), 1e-9)
+gVol     = f_clamp(1.0 - (volRat - volCalm) / math.max(volWild - volCalm, 1e-9), gMin, 1.0)
+trendDir = emaFast > emaSlow and close > emaSlow ? 1 : emaFast < emaSlow and close < emaSlow ? -1 : 0
+
+// старшие таймфреймы: значение берётся с закрытого бара старшего ТФ — не перерисовывается
+f_htfDir() =>
+    ef = ta.ema(close, emaFastL)
+    es = ta.ema(close, emaSlowL)
+    d  = ef > es ? 1 : ef < es ? -1 : 0
+    d[1]
+
+mtfA = request.security(syminfo.tickerid, tfA == "" ? timeframe.period : tfA, f_htfDir(), lookahead = barmerge.lookahead_on)
+mtfB = request.security(syminfo.tickerid, tfB == "" ? timeframe.period : tfB, f_htfDir(), lookahead = barmerge.lookahead_on)
+mtfC = request.security(syminfo.tickerid, tfC == "" ? timeframe.period : tfC, f_htfDir(), lookahead = barmerge.lookahead_on)
+
+mtfTotal = (tfA == "" ? 0 : 1) + (tfB == "" ? 0 : 1) + (tfC == "" ? 0 : 1)
+mtfUp    = (tfA == "" ? 0 : nz(mtfA) == 1 ? 1 : 0) + (tfB == "" ? 0 : nz(mtfB) == 1 ? 1 : 0) + (tfC == "" ? 0 : nz(mtfC) == 1 ? 1 : 0)
+mtfDn    = (tfA == "" ? 0 : nz(mtfA) == -1 ? 1 : 0) + (tfB == "" ? 0 : nz(mtfB) == -1 ? 1 : 0) + (tfC == "" ? 0 : nz(mtfC) == -1 ? 1 : 0)
+mtfUpFr  = mtfTotal > 0 ? mtfUp * 1.0 / mtfTotal : 1.0
+mtfDnFr  = mtfTotal > 0 ? mtfDn * 1.0 / mtfTotal : 1.0
+
+// ── компоненты для одной стороны ───────────────────────────────────────────────
+f_side(int d) =>
+    // C · свеча-триггер: поглощение или пин-бар, строго текущий бар
+    b0  = math.abs(close - open)
+    b1  = math.abs(close[1] - open[1])
+    eng = d == 1 ? (close > open and close[1] < open[1] and close >= open[1] and open <= close[1])
+                 : (close < open and close[1] > open[1] and close <= open[1] and open >= close[1])
+    engQ = eng ? f_01((b0 / math.max(b1, syminfo.mintick) - 1.0) / math.max(engFull - 1.0, 0.1)) : 0.0
+    wick = d == 1 ? dnWick : upWick
+    opp  = d == 1 ? upWick : dnWick
+    mid  = (high + low) / 2.0
+    pin  = wick >= pinMult * b0 and wick > opp and (d == 1 ? close > mid : close < mid)
+    pinQ = pin ? f_01((wick / rng) / math.max(pinFull, 0.05)) : 0.0
+    patQ = math.max(engQ, pinQ)
+    cpos = f_01((d == 1 ? close - low : high - close) / rng)
+    vq   = hasVol ? f_01((vol / volMa) / math.max(volConf, 0.1)) : 0.5
+    sz   = bodyN < minBody ? f_01(bodyN / math.max(minBody, 0.01))
+         : bodyN > maxBody ? f_01(1.0 - (bodyN - maxBody) / math.max(maxBody, 0.01)) : 1.0
+    C = patQ > 0 ? f_01(sz * (0.55 * patQ + 0.25 * cpos + 0.20 * vq)) : 0.0
+
+    // M · импульс: ход растянут против входа и гистограмма разворачивается
+    roc      = (close - close[momLen]) / atrSafe
+    mStretch = f_01((d == 1 ? -roc : roc) / math.max(momFull, 0.1))
+    mTurn    = f_01((d == 1 ? macdHist - macdHist[1] : macdHist[1] - macdHist) / math.max(atrSafe * momTurn, 1e-9))
+    M = f_01(0.60 * mStretch + 0.40 * mTurn)
+
+    // E · RSI: глубина захода за порог плюс разворот
+    depth = d == 1 ? f_01((rsiBuy - rsi) / math.max(rsiFull, 1.0)) : f_01((rsi - rsiSell) / math.max(rsiFull, 1.0))
+    turnR = d == 1 ? (rsi > rsi[1] ? 1.0 : 0.0) : (rsi < rsi[1] ? 1.0 : 0.0)
+    E = f_01(0.75 * depth + 0.25 * turnR)
+
+    // S · структура: свип уровня с реклеймом либо откат к быстрой EMA
+    ref     = d == 1 ? refL : refH
+    pierce  = d == 1 ? math.max(0.0, ref - low) : math.max(0.0, high - ref)
+    sweepQ  = f_01(pierce / math.max(sweepATR * atrSafe, 1e-9))
+    reclaim = d == 1 ? close > ref : close < ref
+    dist    = math.abs(close - emaFast) / atrSafe
+    pull    = f_01(1.0 - dist / math.max(tolATR, 0.01))
+    S = f_01(math.max(reclaim and pierce > 0 ? 0.45 + 0.55 * sweepQ : 0.0, 0.70 * pull))
+
+    [C, M, E, S, patQ]
+
+[Cl, Ml0, El0, Sl0, patL] = f_side(1)
+[Cs, Ms0, Es0, Ss0, patS] = f_side(-1)
+
+// контекст: M/E/S — максимум за окно, C — строго текущий бар
+Ml = ta.highest(Ml0, ctxLen)
+El = ta.highest(El0, ctxLen)
+Sl = ta.highest(Sl0, ctxLen)
+Ms = ta.highest(Ms0, ctxLen)
+Es = ta.highest(Es0, ctxLen)
+Ss = ta.highest(Ss0, ctxLen)
+
+// G · режим
+f_gate(int d) =>
+    against = (d == 1 and trendDir < 0) or (d == -1 and trendDir > 0)
+    gT = against ? f_clamp(1.0 - (er - erLo) / math.max(erHi - erLo, 1e-9), gMin, 1.0) : 1.0
+    gM = useMtf and mtfTotal > 0 ? 0.65 + 0.35 * (d == 1 ? mtfUpFr : mtfDnFr) : 1.0
+    f_clamp(math.min(gVol, math.min(gT, gM)), gMin, 1.0)
+
+Gl = f_gate(1)
+Gs = f_gate(-1)
+
+f_score(float C, float M, float E, float B, float S, float G) =>
+    100.0 * gain * G * (wC * C + wM * M + wE * E + wB * B + wS * S)
+
+scL = f_score(Cl, Ml, El, stabB, Sl, Gl)
+scS = f_score(Cs, Ms, Es, stabB, Ss, Gs)
+// потенциал: что дала бы идеальная свеча-триггер прямо сейчас
+potL = f_score(1.0, Ml, El, stabB, Sl, Gl)
+potS = f_score(1.0, Ms, Es, stabB, Ss, Gs)
+
+// направление разрешено режимом
+f_dirOk(int d) =>
+    sideMode == "Только по тренду"     ? d == trendDir :
+     sideMode == "Только против тренда" ? d == -trendDir and trendDir != 0 : true
+
+okL = f_dirOk(1) and (not useMtf or not mtfHard or mtfTotal == 0 or mtfUpFr >= mtfMin)
+okS = f_dirOk(-1) and (not useMtf or not mtfHard or mtfTotal == 0 or mtfDnFr >= mtfMin)
+
+side  = scL >= scS ? 1 : -1
+score = math.max(scL, scS)
+pot   = side == 1 ? potL : potS
+cC = side == 1 ? Cl : Cs
+cM = side == 1 ? Ml : Ms
+cE = side == 1 ? El : Es
+cS = side == 1 ? Sl : Ss
+cG = side == 1 ? Gl : Gs
+
+// адаптивный порог: в разгоне волатильности сигнал должен стоить дороже
+thr = adaptOn ? thrBase * f_clamp(1.0 + adaptK * (volRat - 1.0), 0.75, 1.40) : thrBase
+
+// ── риск: стоп, цели, размер ───────────────────────────────────────────────────
+f_risk(int d) =>
+    byAtr   = slMult * atrSafe
+    byPct   = close * slPct / 100.0
+    bySwing = d == 1 ? close - (swLo - swingBuf * atrSafe) : (swHi + swingBuf * atrSafe) - close
+    raw = slMode == "ATR" ? byAtr : slMode == "Процент" ? byPct : bySwing
+    math.max(raw, syminfo.mintick * 2)
+
+riskDist = f_risk(side)
+planEnt  = close
+planStop = side == 1 ? planEnt - riskDist : planEnt + riskDist
+planTp1  = side == 1 ? planEnt + rr1 * riskDist : planEnt - rr1 * riskDist
+planTp2  = side == 1 ? planEnt + rr2 * riskDist : planEnt - rr2 * riskDist
+planSize = riskPct / math.max(riskDist / planEnt * 100.0, 1e-9)
+
+var int lastSig = -100000
+
+// ── сигнал ─────────────────────────────────────────────────────────────────────
+barsOk  = not confirmed or barstate.isconfirmed
+freeOk  = not oneTrade or strategy.position_size == 0
+coolOk  = bar_index - lastSig > cooldown
+patOk   = not needPat or (side == 1 ? patL > 0 : patS > 0)
+dirOk   = side == 1 ? okL : okS
+live    = barsOk and freeOk and coolOk and patOk and dirOk and not na(atr) and score >= thr
+
+buySig  = live and side == 1
+sellSig = live and side == -1
+
+state = live ? "СИГНАЛ" : score >= thr ? "БЛОКИРОВАН" :
+     pot >= thr ? "ARMED" : pot >= thrWatch ? "НАБЛЮДЕНИЕ" : "ПУСТО"
+
+// ── исполнение ─────────────────────────────────────────────────────────────────
+var float tStop = na
+var float tTp1  = na
+var float tTp2  = na
+var int   tBar  = na
+var bool  beDone = false
+
+// размер позиции: столько контрактов, чтобы стоп стоил ровно riskPct процентов депозита
+qty = math.max(strategy.equity * riskPct / 100.0 / math.max(riskDist, syminfo.mintick), 0.0)
+
+if live and strategy.position_size == 0
+    tStop  := planStop
+    tTp1   := planTp1
+    tTp2   := planTp2
+    tBar   := bar_index
+    beDone := false
+    lastSig := bar_index
+    strategy.entry(side == 1 ? "LONG" : "SHORT", side == 1 ? strategy.long : strategy.short,
+         qty = qty, comment = str.tostring(score, "#"))
+
+if strategy.position_size != 0
+    isLong = strategy.position_size > 0
+    if useTp2 and not beDone and (isLong ? high >= tTp1 : low <= tTp1)
+        beDone := true
+    stopNow = beDone ? strategy.position_avg_price : tStop
+    if useTp2
+        strategy.exit("TP1", stop = stopNow, limit = tTp1, qty_percent = 50, comment_profit = "TP1", comment_loss = "стоп")
+        strategy.exit("TP2", stop = stopNow, limit = tTp2, comment_profit = "TP2", comment_loss = "стоп")
+    else
+        strategy.exit("TP", stop = stopNow, limit = tTp1, comment_profit = "TP1", comment_loss = "стоп")
+    if bar_index - tBar >= maxBars
+        strategy.close_all(comment = "тайм-стоп")
+
+// ── отрисовка ──────────────────────────────────────────────────────────────────
+plot(showEma ? emaFast : na, "EMA быстрая", color = color.new(cBrass, 35), linewidth = 1)
+plot(showEma ? emaSlow : na, "EMA медленная", color = color.new(color.gray, 35), linewidth = 1)
+plot(score, "Скор", color = color.new(color.gray, 100), display = display.data_window)
+plot(thr,   "Порог", color = color.new(color.gray, 100), display = display.data_window)
+
+if showSig and live
+    label.new(bar_index, side == 1 ? low : high,
+         text = (side == 1 ? "BUY" : "SELL") + "  " + str.tostring(score, "#"),
+         style = side == 1 ? label.style_label_up : label.style_label_down,
+         color = side == 1 ? cLong : cShort, textcolor = color.white, size = size.small)
+
+if showPrz and live
+    zTop = side == 1 ? low + przATR * atrSafe : high
+    zBot = side == 1 ? low : high - przATR * atrSafe
+    box.new(bar_index, zTop, bar_index + przFwd, zBot,
+         border_color = color.new(side == 1 ? cLong : cShort, 55),
+         bgcolor = color.new(side == 1 ? cLong : cShort, 88))
+
+// ── панель ─────────────────────────────────────────────────────────────────────
+pos = panelPos == "Справа снизу" ? position.bottom_right :
+     panelPos == "Слева сверху"  ? position.top_left :
+     panelPos == "Слева снизу"   ? position.bottom_left : position.top_right
+
+var table tP = table.new(pos, 3, 13, border_width = 1)
+
+f_row(int r, string k, string v, string x, color bg) =>
+    table.cell(tP, 0, r, k, text_color = chart.fg_color, text_size = size.tiny, text_halign = text.align_left,  bgcolor = bg)
+    table.cell(tP, 1, r, v, text_color = chart.fg_color, text_size = size.tiny, text_halign = text.align_right, bgcolor = bg)
+    table.cell(tP, 2, r, x, text_color = color.gray,     text_size = size.tiny, text_halign = text.align_right, bgcolor = bg)
+    r
+
+f_tf(string tf, int d) => tf == "" ? "—" : (d == 1 ? "▲" : d == -1 ? "▼" : "•") + " " + tf
+
+if showPanel and barstate.islast
+    bgH  = color.new(color.gray, 85)
+    sCol = state == "СИГНАЛ" ? color.new(side == 1 ? cLong : cShort, 78) : state == "ARMED" ? color.new(cBrass, 82) : bgH
+    f_row(0,  "GAINZ стратегия", syminfo.ticker, timeframe.period, bgH)
+    f_row(1,  "Состояние", state, side == 1 ? "LONG" : "SHORT", sCol)
+    f_row(2,  "Скор / порог", str.tostring(score, "#.0"), str.tostring(thr, "#.0"), na)
+    f_row(3,  "C свеча",        f_gauge(cC), str.tostring(wC * cC, "#.000"), na)
+    f_row(4,  "M импульс",      f_gauge(cM), str.tostring(wM * cM, "#.000"), na)
+    f_row(5,  "E RSI",          f_gauge(cE), str.tostring(wE * cE, "#.000"), na)
+    f_row(6,  "B стабильность", f_gauge(stabB), str.tostring(wB * stabB, "#.000"), na)
+    f_row(7,  "S структура",    f_gauge(cS), str.tostring(wS * cS, "#.000"), na)
+    f_row(8,  "G режим", str.tostring(cG, "#.00"),
+         trendDir == 1 ? "тренд вверх" : trendDir == -1 ? "тренд вниз" : "флэт", na)
+    f_row(9,  "Волатильность / ER", str.tostring(volRat, "#.00") + "×", str.tostring(er, "#.00"), na)
+    f_row(10, "Старшие ТФ", f_tf(tfA, nz(mtfA)), f_tf(tfB, nz(mtfB)) + " " + f_tf(tfC, nz(mtfC)), na)
+    f_row(11, "Позиция", strategy.position_size == 0 ? "—" : (strategy.position_size > 0 ? "LONG" : "SHORT"),
+         strategy.position_size == 0 ? str.tostring(qty, "#.###") + " (" + str.tostring(planSize, "#.##") + "% деп.)" : str.tostring(bar_index - tBar) + " бар", bgH)
+    f_row(12, "Сделок " + str.tostring(strategy.closedtrades),
+         "эквити " + str.tostring(strategy.equity, "#"),
+         "просадка " + str.tostring(strategy.max_drawdown, "#"), na)
+
+// ── алерты ─────────────────────────────────────────────────────────────────────
+alertcondition(buySig,  "GAINZ S · BUY",  "GAINZ стратегия: вход LONG")
+alertcondition(sellSig, "GAINZ S · SELL", "GAINZ стратегия: вход SHORT")
