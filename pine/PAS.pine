@@ -15,6 +15,10 @@
 //  без выделения памяти под каждое окно.
 //
 //  Сигнал строится ТОЛЬКО по данным левее текущего бара — не перерисовывается.
+//
+//  Для младших таймфреймов (M1–M5) предусмотрены: фильтр по времени суток,
+//  запрет на окна, перепрыгивающие через разрыв сессии, порог издержек
+//  в процентах и сглаживание шума при сопоставлении.
 // ═══════════════════════════════════════════════════════════════════════════════
 indicator("Pattern Analog Scanner", "PAS", overlay = true, max_bars_back = 500,
      max_lines_count = 500, max_labels_count = 500, max_boxes_count = 500,
@@ -24,25 +28,32 @@ indicator("Pattern Analog Scanner", "PAS", overlay = true, max_bars_back = 500,
 GP = "Поиск паттернов"
 src        = input.source(close,  "Источник",                  group = GP)
 patLen     = input.int(30,   "Длина паттерна (баров)",         minval = 5,   maxval = 300,   group = GP, tooltip = "Сколько последних баров считать «текущей ситуацией», форму которой ищем в истории.")
-horizon    = input.int(10,   "Горизонт прогноза (баров)",      minval = 1,   maxval = 200,   group = GP, tooltip = "На сколько баров вперёд смотрим после каждого найденного аналога.")
+horizon    = input.int(10,   "Горизонт прогноза (баров)",      minval = 1,   maxval = 200,   group = GP, tooltip = "На сколько баров вперёд смотрим после каждого найденного аналога. Держите около трети длины паттерна.")
 topK       = input.int(10,   "Сколько аналогов брать (K)",     minval = 1,   maxval = 50,    group = GP)
 minMatches = input.int(5,    "Минимум аналогов для сигнала",   minval = 1,   maxval = 50,    group = GP)
-maxHist    = input.int(3000, "Глубина сканирования (баров)",   minval = 200, maxval = 20000, group = GP, tooltip = "Чем больше, тем дольше считает. 3000 — разумный старт.")
-scanStep   = input.int(1,    "Шаг сканирования",               minval = 1,   maxval = 10,    group = GP, tooltip = "1 = проверять каждый бар истории. 2–3 заметно ускоряют расчёт почти без потери качества.")
+maxHist    = input.int(3000, "Глубина сканирования (баров)",   minval = 200, maxval = 20000, group = GP, tooltip = "Сколько баров истории прочёсывать. Главный рычаг скорости. Индикатор видит только те бары, что реально подгружены на график.")
+scanStep   = input.int(1,    "Шаг сканирования",               minval = 1,   maxval = 10,    group = GP, tooltip = "1 = проверять каждый бар истории. 2–3 заметно ускоряют расчёт почти без потери качества — на M1 это правильный размен.")
 minGapIn   = input.int(0,    "Мин. расстояние между аналогами",minval = 0,   maxval = 500,   group = GP, tooltip = "Чтобы не брать K раз один и тот же участок со сдвигом в один бар. 0 = длина паттерна.")
 metric     = input.string("Форма (без учёта масштаба)", "Метрика похожести", options = ["Форма (без учёта масштаба)", "Амплитуда (в ATR)"], group = GP, tooltip = "Форма: важен только рисунок движения. Амплитуда: важен ещё и размах хода, измеренный в ATR.")
 weighted   = input.bool(true, "Взвешивать аналоги по похожести", group = GP)
+smoothLen  = input.int(4, "Сглаживание при сопоставлении", minval = 1, maxval = 20, group = GP, tooltip = "1 = выключено. На M1 держите 3–8.\n\nЭто не косметика: на минутках bid-ask шум ломает корреляцию настолько, что порог похожести не проходит НИЧЕГО и индикатор молчит. На проверочном ряду с дрожанием ±0.03% без сглаживания вышло 5 сигналов, с EMA 5 — 166 сигналов при точности 64.5%; при дрожании ±0.08% без сглаживания 0 сигналов, с EMA 8 — 174 сигнала при 57.5%. Чем грязнее тейп, тем длиннее нужна EMA.\n\nСглаживается ТОЛЬКО ряд для сравнения форм; исходы аналогов и проекция всегда считаются по настоящей цене закрытия. EMA смотрит только назад, заглядывания в будущее не возникает, но она добавляет лаг — слишком большое значение делает «текущую форму» устаревшей. Подбирайте по walk-forward точности.")
+
+// ─── Фильтры контекста (важно для M1–M5) ─────────────────────────────────────
+GX = "Фильтры контекста"
+todTol     = input.int(0, "Допуск по времени суток (минут)", minval = 0, maxval = 720, group = GX, tooltip = "0 = выключено: аналог берётся из любого времени суток. Значение N: годятся только аналоги в пределах ±N минут от текущего времени суток.\n\nЧЕСТНО: пользу этого фильтра проверить не удалось. На синтетическом ряду, специально построенном так, что одна и та же форма даёт противоположный исход в разное время суток, фильтр не дал ничего (+0.1 п.п., z=0.01). Похоже, форма окна сама несёт информацию о режиме, и фильтр по часам к ней избыточен.\n\nОставлен как эксперимент: на реальных данных эффекты открытия, закрытия и выхода новостей резче, чем в модели. Включайте только если walk-forward точность от этого растёт. Плата — объём выборки: ±60 минут отсекает около 11/12 истории.")
+useSegFlt  = input.bool(true, "Не склеивать через разрыв сессии", group = GX, tooltip = "Запрещает окна, перепрыгивающие через ночной перерыв, выходные или дыру в данных. На акциях и фьючерсах на M1 без этого треть аналогов — склейка вчерашнего закрытия с сегодняшним открытием. На круглосуточной крипте просто ничего не делает.")
 
 // ─── Фильтр сигнала ──────────────────────────────────────────────────────────
 GS = "Фильтр сигнала"
 minCorr    = input.float(0.85, "Мин. средняя корреляция",       minval = 0,   maxval = 1, step = 0.01, group = GS)
 minAgree   = input.float(0.70, "Мин. согласие по направлению",  minval = 0.5, maxval = 1, step = 0.01, group = GS, tooltip = "Доля аналогов, сошедшихся в одну сторону.")
-minMoveATR = input.float(0.50, "Мин. ожидаемый ход (в ATR)",    minval = 0,   step = 0.1,  group = GS, tooltip = "Отсекает прогнозы «вверх на 0.03%» — статистически верные, но бесполезные после комиссии.")
+minMoveATR = input.float(0.50, "Мин. ожидаемый ход (в ATR)",    minval = 0,   step = 0.1,  group = GS, tooltip = "Порог в единицах волатильности: сам подстраивается под инструмент.")
+minMovePct = input.float(0.00, "Мин. ожидаемый ход (%)",        minval = 0,   step = 0.01, group = GS, tooltip = "Порог в абсолютных процентах — то, чего нет у ATR-порога. Поставьте сюда минимум удвоенные издержки полного круга (комиссия туда-обратно + спред + проскальзывание).\n\nНа M1 это решающий фильтр: прогноз «вверх на 0.02%» статистически может быть верным и всё равно убыточным. 0 = выключено.")
 atrLen     = input.int(14,     "Период ATR",                    minval = 1,                group = GS)
 
 // ─── Режим расчёта ───────────────────────────────────────────────────────────
 GC = "Режим расчёта"
-histBars   = input.int(0, "Считать на последних N барах", minval = 0, maxval = 2000, group = GC, tooltip = "0 = только на последнем баре: быстро, но истории сигналов и walk-forward статистики не будет.\n\nN > 0 = прогонять поиск на каждом из последних N баров: появляются стрелки на истории и честный процент попаданий. Начните с 200–300 и одновременно уменьшите глубину сканирования (≈1000) либо поднимите шаг сканирования до 3, иначе Pine упрётся в лимит времени.")
+histBars   = input.int(0, "Считать на последних N барах", minval = 0, maxval = 2000, group = GC, tooltip = "0 = только на последнем баре: быстро, но истории сигналов и walk-forward статистики не будет.\n\nN > 0 = прогонять поиск на каждом из последних N баров: появляются стрелки на истории и честный процент попаданий. Начните с 200–300 и одновременно уменьшите глубину сканирования либо поднимите шаг сканирования до 3, иначе Pine упрётся в лимит времени.")
 
 // ─── Отображение ─────────────────────────────────────────────────────────────
 GV = "Отображение"
@@ -59,18 +70,40 @@ neutCol     = input.color(#787b86, "Нейтр.",   group = GV, inline = "col")
 //  Сбор истории в массивы.
 //  Работаем с массивами, а не с оператором [], чтобы индексация внутри циклов
 //  была явной и не упиралась в lookback-буфер Pine.
+//    px  — ряд для сопоставления форм (может быть сглажен)
+//    pxo — настоящая цена: по ней и только по ней считаются исходы аналогов
+//    tod — время суток бара в минутах, для фильтра по времени
+//    seg — номер непрерывного отрезка данных, для защиты от разрывов сессии
 // ═══════════════════════════════════════════════════════════════════════════════
-atrNow = ta.atr(atrLen)
-cap    = maxHist + patLen + horizon + 10
+atrNow    = ta.atr(atrLen)
+matchSrc  = smoothLen > 1 ? ta.ema(src, smoothLen) : src
+cap       = maxHist + patLen + horizon + 10
+
+// разрыв: интрадей терпит до двух пропущенных баров, дневки — выходные
+gapMult   = timeframe.isintraday ? 3.0 : 4.5
+expectMs  = timeframe.in_seconds() * 1000
+
+var int segId = 0
+if bar_index > 0 and expectMs > 0 and (time - time[1]) > expectMs * gapMult
+    segId += 1
 
 var array<float> px  = array.new<float>()
+var array<float> pxo = array.new<float>()
 var array<float> atv = array.new<float>()
+var array<int>   tod = array.new<int>()
+var array<int>   seg = array.new<int>()
 
-array.push(px,  nz(src, close))
+array.push(px,  nz(matchSrc, close))
+array.push(pxo, close)
 array.push(atv, nz(atrNow, 0.0))
+array.push(tod, hour * 60 + minute)
+array.push(seg, segId)
 if array.size(px) > cap
     array.shift(px)
+    array.shift(pxo)
     array.shift(atv)
+    array.shift(tod)
+    array.shift(seg)
 
 shapeMode = metric == "Форма (без учёта масштаба)"
 gapMin    = minGapIn > 0 ? minGapIn : patLen
@@ -79,17 +112,23 @@ gapMin    = minGapIn > 0 ? minGapIn : patLen
 //  Поиск аналогов.
 //  Возвращает [индексы окончаний найденных окон, их корреляции, их «стоимости»].
 //  Ограничения на кандидата e (индекс последнего бара исторического окна):
-//    * e + fwd    <= anchor  — исход аналога должен быть уже известен;
-//    * e + len    <= anchor  — окно аналога не пересекается с текущим.
-//  Оба условия смотрят строго в прошлое, поэтому сигнал не перерисовывается.
+//    * e + fwd <= anchor — исход аналога должен быть уже известен;
+//    * e + len <= anchor — окно аналога не пересекается с текущим;
+//    * окно вместе с исходом лежит внутри одного непрерывного отрезка данных;
+//    * время суток совпадает с текущим в пределах допуска.
+//  Все условия смотрят строго в прошлое, поэтому сигнал не перерисовывается.
 // ═══════════════════════════════════════════════════════════════════════════════
-findMatches(array<float> data, array<float> atrd, int anchor, int len, int fwd,
-             int lookback, int stepN, bool useShape, int k, int minGap) =>
+findMatches(array<float> data, array<float> atrd, array<int> tods, array<int> segs,
+             int anchor, int len, int fwd, int lookback, int stepN, bool useShape,
+             int k, int minGap, int todTolMin, bool useSeg) =>
     ends  = array.new<int>()
     corrs = array.new<float>()
     costs = array.new<float>()
 
     tStart = anchor - len + 1
+
+    // текущее окно само не должно быть склейкой через разрыв сессии
+    tplOk = not useSeg or array.get(segs, tStart) == array.get(segs, anchor)
 
     // z-нормализация шаблона (текущего окна)
     tsum = 0.0
@@ -102,10 +141,11 @@ findMatches(array<float> data, array<float> atrd, int anchor, int len, int fwd,
         tss += d * d
     tsd = math.sqrt(tss / len)
 
-    if tsd > 1e-10
-        t0   = array.get(data, tStart)
-        atr0 = array.get(atrd, tStart)
-        atr0 := atr0 > 1e-10 ? atr0 : 1e-10
+    if tsd > 1e-10 and tplOk
+        t0     = array.get(data, tStart)
+        atr0   = array.get(atrd, tStart)
+        atr0  := atr0 > 1e-10 ? atr0 : 1e-10
+        anchTod = array.get(tods, anchor)
 
         tz   = array.new<float>()
         tamp = array.new<float>()
@@ -126,6 +166,16 @@ findMatches(array<float> data, array<float> atrd, int anchor, int len, int fwd,
             for p = 0 to passes
                 e = hiE - p * stepN
                 s = e - len + 1
+
+                // дешёвые отсечки до тяжёлого цикла
+                if useSeg and array.get(segs, s) != array.get(segs, e + fwd)
+                    continue
+                if todTolMin > 0
+                    dd = math.abs(array.get(tods, e) - anchTod)
+                    dd := math.min(dd, 1440 - dd)     // сутки замкнуты в круг
+                    if dd > todTolMin
+                        continue
+
                 sumC  = 0.0
                 sumC2 = 0.0
                 dot   = 0.0
@@ -178,7 +228,7 @@ findMatches(array<float> data, array<float> atrd, int anchor, int len, int fwd,
     [ends, corrs, costs]
 
 // ═══════════════════════════════════════════════════════════════════════════════
-//  Агрегация исходов найденных аналогов.
+//  Агрегация исходов найденных аналогов. Считается по настоящей цене (pxo).
 //  Возвращает [средний путь, разброс σ по шагам, доля роста, итоговый ход, ср. корреляция]
 // ═══════════════════════════════════════════════════════════════════════════════
 aggregate(array<float> data, array<int> ends, array<float> corrs, int fwd, bool useW) =>
@@ -253,8 +303,9 @@ var array<int>   lastEnds = array.new<int>()
 var array<float> lastCorr = array.new<float>()
 
 if doCalc
-    [ends, corrs, costs] = findMatches(px, atv, n - 1, patLen, horizon, maxHist, scanStep, shapeMode, topK, gapMin)
-    [meanPath, sdPath, agree, term, avgCorr] = aggregate(px, ends, corrs, horizon, weighted)
+    [ends, corrs, costs] = findMatches(px, atv, tod, seg, n - 1, patLen, horizon, maxHist,
+         scanStep, shapeMode, topK, gapMin, todTol, useSegFlt)
+    [meanPath, sdPath, agree, term, avgCorr] = aggregate(pxo, ends, corrs, horizon, weighted)
 
     nMatch  := array.size(ends)
     agreeV  := agree
@@ -262,10 +313,11 @@ if doCalc
     expMove := term
     expATR  := atrNow > 0 ? term * close / atrNow : 0.0
 
-    quality = nMatch >= minMatches and avgCorr >= minCorr
-    bull    = quality and agree         >= minAgree and expATR >=  minMoveATR
-    bear    = quality and (1.0 - agree) >= minAgree and expATR <= -minMoveATR
-    bias    := bull ? 1 : bear ? -1 : 0
+    quality  = nMatch >= minMatches and avgCorr >= minCorr
+    passCost = minMovePct <= 0 or math.abs(term) * 100.0 >= minMovePct
+    bull     = quality and passCost and agree         >= minAgree and expATR >=  minMoveATR
+    bear     = quality and passCost and (1.0 - agree) >= minAgree and expATR <= -minMoveATR
+    bias     := bull ? 1 : bear ? -1 : 0
 
     if barstate.islast
         lastMean := meanPath
@@ -341,14 +393,14 @@ if barstate.islast
             for i = 0 to cnt - 1
                 int   e  = array.get(lastEnds, i)
                 int   s  = e - patLen + 1
-                float hi = array.get(px, s)
+                float hi = array.get(pxo, s)
                 float lo = hi
                 for q = s to e
-                    float v = array.get(px, q)
+                    float v = array.get(pxo, q)
                     hi := math.max(hi, v)
                     lo := math.min(lo, v)
                 float pad   = (hi - lo) * 0.08 + syminfo.mintick
-                float after = array.get(px, e) != 0 ? array.get(px, e + horizon) / array.get(px, e) - 1 : 0
+                float after = array.get(pxo, e) != 0 ? array.get(pxo, e + horizon) / array.get(pxo, e) - 1 : 0
                 color aCol  = after >= 0 ? bullCol : bearCol
 
                 array.push(gBoxes, box.new(base0 + s, hi + pad, base0 + e, lo - pad,
@@ -366,7 +418,7 @@ if barstate.islast
 // ═══════════════════════════════════════════════════════════════════════════════
 //  Таблица статистики
 // ═══════════════════════════════════════════════════════════════════════════════
-var table tbl = table.new(position.top_right, 2, 9, border_width = 1, frame_width = 1,
+var table tbl = table.new(position.top_right, 2, 10, border_width = 1, frame_width = 1,
      frame_color = color.new(color.gray, 50), border_color = color.new(color.gray, 70))
 
 row(int r, string k, string v, color vc) =>
@@ -379,6 +431,9 @@ if barstate.islast and showTable
     biasTxt = bias == 1 ? "LONG" : bias == -1 ? "SHORT" : "—"
     biasCol = bias == 1 ? bullCol : bias == -1 ? bearCol : neutCol
     aV      = nz(agreeV, 0.5)
+    // сколько истории реально подгрузил TradingView и на сколько суток её хватает
+    spanD   = expectMs > 0 ? n * expectMs / 86400000.0 : 0.0
+    deep    = n - patLen - horizon           // реально доступная глубина поиска
     row(0, "PAS   " + str.tostring(patLen) + " → " + str.tostring(horizon), biasTxt, biasCol)
     row(1, "Аналогов найдено",  str.tostring(nMatch), color.new(color.gray, 10))
     row(2, "Ср. корреляция",    str.tostring(nz(corrV), "0.000"), nz(corrV) >= minCorr ? bullCol : neutCol)
@@ -386,9 +441,11 @@ if barstate.islast and showTable
     row(4, "Ожидаемый ход",     str.tostring(nz(expMove) * 100, "+0.00;-0.00") + "%", nz(expMove) >= 0 ? bullCol : bearCol)
     row(5, "То же в ATR",       str.tostring(nz(expATR), "+0.00;-0.00"),               nz(expATR)  >= 0 ? bullCol : bearCol)
     row(6, "Разброс ±1σ",       array.size(lastSd) > 0 ? "±" + str.tostring(array.get(lastSd, array.size(lastSd) - 1) * 100, "0.00") + "%" : "—", color.new(color.gray, 10))
-    row(7, "Walk-forward точность", wfN > 0 ? str.tostring(100.0 * wfHit / wfN, "0.0") + "%  (" + str.tostring(wfN) + ")" : (histBars > 0 ? "накопление…" : "выкл."),
+    row(7, "История на графике", str.tostring(n) + " баров ≈ " + str.tostring(spanD, "0.0") + " дн.",
+         deep < maxHist ? bearCol : color.new(color.gray, 10))
+    row(8, "Walk-forward точность", wfN > 0 ? str.tostring(100.0 * wfHit / wfN, "0.0") + "%  (" + str.tostring(wfN) + ")" : (histBars > 0 ? "накопление…" : "выкл."),
          wfN == 0 ? neutCol : (wfHit * 2 > wfN ? bullCol : bearCol))
-    row(8, "Ср. исход сигнала", wfN > 0 ? str.tostring(100.0 * wfPnl / wfN, "+0.000;-0.000") + "%" : "—",
+    row(9, "Ср. исход сигнала", wfN > 0 ? str.tostring(100.0 * wfPnl / wfN, "+0.000;-0.000") + "%" : "—",
          wfN > 0 and wfPnl >= 0 ? bullCol : wfN > 0 ? bearCol : neutCol)
 
 // ═══════════════════════════════════════════════════════════════════════════════
