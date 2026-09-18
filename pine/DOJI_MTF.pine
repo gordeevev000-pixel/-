@@ -1,0 +1,271 @@
+//@version=6
+// ═══════════════════════════════════════════════════════════════════════════════
+//  DOJI MTF · стрекоза и надгробие на пяти таймфреймах сразу
+//
+//    ▲ Dragonfly / стрекоза   — длинная нижняя тень, тела почти нет, верхней тени
+//                               нет. Продавцы продавили цену и не удержали — их
+//                               выкупили обратно в точку открытия. Разворот вверх.
+//    ▼ Gravestone / надгробие — длинная верхняя тень, тела почти нет, нижней тени
+//                               нет. Покупателей вынесли вверх и не удержали.
+//                               Разворот вниз.
+//
+//  Задача скрипта: открыт график 1 минута, а знать надо ещё и про 5 / 15 / 30 / 60.
+//  Каждый таймфрейм опрашивается отдельно, результат сводится в панель, метки на
+//  графике и алерты — с одного открытого графика видно все пять.
+//
+//  Перерисовка. По умолчанию сигнал берётся только с ЗАКРЫТОЙ свечи старшего ТФ:
+//  request.security(..., expr[1], lookahead_on) — связка, которая на истории и в
+//  реальном времени даёт одно и то же и не заглядывает в будущее. Плата за это —
+//  задержка: часовой доджи станет известен в 11:00, а не в 10:37. Выключатель
+//  «только закрытые свечи» отдаёт сигнал внутри формирующейся свечи: быстрее, но
+//  такой сигнал может исчезнуть до её закрытия.
+//
+//  Таймфрейм младше графика (открыт 15м, а нужен 1м) читается через
+//  request.security_lower_tf — она возвращает массив всех внутрибарных свечей,
+//  поэтому ни один доджи не теряется. Обычный request.security так не умеет:
+//  он вернул бы только последнюю минутку внутри бара.
+//
+//  Доджи — сигнал контекста, а не самостоятельная система. Стрекоза на поддержке
+//  после пролива и стрекоза посреди вялого боковика — разные вещи. Фильтр по ATR
+//  отсекает хотя бы микро-свечи в затишье, остальное — на глаз.
+// ═══════════════════════════════════════════════════════════════════════════════
+
+indicator("DOJI MTF · стрекоза и надгробие", "DOJI MTF", overlay = true,
+     max_labels_count = 500)
+
+// ── геометрия доджи ───────────────────────────────────────────────────────────
+gP = "Геометрия доджи"
+bodyMax = input.float(5.0, "Тело ≤ % диапазона свечи", minval = 0.1, maxval = 50, step = 0.5, group = gP,
+     tooltip = "Доджи — свеча почти без тела. 5 % от хай-лоу — строгая классика, 10 % — помягче и сигналов больше.")
+wickMin = input.float(60.0, "Рабочая тень ≥ % диапазона", minval = 30, maxval = 95, step = 1, group = gP,
+     tooltip = "Нижняя тень для стрекозы, верхняя для надгробия. Классика — две трети свечи. Ниже 50 % ставить смысла нет: это уже не стрекоза.")
+oppMax  = input.float(10.0, "Противоположная тень ≤ % диапазона", minval = 0, maxval = 40, step = 1, group = gP,
+     tooltip = "У стрекозы верхней тени быть почти не должно, у надгробия — нижней. 0 % — идеал из учебника, на рынке почти не встречается.")
+atrLen  = input.int(14, "ATR для фильтра размера", minval = 1, group = gP)
+atrMin  = input.float(0.5, "Диапазон свечи ≥ × ATR (0 — выключить)", minval = 0, maxval = 5, step = 0.1, group = gP,
+     tooltip = "Отсекает микро-доджи в затишье: разворачивать там нечего.")
+
+// ── таймфреймы ────────────────────────────────────────────────────────────────
+gT = "Таймфреймы"
+confirmed = input.bool(true, "Только закрытые свечи (без перерисовки)", group = gT,
+     tooltip = "Включено — сигнал приходит в момент закрытия свечи нужного ТФ и уже не пропадёт.\nВыключено — сигнал появляется внутри формирующейся свечи: раньше, но может исчезнуть.")
+use1 = input.bool(true, "ТФ 1", inline = "tf1", group = gT)
+tf1  = input.timeframe("1", "", inline = "tf1", group = gT)
+use2 = input.bool(true, "ТФ 2", inline = "tf2", group = gT)
+tf2  = input.timeframe("5", "", inline = "tf2", group = gT)
+use3 = input.bool(true, "ТФ 3", inline = "tf3", group = gT)
+tf3  = input.timeframe("15", "", inline = "tf3", group = gT)
+use4 = input.bool(true, "ТФ 4", inline = "tf4", group = gT)
+tf4  = input.timeframe("30", "", inline = "tf4", group = gT)
+use5 = input.bool(true, "ТФ 5", inline = "tf5", group = gT)
+tf5  = input.timeframe("60", "", inline = "tf5", group = gT)
+
+// ── отображение ───────────────────────────────────────────────────────────────
+gV = "Отображение"
+showPanel  = input.bool(true, "Панель статуса", group = gV)
+panelPos   = input.string("Справа сверху", "Угол панели", group = gV,
+     options = ["Справа сверху", "Слева сверху", "Справа снизу", "Слева снизу"])
+panelSize  = input.string("Обычный", "Размер шрифта панели", options = ["Мелкий", "Обычный", "Крупный"], group = gV)
+showLabels = input.bool(true, "Метки на графике", group = gV,
+     tooltip = "Одна метка на все таймфреймы, сработавшие на этом баре: в ней перечислены их значения.")
+showOwn    = input.bool(true, "Отмечать доджи текущего ТФ треугольником", group = gV)
+showBg     = input.bool(true, "Подсвечивать фон бара с сигналом", group = gV)
+freshBars  = input.int(10, "Сколько баров считать сигнал свежим", minval = 1, maxval = 200, group = gV,
+     tooltip = "Строка панели подсвечена, пока сигнал свежий.")
+colUp = input.color(#26a69a, "Стрекоза ▲", inline = "col", group = gV)
+colDn = input.color(#ef5350, "Надгробие ▼", inline = "col", group = gV)
+
+// ── алерты ────────────────────────────────────────────────────────────────────
+gA = "Алерты"
+alertUp = input.bool(true, "Сообщать о стрекозе",  group = gA)
+alertDn = input.bool(true, "Сообщать о надгробии", group = gA)
+
+// ═══ ядро ══════════════════════════════════════════════════════════════════════
+
+// Геометрия одной свечи. 0 — ничего, 1 — стрекоза, 2 — надгробие.
+// Одновременно обеими свеча быть не может: длинная тень одной стороны исключает
+// требование «противоположной тени почти нет» для другой.
+dojiCode() =>
+    rng  = high - low
+    body = math.abs(close - open)
+    upW  = high - math.max(open, close)
+    dnW  = math.min(open, close) - low
+    a    = ta.atr(atrLen)
+    okSize = atrMin <= 0 or (not na(a) and rng >= a * atrMin)
+    base = rng > 0 and okSize and body <= rng * bodyMax / 100
+    dfl  = base and dnW >= rng * wickMin / 100 and upW <= rng * oppMax / 100
+    gst  = base and upW >= rng * wickMin / 100 and dnW <= rng * oppMax / 100
+    dfl ? 1 : gst ? 2 : 0
+
+// То же, но со сдвигом на закрытую свечу, если включён режим без перерисовки.
+dojiCodeTf() =>
+    c = dojiCode()
+    confirmed ? c[1] : c
+
+// Человекочитаемое имя таймфрейма: "1" → "1м", "60" → "1ч".
+tfName(string tf) =>
+    s = timeframe.in_seconds(tf)
+    s >= 86400 ? str.tostring(s / 86400.0, "#.##") + "д" :
+     s >= 3600 ? str.tostring(s / 3600.0,  "#.##") + "ч" :
+     s >= 60   ? str.tostring(s / 60.0,    "#.##") + "м" : str.tostring(s) + "с"
+
+// ── опрос одного таймфрейма ───────────────────────────────────────────────────
+// Возвращает: появился ли сигнал именно сейчас (стрекоза / надгробие), тип
+// последнего найденного доджи, номер бара и время, когда он был найден.
+// Переменные var живут отдельно для каждого места вызова — поэтому пять
+// таймфреймов не мешают друг другу, хотя функция одна.
+scanTf(string tf) =>
+    bool lower = timeframe.in_seconds(tf) < timeframe.in_seconds(timeframe.period)
+
+    // Старший (или равный) ТФ: одно значение на бар.
+    int htf = request.security(syminfo.tickerid, tf, dojiCodeTf(),
+         lookahead = confirmed ? barmerge.lookahead_on : barmerge.lookahead_off)
+
+    // Младший ТФ: массив всех внутрибарных свечей текущего бара графика.
+    // ignore_invalid_timeframe — чтобы вызов не падал, когда ТФ старше графика.
+    array<int> ltf = request.security_lower_tf(syminfo.tickerid, tf, dojiCode(),
+         ignore_invalid_timeframe = true)
+
+    var int lastKeyUp = 0
+    var int lastKeyDn = 0
+    var int lastType  = 0
+    var int lastBar   = na
+    var int lastTime  = na
+
+    bool newUp = false
+    bool newDn = false
+
+    if lower
+        int sz = array.size(ltf)
+        // Пока бар графика не закрыт, последняя внутрибарная свеча ещё формируется.
+        int lim = (confirmed and not barstate.isconfirmed) ? sz - 1 : sz
+        if lim > 0
+            for i = 0 to lim - 1
+                int v = array.get(ltf, i)
+                newUp := newUp or v == 1
+                newDn := newDn or v == 2
+    else
+        // Ключ — время открытия текущей свечи нужного ТФ: он же защита от того,
+        // чтобы один и тот же доджи не сработал на каждом баре графика внутри неё.
+        int key = time(tf)
+        bool okKey = not na(key)
+        newUp := htf == 1 and okKey and key != lastKeyUp
+        newDn := htf == 2 and okKey and key != lastKeyDn
+        if newUp
+            lastKeyUp := key
+        if newDn
+            lastKeyDn := key
+
+    if newUp or newDn
+        lastType := newUp ? 1 : 2
+        lastBar  := bar_index
+        lastTime := time
+
+    [newUp, newDn, lastType, lastBar, lastTime]
+
+// ── опрос всех пяти ───────────────────────────────────────────────────────────
+[up1, dn1, typ1, bar1, tim1] = scanTf(tf1)
+[up2, dn2, typ2, bar2, tim2] = scanTf(tf2)
+[up3, dn3, typ3, bar3, tim3] = scanTf(tf3)
+[up4, dn4, typ4, bar4, tim4] = scanTf(tf4)
+[up5, dn5, typ5, bar5, tim5] = scanTf(tf5)
+
+nameArr = array.from(tfName(tf1), tfName(tf2), tfName(tf3), tfName(tf4), tfName(tf5))
+onArr   = array.from(use1, use2, use3, use4, use5)
+
+upArr  = array.from(up1,  up2,  up3,  up4,  up5)
+dnArr  = array.from(dn1,  dn2,  dn3,  dn4,  dn5)
+typArr = array.from(typ1, typ2, typ3, typ4, typ5)
+barArr = array.from(bar1, bar2, bar3, bar4, bar5)
+timArr = array.from(tim1, tim2, tim3, tim4, tim5)
+
+// Список таймфреймов, сработавших на этом баре, — он же текст метки и алерта.
+string upList = ""
+string dnList = ""
+for i = 0 to 4
+    if array.get(onArr, i)
+        if array.get(upArr, i)
+            upList := upList + (upList == "" ? "" : " · ") + array.get(nameArr, i)
+        if array.get(dnArr, i)
+            dnList := dnList + (dnList == "" ? "" : " · ") + array.get(nameArr, i)
+
+bool anyUp = upList != ""
+bool anyDn = dnList != ""
+
+// ═══ вывод ═════════════════════════════════════════════════════════════════════
+
+// Доджи на самом графике — маленьким треугольником ровно под той свечой,
+// которая его образовала (в режиме без перерисовки — после её закрытия).
+ownCode = dojiCode()
+ownOk   = not confirmed or barstate.isconfirmed
+plotshape(showOwn and ownOk and ownCode == 1, "Стрекоза на текущем ТФ", shape.triangleup,
+     location.belowbar, colUp, size = size.tiny)
+plotshape(showOwn and ownOk and ownCode == 2, "Надгробие на текущем ТФ", shape.triangledown,
+     location.abovebar, colDn, size = size.tiny)
+
+bgcolor((showBg and anyUp) ? color.new(colUp, 88) : (showBg and anyDn) ? color.new(colDn, 88) : na,
+     title = "Подсветка бара с сигналом")
+
+if showLabels and anyUp
+    label.new(bar_index, low, "▲ Стрекоза\n" + upList, yloc = yloc.belowbar,
+         style = label.style_label_up, color = color.new(colUp, 10), textcolor = color.white,
+         size = size.small, textalign = text.align_center)
+if showLabels and anyDn
+    label.new(bar_index, high, "▼ Надгробие\n" + dnList, yloc = yloc.abovebar,
+         style = label.style_label_down, color = color.new(colDn, 10), textcolor = color.white,
+         size = size.small, textalign = text.align_center)
+
+// ── панель ────────────────────────────────────────────────────────────────────
+posSel = switch panelPos
+    "Слева сверху"  => position.top_left
+    "Справа снизу"  => position.bottom_right
+    "Слева снизу"   => position.bottom_left
+    => position.top_right
+
+tsz = panelSize == "Мелкий" ? size.tiny : panelSize == "Крупный" ? size.normal : size.small
+
+var table panel = table.new(posSel, 3, 7, border_width = 1, frame_width = 1,
+     frame_color = color.new(color.gray, 60), border_color = color.new(color.gray, 70))
+
+if showPanel and barstate.islast
+    hdr = color.new(color.gray, 75)
+    table.cell(panel, 0, 0, "ТФ",    text_color = color.silver, bgcolor = hdr, text_size = tsz)
+    table.cell(panel, 1, 0, "доджи", text_color = color.silver, bgcolor = hdr, text_size = tsz)
+    table.cell(panel, 2, 0, "когда", text_color = color.silver, bgcolor = hdr, text_size = tsz)
+
+    table.clear(panel, 0, 1, 2, 5)
+
+    int row = 0
+    for i = 0 to 4
+        if array.get(onArr, i)
+            row += 1
+            int    typ   = array.get(typArr, i)
+            int    bb    = array.get(barArr, i)
+            int    tt    = array.get(timArr, i)
+            bool   fresh = not na(bb) and bar_index - bb <= freshBars
+            string sig   = typ == 1 ? "▲ стрекоза" : typ == 2 ? "▼ надгробие" : "—"
+            color  cc    = typ == 1 ? colUp : typ == 2 ? colDn : color.gray
+            string whn   = na(tt) ? "—" : str.format_time(tt, "dd.MM HH:mm", syminfo.timezone)
+            color  bg    = fresh ? color.new(cc, 82) : na
+            table.cell(panel, 0, row, array.get(nameArr, i), text_color = color.silver, bgcolor = bg, text_size = tsz)
+            table.cell(panel, 1, row, sig, text_color = cc, bgcolor = bg, text_size = tsz)
+            table.cell(panel, 2, row, whn, text_color = fresh ? cc : color.gray, bgcolor = bg, text_size = tsz)
+
+    table.cell(panel, 0, 6, confirmed ? "закрытые свечи" : "ранний сигнал",
+         text_color = color.new(color.gray, 20), text_size = size.tiny)
+    table.cell(panel, 1, 6, "", text_size = size.tiny)
+    table.cell(panel, 2, 6, str.tostring(row) + " ТФ", text_color = color.new(color.gray, 20), text_size = size.tiny)
+
+// ── алерты ────────────────────────────────────────────────────────────────────
+// alert() — динамический текст, ловится типом «Any alert() function call».
+if anyUp and alertUp
+    alert(str.format("▲ Стрекоза (Dragonfly Doji) · {0} · ТФ: {1} · цена {2}",
+         syminfo.ticker, upList, str.tostring(close, format.mintick)), alert.freq_once_per_bar)
+if anyDn and alertDn
+    alert(str.format("▼ Надгробие (Gravestone Doji) · {0} · ТФ: {1} · цена {2}",
+         syminfo.ticker, dnList, str.tostring(close, format.mintick)), alert.freq_once_per_bar)
+
+// alertcondition() — отдельные пункты в списке условий алерта, текст фиксированный.
+alertcondition(anyUp, "Стрекоза (любой ТФ)", "▲ Стрекоза на {{ticker}} — разворотный сигнал вверх")
+alertcondition(anyDn, "Надгробие (любой ТФ)", "▼ Надгробие на {{ticker}} — разворотный сигнал вниз")
+alertcondition(anyUp or anyDn, "Любой доджи (любой ТФ)", "Разворотный доджи на {{ticker}}")
