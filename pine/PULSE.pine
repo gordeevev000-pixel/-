@@ -1,0 +1,503 @@
+//@version=6
+// ═══════════════════════════════════════════════════════════════════════════════
+//  PULSE · механизм сигналов для минутного графика
+//
+//  Задача, которую решает скрипт: выдавать сделки с винрейтом 70 % и выше.
+//  Винрейт — не свойство индикатора, а следствие двух вещей:
+//
+//    1) насколько узок фильтр входа  → чем больше подтверждений, тем реже и чище;
+//    2) насколько тейк меньше стопа  → тейк 1.0 ATR против стопа 1.5 ATR берётся
+//       чаще, но каждый плюс меньше каждого минуса.
+//
+//  Поэтому 70 % здесь — не обещание, а порог, который скрипт СЧИТАЕТ ПО ФАКТУ и
+//  показывает в панели вместе с ценой этого винрейта: сколько процентов нужно
+//  только чтобы выйти в ноль при выбранном соотношении тейк/стоп. Если «нужно для
+//  нуля» 60 %, а фактический винрейт 71 % — механизм работает. Если фактический
+//  73 %, но «нужно для нуля» 75 % — он убыточен, и никакая красивая цифра
+//  винрейта этого не меняет.
+//
+//  Устройство
+//  ──────────
+//  ЖЁСТКИЕ ФИЛЬТРЫ (режим). Сессия, коридор ADX, минимальная волатильность,
+//  вето на выброс волатильности (новости), согласие старшего таймфрейма.
+//  Не прошло — бар вообще не рассматривается.
+//
+//  ДВА СЕТАПА. «Откат по тренду» — цена в тренде старшего ТФ откатила к быстрой
+//  EMA, RSI разгрузился и разворачивается. «Снятие ликвидности» — бар пробил
+//  экстремум N баров, собрал стопы и закрылся обратно внутри диапазона.
+//
+//  СКОР КОНФЛЮЭНСА 0…11. Одиннадцать независимых подтверждений, каждое даёт балл.
+//  Вход — только при скоре не ниже порога. Это и есть ручка «винрейт против
+//  количества сигналов».
+//
+//  АДАПТИВНЫЙ ПОРОГ. Если скользящий винрейт просел ниже цели, порог сам
+//  поднимается — механизм зажимается, пока рынок не вернётся в свой режим.
+//
+//  ТАБЛИЦА КАЛИБРОВКИ. Винрейт и средний R отдельно для каждого порога скора.
+//  Это главный рабочий инструмент: по ней видно, на каком пороге ваш инструмент
+//  реально даёт 70 %, и даёт ли вообще. Если винрейт не растёт вместе со скором —
+//  на этом инструменте модель не работает.
+//
+//  Статистика считается с учётом издержек (спред + комиссия в тиках) и в
+//  пессимистичном режиме: если тейк и стоп задеты одним баром, засчитывается стоп.
+// ═══════════════════════════════════════════════════════════════════════════════
+
+indicator("PULSE · механизм M1", "PULSE", overlay = true,
+     max_lines_count = 500, max_labels_count = 500, max_boxes_count = 500)
+
+// ── ядро ───────────────────────────────────────────────────────────────────────
+gCore = "Ядро"
+dirMode   = input.string("Обе стороны", "Направление", options = ["Обе стороны", "Только лонг", "Только шорт"], group = gCore)
+setupMode = input.string("Оба сетапа", "Сетап", options = ["Оба сетапа", "Откат по тренду", "Снятие ликвидности"], group = gCore)
+baseMin   = input.int(7, "Порог скора конфлюэнса (из 11)", minval = 3, maxval = 11, group = gCore,
+     tooltip = "Выше — реже, но чище. Подбирается по таблице калибровки внизу справа.")
+cooldown  = input.int(12, "Пауза между сигналами, баров", minval = 0, maxval = 500, group = gCore)
+confirmed = input.bool(true, "Сигналы только по закрытым барам", group = gCore,
+     tooltip = "Выключить — сигнал появится внутри формирующегося бара и может исчезнуть.")
+
+// ── жёсткие фильтры режима ─────────────────────────────────────────────────────
+gReg = "Режим · жёсткие фильтры"
+useSess   = input.bool(true, "Торговать только внутри сессии", group = gReg)
+sessStr   = input.session("0700-2000", "Сессия", group = gReg,
+     tooltip = "0700-2000 UTC — Лондон плюс американская сессия. Для крипты ставьте 0000-2400.")
+sessTzIn  = input.string("UTC", "Часовой пояс сессии", group = gReg,
+     options = ["UTC", "Europe/Moscow", "Europe/London", "America/New_York", "Asia/Tokyo", "Биржа"])
+adxLen    = input.int(14, "ADX", minval = 2, group = gReg)
+adxMin    = input.float(15.0, "ADX минимум", minval = 0, step = 0.5, group = gReg,
+     tooltip = "Ниже — рынок стоит, движения не хватит даже на тейк.")
+adxMax    = input.float(45.0, "ADX максимум", minval = 1, step = 0.5, group = gReg,
+     tooltip = "Выше — разгон, откаты не отрабатывают.")
+atrLen    = input.int(14, "ATR", minval = 2, group = gReg)
+minAtrPct = input.float(0.02, "Минимальный ATR, % от цены", minval = 0, step = 0.01, group = gReg)
+spikeMult = input.float(2.2, "Вето на выброс волатильности, ATR5 / ATR50", minval = 1.0, step = 0.1, group = gReg,
+     tooltip = "Отсекает бары новостей: короткая волатильность резко выше длинной.")
+htfTf     = input.timeframe("5", "Старший таймфрейм", group = gReg)
+htfEmaLen = input.int(50, "EMA старшего таймфрейма", minval = 2, group = gReg)
+htfHard   = input.bool(true, "Согласие старшего ТФ обязательно", group = gReg)
+
+// ── триггеры ───────────────────────────────────────────────────────────────────
+gTrg = "Триггеры"
+emaFLen   = input.int(21,  "EMA быстрая", minval = 2, group = gTrg)
+emaSLen   = input.int(50,  "EMA медленная", minval = 3, group = gTrg)
+emaBLen   = input.int(200, "EMA направления", minval = 5, group = gTrg)
+rsiLen    = input.int(14, "RSI", minval = 2, group = gTrg)
+rsiLong   = input.float(40.0, "Разгрузка RSI для лонга", minval = 1, maxval = 99, step = 1, group = gTrg)
+rsiShort  = input.float(60.0, "Разгрузка RSI для шорта", minval = 1, maxval = 99, step = 1, group = gTrg)
+bbLen     = input.int(20, "Полосы Боллинджера", minval = 2, group = gTrg)
+bbMult    = input.float(2.0, "Множитель полос", minval = 0.1, step = 0.1, group = gTrg)
+sweepLb   = input.int(12, "Окно снятия ликвидности", minval = 3, group = gTrg)
+wickRatio = input.float(1.2, "Хвост отбоя / тело", minval = 0.2, step = 0.1, group = gTrg)
+volLen    = input.int(20, "Окно среднего объёма", minval = 2, group = gTrg)
+volMult   = input.float(1.1, "Объём, × среднего", minval = 0.1, step = 0.1, group = gTrg)
+stretchA  = input.float(0.5, "Отход от быстрой EMA, ATR", minval = 0, step = 0.1, group = gTrg)
+
+// ── сделка ─────────────────────────────────────────────────────────────────────
+gRisk = "Сделка"
+tpAtr     = input.float(1.0, "Тейк, ATR", minval = 0.1, step = 0.1, group = gRisk)
+slAtr     = input.float(1.5, "Стоп, ATR", minval = 0.1, step = 0.1, group = gRisk)
+maxHold   = input.int(45, "Максимум баров в сделке", minval = 3, group = gRisk)
+beOn      = input.bool(true, "Переводить стоп в безубыток", group = gRisk)
+beTrig    = input.float(0.7, "Порог безубытка, ATR", minval = 0.1, step = 0.1, group = gRisk)
+pessim    = input.bool(true, "Тейк и стоп на одном баре = минус", group = gRisk,
+     tooltip = "Порядок внутри минутного бара неизвестен. Пессимистичный счёт честнее.")
+costTicks = input.float(2.0, "Издержки на круг, тиков", minval = 0, step = 0.5, group = gRisk,
+     tooltip = "Спред плюс комиссия. Вычитается из результата каждой сделки — без этого статистика врёт.")
+
+// ── адаптивный порог ───────────────────────────────────────────────────────────
+gAdp = "Адаптивный порог"
+adaptOn   = input.bool(true, "Поднимать порог, когда винрейт просел", group = gAdp)
+targetWr  = input.float(70.0, "Целевой винрейт, %", minval = 1, maxval = 99, step = 1, group = gAdp)
+rollWin   = input.int(20, "Скользящее окно, сделок", minval = 5, group = gAdp)
+scoreStep = input.int(2, "Прибавка к порогу", minval = 0, maxval = 4, group = gAdp)
+warmup    = input.int(12, "Сделок до включения адаптации", minval = 1, group = gAdp)
+
+// ── статистика и вид ───────────────────────────────────────────────────────────
+gUi = "Статистика и вид"
+statAll   = input.bool(true, "Вести статистику по всем сигналам", group = gUi,
+     tooltip = "Включено — отслеживаются и сигналы ниже порога, чтобы заполнить таблицу калибровки. " +
+               "Такой сигнал занимает слот и может перекрыть более сильный. " +
+               "Выключите, когда порог уже выбран и нужна чистая статистика по нему.")
+showPanel = input.bool(true, "Панель статистики", group = gUi)
+showCalib = input.bool(true, "Таблица калибровки", group = gUi)
+showLev   = input.bool(true, "Уровни открытой сделки", group = gUi)
+showLab   = input.bool(false, "Подписи скора у сигналов", group = gUi)
+showEma   = input.bool(true, "Рисовать EMA", group = gUi)
+
+// ═══ расчёты ═══════════════════════════════════════════════════════════════════
+sessTz = sessTzIn == "Биржа" ? syminfo.timezone : sessTzIn
+
+atr     = ta.atr(atrLen)
+atrFast = ta.atr(5)
+atrSlow = ta.atr(50)
+[diPlus, diMinus, adx] = ta.dmi(adxLen, adxLen)
+rsi     = ta.rsi(close, rsiLen)
+[bbMid, bbUp, bbLo] = ta.bb(close, bbLen, bbMult)
+emaF    = ta.ema(close, emaFLen)
+emaS    = ta.ema(close, emaSLen)
+emaB    = ta.ema(close, emaBLen)
+volAvg  = ta.sma(volume, volLen)
+
+// старший таймфрейм — берётся закрытый бар, без заглядывания вперёд
+htfEmaSrc() => ta.ema(close, htfEmaLen)
+htfEma = request.security(syminfo.tickerid, htfTf, htfEmaSrc()[1], lookahead = barmerge.lookahead_off)
+htfPx  = request.security(syminfo.tickerid, htfTf, close[1],       lookahead = barmerge.lookahead_off)
+htfUp  = not na(htfEma) and not na(htfPx) and htfPx > htfEma
+htfDn  = not na(htfEma) and not na(htfPx) and htfPx < htfEma
+
+// режим
+inSess   = not useSess or not na(time(timeframe.period, sessStr, sessTz))
+atrPct   = close > 0 ? atr / close * 100.0 : 0.0
+liveOk   = atrPct >= minAtrPct
+spikeOk  = atrFast <= atrSlow * spikeMult
+adxOk    = adx >= adxMin and adx <= adxMax
+regimeOk = inSess and liveOk and spikeOk and adxOk
+
+// анатомия бара
+barRng  = math.max(high - low, syminfo.mintick)
+barBody = math.max(math.abs(close - open), syminfo.mintick)
+wickDn  = math.min(close, open) - low
+wickUp  = high - math.max(close, open)
+rejBull = wickDn >= barBody * wickRatio and close >= low  + barRng * 0.60
+rejBear = wickUp >= barBody * wickRatio and close <= high - barRng * 0.60
+
+// снятие ликвидности
+prevLow  = ta.lowest(low,   sweepLb)[1]
+prevHigh = ta.highest(high, sweepLb)[1]
+sweepDn  = not na(prevLow)  and low  < prevLow  and close > prevLow
+sweepUp  = not na(prevHigh) and high > prevHigh and close < prevHigh
+
+// разгрузка RSI и разворот
+rsiResetL = ta.lowest(rsi, 3)  < rsiLong  and rsi > rsi[1]
+rsiResetS = ta.highest(rsi, 3) > rsiShort and rsi < rsi[1]
+
+// прочие подтверждения
+stretchL = (emaF - low)  >= stretchA * atr
+stretchS = (high - emaF) >= stretchA * atr
+volOk    = na(volume) or na(volAvg) or volAvg == 0 or volume >= volAvg * volMult
+strongUp = close > open and close >= (high + low) / 2
+strongDn = close < open and close <= (high + low) / 2
+adxSwLo  = adxMin + (adxMax - adxMin) * 0.25
+adxSwHi  = adxMin + (adxMax - adxMin) * 0.85
+adxSweet = adx >= adxSwLo and adx <= adxSwHi
+
+// сетапы
+useTrend = setupMode != "Снятие ликвидности"
+useSweep = setupMode != "Откат по тренду"
+
+trendL = useTrend and htfUp and close > emaB and emaF > emaS and rsiResetL and low  <= emaF and close > open
+trendS = useTrend and htfDn and close < emaB and emaF < emaS and rsiResetS and high >= emaF and close < open
+sweepL = useSweep and sweepDn and rejBull and (low  <= bbLo or rsi <= 35)
+sweepS = useSweep and sweepUp and rejBear and (high >= bbUp or rsi >= 65)
+
+primaryL = trendL or sweepL
+primaryS = trendS or sweepS
+gateL    = not htfHard or htfUp
+gateS    = not htfHard or htfDn
+allowL   = dirMode != "Только шорт"
+allowS   = dirMode != "Только лонг"
+
+// скор конфлюэнса, 11 независимых подтверждений
+scoreL = (htfUp ? 1 : 0) + (close > emaB ? 1 : 0) + (emaF > emaS ? 1 : 0) +
+         (diPlus > diMinus ? 1 : 0) + (adxSweet ? 1 : 0) + (rsiResetL ? 1 : 0) +
+         (rejBull ? 1 : 0) + (sweepDn ? 1 : 0) + (volOk ? 1 : 0) +
+         (stretchL ? 1 : 0) + (strongUp ? 1 : 0)
+scoreS = (htfDn ? 1 : 0) + (close < emaB ? 1 : 0) + (emaF < emaS ? 1 : 0) +
+         (diMinus > diPlus ? 1 : 0) + (adxSweet ? 1 : 0) + (rsiResetS ? 1 : 0) +
+         (rejBear ? 1 : 0) + (sweepUp ? 1 : 0) + (volOk ? 1 : 0) +
+         (stretchS ? 1 : 0) + (strongDn ? 1 : 0)
+
+// ═══ учёт сделок ═══════════════════════════════════════════════════════════════
+// Один слот: пока сделка открыта, новых входов нет. Результат каждой сделки
+// раскладывается в корзину по скору входа — из этих корзин строится и панель,
+// и таблица калибровки.
+var int   pos        = 0
+var float entryPx    = na
+var float tpPx       = na
+var float slPx       = na
+var float slInit     = na
+var float atrEntry   = na
+var int   entryBar   = na
+var int   entryScore = 0
+var bool  entryTaken = false
+var bool  beDone     = false
+var int   lastSig    = -100000
+
+var array<int>   cTot  = array.new_int(12, 0)     // сделок в корзине
+var array<int>   cWin  = array.new_int(12, 0)     // плюсовых
+var array<int>   cBe   = array.new_int(12, 0)     // безубыточных
+var array<float> cWinR = array.new_float(12, 0.0) // сумма плюсов, R
+var array<float> cLosR = array.new_float(12, 0.0) // сумма минусов, R
+var array<int>   cBars = array.new_int(12, 0)     // сумма длительностей
+var array<int>   cTotL = array.new_int(12, 0)     // из них лонгов
+var array<int>   cWinL = array.new_int(12, 0)     // из них плюсовых лонгов
+var array<int>   roll  = array.new_int(0)          // окно для адаптации
+
+float doneR    = na
+int   doneIdx  = -1
+bool  doneLong = false
+bool  doneBe   = false
+int   doneBars = 0
+
+// сопровождение открытой сделки: вход по закрытию, поэтому бар входа не считается
+if pos != 0 and bar_index > entryBar
+    float risk  = math.max(math.abs(entryPx - slInit), syminfo.mintick)
+    float costR = costTicks * syminfo.mintick / risk
+    bool  hitTp = pos == 1 ? high >= tpPx : low  <= tpPx
+    bool  hitSl = pos == 1 ? low  <= slPx : high >= slPx
+    float exitPx = na
+    if hitTp and hitSl
+        exitPx := pessim ? slPx : tpPx
+    else if hitTp
+        exitPx := tpPx
+    else if hitSl
+        exitPx := slPx
+    else if bar_index - entryBar >= maxHold
+        exitPx := close
+    if not na(exitPx)
+        float grossR = (pos == 1 ? exitPx - entryPx : entryPx - exitPx) / risk
+        doneR    := grossR - costR
+        doneBe   := math.abs(grossR) <= 0.05
+        doneIdx  := math.min(11, math.max(0, entryScore))
+        doneLong := pos == 1
+        doneBars := bar_index - entryBar
+        pos      := 0
+    else if beOn and not beDone
+        // безубыток включается только со следующего бара — внутри бара порядок неизвестен
+        if pos == 1 and high >= entryPx + beTrig * atrEntry
+            slPx   := math.max(slPx, entryPx)
+            beDone := true
+        if pos == -1 and low <= entryPx - beTrig * atrEntry
+            slPx   := math.min(slPx, entryPx)
+            beDone := true
+
+if doneIdx >= 0
+    bool isWin = not doneBe and doneR > 0
+    array.set(cTot,  doneIdx, array.get(cTot,  doneIdx) + 1)
+    array.set(cBars, doneIdx, array.get(cBars, doneIdx) + doneBars)
+    if doneLong
+        array.set(cTotL, doneIdx, array.get(cTotL, doneIdx) + 1)
+    if isWin
+        array.set(cWin,  doneIdx, array.get(cWin,  doneIdx) + 1)
+        if doneLong
+            array.set(cWinL, doneIdx, array.get(cWinL, doneIdx) + 1)
+    if doneBe
+        array.set(cBe, doneIdx, array.get(cBe, doneIdx) + 1)
+    if doneR > 0
+        array.set(cWinR, doneIdx, array.get(cWinR, doneIdx) + doneR)
+    else
+        array.set(cLosR, doneIdx, array.get(cLosR, doneIdx) + doneR)
+    if entryTaken
+        array.push(roll, isWin ? 1 : 0)
+        if array.size(roll) > rollWin
+            array.shift(roll)
+
+// адаптивный порог: считается по уже закрытым сделкам, взятым по порогу
+rollN  = array.size(roll)
+rollWr = rollN > 0 ? 100.0 * array.sum(roll) / rollN : na
+doneN  = array.sum(cTot)
+effMin = adaptOn and doneN >= warmup and not na(rollWr) and rollWr < targetWr ?
+         math.min(11, baseMin + scoreStep) : baseMin
+
+// ═══ вход ══════════════════════════════════════════════════════════════════════
+barOk    = confirmed ? barstate.isconfirmed : true
+trackMin = statAll ? 3 : effMin
+gapOk    = bar_index - lastSig > cooldown
+canFire  = pos == 0 and regimeOk and barOk and gapOk
+
+sigL = canFire and allowL and gateL and primaryL and scoreL >= trackMin
+sigS = canFire and allowS and gateS and primaryS and scoreS >= trackMin
+if sigL and sigS
+    if scoreL >= scoreS
+        sigS := false
+    else
+        sigL := false
+
+if sigL or sigS
+    pos        := sigL ? 1 : -1
+    entryPx    := close
+    atrEntry   := atr
+    tpPx       := sigL ? close + tpAtr * atr : close - tpAtr * atr
+    slPx       := sigL ? close - slAtr * atr : close + slAtr * atr
+    slInit     := slPx
+    entryBar   := bar_index
+    entryScore := sigL ? scoreL : scoreS
+    entryTaken := entryScore >= effMin
+    beDone     := false
+    lastSig    := bar_index
+
+takeL = sigL and scoreL >= effMin
+takeS = sigS and scoreS >= effMin
+watchL = sigL and not takeL
+watchS = sigS and not takeS
+
+// ═══ отрисовка ═════════════════════════════════════════════════════════════════
+cBull = #26a69a
+cBear = #ef5350
+
+plot(showEma ? emaF : na, "EMA быстрая",    color.new(color.aqua,   45), 1)
+plot(showEma ? emaS : na, "EMA медленная",  color.new(color.orange, 45), 1)
+plot(showEma ? emaB : na, "EMA направления",color.new(color.gray,   35), 2)
+
+plot(showLev and pos != 0 ? tpPx    : na, "Тейк", color.new(cBull, 15),      1, plot.style_linebr)
+plot(showLev and pos != 0 ? slPx    : na, "Стоп", color.new(cBear, 15),      1, plot.style_linebr)
+plot(showLev and pos != 0 ? entryPx : na, "Вход", color.new(color.gray, 25), 1, plot.style_linebr)
+
+plotshape(takeL,  "Лонг",              shape.triangleup,   location.belowbar, color.new(cBull, 0),  size = size.small)
+plotshape(takeS,  "Шорт",              shape.triangledown, location.abovebar, color.new(cBear, 0),  size = size.small)
+plotshape(watchL, "Лонг ниже порога",  shape.circle,       location.belowbar, color.new(cBull, 60), size = size.tiny)
+plotshape(watchS, "Шорт ниже порога",  shape.circle,       location.abovebar, color.new(cBear, 60), size = size.tiny)
+
+bgcolor(not regimeOk ? color.new(color.gray, 93) : na, title = "Режим закрыт")
+
+if showLab and (sigL or sigS)
+    label.new(bar_index, sigL ? low : high, str.tostring(sigL ? scoreL : scoreS),
+         style = sigL ? label.style_label_up : label.style_label_down,
+         color = color.new(sigL ? cBull : cBear, takeL or takeS ? 20 : 70),
+         textcolor = color.white, size = size.tiny)
+
+// ═══ алерты ════════════════════════════════════════════════════════════════════
+alertcondition(takeL, "PULSE · лонг", "PULSE ЛОНГ {{ticker}} {{interval}} @ {{close}}")
+alertcondition(takeS, "PULSE · шорт", "PULSE ШОРТ {{ticker}} {{interval}} @ {{close}}")
+
+if takeL or takeS
+    alert(str.format("PULSE {0} {1} {2} · вход {3} · тейк {4} · стоп {5} · скор {6}/11",
+         takeL ? "ЛОНГ" : "ШОРТ", syminfo.ticker, timeframe.period,
+         str.tostring(entryPx, format.mintick), str.tostring(tpPx, format.mintick),
+         str.tostring(slPx, format.mintick), entryScore), alert.freq_once_per_bar_close)
+
+// ═══ панель ════════════════════════════════════════════════════════════════════
+// накопленная статистика по всем корзинам со скором не ниже lo
+f_cum(int lo) =>
+    int   t  = 0
+    int   w  = 0
+    int   b  = 0
+    float wr = 0.0
+    float lr = 0.0
+    int   bs = 0
+    int   tl = 0
+    int   wl = 0
+    for i = lo to 11
+        t  += array.get(cTot,  i)
+        w  += array.get(cWin,  i)
+        b  += array.get(cBe,   i)
+        wr += array.get(cWinR, i)
+        lr += array.get(cLosR, i)
+        bs += array.get(cBars, i)
+        tl += array.get(cTotL, i)
+        wl += array.get(cWinL, i)
+    [t, w, b, wr, lr, bs, tl, wl]
+
+f_pct(float v) => na(v) ? "—" : str.tostring(v, "#.0") + " %"
+
+var table panel = table.new(position.top_right, 2, 15, border_width = 1,
+     frame_color = color.new(color.gray, 60), frame_width = 1)
+var table calib = table.new(position.bottom_right, 4, 11, border_width = 1,
+     frame_color = color.new(color.gray, 60), frame_width = 1)
+
+if barstate.islast
+    color bgHead = color.new(color.gray, 65)
+    color bgCell = color.new(color.gray, 88)
+    color txt    = chart.fg_color
+
+    if showPanel
+        [t, w, b, wr, lr, bs, tl, wl] = f_cum(effMin)
+        int   decided = t - b                    // плюсы и минусы, без безубытков
+        float wrStrict = t > 0 ? 100.0 * w / t : na
+        float wrNoBe   = decided > 0 ? 100.0 * w / decided : na
+        float pf       = lr < 0 ? wr / -lr : na
+        float exp_     = t > 0 ? (wr + lr) / t : na
+        float avgBars  = t > 0 ? 1.0 * bs / t : na
+        float rr       = slAtr > 0 ? tpAtr / slAtr : na
+        float beWr     = na(rr) ? na : 100.0 / (1.0 + rr)
+        float wrLong   = tl > 0 ? 100.0 * wl / tl : na
+        int   ts       = t - tl
+        float wrShort  = ts > 0 ? 100.0 * (w - wl) / ts : na
+
+        table.cell(panel, 0, 0, "PULSE · M1", bgcolor = bgHead, text_color = txt, text_size = size.small)
+        table.cell(panel, 1, 0, timeframe.period == "1" ? "1 мин" : timeframe.period + " — не M1",
+             bgcolor = bgHead, text_color = timeframe.period == "1" ? txt : color.orange, text_size = size.small)
+
+        table.cell(panel, 0, 1, "Режим", bgcolor = bgCell, text_color = txt, text_size = size.tiny)
+        table.cell(panel, 1, 1, regimeOk ? "открыт" :
+             not inSess ? "вне сессии" : not liveOk ? "мало волатильности" :
+             not spikeOk ? "выброс волатильности" : "ADX вне коридора",
+             bgcolor = bgCell, text_color = regimeOk ? cBull : color.orange, text_size = size.tiny)
+
+        table.cell(panel, 0, 2, "Порог базовый / рабочий", bgcolor = bgCell, text_color = txt, text_size = size.tiny)
+        table.cell(panel, 1, 2, str.tostring(baseMin) + " / " + str.tostring(effMin),
+             bgcolor = bgCell, text_color = effMin > baseMin ? color.orange : txt, text_size = size.tiny)
+
+        table.cell(panel, 0, 3, "Скор сейчас лонг / шорт", bgcolor = bgCell, text_color = txt, text_size = size.tiny)
+        table.cell(panel, 1, 3, str.tostring(scoreL) + " / " + str.tostring(scoreS),
+             bgcolor = bgCell, text_color = txt, text_size = size.tiny)
+
+        table.cell(panel, 0, 4, "Сделок на пороге", bgcolor = bgCell, text_color = txt, text_size = size.tiny)
+        table.cell(panel, 1, 4, str.tostring(t) + (b > 0 ? "  (БУ " + str.tostring(b) + ")" : ""),
+             bgcolor = bgCell, text_color = txt, text_size = size.tiny)
+
+        table.cell(panel, 0, 5, "ВИНРЕЙТ", bgcolor = bgHead, text_color = txt, text_size = size.small)
+        table.cell(panel, 1, 5, f_pct(wrStrict), text_size = size.small, text_color = color.white,
+             bgcolor = na(wrStrict) ? bgCell : color.new(wrStrict >= targetWr ? cBull : cBear, 25))
+
+        table.cell(panel, 0, 6, "Винрейт без безубытков", bgcolor = bgCell, text_color = txt, text_size = size.tiny)
+        table.cell(panel, 1, 6, f_pct(wrNoBe), bgcolor = bgCell, text_color = txt, text_size = size.tiny)
+
+        table.cell(panel, 0, 7, "Нужно для нуля", bgcolor = bgCell, text_color = txt, text_size = size.tiny)
+        table.cell(panel, 1, 7, f_pct(beWr), bgcolor = bgCell, text_size = size.tiny,
+             text_color = na(wrStrict) or na(beWr) ? txt : wrStrict > beWr ? cBull : cBear)
+
+        table.cell(panel, 0, 8, "Профит-фактор", bgcolor = bgCell, text_color = txt, text_size = size.tiny)
+        table.cell(panel, 1, 8, na(pf) ? "—" : str.tostring(pf, "#.00"), bgcolor = bgCell, text_size = size.tiny,
+             text_color = na(pf) ? txt : pf >= 1.0 ? cBull : cBear)
+
+        table.cell(panel, 0, 9, "Мат. ожидание, R", bgcolor = bgCell, text_color = txt, text_size = size.tiny)
+        table.cell(panel, 1, 9, na(exp_) ? "—" : str.tostring(exp_, "#.000"), bgcolor = bgCell, text_size = size.tiny,
+             text_color = na(exp_) ? txt : exp_ > 0 ? cBull : cBear)
+
+        table.cell(panel, 0, 10, "Тейк / стоп, ATR", bgcolor = bgCell, text_color = txt, text_size = size.tiny)
+        table.cell(panel, 1, 10, str.tostring(tpAtr, "#.0") + " / " + str.tostring(slAtr, "#.0") +
+             "  (R " + str.tostring(rr, "#.00") + ")", bgcolor = bgCell, text_color = txt, text_size = size.tiny)
+
+        table.cell(panel, 0, 11, "Средняя длина, баров", bgcolor = bgCell, text_color = txt, text_size = size.tiny)
+        table.cell(panel, 1, 11, na(avgBars) ? "—" : str.tostring(avgBars, "#.0"),
+             bgcolor = bgCell, text_color = txt, text_size = size.tiny)
+
+        table.cell(panel, 0, 12, "Винрейт лонг / шорт", bgcolor = bgCell, text_color = txt, text_size = size.tiny)
+        table.cell(panel, 1, 12, f_pct(wrLong) + " / " + f_pct(wrShort),
+             bgcolor = bgCell, text_color = txt, text_size = size.tiny)
+
+        table.cell(panel, 0, 13, "Скользящий винрейт (" + str.tostring(rollN) + ")", bgcolor = bgCell, text_color = txt, text_size = size.tiny)
+        table.cell(panel, 1, 13, f_pct(rollWr), bgcolor = bgCell, text_size = size.tiny,
+             text_color = na(rollWr) ? txt : rollWr >= targetWr ? cBull : color.orange)
+
+        table.cell(panel, 0, 14, "Позиция", bgcolor = bgCell, text_color = txt, text_size = size.tiny)
+        table.cell(panel, 1, 14, pos == 0 ? "нет" :
+             (pos == 1 ? "лонг" : "шорт") + " от " + str.tostring(entryPx, format.mintick) +
+             " · скор " + str.tostring(entryScore),
+             bgcolor = bgCell, text_color = pos == 0 ? txt : pos == 1 ? cBull : cBear, text_size = size.tiny)
+
+    if showCalib
+        table.cell(calib, 0, 0, "скор ≥", bgcolor = bgHead, text_color = txt, text_size = size.tiny)
+        table.cell(calib, 1, 0, "сделок", bgcolor = bgHead, text_color = txt, text_size = size.tiny)
+        table.cell(calib, 2, 0, "винрейт", bgcolor = bgHead, text_color = txt, text_size = size.tiny)
+        table.cell(calib, 3, 0, "ср. R", bgcolor = bgHead, text_color = txt, text_size = size.tiny)
+        // идём от максимального скора вниз, накапливая суммы: каждая строка — это
+        // «все сделки со скором не ниже k», то есть результат такого порога
+        int   accT = 0
+        int   accW = 0
+        float accR = 0.0
+        for k = 11 to 3
+            accT += array.get(cTot,  k)
+            accW += array.get(cWin,  k)
+            accR += array.get(cWinR, k) + array.get(cLosR, k)
+            float wrK  = accT > 0 ? 100.0 * accW / accT : na
+            float expK = accT > 0 ? accR / accT : na
+            int   row  = k - 2
+            bool  cur  = k == effMin
+            color bg   = cur ? color.new(color.blue, 65) : bgCell
+            table.cell(calib, 0, row, str.tostring(k) + (cur ? " ◄" : ""), bgcolor = bg, text_color = txt, text_size = size.tiny)
+            table.cell(calib, 1, row, str.tostring(accT), bgcolor = bg, text_color = txt, text_size = size.tiny)
+            table.cell(calib, 2, row, f_pct(wrK), bgcolor = bg, text_size = size.tiny,
+                 text_color = na(wrK) ? txt : wrK >= targetWr ? cBull : color.orange)
+            table.cell(calib, 3, row, na(expK) ? "—" : str.tostring(expK, "#.000"), bgcolor = bg, text_size = size.tiny,
+                 text_color = na(expK) ? txt : expK > 0 ? cBull : cBear)

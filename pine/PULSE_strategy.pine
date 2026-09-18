@@ -1,0 +1,311 @@
+//@version=6
+// ═══════════════════════════════════════════════════════════════════════════════
+//  PULSE · стратегия для M1
+//
+//  Те же сигналы, что и в pine/PULSE.pine, но сделки исполняет движок TradingView:
+//  нативный отчёт с эквити, просадкой, списком сделок и винрейтом, который уже
+//  нельзя подкрутить отображением.
+//
+//  Отличия от индикатора — только в исполнении:
+//    · размер позиции считается от риска (фиксированный % депозита на стоп),
+//      поэтому кривая эквити прямо отражает матожидание в R;
+//    · вход по закрытию сигнального бара (process_orders_on_close);
+//    · комиссия и проскальзывание заданы в объявлении стратегии и правятся
+//      во вкладке «Свойства» — ставьте туда реальные издержки своего брокера,
+//      иначе отчёт по минутному таймфрейму будет заметно оптимистичнее реальности.
+//
+//  Ядро (фильтры, сетапы, скор, адаптивный порог) повторяет индикатор один в один.
+//  Правки в логике надо делать в обоих файлах.
+// ═══════════════════════════════════════════════════════════════════════════════
+
+strategy("PULSE · стратегия M1", "PULSE-S", overlay = true,
+     initial_capital       = 10000,
+     default_qty_type      = strategy.fixed,
+     default_qty_value     = 1,
+     pyramiding            = 0,
+     commission_type       = strategy.commission.percent,
+     commission_value      = 0.02,
+     slippage              = 1,
+     process_orders_on_close = true,
+     calc_on_every_tick    = false,
+     max_lines_count = 500, max_labels_count = 500, max_boxes_count = 500)
+
+// ── ядро ───────────────────────────────────────────────────────────────────────
+gCore = "Ядро"
+dirMode   = input.string("Обе стороны", "Направление", options = ["Обе стороны", "Только лонг", "Только шорт"], group = gCore)
+setupMode = input.string("Оба сетапа", "Сетап", options = ["Оба сетапа", "Откат по тренду", "Снятие ликвидности"], group = gCore)
+baseMin   = input.int(7, "Порог скора конфлюэнса (из 11)", minval = 3, maxval = 11, group = gCore)
+cooldown  = input.int(12, "Пауза между сигналами, баров", minval = 0, maxval = 500, group = gCore)
+
+// ── жёсткие фильтры режима ─────────────────────────────────────────────────────
+gReg = "Режим · жёсткие фильтры"
+useSess   = input.bool(true, "Торговать только внутри сессии", group = gReg)
+sessStr   = input.session("0700-2000", "Сессия", group = gReg)
+sessTzIn  = input.string("UTC", "Часовой пояс сессии", group = gReg,
+     options = ["UTC", "Europe/Moscow", "Europe/London", "America/New_York", "Asia/Tokyo", "Биржа"])
+adxLen    = input.int(14, "ADX", minval = 2, group = gReg)
+adxMin    = input.float(15.0, "ADX минимум", minval = 0, step = 0.5, group = gReg)
+adxMax    = input.float(45.0, "ADX максимум", minval = 1, step = 0.5, group = gReg)
+atrLen    = input.int(14, "ATR", minval = 2, group = gReg)
+minAtrPct = input.float(0.02, "Минимальный ATR, % от цены", minval = 0, step = 0.01, group = gReg)
+spikeMult = input.float(2.2, "Вето на выброс волатильности, ATR5 / ATR50", minval = 1.0, step = 0.1, group = gReg)
+htfTf     = input.timeframe("5", "Старший таймфрейм", group = gReg)
+htfEmaLen = input.int(50, "EMA старшего таймфрейма", minval = 2, group = gReg)
+htfHard   = input.bool(true, "Согласие старшего ТФ обязательно", group = gReg)
+
+// ── триггеры ───────────────────────────────────────────────────────────────────
+gTrg = "Триггеры"
+emaFLen   = input.int(21,  "EMA быстрая", minval = 2, group = gTrg)
+emaSLen   = input.int(50,  "EMA медленная", minval = 3, group = gTrg)
+emaBLen   = input.int(200, "EMA направления", minval = 5, group = gTrg)
+rsiLen    = input.int(14, "RSI", minval = 2, group = gTrg)
+rsiLong   = input.float(40.0, "Разгрузка RSI для лонга", minval = 1, maxval = 99, step = 1, group = gTrg)
+rsiShort  = input.float(60.0, "Разгрузка RSI для шорта", minval = 1, maxval = 99, step = 1, group = gTrg)
+bbLen     = input.int(20, "Полосы Боллинджера", minval = 2, group = gTrg)
+bbMult    = input.float(2.0, "Множитель полос", minval = 0.1, step = 0.1, group = gTrg)
+sweepLb   = input.int(12, "Окно снятия ликвидности", minval = 3, group = gTrg)
+wickRatio = input.float(1.2, "Хвост отбоя / тело", minval = 0.2, step = 0.1, group = gTrg)
+volLen    = input.int(20, "Окно среднего объёма", minval = 2, group = gTrg)
+volMult   = input.float(1.1, "Объём, × среднего", minval = 0.1, step = 0.1, group = gTrg)
+stretchA  = input.float(0.5, "Отход от быстрой EMA, ATR", minval = 0, step = 0.1, group = gTrg)
+
+// ── сделка ─────────────────────────────────────────────────────────────────────
+gRisk = "Сделка"
+tpAtr     = input.float(1.0, "Тейк, ATR", minval = 0.1, step = 0.1, group = gRisk)
+slAtr     = input.float(1.5, "Стоп, ATR", minval = 0.1, step = 0.1, group = gRisk)
+maxHold   = input.int(45, "Максимум баров в сделке", minval = 3, group = gRisk)
+beOn      = input.bool(true, "Переводить стоп в безубыток", group = gRisk)
+beTrig    = input.float(0.7, "Порог безубытка, ATR", minval = 0.1, step = 0.1, group = gRisk)
+riskPct   = input.float(1.0, "Риск на сделку, % депозита", minval = 0.01, maxval = 100, step = 0.1, group = gRisk,
+     tooltip = "Размер позиции считается так, чтобы стоп стоил ровно этот процент. " +
+               "Поэтому эквити читается прямо как сумма результатов в R.")
+
+// ── адаптивный порог ───────────────────────────────────────────────────────────
+gAdp = "Адаптивный порог"
+adaptOn   = input.bool(true, "Поднимать порог, когда винрейт просел", group = gAdp)
+targetWr  = input.float(70.0, "Целевой винрейт, %", minval = 1, maxval = 99, step = 1, group = gAdp)
+rollWin   = input.int(20, "Скользящее окно, сделок", minval = 5, group = gAdp)
+scoreStep = input.int(2, "Прибавка к порогу", minval = 0, maxval = 4, group = gAdp)
+warmup    = input.int(12, "Сделок до включения адаптации", minval = 1, group = gAdp)
+
+gUi = "Вид"
+showPanel = input.bool(true, "Панель", group = gUi)
+showLev   = input.bool(true, "Уровни открытой сделки", group = gUi)
+showEma   = input.bool(true, "Рисовать EMA", group = gUi)
+
+// ═══ расчёты ═══ (идентичны индикатору) ════════════════════════════════════════
+sessTz = sessTzIn == "Биржа" ? syminfo.timezone : sessTzIn
+
+atr     = ta.atr(atrLen)
+atrFast = ta.atr(5)
+atrSlow = ta.atr(50)
+[diPlus, diMinus, adx] = ta.dmi(adxLen, adxLen)
+rsi     = ta.rsi(close, rsiLen)
+[bbMid, bbUp, bbLo] = ta.bb(close, bbLen, bbMult)
+emaF    = ta.ema(close, emaFLen)
+emaS    = ta.ema(close, emaSLen)
+emaB    = ta.ema(close, emaBLen)
+volAvg  = ta.sma(volume, volLen)
+
+htfEmaSrc() => ta.ema(close, htfEmaLen)
+htfEma = request.security(syminfo.tickerid, htfTf, htfEmaSrc()[1], lookahead = barmerge.lookahead_off)
+htfPx  = request.security(syminfo.tickerid, htfTf, close[1],       lookahead = barmerge.lookahead_off)
+htfUp  = not na(htfEma) and not na(htfPx) and htfPx > htfEma
+htfDn  = not na(htfEma) and not na(htfPx) and htfPx < htfEma
+
+inSess   = not useSess or not na(time(timeframe.period, sessStr, sessTz))
+atrPct   = close > 0 ? atr / close * 100.0 : 0.0
+liveOk   = atrPct >= minAtrPct
+spikeOk  = atrFast <= atrSlow * spikeMult
+adxOk    = adx >= adxMin and adx <= adxMax
+regimeOk = inSess and liveOk and spikeOk and adxOk
+
+barRng  = math.max(high - low, syminfo.mintick)
+barBody = math.max(math.abs(close - open), syminfo.mintick)
+wickDn  = math.min(close, open) - low
+wickUp  = high - math.max(close, open)
+rejBull = wickDn >= barBody * wickRatio and close >= low  + barRng * 0.60
+rejBear = wickUp >= barBody * wickRatio and close <= high - barRng * 0.60
+
+prevLow  = ta.lowest(low,   sweepLb)[1]
+prevHigh = ta.highest(high, sweepLb)[1]
+sweepDn  = not na(prevLow)  and low  < prevLow  and close > prevLow
+sweepUp  = not na(prevHigh) and high > prevHigh and close < prevHigh
+
+rsiResetL = ta.lowest(rsi, 3)  < rsiLong  and rsi > rsi[1]
+rsiResetS = ta.highest(rsi, 3) > rsiShort and rsi < rsi[1]
+
+stretchL = (emaF - low)  >= stretchA * atr
+stretchS = (high - emaF) >= stretchA * atr
+volOk    = na(volume) or na(volAvg) or volAvg == 0 or volume >= volAvg * volMult
+strongUp = close > open and close >= (high + low) / 2
+strongDn = close < open and close <= (high + low) / 2
+adxSwLo  = adxMin + (adxMax - adxMin) * 0.25
+adxSwHi  = adxMin + (adxMax - adxMin) * 0.85
+adxSweet = adx >= adxSwLo and adx <= adxSwHi
+
+useTrend = setupMode != "Снятие ликвидности"
+useSweep = setupMode != "Откат по тренду"
+
+trendL = useTrend and htfUp and close > emaB and emaF > emaS and rsiResetL and low  <= emaF and close > open
+trendS = useTrend and htfDn and close < emaB and emaF < emaS and rsiResetS and high >= emaF and close < open
+sweepL = useSweep and sweepDn and rejBull and (low  <= bbLo or rsi <= 35)
+sweepS = useSweep and sweepUp and rejBear and (high >= bbUp or rsi >= 65)
+
+primaryL = trendL or sweepL
+primaryS = trendS or sweepS
+gateL    = not htfHard or htfUp
+gateS    = not htfHard or htfDn
+allowL   = dirMode != "Только шорт"
+allowS   = dirMode != "Только лонг"
+
+scoreL = (htfUp ? 1 : 0) + (close > emaB ? 1 : 0) + (emaF > emaS ? 1 : 0) +
+         (diPlus > diMinus ? 1 : 0) + (adxSweet ? 1 : 0) + (rsiResetL ? 1 : 0) +
+         (rejBull ? 1 : 0) + (sweepDn ? 1 : 0) + (volOk ? 1 : 0) +
+         (stretchL ? 1 : 0) + (strongUp ? 1 : 0)
+scoreS = (htfDn ? 1 : 0) + (close < emaB ? 1 : 0) + (emaF < emaS ? 1 : 0) +
+         (diMinus > diPlus ? 1 : 0) + (adxSweet ? 1 : 0) + (rsiResetS ? 1 : 0) +
+         (rejBear ? 1 : 0) + (sweepUp ? 1 : 0) + (volOk ? 1 : 0) +
+         (stretchS ? 1 : 0) + (strongDn ? 1 : 0)
+
+// ═══ адаптивный порог по закрытым сделкам ══════════════════════════════════════
+f_rollWr(int n) =>
+    int tot = math.min(n, strategy.closedtrades)
+    int w   = 0
+    if tot > 0
+        for i = 1 to tot
+            if strategy.closedtrades.profit(strategy.closedtrades - i) > 0
+                w += 1
+    tot > 0 ? 100.0 * w / tot : na
+
+rollWr = f_rollWr(rollWin)
+effMin = adaptOn and strategy.closedtrades >= warmup and not na(rollWr) and rollWr < targetWr ?
+         math.min(11, baseMin + scoreStep) : baseMin
+
+// ═══ вход ══════════════════════════════════════════════════════════════════════
+var float entryPx  = na
+var float tpPx     = na
+var float slPx     = na
+var float atrEntry = na
+var int   entryBar = na
+var bool  beDone   = false
+var int   lastSig  = -100000
+
+flat    = strategy.position_size == 0
+gapOk   = bar_index - lastSig > cooldown
+canFire = flat and regimeOk and barstate.isconfirmed and gapOk
+
+takeL = canFire and allowL and gateL and primaryL and scoreL >= effMin
+takeS = canFire and allowS and gateS and primaryS and scoreS >= effMin
+if takeL and takeS
+    if scoreL >= scoreS
+        takeS := false
+    else
+        takeL := false
+
+// размер позиции от риска: стоп стоит ровно riskPct процентов депозита
+riskUnit = slAtr * atr * syminfo.pointvalue
+qty      = riskUnit > 0 ? strategy.equity * riskPct / 100.0 / riskUnit : na
+
+if (takeL or takeS) and not na(qty) and qty > 0
+    entryPx  := close
+    atrEntry := atr
+    tpPx     := takeL ? close + tpAtr * atr : close - tpAtr * atr
+    slPx     := takeL ? close - slAtr * atr : close + slAtr * atr
+    entryBar := bar_index
+    beDone   := false
+    lastSig  := bar_index
+    if takeL
+        strategy.entry("L", strategy.long, qty = qty, comment = "L " + str.tostring(scoreL))
+        strategy.exit("L·выход", "L", limit = tpPx, stop = slPx)
+    else
+        strategy.entry("S", strategy.short, qty = qty, comment = "S " + str.tostring(scoreS))
+        strategy.exit("S·выход", "S", limit = tpPx, stop = slPx)
+
+// ═══ сопровождение ═════════════════════════════════════════════════════════════
+// Стоп в безубыток двигается по текущему бару, но заявка переоценивается движком
+// на следующем — это совпадает с тем, как считает индикатор.
+if strategy.position_size != 0 and not na(entryBar)
+    if beOn and not beDone
+        if strategy.position_size > 0 and high >= entryPx + beTrig * atrEntry
+            slPx   := math.max(slPx, entryPx)
+            beDone := true
+        if strategy.position_size < 0 and low <= entryPx - beTrig * atrEntry
+            slPx   := math.min(slPx, entryPx)
+            beDone := true
+    if strategy.position_size > 0
+        strategy.exit("L·выход", "L", limit = tpPx, stop = slPx)
+    else
+        strategy.exit("S·выход", "S", limit = tpPx, stop = slPx)
+    if bar_index - entryBar >= maxHold
+        strategy.close_all(comment = "время")
+
+// ═══ отрисовка ═════════════════════════════════════════════════════════════════
+cBull = #26a69a
+cBear = #ef5350
+
+plot(showEma ? emaF : na, "EMA быстрая",     color.new(color.aqua,   45), 1)
+plot(showEma ? emaS : na, "EMA медленная",   color.new(color.orange, 45), 1)
+plot(showEma ? emaB : na, "EMA направления", color.new(color.gray,   35), 2)
+
+inPos = strategy.position_size != 0
+plot(showLev and inPos ? tpPx    : na, "Тейк", color.new(cBull, 15),      1, plot.style_linebr)
+plot(showLev and inPos ? slPx    : na, "Стоп", color.new(cBear, 15),      1, plot.style_linebr)
+plot(showLev and inPos ? entryPx : na, "Вход", color.new(color.gray, 25), 1, plot.style_linebr)
+
+bgcolor(not regimeOk ? color.new(color.gray, 93) : na, title = "Режим закрыт")
+
+// ═══ панель ════════════════════════════════════════════════════════════════════
+f_pct(float v) => na(v) ? "—" : str.tostring(v, "#.0") + " %"
+
+var table panel = table.new(position.top_right, 2, 9, border_width = 1,
+     frame_color = color.new(color.gray, 60), frame_width = 1)
+
+if barstate.islast and showPanel
+    color bgHead = color.new(color.gray, 65)
+    color bgCell = color.new(color.gray, 88)
+    color txt    = chart.fg_color
+
+    float wrAll = strategy.closedtrades > 0 ? 100.0 * strategy.wintrades / strategy.closedtrades : na
+    float pf    = strategy.grossloss > 0 ? strategy.grossprofit / strategy.grossloss : na
+    float rr    = slAtr > 0 ? tpAtr / slAtr : na
+    float beWr  = na(rr) ? na : 100.0 / (1.0 + rr)
+
+    table.cell(panel, 0, 0, "PULSE · стратегия", bgcolor = bgHead, text_color = txt, text_size = size.small)
+    table.cell(panel, 1, 0, timeframe.period == "1" ? "1 мин" : timeframe.period + " — не M1",
+         bgcolor = bgHead, text_size = size.small,
+         text_color = timeframe.period == "1" ? txt : color.orange)
+
+    table.cell(panel, 0, 1, "Режим", bgcolor = bgCell, text_color = txt, text_size = size.tiny)
+    table.cell(panel, 1, 1, regimeOk ? "открыт" :
+         not inSess ? "вне сессии" : not liveOk ? "мало волатильности" :
+         not spikeOk ? "выброс волатильности" : "ADX вне коридора",
+         bgcolor = bgCell, text_color = regimeOk ? cBull : color.orange, text_size = size.tiny)
+
+    table.cell(panel, 0, 2, "Порог базовый / рабочий", bgcolor = bgCell, text_color = txt, text_size = size.tiny)
+    table.cell(panel, 1, 2, str.tostring(baseMin) + " / " + str.tostring(effMin),
+         bgcolor = bgCell, text_size = size.tiny, text_color = effMin > baseMin ? color.orange : txt)
+
+    table.cell(panel, 0, 3, "Скор сейчас лонг / шорт", bgcolor = bgCell, text_color = txt, text_size = size.tiny)
+    table.cell(panel, 1, 3, str.tostring(scoreL) + " / " + str.tostring(scoreS),
+         bgcolor = bgCell, text_color = txt, text_size = size.tiny)
+
+    table.cell(panel, 0, 4, "Сделок закрыто", bgcolor = bgCell, text_color = txt, text_size = size.tiny)
+    table.cell(panel, 1, 4, str.tostring(strategy.closedtrades), bgcolor = bgCell, text_color = txt, text_size = size.tiny)
+
+    table.cell(panel, 0, 5, "ВИНРЕЙТ", bgcolor = bgHead, text_color = txt, text_size = size.small)
+    table.cell(panel, 1, 5, f_pct(wrAll), text_size = size.small, text_color = color.white,
+         bgcolor = na(wrAll) ? bgCell : color.new(wrAll >= targetWr ? cBull : cBear, 25))
+
+    table.cell(panel, 0, 6, "Нужно для нуля", bgcolor = bgCell, text_color = txt, text_size = size.tiny)
+    table.cell(panel, 1, 6, f_pct(beWr), bgcolor = bgCell, text_size = size.tiny,
+         text_color = na(wrAll) or na(beWr) ? txt : wrAll > beWr ? cBull : cBear)
+
+    table.cell(panel, 0, 7, "Профит-фактор", bgcolor = bgCell, text_color = txt, text_size = size.tiny)
+    table.cell(panel, 1, 7, na(pf) ? "—" : str.tostring(pf, "#.00"), bgcolor = bgCell, text_size = size.tiny,
+         text_color = na(pf) ? txt : pf >= 1.0 ? cBull : cBear)
+
+    table.cell(panel, 0, 8, "Скользящий винрейт (" + str.tostring(math.min(rollWin, strategy.closedtrades)) + ")",
+         bgcolor = bgCell, text_color = txt, text_size = size.tiny)
+    table.cell(panel, 1, 8, f_pct(rollWr), bgcolor = bgCell, text_size = size.tiny,
+         text_color = na(rollWr) ? txt : rollWr >= targetWr ? cBull : color.orange)
