@@ -416,7 +416,9 @@ f_row2(table t, int r, string k, string v, color bg, color tc) =>
 
 var table tW = table.new(position.top_right, 2, 8, border_width = 1)
 
-if showWR and barstate.islast
+// barstate.islast в стратегии без calc_on_every_tick не срабатывает на живом баре —
+// рисуем таблицу по последнему подтверждённому бару, она обновляется на каждом закрытии
+if showWR and barstate.islastconfirmedhistory
     bgH    = color.new(color.gray, 85)
     engN   = strategy.closedtrades
     engWR  = engN > 0 ? 100.0 * strategy.wintrades / engN : na
