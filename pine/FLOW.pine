@@ -1,0 +1,195 @@
+//@version=6
+// ═══════════════════════════════════════════════════════════════════════════════
+//  FLOW · одна линия тренда
+//
+//  На графике только одна линия. Где она идёт — там «справедливая» цена тренда,
+//  каким цветом — в каком состоянии тренд:
+//
+//    зелёная   — тренд вверх      ярче = сильнее  → ловим продолжение: лонг на откате к линии
+//    красная   — тренд вниз       ярче = сильнее  → ловим продолжение: шорт на откате к линии
+//    бледнеет  — тренд теряет силу                → продолжение уже не ловим
+//    серая     — флэт, тренда нет                 → продолжение не работает, ждём
+//    янтарная  — перегрев: цена убежала от линии,
+//                а импульс уже гаснет             → не догоняем, ищем откат или разворот
+//
+//  Как считается
+//    Линия — адаптивная средняя Кауфмана (KAMA) с лёгким сглаживанием Элерса.
+//    На тренде она идёт за ценой, во флэте почти замирает — плоская серая линия
+//    сама по себе и есть «тренда нет».
+//
+//    Сила тренда T от −1 до +1 — смесь трёх вещей:
+//      эффективность хода (сколько из пройденного пути цена прошла в одну сторону),
+//      наклон линии в ATR, положение цены относительно линии в ATR.
+//    Движение против старшего тренда (в N раз длиннее) штрафуется: скорее откат,
+//    чем новый тренд, поэтому такая линия рисуется бледнее.
+//
+//    Перегрев — цена отошла от линии больше чем на 1.8σ своих обычных отклонений
+//    И импульс перестал расти (сила ниже недавнего пика или цена не обновляет
+//    экстремум). Одного растяжения мало: в начале сильного импульса цена тоже
+//    далеко от линии, но это не повод для разворота.
+//
+//  Всё считается по закрытым данным, история не перерисовывается. На текущем,
+//  ещё не закрытом баре цвет может меняться — это нормально.
+// ═══════════════════════════════════════════════════════════════════════════════
+
+indicator("FLOW · линия тренда", "FLOW", overlay = true, max_labels_count = 10)
+
+// ── входные параметры ──────────────────────────────────────────────────────────
+gMain = "Линия"
+len       = input.int(10, "Период", minval = 3, maxval = 60, group = gMain,
+     tooltip = "Главная настройка. Меньше — линия быстрее и чаще меняет цвет, больше — плавнее и спокойнее. 10 подобрано под 1 минуту.")
+smoothLen = input.int(4, "Плавность", minval = 1, maxval = 10, group = gMain,
+     tooltip = "Сглаживание линии. 1 — без сглаживания, линия ближе к цене, но дёрганее.")
+
+gView = "Вид"
+cUp       = input.color(#10B981, "Вверх",    group = gView, inline = "c1")
+cDn       = input.color(#F43F5E, "Вниз",     group = gView, inline = "c1")
+cFlat     = input.color(#787B86, "Флэт",     group = gView, inline = "c2")
+cHot      = input.color(#F59E0B, "Перегрев", group = gView, inline = "c2")
+lineW     = input.int(3, "Толщина линии", minval = 1, maxval = 6, group = gView)
+showGlow  = input.bool(true, "Свечение линии", group = gView,
+     tooltip = "Мягкий ореол под линией. Во флэте его нет, на сильном тренде он заметнее всего.")
+showTag   = input.bool(true, "Метка состояния на конце линии", group = gView,
+     tooltip = "Одно слово справа от последнего бара. Наведите курсор — подсказка с деталями.")
+paintBars = input.bool(false, "Красить свечи в цвет линии", group = gView)
+
+gAdv = "Тонкая настройка"
+ctxMult = input.int(5, "Старший тренд, × периода", minval = 2, maxval = 20, group = gAdv,
+     tooltip = "Контекст — тот же тренд, только в N раз длиннее. На 1 минуте 5 × ≈ тренд на 5-минутках.")
+ctxPen  = input.float(0.5, "Штраф за ход против старшего тренда", minval = 0, maxval = 1, step = 0.05, group = gAdv,
+     tooltip = "0 — не учитывать старший тренд. 1 — ход против сильного старшего тренда почти не считается трендом.")
+thrOn   = input.float(0.35, "Порог тренда", minval = 0.05, maxval = 0.95, step = 0.05, group = gAdv,
+     tooltip = "С какой силы (0…1) начинается тренд.")
+thrOff  = input.float(0.15, "Порог флэта", minval = 0.0, maxval = 0.9, step = 0.05, group = gAdv,
+     tooltip = "Ниже этой силы тренд считается закончившимся. Разница с порогом тренда — защита от дёрганья.")
+hotZ    = input.float(1.8, "Перегрев от, σ", minval = 0.5, maxval = 5, step = 0.1, group = gAdv,
+     tooltip = "Насколько далеко цена должна уйти от линии в своих обычных отклонениях, чтобы начать считать перегрев. Полный перегрев — на 1.2σ дальше.")
+
+// ── производные длины: всё крутится от одного периода ──────────────────────────
+erLen    = 2 * len                                   // окно силы тренда
+slopeLen = math.max(2, int(math.round(len / 2.0)))   // окно наклона линии
+ctxLen   = erLen * ctxMult                           // окно старшего тренда
+devLen   = 12 * len                                  // окно «обычного» отклонения от линии
+atrLen   = 2 * len
+
+// ── утилиты ────────────────────────────────────────────────────────────────────
+f_clamp(float x, float lo, float hi) => math.max(lo, math.min(hi, x))
+
+// Эффективность хода со знаком: −1…+1. 1 — цена шла строго в одну сторону.
+f_er(float src, int n) =>
+    nz((src - src[n]) / math.sum(math.abs(src - src[1]), n))
+
+// Двухполюсный сглаживатель Элерса: почти без выбросов и с малой задержкой.
+f_smooth(float x, int p) =>
+    a1 = math.exp(-1.414 * math.pi / p)
+    c2 = 2.0 * a1 * math.cos(1.414 * math.pi / p)
+    c3 = -a1 * a1
+    c1 = 1.0 - c2 - c3
+    float y = na
+    y := c1 * (x + nz(x[1], x)) / 2.0 + c2 * nz(y[1], x) + c3 * nz(y[2], x)
+    p > 1 ? y : x
+
+// ── линия: адаптивная средняя Кауфмана ─────────────────────────────────────────
+fastSC = 2.0 / (2 + 1)
+slowSC = 2.0 / (30 + 1)
+effAbs = math.abs(f_er(close, len))
+sc     = math.pow(effAbs * (fastSC - slowSC) + slowSC, 2)
+var float kama = na
+kama := na(kama) ? close : kama + sc * (close - kama)
+trendLine = f_smooth(kama, smoothLen)
+
+// ── сила тренда T: −1…+1 ───────────────────────────────────────────────────────
+atr   = ta.atr(atrLen)
+cEff  = f_clamp(f_er(close, erLen) / 0.5, -1, 1)
+cSlp  = f_clamp(nz((trendLine - trendLine[slopeLen]) / (slopeLen * atr)) / 0.3, -1, 1)
+cPos  = f_clamp(nz((close - trendLine) / atr) / 2.0, -1, 1)
+tRaw  = 0.40 * cEff + 0.35 * cSlp + 0.25 * cPos
+
+ctx     = f_clamp(f_er(close, ctxLen) / 0.3, -1, 1)
+against = math.sign(tRaw) != math.sign(ctx)
+tAdj    = against ? tRaw * (1 - ctxPen * math.abs(ctx)) : tRaw
+T       = ta.ema(tAdj, 3)
+absT    = math.abs(T)
+
+// Состояние с гистерезисом: +1 вверх, −1 вниз, 0 флэт.
+var int state = 0
+if state == 0
+    state := T > thrOn ? 1 : T < -thrOn ? -1 : 0
+else if state == 1
+    state := T < -thrOn ? -1 : T < thrOff ? 0 : 1
+else
+    state := T > thrOn ? 1 : T > -thrOff ? 0 : -1
+
+// ── перегрев: далеко от линии + импульс гаснет ─────────────────────────────────
+dev      = close - trendLine
+devNorm  = math.sqrt(ta.sma(dev * dev, devLen))
+zDir     = math.sign(T) * nz(dev / devNorm)
+heat     = f_clamp((zDir - hotZ) / 1.2, 0, 1)
+heatPk   = ta.highest(heat, 6)
+roll     = f_clamp((ta.highest(absT, 6) - absT) / 0.3, 0, 1)
+hi3      = ta.highest(close, 3)
+lo3      = ta.lowest(close, 3)
+noNewExt = T > 0 ? close < hi3 : close > lo3
+inTrend  = f_clamp((absT - thrOff) / math.max(thrOn - thrOff, 0.01), 0, 1)
+hotRaw   = heatPk * math.max(roll, noNewExt ? 0.6 : 0.0) * inTrend
+var float hot = 0.0
+hot := math.max(nz(hotRaw), hot * 0.8)
+
+// ── цвет ───────────────────────────────────────────────────────────────────────
+strength = f_clamp((absT - 0.15) / 0.55, 0, 1)
+baseCol  = color.from_gradient(strength, 0, 1, cFlat, T >= 0 ? cUp : cDn)
+lineCol  = color.from_gradient(hot, 0, 1, baseCol, cHot)
+
+plot(showGlow ? trendLine : na, "Свечение", color.new(lineCol, 100 - 22 * strength), lineW + 6,
+     display = display.pane, editable = false)
+plot(trendLine, "FLOW", lineCol, lineW)
+plot(T * 100, "Сила тренда, %", display = display.data_window, precision = 0)
+plot(hot * 100, "Перегрев, %", display = display.data_window, precision = 0)
+barcolor(paintBars ? lineCol : na)
+
+// ── метка на конце линии ───────────────────────────────────────────────────────
+isHot  = hot >= 0.5 and state != 0
+isWeak = state != 0 and absT < thrOn
+isFar  = state != 0 and not isHot and zDir >= hotZ   // импульс ещё идёт, но цена уже далеко
+arrow  = state > 0 ? "▲" : state < 0 ? "▼" : "●"
+pct    = str.tostring(math.round(absT * 100)) + "%"
+
+word = isHot ? "ПЕРЕГРЕВ" : state == 0 ? "ФЛЭТ" : isWeak ? "СЛАБЕЕТ " + pct : "ТРЕНД " + pct
+hint = isHot  ? "Цена убежала от линии, импульс гаснет.\nПродолжение не догонять: ждать отката к линии или искать разворот." :
+       state == 0 ? "Тренда нет.\nПродолжение не работает: торговать от границ диапазона или ждать новый тренд." :
+       isWeak ? "Тренд теряет силу.\nНовые входы по тренду — только с подтверждением, готовиться к развороту или флэту." :
+       isFar  ? "Тренд сильный, но цена уже далеко от линии.\nНе догонять: продолжение брать на откате к линии." :
+       "Тренд живой.\nИскать продолжение: вход на откате к линии, против тренда не стоять."
+ctxTxt = ctx > 0.25 ? "вверх" : ctx < -0.25 ? "вниз" : "нет"
+ctxWarn = state != 0 and ((state > 0 and ctx < -0.25) or (state < 0 and ctx > 0.25)) ?
+     "\nХод против старшего тренда — скорее откат, чем новый тренд." : ""
+tip = hint + ctxWarn + "\n\nСила тренда: " + str.tostring(math.round(T * 100)) + "%" +
+     "\nСтарший тренд: " + ctxTxt +
+     "\nОтклонение от линии: " + str.tostring(nz(dev / devNorm), "#.#") + "σ"
+
+var label tag = na
+if barstate.islast
+    label.delete(tag)
+    tag := na
+    if showTag
+        tag := label.new(bar_index + 3, trendLine, arrow + " " + word, xloc.bar_index, yloc.price,
+             color.new(lineCol, 80), label.style_label_left, lineCol, size.small,
+             tooltip = tip, text_formatting = text.format_bold)
+
+// ── алерты ─────────────────────────────────────────────────────────────────────
+// Ставить на «Раз за бар на закрытии», иначе сигнал может мигнуть внутри бара.
+turnUp   = state == 1 and state[1] != 1
+turnDn   = state == -1 and state[1] != -1
+turnFlat = state == 0 and state[1] != 0
+hotOn    = isHot and not isHot[1]
+
+alertcondition(turnUp,   "FLOW · тренд вверх", "FLOW: начался тренд вверх")
+alertcondition(turnDn,   "FLOW · тренд вниз",  "FLOW: начался тренд вниз")
+alertcondition(turnFlat, "FLOW · флэт",        "FLOW: тренд закончился, флэт")
+alertcondition(hotOn,    "FLOW · перегрев",    "FLOW: перегрев — не догонять, ждать отката или разворота")
+
+if turnUp or turnDn or turnFlat or hotOn
+    alert(str.format("FLOW {0} · {1} · сила {2}% · линия {3}", syminfo.ticker,
+         hotOn ? "перегрев" : turnUp ? "тренд вверх" : turnDn ? "тренд вниз" : "флэт",
+         str.tostring(math.round(T * 100)), str.tostring(trendLine, format.mintick)),
+         alert.freq_once_per_bar_close)
