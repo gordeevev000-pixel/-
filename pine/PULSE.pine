@@ -1,0 +1,457 @@
+//@version=6
+// ═══════════════════════════════════════════════════════════════════════════════
+//  PULSE · минутный импульс из коридора шума
+//
+//  Идея одной строкой: на минутках нет смысла угадывать каждое движение —
+//  большая часть того, что происходит внутри дня, это шум. Индикатор меряет, какой
+//  шум НОРМАЛЕН для этой минуты сессии, и торгует только то, что из него вышло.
+//
+//  Коридор шума. Для каждой минуты от открытия сессии держим среднее за прошлые
+//  дни |close / open − 1| — насколько цена обычно успевает уйти от открытия к этой
+//  минуте. Коридор = open · (1 ± σ минуты), с поправкой на гэп (вчерашнее закрытие).
+//  В 9:31 коридор узкий, к обеду широкий — ровно как дышит рынок.
+//
+//  Два движка:
+//    ИМПУЛЬС — цена закрылась за коридором дальше чем на 1 ATR и по нужную сторону
+//              от VWAP. Выход по закрытию за трейлом max(коридор, VWAP) − 0.5 ATR.
+//              Винрейт ~30%, но прибыльные сделки длинные: это и есть эдж.
+//    ФЕЙД    — пока день тихий (импульса ещё не было), касание границы коридора
+//              с отказом: цель — VWAP, стоп за экстремумом + 1 ATR.
+//
+//  Каждый сигнал считается по трём потокам: импульс и фейд по отдельности
+//  (чтобы видеть, что работает на вашем инструменте) и живой — одна позиция за раз.
+//  Все цифры в таблице уже за вычетом издержек.
+//
+//  Проверено на реальных минутках (см. README): на S&P 500 импульс дал плюс
+//  в обеих половинах выборки при любых разумных параметрах; минутные паттерны
+//  «свип-реклейм» и «откат к EMA» на тех же данных не дали ничего даже до комиссии.
+// ═══════════════════════════════════════════════════════════════════════════════
+
+indicator("PULSE · импульс из коридора шума", "PULSE", overlay = true,
+     max_labels_count = 500)
+
+// ── входные параметры ──────────────────────────────────────────────────────────
+gSess = "Сессия"
+sessStr    = input.session("0930-1600", "Основная сессия", group = gSess,
+     tooltip = "Коридор строится от открытия этой сессии. ES/NQ/SPY — 0930-1600 по Нью-Йорку. MOEX — 1000-1850 по Москве. DAX — 0900-1730 по Берлину.")
+tzIn       = input.string("America/New_York", "Часовой пояс сессии", group = gSess,
+     options = ["America/New_York", "America/Chicago", "Europe/Moscow", "Europe/London", "Europe/Berlin", "Asia/Tokyo", "Asia/Hong_Kong", "UTC", "Биржевой"])
+skipOpen   = input.int(0, "Не входить первые N минут", minval = 0, group = gSess)
+noEntryEnd = input.int(15, "Не входить за N минут до конца", minval = 0, group = gSess)
+
+gNoise = "Коридор шума"
+noiseN  = input.int(14, "Дней в среднем движении", minval = 2, group = gNoise,
+     tooltip = "Экспоненциальное среднее |close/open − 1| по каждой минуте сессии за прошлые дни.")
+minDays = input.int(5, "Минимум дней истории на минуту", minval = 1, group = gNoise,
+     tooltip = "Пока у минуты меньше дней истории, коридора нет и сигналов нет. На минутке с выключенными расширенными часами истории хватает быстрее.")
+useGap  = input.bool(true, "Расширять коридор на гэп", group = gNoise,
+     tooltip = "Верх считается от max(open, вчерашнее закрытие), низ — от min. Иначе гэп сам по себе выглядит как импульс.")
+
+gMom = "Импульс"
+useMom = input.bool(true, "Включить импульс", group = gMom)
+inBuf  = input.float(1.0, "Вход: закрытие за коридором дальше чем, ATR", minval = 0, step = 0.1, group = gMom)
+outBuf = input.float(0.5, "Выход: закрытие за max(коридор, VWAP) − , ATR", minval = 0, step = 0.1, group = gMom,
+     tooltip = "Без этого запаса импульс пилит на каждом касании трейла — на данных это худший вариант.")
+every  = input.int(1, "Проверять вход раз в N минут", minval = 1, group = gMom,
+     tooltip = "1 — каждый бар. Реже — меньше сделок и крупнее каждая.")
+t1R    = input.float(0.0, "Половина на +R (0 — выкл.)", minval = 0, step = 0.25, group = gMom,
+     tooltip = "Поднимает число прибыльных сделок и режет прибыль: у импульса весь эдж в длинных хвостах. На S&P половина на +1R: прибыльных сделок 0.49 → 0.83 в день, пунктов в день 1.24 → 0.47.")
+
+gFade = "Фейд"
+useFade   = input.bool(true, "Включить фейд", group = gFade)
+fadeQuiet = input.bool(true, "Только пока сегодня не было импульса", group = gFade,
+     tooltip = "Без этого фильтра фейд встаёт против трендовых дней и в ноль отдаёт всё, что заработал в тихие.")
+zone      = input.float(0.3, "Касание: до границы не дальше, ATR", minval = 0, step = 0.05, group = gFade)
+fStop     = input.float(1.0, "Стоп за экстремумом бара, ATR", minval = 0.1, step = 0.1, group = gFade)
+fMinRR    = input.float(1.0, "Минимум R:R до VWAP", minval = 0, step = 0.1, group = gFade)
+fMax      = input.int(30, "Тайм-стоп, баров", minval = 1, group = gFade)
+
+gCost = "Издержки"
+atrLen    = input.int(14, "ATR", minval = 2, group = gCost)
+costTicks = input.float(2.0, "Проскальзывание и комиссия, тиков на круг", minval = 0, step = 0.5, group = gCost,
+     tooltip = "На минутках это главный параметр. Все R, пункты и винрейты в таблице считаются после его вычета.")
+costPct   = input.float(0.0, "Комиссия, % от цены на круг", minval = 0, step = 0.005, group = gCost,
+     tooltip = "Для крипты и акций, где комиссия в процентах. Биржевой тейкер 0.05% в каждую сторону = 0.10 на круг.")
+
+gV = "Вид"
+showBand  = input.bool(true, "Коридор", group = gV)
+showVwap  = input.bool(true, "VWAP", group = gV)
+showBg    = input.bool(true, "Подсветка импульса", group = gV)
+showExit  = input.bool(true, "Метки выхода с результатом", group = gV)
+showStats = input.bool(true, "Таблица", group = gV)
+cLong     = input.color(#0B7A69, "Лонг",  group = gV, inline = "c")
+cShort    = input.color(#B8412F, "Шорт",  group = gV, inline = "c")
+cBrass    = input.color(#A9701C, "Акцент", group = gV, inline = "c")
+
+// ── сессия ─────────────────────────────────────────────────────────────────────
+tz     = tzIn == "Биржевой" ? syminfo.timezone : tzIn
+inSess = not na(time(timeframe.period, sessStr, tz))
+first  = inSess and not inSess[1]
+outNow = not inSess and inSess[1]
+
+// границы сессии берём из строки «ЧЧММ-ЧЧММ»: session.islastbar знает только сессию графика
+begH = str.tonumber(str.substring(sessStr, 0, 2))
+begM = str.tonumber(str.substring(sessStr, 2, 4))
+endH = str.tonumber(str.substring(sessStr, 5, 7))
+endM = str.tonumber(str.substring(sessStr, 7, 9))
+
+var float dOpen     = na
+var float prevClose = na
+var float lastClose = na
+var int   sessStart = na
+var int   sessEnd   = na
+var float cpv       = 0.0
+var float cv        = 0.0
+var bool  sessOk    = false
+var bool  broke     = false
+var bool  dayLive   = false
+var int   nDays     = 0
+
+if first
+    prevClose := lastClose
+    dOpen     := open
+    sessStart := time
+    sessOk    := true
+    if not na(begH) and not na(begM)
+        // день без первых минут (или график начался посреди сессии) пропускаем:
+        // open у него не тот, и σ по минутам он бы испортил
+        int s0 = timestamp(tz, year(time, tz), month(time, tz), dayofmonth(time, tz), int(begH), int(begM))
+        sessStart := s0
+        sessOk    := time - s0 >= 0 and time - s0 <= 5 * 60000
+    cpv       := 0.0
+    cv        := 0.0
+    broke     := false
+    dayLive   := false
+    if not na(endH) and not na(endM)
+        int e = timestamp(tz, year(time, tz), month(time, tz), dayofmonth(time, tz), int(endH), int(endM))
+        sessEnd := e <= time ? e + 86400000 : e
+    else
+        sessEnd := na
+
+atr  = ta.atr(atrLen)
+key  = inSess ? int(math.round((time - sessStart) / 60000.0)) : -1
+left = inSess and not na(sessEnd) ? (sessEnd - time_close) / 60000.0 : na
+isLast = inSess and not na(left) and left <= 0
+
+// VWAP сессии руками: ta.vwap якорится к сессии графика, а не к нашей, и падает без объёма
+if inSess
+    float w = nz(volume) > 0 ? volume : 1.0
+    cpv += hlc3 * w
+    cv  += w
+vw = inSess and cv > 0 ? cpv / cv : na
+
+// ── σ каждой минуты: сначала читаем прошлые дни, потом дописываем сегодняшний ──
+var map<int, float> sigM = map.new<int, float>()
+var map<int, int>   cntM = map.new<int, int>()
+alpha = 2.0 / (noiseN + 1)
+
+float sg = na
+if inSess and sessOk
+    float sOld = sigM.get(key)
+    int   cOld = cntM.contains(key) ? cntM.get(key) : 0
+    sg := cOld >= minDays ? sOld : na
+    if barstate.isconfirmed
+        float mv = math.abs(close / dOpen - 1.0)
+        sigM.put(key, na(sOld) ? mv : sOld + alpha * (mv - sOld))
+        cntM.put(key, cOld + 1)
+if inSess and barstate.isconfirmed
+    lastClose := close
+
+top = useGap and not na(prevClose) ? math.max(dOpen, prevClose) : dOpen
+bot = useGap and not na(prevClose) ? math.min(dOpen, prevClose) : dOpen
+up  = inSess and not na(sg) ? top * (1.0 + sg) : na
+dn  = inSess and not na(sg) ? bot * (1.0 - sg) : na
+
+if not na(up) and not dayLive
+    dayLive := true
+    nDays   += 1
+
+// ── позиции и статистика ───────────────────────────────────────────────────────
+type Pos
+    int   side = 0
+    int   kind = 0
+    float entry
+    float stop
+    float tgt
+    float risk
+    float cost
+    int   bar
+    bool  t1 = false
+    float got = 0.0
+
+type Stat
+    int   n    = 0
+    int   w    = 0
+    float sR   = 0.0
+    float pos  = 0.0
+    float neg  = 0.0
+    float pts  = 0.0
+    float cum  = 0.0
+    float peak = 0.0
+    float dd   = 0.0
+    float cR   = 0.0
+
+method add(Stat s, float r, float pts, float costR) =>
+    s.n   += 1
+    s.w   += r > 0 ? 1 : 0
+    s.sR  += r
+    s.pts += pts
+    s.cR  += costR
+    if r > 0
+        s.pos += r
+    else
+        s.neg -= r
+    s.cum  += pts
+    s.peak := math.max(s.peak, s.cum)
+    s.dd   := math.min(s.dd, s.cum - s.peak)
+    s.n
+
+method enter(Pos p, int kind, int sd, float e, float st, float tg) =>
+    p.side  := sd
+    p.kind  := kind
+    p.entry := e
+    p.stop  := st
+    p.tgt   := tg
+    p.risk  := math.max(math.abs(e - st), syminfo.mintick)
+    p.cost  := costTicks * syminfo.mintick + costPct / 100.0 * e
+    p.bar   := bar_index
+    p.t1    := false
+    p.got   := 0.0
+    p.side
+
+// выход по правилам своего движка; возвращает [R после издержек, цена выхода]
+method advance(Pos p, float up_, float dn_, float vw_, float a, bool isEnd, bool isOut) =>
+    float x = na
+    if p.side != 0 and bar_index > p.bar
+        int sd = p.side
+        if isOut
+            x := open
+        else if p.kind == 0
+            if t1R > 0 and not p.t1
+                bool hit = sd == 1 ? high - p.entry >= t1R * p.risk : p.entry - low >= t1R * p.risk
+                if hit
+                    p.t1  := true
+                    p.got := 0.5 * t1R
+            float trl = sd == 1 ? math.max(up_, vw_) - outBuf * a : math.min(dn_, vw_) + outBuf * a
+            p.stop := trl
+            if na(trl) or (sd == 1 ? close < trl : close > trl) or isEnd
+                x := close
+        else
+            bool stopHit = sd == 1 ? low <= p.stop : high >= p.stop
+            bool tgtHit  = sd == 1 ? high >= p.tgt : low <= p.tgt
+            if stopHit
+                x := sd == 1 ? math.min(p.stop, open) : math.max(p.stop, open)
+            else if tgtHit
+                x := p.tgt
+            else if bar_index - p.bar >= fMax or isEnd
+                x := close
+    float r = na
+    if not na(x)
+        float rem = p.t1 ? 0.5 : 1.0
+        r := p.got + rem * (x - p.entry) * p.side / p.risk - p.cost / p.risk
+        p.side := 0
+    [r, x]
+
+var Pos  pM = Pos.new()
+var Pos  pF = Pos.new()
+var Pos  pL = Pos.new()
+var Stat sM = Stat.new()
+var Stat sF = Stat.new()
+var Stat sL = Stat.new()
+
+var int   todayN = 0
+var int   todayW = 0
+var float todayP = 0.0
+if first
+    todayN := 0
+    todayW := 0
+    todayP := 0.0
+
+// ── сигналы текущего бара ──────────────────────────────────────────────────────
+ready    = inSess and not isLast and not na(up) and not na(vw) and atr > 0
+canEnter = ready and key >= skipOpen and (na(left) or left >= noEntryEnd)
+
+momSide = useMom and canEnter and key % every == 0 ?
+     (close > up + inBuf * atr and close > vw ? 1 : close < dn - inBuf * atr and close < vw ? -1 : 0) : 0
+brokeNow = ready and (close > up + inBuf * atr or close < dn - inBuf * atr)
+
+fadeOk = useFade and canEnter and not (fadeQuiet and broke)
+fSStop = high + fStop * atr
+fLStop = low  - fStop * atr
+fadeS  = fadeOk and high >= up - zone * atr and close < up and close < open and (close - vw) >= fMinRR * (fSStop - close)
+fadeL  = fadeOk and low  <= dn + zone * atr and close > dn and close > open and (vw - close) >= fMinRR * (close - fLStop)
+fadeSide = fadeS ? -1 : fadeL ? 1 : 0
+
+// ── исполнение: только на закрытом баре, сначала выходы, потом входы ─────────
+float exitR  = na
+float exitX  = na
+int   exitSd = 0
+int   exitK  = 0
+bool  enteredLive = false
+int   liveSide = 0
+int   liveKind = 0
+
+if barstate.isconfirmed
+    [rM, xM] = pM.advance(up, dn, vw, atr, isLast, outNow or first)
+    if not na(rM)
+        sM.add(rM, rM * pM.risk, pM.cost / pM.risk)
+    [rF, xF] = pF.advance(up, dn, vw, atr, isLast, outNow or first)
+    if not na(rF)
+        sF.add(rF, rF * pF.risk, pF.cost / pF.risk)
+    int sdL = pL.side
+    int kL  = pL.kind
+    [rL, xL] = pL.advance(up, dn, vw, atr, isLast, outNow or first)
+    if not na(rL)
+        sL.add(rL, rL * pL.risk, pL.cost / pL.risk)
+        todayN += 1
+        todayW += rL > 0 ? 1 : 0
+        todayP += rL * pL.risk
+        exitR  := rL
+        exitX  := xL
+        exitSd := sdL
+        exitK  := kL
+
+    if momSide != 0
+        float st = momSide == 1 ? math.max(up, vw) - outBuf * atr : math.min(dn, vw) + outBuf * atr
+        if pM.side == 0
+            pM.enter(0, momSide, close, st, na)
+        if pL.side == 0
+            pL.enter(0, momSide, close, st, na)
+            enteredLive := true
+            liveSide    := momSide
+            liveKind    := 0
+    if fadeSide != 0
+        float st = fadeSide == 1 ? fLStop : fSStop
+        if pF.side == 0
+            pF.enter(1, fadeSide, close, st, vw)
+        if pL.side == 0
+            pL.enter(1, fadeSide, close, st, vw)
+            enteredLive := true
+            liveSide    := fadeSide
+            liveKind    := 1
+    broke := broke or brokeNow
+
+// ── график ────────────────────────────────────────────────────────────────────
+state = not inSess ? 0 : na(up) ? 0 : close > up ? 1 : close < dn ? -1 : 2
+
+pUp = plot(showBand ? up : na, "Коридор: верх", color = color.new(cBrass, 30), style = plot.style_linebr)
+pDn = plot(showBand ? dn : na, "Коридор: низ",  color = color.new(cBrass, 30), style = plot.style_linebr)
+fill(pUp, pDn, color = showBand ? color.new(cBrass, 93) : na, title = "Коридор шума")
+plot(showVwap ? vw : na, "VWAP", color = color.new(chart.fg_color, 45), style = plot.style_linebr)
+
+bgcolor(showBg and state == 1 ? color.new(cLong, 92) : showBg and state == -1 ? color.new(cShort, 92) : na, title = "Импульс")
+
+inLive = pL.side != 0
+plot(inLive ? pL.stop : na, "Стоп / трейл живой позиции", color = cShort, style = plot.style_linebr, linewidth = 1)
+plot(inLive and pL.kind == 1 ? pL.tgt : na, "Цель фейда (VWAP на входе)", color = cLong, style = plot.style_linebr, linewidth = 1)
+
+plotshape(enteredLive and liveKind == 0 and liveSide == 1,  "Импульс LONG",  shape.triangleup,   location.belowbar, cLong,  size = size.small, text = "ИМП", textcolor = cLong)
+plotshape(enteredLive and liveKind == 0 and liveSide == -1, "Импульс SHORT", shape.triangledown, location.abovebar, cShort, size = size.small, text = "ИМП", textcolor = cShort)
+plotshape(enteredLive and liveKind == 1 and liveSide == 1,  "Фейд LONG",     shape.triangleup,   location.belowbar, color.new(cLong, 40),  size = size.tiny, text = "ФЕЙД", textcolor = cLong)
+plotshape(enteredLive and liveKind == 1 and liveSide == -1, "Фейд SHORT",    shape.triangledown, location.abovebar, color.new(cShort, 40), size = size.tiny, text = "ФЕЙД", textcolor = cShort)
+
+if showExit and not na(exitR)
+    label.new(bar_index, exitX, (exitR >= 0 ? "+" : "") + str.tostring(exitR, "#.##") + "R",
+         style = label.style_label_left,
+         color = color.new(exitR > 0 ? cLong : cShort, 80), textcolor = chart.fg_color, size = size.tiny)
+
+// ── таблица ───────────────────────────────────────────────────────────────────
+var table tS = table.new(position.top_right, 7, 10, border_width = 1)
+
+f_cell(int c, int r, string s, color bg, color fg) =>
+    table.cell(tS, c, r, s, text_color = fg, text_size = size.tiny,
+         text_halign = c == 0 ? text.align_left : text.align_right, bgcolor = bg)
+    c
+
+f_srow(int r, string name, Stat s, color bg) =>
+    float d = math.max(nDays, 1)
+    f_cell(0, r, name, bg, chart.fg_color)
+    f_cell(1, r, str.tostring(s.n / d, "#.##"), bg, chart.fg_color)
+    f_cell(2, r, str.tostring(s.w / d, "#.##"), bg, chart.fg_color)
+    f_cell(3, r, s.n > 0 ? str.tostring(100.0 * s.w / s.n, "#") + "%" : "—", bg, chart.fg_color)
+    f_cell(4, r, s.neg > 0 ? str.tostring(s.pos / s.neg, "#.00") : "—", bg, chart.fg_color)
+    f_cell(5, r, s.n > 0 ? str.tostring(s.sR / s.n, "+#.000;-#.000") : "—", bg, chart.fg_color)
+    f_cell(6, r, str.tostring(s.pts / d, "+#.##;-#.##"), bg, s.pts > 0 ? cLong : s.pts < 0 ? cShort : chart.fg_color)
+    r
+
+if showStats and barstate.isfirst
+    table.merge_cells(tS, 1, 0, 3, 0)
+    table.merge_cells(tS, 1, 8, 3, 8)
+    table.merge_cells(tS, 0, 9, 6, 9)
+
+if showStats and barstate.islast
+    bgH = color.new(color.gray, 85)
+    string st = not inSess ? "вне сессии" : na(up) ? "копит историю" : state == 1 ? "ИМПУЛЬС ▲" : state == -1 ? "ИМПУЛЬС ▼" : "ШУМ"
+    color  sc = state == 1 ? cLong : state == -1 ? cShort : cBrass
+    f_cell(0, 0, "PULSE", bgH, chart.fg_color)
+    f_cell(1, 0, st, color.new(sc, 80), chart.fg_color)
+    f_cell(4, 0, "коридор", bgH, color.gray)
+    f_cell(5, 0, na(sg) ? "—" : "±" + str.tostring(100.0 * sg, "#.###") + "%", bgH, chart.fg_color)
+    f_cell(6, 0, na(sg) or na(atr) ? "" : str.tostring(sg * dOpen / atr, "#.#") + " ATR", bgH, color.gray)
+
+    f_cell(0, 1, "ДВИЖОК", bgH, chart.fg_color)
+    f_cell(1, 1, "СДЕЛОК/ДЕНЬ", bgH, chart.fg_color)
+    f_cell(2, 1, "ПРИБЫЛЬНЫХ/ДЕНЬ", bgH, chart.fg_color)
+    f_cell(3, 1, "ВИНРЕЙТ", bgH, chart.fg_color)
+    f_cell(4, 1, "ПФ", bgH, chart.fg_color)
+    f_cell(5, 1, "СРЕДНИЙ R", bgH, chart.fg_color)
+    f_cell(6, 1, "ПУНКТОВ/ДЕНЬ", bgH, chart.fg_color)
+    f_srow(2, "импульс", sM, na)
+    f_srow(3, "фейд", sF, na)
+    f_srow(4, "живой поток", sL, color.new(cBrass, 85))
+
+    f_cell(0, 5, "сегодня", na, chart.fg_color)
+    f_cell(1, 5, str.tostring(todayN), na, chart.fg_color)
+    f_cell(2, 5, str.tostring(todayW), na, chart.fg_color)
+    f_cell(3, 5, "", na, chart.fg_color)
+    f_cell(4, 5, "", na, chart.fg_color)
+    f_cell(5, 5, "", na, chart.fg_color)
+    f_cell(6, 5, str.tostring(todayP, "+#.##;-#.##"), na, todayP > 0 ? cLong : todayP < 0 ? cShort : chart.fg_color)
+
+    f_cell(0, 6, "дней в статистике", na, color.gray)
+    f_cell(1, 6, str.tostring(nDays), na, chart.fg_color)
+    f_cell(2, 6, "просадка, п.", na, color.gray)
+    f_cell(3, 6, str.tostring(sL.dd, "#.##"), na, chart.fg_color)
+    f_cell(4, 6, "итого, п.", na, color.gray)
+    f_cell(5, 6, str.tostring(sL.cum, "+#.##;-#.##"), na, sL.cum > 0 ? cLong : sL.cum < 0 ? cShort : chart.fg_color)
+    f_cell(6, 6, "", na, chart.fg_color)
+
+    float costPx = costTicks * syminfo.mintick + costPct / 100.0 * close
+    f_cell(0, 7, "издержки на круг", na, color.gray)
+    f_cell(1, 7, str.tostring(costPx, format.mintick), na, chart.fg_color)
+    f_cell(2, 7, "в среднем риска", na, color.gray)
+    f_cell(3, 7, sL.n > 0 ? str.tostring(100.0 * sL.cR / sL.n, "#") + "%" : "—", na,
+         sL.n > 0 and sL.cR / sL.n > 0.25 ? cShort : chart.fg_color)
+    f_cell(4, 7, "ATR", na, color.gray)
+    f_cell(5, 7, str.tostring(atr, format.mintick), na, chart.fg_color)
+    f_cell(6, 7, na(atr) or atr == 0 ? "" : str.tostring(costPx / atr, "#.##") + " ATR", na, color.gray)
+
+    string ps = pL.side == 0 ? "нет" : (pL.side == 1 ? "LONG " : "SHORT ") + (pL.kind == 0 ? "импульс" : "фейд")
+    float openR = pL.side == 0 ? na : (close - pL.entry) * pL.side / pL.risk - pL.cost / pL.risk
+    f_cell(0, 8, "позиция", na, color.gray)
+    f_cell(1, 8, ps, na, pL.side == 1 ? cLong : pL.side == -1 ? cShort : chart.fg_color)
+    f_cell(4, 8, pL.side == 0 ? "" : str.tostring(bar_index - pL.bar) + " бар", na, color.gray)
+    f_cell(5, 8, na(openR) ? "" : str.tostring(openR, "+#.##;-#.##") + "R", na, chart.fg_color)
+    f_cell(6, 8, pL.side == 0 ? "" : "стоп " + str.tostring(pL.stop, format.mintick), na, color.gray)
+
+    f_cell(0, 9, timeframe.isintraday ? "все цифры — после издержек" : "нужен внутридневной ТФ, лучше 1 минута", na, color.gray)
+
+// ── алерты ─────────────────────────────────────────────────────────────────────
+longIn  = enteredLive and liveSide == 1
+shortIn = enteredLive and liveSide == -1
+alertcondition(longIn,  "PULSE · LONG",  "PULSE: вход LONG")
+alertcondition(shortIn, "PULSE · SHORT", "PULSE: вход SHORT")
+alertcondition(not na(exitR), "PULSE · выход", "PULSE: выход из позиции")
+
+if enteredLive
+    alert(str.format("PULSE {0} {1} · {2} {3} | вход {4} стоп {5}{6} | риск {7} = {8,number,#.##} ATR | издержки {9,number,#}% риска",
+         syminfo.ticker, timeframe.period, liveSide == 1 ? "LONG" : "SHORT", liveKind == 0 ? "импульс" : "фейд",
+         str.tostring(pL.entry, format.mintick), str.tostring(pL.stop, format.mintick),
+         liveKind == 1 ? " цель " + str.tostring(pL.tgt, format.mintick) : " (трейл max(коридор, VWAP))",
+         str.tostring(pL.risk, format.mintick), pL.risk / atr, 100.0 * pL.cost / pL.risk),
+         alert.freq_once_per_bar_close)
+if not na(exitR)
+    alert(str.format("PULSE {0} {1} · выход {2} {3} по {4} · {5,number,+#.##;-#.##}R",
+         syminfo.ticker, timeframe.period, exitSd == 1 ? "LONG" : "SHORT", exitK == 0 ? "импульс" : "фейд",
+         str.tostring(exitX, format.mintick), exitR),
+         alert.freq_once_per_bar_close)

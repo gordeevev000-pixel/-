@@ -1,0 +1,215 @@
+//@version=6
+// ═══════════════════════════════════════════════════════════════════════════════
+//  PULSE · стратегия для бэктеста
+//
+//  Тот же движок, что и в индикаторе PULSE (коридор шума, сигналы — один в один),
+//  но сделки исполняет движок TradingView — ради нативного отчёта: эквити,
+//  просадка, профит-фактор, список сделок.
+//
+//  Одна позиция за раз, приоритет у импульса. Вход по закрытию бара-сигнала.
+//  Импульс выходит по закрытию за трейлом max(коридор, VWAP) − 0.5 ATR,
+//  фейд — по стопу, по цели (VWAP на входе) или по тайм-стопу. Всё закрывается
+//  на последнем баре сессии.
+//
+//  Комиссия и проскальзывание по умолчанию — под ES: 1 тик на каждое исполнение
+//  и $2 за контракт в каждую сторону. Для другого инструмента поменяйте их во
+//  вкладке «Свойства» — на минутках от них зависит всё.
+// ═══════════════════════════════════════════════════════════════════════════════
+
+strategy("PULSE · стратегия", "PULSE S", overlay = true,
+     default_qty_type = strategy.fixed, default_qty_value = 1,
+     initial_capital = 100000, commission_type = strategy.commission.cash_per_contract,
+     commission_value = 2.0, slippage = 1, pyramiding = 0,
+     calc_on_every_tick = false, process_orders_on_close = true)
+
+// ── входные параметры ──────────────────────────────────────────────────────────
+gSess = "Сессия"
+sessStr    = input.session("0930-1600", "Основная сессия", group = gSess,
+     tooltip = "Коридор строится от открытия этой сессии. ES/NQ/SPY — 0930-1600 по Нью-Йорку. MOEX — 1000-1850 по Москве. DAX — 0900-1730 по Берлину.")
+tzIn       = input.string("America/New_York", "Часовой пояс сессии", group = gSess,
+     options = ["America/New_York", "America/Chicago", "Europe/Moscow", "Europe/London", "Europe/Berlin", "Asia/Tokyo", "Asia/Hong_Kong", "UTC", "Биржевой"])
+skipOpen   = input.int(0, "Не входить первые N минут", minval = 0, group = gSess)
+noEntryEnd = input.int(15, "Не входить за N минут до конца", minval = 0, group = gSess)
+
+gNoise = "Коридор шума"
+noiseN  = input.int(14, "Дней в среднем движении", minval = 2, group = gNoise,
+     tooltip = "Экспоненциальное среднее |close/open − 1| по каждой минуте сессии за прошлые дни.")
+minDays = input.int(5, "Минимум дней истории на минуту", minval = 1, group = gNoise,
+     tooltip = "Пока у минуты меньше дней истории, коридора нет и сигналов нет. На минутке с выключенными расширенными часами истории хватает быстрее.")
+useGap  = input.bool(true, "Расширять коридор на гэп", group = gNoise,
+     tooltip = "Верх считается от max(open, вчерашнее закрытие), низ — от min. Иначе гэп сам по себе выглядит как импульс.")
+
+gMom = "Импульс"
+useMom = input.bool(true, "Включить импульс", group = gMom)
+inBuf  = input.float(1.0, "Вход: закрытие за коридором дальше чем, ATR", minval = 0, step = 0.1, group = gMom)
+outBuf = input.float(0.5, "Выход: закрытие за max(коридор, VWAP) − , ATR", minval = 0, step = 0.1, group = gMom,
+     tooltip = "Без этого запаса импульс пилит на каждом касании трейла — на данных это худший вариант.")
+every  = input.int(1, "Проверять вход раз в N минут", minval = 1, group = gMom,
+     tooltip = "1 — каждый бар. Реже — меньше сделок и крупнее каждая.")
+t1R    = input.float(0.0, "Половина на +R (0 — выкл.)", minval = 0, step = 0.25, group = gMom,
+     tooltip = "Поднимает число прибыльных сделок и режет прибыль: у импульса весь эдж в длинных хвостах. На S&P половина на +1R: прибыльных 0.65 → 1.06 в день, пунктов в день 1.89 → 0.93.")
+
+gFade = "Фейд"
+useFade   = input.bool(true, "Включить фейд", group = gFade)
+fadeQuiet = input.bool(true, "Только пока сегодня не было импульса", group = gFade,
+     tooltip = "Без этого фильтра фейд встаёт против трендовых дней и в ноль отдаёт всё, что заработал в тихие.")
+zone      = input.float(0.3, "Касание: до границы не дальше, ATR", minval = 0, step = 0.05, group = gFade)
+fStop     = input.float(1.0, "Стоп за экстремумом бара, ATR", minval = 0.1, step = 0.1, group = gFade)
+fMinRR    = input.float(1.0, "Минимум R:R до VWAP", minval = 0, step = 0.1, group = gFade)
+fMax      = input.int(30, "Тайм-стоп, баров", minval = 1, group = gFade)
+
+gCost = "ATR"
+atrLen = input.int(14, "ATR", minval = 2, group = gCost)
+
+gV = "Вид"
+showBand = input.bool(true, "Коридор", group = gV)
+showVwap = input.bool(true, "VWAP", group = gV)
+showBg   = input.bool(true, "Подсветка импульса", group = gV)
+cLong    = input.color(#0B7A69, "Лонг",  group = gV, inline = "c")
+cShort   = input.color(#B8412F, "Шорт",  group = gV, inline = "c")
+cBrass   = input.color(#A9701C, "Акцент", group = gV, inline = "c")
+
+// ── сессия ─────────────────────────────────────────────────────────────────────
+tz     = tzIn == "Биржевой" ? syminfo.timezone : tzIn
+inSess = not na(time(timeframe.period, sessStr, tz))
+first  = inSess and not inSess[1]
+outNow = not inSess and inSess[1]
+
+// границы сессии берём из строки «ЧЧММ-ЧЧММ»: session.islastbar знает только сессию графика
+begH = str.tonumber(str.substring(sessStr, 0, 2))
+begM = str.tonumber(str.substring(sessStr, 2, 4))
+endH = str.tonumber(str.substring(sessStr, 5, 7))
+endM = str.tonumber(str.substring(sessStr, 7, 9))
+
+var float dOpen     = na
+var float prevClose = na
+var float lastClose = na
+var int   sessStart = na
+var int   sessEnd   = na
+var float cpv       = 0.0
+var float cv        = 0.0
+var bool  sessOk    = false
+var bool  broke     = false
+var bool  dayLive   = false
+var int   nDays     = 0
+
+if first
+    prevClose := lastClose
+    dOpen     := open
+    sessStart := time
+    sessOk    := true
+    if not na(begH) and not na(begM)
+        // день без первых минут (или график начался посреди сессии) пропускаем:
+        // open у него не тот, и σ по минутам он бы испортил
+        int s0 = timestamp(tz, year(time, tz), month(time, tz), dayofmonth(time, tz), int(begH), int(begM))
+        sessStart := s0
+        sessOk    := time - s0 >= 0 and time - s0 <= 5 * 60000
+    cpv       := 0.0
+    cv        := 0.0
+    broke     := false
+    dayLive   := false
+    if not na(endH) and not na(endM)
+        int e = timestamp(tz, year(time, tz), month(time, tz), dayofmonth(time, tz), int(endH), int(endM))
+        sessEnd := e <= time ? e + 86400000 : e
+    else
+        sessEnd := na
+
+atr  = ta.atr(atrLen)
+key  = inSess ? int(math.round((time - sessStart) / 60000.0)) : -1
+left = inSess and not na(sessEnd) ? (sessEnd - time_close) / 60000.0 : na
+isLast = inSess and not na(left) and left <= 0
+
+// VWAP сессии руками: ta.vwap якорится к сессии графика, а не к нашей, и падает без объёма
+if inSess
+    float w = nz(volume) > 0 ? volume : 1.0
+    cpv += hlc3 * w
+    cv  += w
+vw = inSess and cv > 0 ? cpv / cv : na
+
+// ── σ каждой минуты: сначала читаем прошлые дни, потом дописываем сегодняшний ──
+var map<int, float> sigM = map.new<int, float>()
+var map<int, int>   cntM = map.new<int, int>()
+alpha = 2.0 / (noiseN + 1)
+
+float sg = na
+if inSess and sessOk
+    float sOld = sigM.get(key)
+    int   cOld = cntM.contains(key) ? cntM.get(key) : 0
+    sg := cOld >= minDays ? sOld : na
+    if barstate.isconfirmed
+        float mv = math.abs(close / dOpen - 1.0)
+        sigM.put(key, na(sOld) ? mv : sOld + alpha * (mv - sOld))
+        cntM.put(key, cOld + 1)
+if inSess and barstate.isconfirmed
+    lastClose := close
+
+top = useGap and not na(prevClose) ? math.max(dOpen, prevClose) : dOpen
+bot = useGap and not na(prevClose) ? math.min(dOpen, prevClose) : dOpen
+up  = inSess and not na(sg) ? top * (1.0 + sg) : na
+dn  = inSess and not na(sg) ? bot * (1.0 - sg) : na
+
+if not na(up) and not dayLive
+    dayLive := true
+    nDays   += 1
+
+// ── сигналы текущего бара ──────────────────────────────────────────────────────
+ready    = inSess and not isLast and not na(up) and not na(vw) and atr > 0
+canEnter = ready and key >= skipOpen and (na(left) or left >= noEntryEnd)
+
+momSide = useMom and canEnter and key % every == 0 ?
+     (close > up + inBuf * atr and close > vw ? 1 : close < dn - inBuf * atr and close < vw ? -1 : 0) : 0
+brokeNow = ready and (close > up + inBuf * atr or close < dn - inBuf * atr)
+
+fadeOk = useFade and canEnter and not (fadeQuiet and broke)
+fSStop = high + fStop * atr
+fLStop = low  - fStop * atr
+fadeS  = fadeOk and high >= up - zone * atr and close < up and close < open and (close - vw) >= fMinRR * (fSStop - close)
+fadeL  = fadeOk and low  <= dn + zone * atr and close > dn and close > open and (vw - close) >= fMinRR * (close - fLStop)
+fadeSide = fadeS ? -1 : fadeL ? 1 : 0
+
+// ── исполнение ─────────────────────────────────────────────────────────────────
+var int   curKind  = -1
+var int   curBar   = na
+posSide = strategy.position_size > 0 ? 1 : strategy.position_size < 0 ? -1 : 0
+bool closing = false
+
+if barstate.isconfirmed and posSide != 0
+    if outNow or first
+        strategy.close_all(comment = "вне сессии")
+        closing := true
+    else if curKind == 0
+        float trl = posSide == 1 ? math.max(up, vw) - outBuf * atr : math.min(dn, vw) + outBuf * atr
+        if na(trl) or (posSide == 1 ? close < trl : close > trl) or isLast
+            strategy.close("ИМП", comment = isLast ? "конец сессии" : "трейл")
+            closing := true
+    else if curKind == 1
+        if bar_index - curBar >= fMax or isLast
+            strategy.close("ФЕЙД", comment = isLast ? "конец сессии" : "тайм-стоп")
+            closing := true
+
+if barstate.isconfirmed and posSide == 0 and not closing
+    if momSide != 0
+        float st   = momSide == 1 ? math.max(up, vw) - outBuf * atr : math.min(dn, vw) + outBuf * atr
+        float risk = math.max(math.abs(close - st), syminfo.mintick)
+        strategy.entry("ИМП", momSide == 1 ? strategy.long : strategy.short)
+        if t1R > 0
+            strategy.exit("ИМП T1", "ИМП", qty_percent = 50, limit = close + momSide * t1R * risk, comment = "T1")
+        curKind := 0
+        curBar  := bar_index
+    else if fadeSide != 0
+        float st = fadeSide == 1 ? fLStop : fSStop
+        strategy.entry("ФЕЙД", fadeSide == 1 ? strategy.long : strategy.short)
+        strategy.exit("ФЕЙД выход", "ФЕЙД", stop = st, limit = vw, comment_loss = "стоп", comment_profit = "VWAP")
+        curKind := 1
+        curBar  := bar_index
+
+if barstate.isconfirmed
+    broke := broke or brokeNow
+
+// ── график ────────────────────────────────────────────────────────────────────
+state = not inSess ? 0 : na(up) ? 0 : close > up ? 1 : close < dn ? -1 : 2
+pUp = plot(showBand ? up : na, "Коридор: верх", color = color.new(cBrass, 30), style = plot.style_linebr)
+pDn = plot(showBand ? dn : na, "Коридор: низ",  color = color.new(cBrass, 30), style = plot.style_linebr)
+fill(pUp, pDn, color = showBand ? color.new(cBrass, 93) : na, title = "Коридор шума")
+plot(showVwap ? vw : na, "VWAP", color = color.new(chart.fg_color, 45), style = plot.style_linebr)
+bgcolor(showBg and state == 1 ? color.new(cLong, 92) : showBg and state == -1 ? color.new(cShort, 92) : na, title = "Импульс")
