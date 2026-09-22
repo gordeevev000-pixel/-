@@ -37,7 +37,7 @@ DEFAULT = dict(
     cost_pct=0.04, cost_ticks=None, tick=None, max_cost_r=0.25,
     gap_min=4, after_gap=3, tod_alpha=0.1, tod_min=3,
     memory=150, prior_k=10, prior_mu=-0.05, z=0.5, min_n=20, min_edge=0.05,
-    cooldown=5, one_at_a_time=True,
+    cooldown=5, one_at_a_time=True, mode="strict",   # strict | soft | all — как «Какие сигналы показывать»
 )
 
 SETUPS = ("Откат", "Снятие ликвидности", "Пробой сжатия")
@@ -236,14 +236,15 @@ def run(df, p=None):
                 continue
             cost_px = C[i] * p["cost_pct"] / 100 if p["cost_ticks"] is None else p["cost_ticks"] * tick
             cost_r = cost_px / dist
-            if cost_r > p["max_cost_r"]:
+            if cost_r > p["max_cost_r"] and p["mode"] != "all":
                 continue
             last_trig[key] = i
             ctx_raw = BIAS[i] * d
             ctx = 0 if ctx_raw > p["bias_thr"] else (2 if ctx_raw < -p["bias_thr"] else 1)
             b = s * 3 + ctx
-            lcb, _ = edge(b)
-            ok = sn[b] >= p["min_n"] and lcb > p["min_edge"]
+            lcb, mean = edge(b)
+            ok = (sn[b] >= p["min_n"] and lcb > p["min_edge"]) or p["mode"] == "all" \
+                or (p["mode"] == "soft" and sn[b] >= max(5, p["min_n"] / 2) and mean > 0)
             vt = [C[i], C[i] - d * dist, C[i] + d * dist * p["rr"], d, b, i, cost_r, False]
             open_vt.append(vt)
             if ok and (best is None or lcb > best[0]):
