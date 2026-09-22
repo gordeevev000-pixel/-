@@ -42,10 +42,12 @@ slMin   = input.float(0.5, "Стоп мин., ×ATR", minval = 0.1, step = 0.1, 
 slMax   = input.float(2.5, "Стоп макс., ×ATR", minval = 0.5, step = 0.1, group = G_RISK)
 maxBars = input.int(30, "Макс. длительность сделки, баров", minval = 1, group = G_RISK)
 
-costMode  = input.string("%", "Издержки задаются в", options = ["%", "тиках"], group = G_COST)
+costMode  = input.string("авто", "Издержки задаются в", options = ["авто", "%", "тиках"], group = G_COST,
+             tooltip = "Авто: для фьючерсов — в тиках, для остального — в процентах.")
 costPct   = input.float(0.04, "Комиссия + проскальзывание за вход и выход, %", minval = 0, step = 0.01, group = G_COST,
-             tooltip = "Сумма за ОБЕ стороны сделки. Пример: мейкер 0.02% + мейкер 0.02% = 0.04%. Тейкер 0.05% + тейкер 0.05% = 0.10%.")
-costTicks = input.float(2, "Издержки за вход и выход, тиков", minval = 0, step = 1, group = G_COST)
+             tooltip = "Для акций. Сумма за ОБЕ стороны сделки: комиссия брокера и биржи плюс спред. Пример: 0.02% за сторону → 0.04%.")
+costTicks = input.float(2, "Издержки за вход и выход, тиков", minval = 0, step = 0.5, group = G_COST,
+             tooltip = "Для фьючерсов. Комиссия за вход и выход в пересчёте на тики плюс проскальзывание. Пример ES: комиссия ~$4.5 ≈ 0.4 тика + 1 тик проскальзывания ≈ 1.5 тика.")
 maxCostR  = input.float(0.25, "Макс. доля издержек в риске, R", minval = 0.01, step = 0.05, group = G_COST,
              tooltip = "Если комиссия съедает больше этой доли стопа, сетап отбрасывается сразу.")
 
@@ -80,6 +82,10 @@ const float SL_BUF    = 0.1
 const float PRIOR_K   = 10.0
 const float PRIOR_MU  = -0.05
 const int   WARMUP    = 105
+const int   GAP_BARS  = 4      // пропуск дольше 4 баров = разрыв сессии
+const int   AFTER_GAP = 3      // после разрыва 3 бара только наблюдаем
+const float TOD_ALPHA = 0.1    // сглаживание «обычного объёма в эту минуту»
+const int   TOD_MIN   = 3      // сколько дней наблюдений нужно для этой минуты
 
 // Цвета
 color C_LONG  = #16a34a
@@ -115,15 +121,16 @@ float b3   = request.security(syminfo.tickerid, tf3, f_htfBias(), lookahead = ba
 float bias = (w1 * b1 + w2 * b2 + w3 * b3) / math.max(w1 + w2 + w3, 1e-9)
 
 // ───────────────────────────── Рабочий ТФ ─────────────────────────────
-float atr1   = ta.atr(ATR_LEN)
-float atrL   = ta.atr(ATR_LONG)
+// ATR по диапазону свечи: гэп на открытии или после клиринга его не раздувает
+float atr1   = ta.rma(high - low, ATR_LEN)
+float atrL   = ta.rma(high - low, ATR_LONG)
 float emaF   = ta.ema(close, EMA_F)
 float emaS   = ta.ema(close, EMA_S)
 float rng    = high - low
 float clv    = rng > 0 ? (close - low) / rng : 0.5
 float volMa  = ta.sma(volume, 50)
 bool  hasVol = nz(volMa) > 0
-float rvol   = hasVol ? volume / volMa : 1.0
+float rvolMa = hasVol ? volume / volMa : 1.0
 float pl     = ta.pivotlow(low, PIV_L, PIV_R)
 float ph     = ta.pivothigh(high, PIV_L, PIV_R)
 float loPb   = ta.lowest(low, PB_LOOK)
@@ -133,6 +140,10 @@ float cMax   = ta.highest(close, PB_LOOK)
 float boxHi  = ta.highest(high, SQ_LEN)[1]
 float boxLo  = ta.lowest(low, SQ_LEN)[1]
 bool  inSess = not useSess or not na(time(timeframe.period, sess))
+// Разрыв сессии: ночь, клиринг, выходные
+bool  brk    = time - nz(time[1], time) > GAP_BARS * timeframe.in_seconds() * 1000
+bool  useTicks = costMode == "тиках" or (costMode == "авто" and syminfo.type == "futures")
+float costPx = useTicks ? costTicks * syminfo.mintick : close * costPct / 100
 
 // ───────────────────────────── Память ─────────────────────────────
 // Виртуальная сделка: так индикатор проверяет каждый свой сетап.
@@ -161,6 +172,9 @@ var int   lvlLoBar    = na
 var float lvlHi       = na
 var int   lvlHiBar    = na
 var bool  shownActive = false
+var int   sinceBreak  = 1000000
+var array<float> todV = array.new<float>(1440, na)   // обычный объём в каждую минуту суток
+var array<int>   todC = array.new<int>(1440, 0)
 var int   shN         = 0
 var int   shW         = 0
 var float shR         = 0.0
@@ -205,17 +219,22 @@ bool sigShort = false
 
 // ───────────────────────────── Движок ─────────────────────────────
 if barstate.isconfirmed
-    // 1) Итоги виртуальных сделок → статистика
+    // 1) Итоги виртуальных сделок → статистика.
+    //    На разрыве сессии всё открытое закрывается по последней цене перед ним.
+    sinceBreak := brk ? 0 : sinceBreak + 1
+    int xEnd  = brk ? bar_index - 1 : bar_index
     int nOpen = array.size(vts)
     if nOpen > 0
         for i = nOpen - 1 to 0
             VTrade t = array.get(vts, i)
-            if bar_index > t.bar
+            if bar_index > t.bar or brk
                 bool  hitSL = t.dir > 0 ? low <= t.sl : high >= t.sl
                 bool  hitTP = t.dir > 0 ? high >= t.tp : low <= t.tp
                 float dist  = math.abs(t.entry - t.sl)
                 float r     = na
-                if hitSL          // стоп и тейк в одном баре — считаем стоп
+                if brk
+                    r := t.dir * (close[1] - t.entry) / dist
+                else if hitSL     // стоп и тейк в одном баре — считаем стоп
                     r := -1.0
                 else if hitTP
                     r := rr
@@ -235,8 +254,8 @@ if barstate.isconfirmed
                         if not na(t.lbl)
                             label.set_text(t.lbl, label.get_text(t.lbl) + "\n" + (r > 0 ? "✓ " : "✗ ") + f_r(r))
                         if not na(t.slLn)
-                            line.set_x2(t.slLn, bar_index)
-                            line.set_x2(t.tpLn, bar_index)
+                            line.set_x2(t.slLn, xEnd)
+                            line.set_x2(t.tpLn, xEnd)
                     array.remove(vts, i)
                 else if t.shown and not na(t.slLn)
                     line.set_x2(t.slLn, bar_index)
@@ -250,8 +269,19 @@ if barstate.isconfirmed
         lvlHi    := ph
         lvlHiBar := bar_index
 
-    if bar_index >= WARMUP and not na(bias) and not na(atr1) and not na(atrL)
-        // 3) Поиск сетапов
+    // 3) Относительный объём — к обычному объёму в ЭТУ минуту суток
+    //    (открытие и закрытие сессии не путаются с тихой серединой дня)
+    int   slot    = hour(time) * 60 + minute(time)
+    float todPrev = array.get(todV, slot)
+    float rvol    = rvolMa
+    if hasVol and array.get(todC, slot) >= TOD_MIN and nz(todPrev) > 0
+        rvol := volume / todPrev
+    if hasVol and not na(volume)
+        array.set(todV, slot, na(todPrev) ? volume : todPrev + TOD_ALPHA * (volume - todPrev))
+        array.set(todC, slot, array.get(todC, slot) + 1)
+
+    if bar_index >= WARMUP and sinceBreak >= AFTER_GAP and not na(bias) and not na(atr1) and not na(atrL)
+        // 4) Поиск сетапов
         bool trendUp = emaF > emaS and emaS > emaS[5]
         bool trendDn = emaF < emaS and emaS < emaS[5]
 
@@ -277,8 +307,7 @@ if barstate.isconfirmed
             else if close < boxLo
                 f_add(2, -1, mid + SL_BUF * atr1)
 
-        // 4) Каждый сетап — в виртуальную проверку; к показу — лучший с доказанным перевесом
-        float  costPx   = costMode == "%" ? close * costPct / 100 : costTicks * syminfo.mintick
+        // 5) Каждый сетап — в виртуальную проверку; к показу — лучший с доказанным перевесом
         VTrade best     = na
         float  bestLcb  = na
         float  bestMean = na
@@ -317,7 +346,7 @@ if barstate.isconfirmed
                                  color = C_GRAY, size = size.tiny,
                                  tooltip = f_setupName(s) + ", " + f_ctxName(ctx) + "\nПеревес не доказан: " + f_r(mean) + " на сделку, выборка " + str.tostring(n, "0"))
 
-        // 5) Сигнал
+        // 6) Сигнал
         if not na(best) and inSess and not (oneAtATime and shownActive)
             best.shown  := true
             shownActive := true
@@ -346,7 +375,7 @@ alertcondition(sigLong,  "EDGE: покупка", "EDGE ▲ BUY {{ticker}} @ {{cl
 alertcondition(sigShort, "EDGE: продажа", "EDGE ▼ SELL {{ticker}} @ {{close}}")
 
 // ───────────────────────────── Панель (по желанию) ─────────────────────────────
-var table panel = table.new(position.top_right, 2, 6, bgcolor = C_PANEL, border_width = 0, frame_width = 0)
+var table panel = table.new(position.top_right, 2, 7, bgcolor = C_PANEL, border_width = 0, frame_width = 0)
 if showPanel and barstate.islast
     // Лучшая корзина сейчас
     float topLcb = na
@@ -373,3 +402,6 @@ if showPanel and barstate.islast
     table.cell(panel, 1, 4, shN > 0 ? f_r(shR) : "—", text_color = shR >= 0 ? C_LONG : C_SHORT, text_size = size.small, text_halign = text.align_right)
     table.cell(panel, 0, 5, "Лучший сетап", text_color = C_TEXT, text_size = size.small, text_halign = text.align_left)
     table.cell(panel, 1, 5, topTxt, text_color = C_TEXT, text_size = size.small, text_halign = text.align_right)
+    float costShare = atr1 > 0 ? 100 * costPx / atr1 : na
+    table.cell(panel, 0, 6, "Издержки / средняя свеча", text_color = C_TEXT, text_size = size.small, text_halign = text.align_left)
+    table.cell(panel, 1, 6, na(costShare) ? "—" : str.tostring(costShare, "0") + "%", text_color = nz(costShare) <= 15 ? C_LONG : nz(costShare) <= 30 ? C_TEXT : C_SHORT, text_size = size.small, text_halign = text.align_right)
