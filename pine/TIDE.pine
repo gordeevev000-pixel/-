@@ -1,0 +1,732 @@
+//@version=6
+// ═══════════════════════════════════════════════════════════════════════════════
+//  TIDE · фазы тренда — для минутного графика
+//
+//  Отвечает на один вопрос: сейчас имеет смысл ловить ПРОДОЛЖЕНИЕ или РАЗВОРОТ.
+//
+//  Trend = 100 · ( 0.24·Q + 0.16·L + 0.18·S + 0.16·M + 0.10·V + 0.16·H )
+//
+//    Q — ход: качество движения (R² линейной регрессии, ER Кауфмана, ADX) × размах
+//    L — расположение: порядок EMA 9/21/50/200 и разнос ленты в ATR
+//    S — структура: HH/HL против LH/LL по подтверждённым пивотам, BOS и CHoCH
+//    M — импульс: гистограмма MACD в ATR, режим RSI, ROC
+//    V — участие: наклон дельты объёма (CVD) и баланс объёма вверх/вниз
+//    H — старший ТФ: тот же мини-движок на 5 и 15 минутах
+//
+//  Каждый компонент знаковый: −1 (медвежий) … +1 (бычий). Скор −100…+100.
+//
+//  Дальше тренд раскладывается на ФАЗЫ жизненного цикла:
+//    ФЛЭТ → СЖАТИЕ → ЗАРОЖДЕНИЕ → РАЗГОН → ХОД → ОТКАТ → ИСТОЩЕНИЕ → СЛОМ
+//  и на две независимые меры:
+//    CONT — качество продолжения (сила × согласие ТФ × структура × откат × энергия,
+//           придушенное истощением)
+//    REV  — качество разворота (истощение × дивергенция × слом × перерастяжение)
+//  Вердикт — это то, что из них победило с запасом. Если оба низкие — вне рынка.
+//
+//  Таблица статистики внизу считает по вашей истории, что каждая фаза давала
+//  ЧЕРЕЗ N БАРОВ: долю продолжений, средний ход, MFE и MAE в ATR. Если у фазы
+//  «ХОД» доля продолжений не выше, чем у строки «все бары», — на этом инструменте
+//  продолжения не работают, и никакая красота на графике этого не изменит.
+//
+//  Заглядывания в будущее нет: пивоты подтверждаются с задержкой в плечо,
+//  старшие ТФ берутся через lookahead_off (по желанию — только закрытые бары),
+//  статистика оценивает бар из прошлого по уже прожитым барам.
+// ═══════════════════════════════════════════════════════════════════════════════
+
+indicator("TIDE · фазы тренда", "TIDE", overlay = false, max_bars_back = 1000,
+     max_lines_count = 500, max_labels_count = 500, max_boxes_count = 500)
+
+// ── входные параметры ──────────────────────────────────────────────────────────
+gCore = "Ядро"
+atrLen    = input.int(14, "ATR", minval = 2, group = gCore)
+lenF      = input.int(9,   "Быстрая EMA",  minval = 2, group = gCore, inline = "e1")
+lenM      = input.int(21,  "Средняя EMA",  minval = 2, group = gCore, inline = "e1")
+lenS      = input.int(50,  "Медленная EMA",minval = 3, group = gCore, inline = "e2")
+lenA      = input.int(200, "Якорная EMA",  minval = 5, group = gCore, inline = "e2")
+smoothLen = input.int(2, "Сглаживание скора, баров", minval = 1, maxval = 20, group = gCore,
+     tooltip = "На минутке 2-3 бара убирают дребезг и почти не добавляют задержки.")
+chopThr   = input.float(28.0, "Порог «тренд жив»",   minval = 1, maxval = 100, step = 1, group = gCore)
+strongThr = input.float(55.0, "Порог «сильный тренд»", minval = 5, maxval = 100, step = 1, group = gCore)
+confirmed = input.bool(true, "Сигналы только по закрытым барам", group = gCore,
+     tooltip = "Выключить — стрелка появится внутри формирующегося бара и может исчезнуть.")
+
+gW = "Веса компонентов"
+wQ = input.float(0.24, "Q · ход",           minval = 0, maxval = 1, step = 0.01, group = gW)
+wL = input.float(0.16, "L · расположение",  minval = 0, maxval = 1, step = 0.01, group = gW)
+wSt= input.float(0.18, "S · структура",     minval = 0, maxval = 1, step = 0.01, group = gW)
+wM = input.float(0.16, "M · импульс",       minval = 0, maxval = 1, step = 0.01, group = gW)
+wV = input.float(0.10, "V · участие",       minval = 0, maxval = 1, step = 0.01, group = gW)
+wH = input.float(0.16, "H · старший ТФ",    minval = 0, maxval = 1, step = 0.01, group = gW)
+
+gQ = "Q · ход"
+qLen   = input.int(30, "Окно качества хода", minval = 5, group = gQ)
+qFull  = input.float(2.0, "Полный размах окна, ATR", minval = 0.2, step = 0.1, group = gQ)
+erFull = input.float(0.45, "Полная эффективность ER", minval = 0.05, maxval = 1, step = 0.01, group = gQ)
+adxLen = input.int(14, "DMI/ADX", minval = 2, group = gQ)
+adxLo  = input.float(15.0, "ADX: тренда нет",   minval = 0, step = 1, group = gQ, inline = "a")
+adxHi  = input.float(35.0, "ADX: тренд в силе", minval = 5, step = 1, group = gQ, inline = "a")
+
+gL = "L · расположение"
+spreadFull = input.float(1.20, "Полный разнос ленты, ATR", minval = 0.1, step = 0.05, group = gL)
+
+gS = "S · структура"
+pivLen  = input.int(5, "Плечо пивота", minval = 2, group = gS,
+     tooltip = "Свинг подтверждается через столько баров. Меньше — чувствительнее и шумнее.")
+memBars = input.int(20, "Память события структуры, баров", minval = 1, group = gS)
+
+gM = "M · импульс"
+macdF   = input.int(12, "MACD быстрый", minval = 2, group = gM, inline = "m")
+macdSl  = input.int(26, "медленный",    minval = 3, group = gM, inline = "m")
+macdSig = input.int(9,  "сигнальный",   minval = 1, group = gM, inline = "m")
+histFull= input.float(0.50, "Полная гистограмма, ATR", minval = 0.05, step = 0.05, group = gM)
+rsiLen  = input.int(14, "RSI", minval = 2, group = gM)
+rsiFull = input.float(18.0, "Полный режим RSI, пунктов от 50", minval = 2, step = 1, group = gM)
+rocLen  = input.int(10, "Окно ROC", minval = 1, group = gM, inline = "r")
+rocFull = input.float(1.50, "Полный ROC, ATR", minval = 0.1, step = 0.1, group = gM, inline = "r")
+
+gV = "V · участие"
+volLen  = input.int(20, "Окно среднего объёма", minval = 2, group = gV)
+cvdLen  = input.int(20, "Окно наклона CVD", minval = 2, group = gV)
+cvdFull = input.float(0.35, "Полный наклон CVD, доля среднего объёма", minval = 0.05, maxval = 1, step = 0.01, group = gV)
+
+gH = "H · старший таймфрейм"
+htf1      = input.timeframe("5",  "Первый старший ТФ",  group = gH, inline = "h1")
+wH1       = input.float(0.6, "вес", minval = 0, maxval = 1, step = 0.05, group = gH, inline = "h1")
+htf2      = input.timeframe("15", "Второй старший ТФ", group = gH, inline = "h2")
+wH2       = input.float(0.4, "вес", minval = 0, maxval = 1, step = 0.05, group = gH, inline = "h2")
+htfFast   = input.int(9,  "Быстрая EMA старшего ТФ", minval = 2, group = gH, inline = "h3")
+htfSlow   = input.int(21, "медленная",               minval = 3, group = gH, inline = "h3")
+htfQ      = input.int(20, "Окно качества старшего ТФ", minval = 5, group = gH)
+htfClosed = input.bool(false, "Старший ТФ только по закрытым барам", group = gH,
+     tooltip = "Включить — значение не дёргается внутри старшего бара, но приходит с задержкой в один его бар.")
+
+gX = "Истощение"
+extLo    = input.float(1.40, "Растяжение от средней: начало, ATR", minval = 0.1, step = 0.1, group = gX, inline = "x")
+extFull  = input.float(3.00, "перегрев, ATR",                      minval = 0.2, step = 0.1, group = gX, inline = "x")
+divLen   = input.int(20, "Окно дивергенции", minval = 3, group = gX)
+divRsi   = input.float(6.0, "Полная дивергенция RSI, пунктов", minval = 1, step = 0.5, group = gX)
+divVol   = input.float(2.5, "Полная дивергенция CVD, × среднего объёма", minval = 0.2, step = 0.1, group = gX)
+divMem   = input.int(5, "Память дивергенции, баров", minval = 1, group = gX)
+climaxLo = input.float(1.80, "Климакс объёма: начало, × среднего", minval = 1.0, step = 0.1, group = gX, inline = "cl")
+climaxHi = input.float(3.50, "полный",                             minval = 1.1, step = 0.1, group = gX, inline = "cl")
+decayLen = input.int(30, "Окно затухания качества", minval = 3, group = gX)
+decayFull= input.float(0.50, "Полное затухание, доля от пика", minval = 0.05, maxval = 1, step = 0.05, group = gX)
+ageLo    = input.int(40,  "Возраст тренда: молодой, баров", minval = 1, group = gX, inline = "ag")
+ageHi    = input.int(150, "старый",                         minval = 5, group = gX, inline = "ag")
+exhThr   = input.float(0.55, "Порог фазы ИСТОЩЕНИЕ", minval = 0.1, maxval = 1, step = 0.05, group = gX)
+
+gP = "Откат и фазы"
+pbLook     = input.int(20, "Окно экстремума для отката", minval = 3, group = gP)
+pbLo       = input.float(0.70, "Откат: минимум, ATR", minval = 0.05, step = 0.05, group = gP, inline = "p")
+pbHi       = input.float(2.20, "максимум, ATR",       minval = 0.2,  step = 0.05, group = gP, inline = "p")
+ribbonTol  = input.float(1.20, "Близость к ленте, ATR", minval = 0.1, step = 0.1, group = gP)
+impulseExt = input.float(1.50, "РАЗГОН: растяжение от средней, ATR", minval = 0.2, step = 0.1, group = gP)
+igniteWin  = input.int(15, "ЗАРОЖДЕНИЕ: как недавно тренд проснулся, баров", minval = 1, group = gP)
+bbLen      = input.int(20, "Окно сжатия (BB/KC)", minval = 3, group = gP)
+bbMult     = input.float(2.0, "BB, σ",  minval = 0.5, step = 0.1, group = gP, inline = "sq")
+kcMult     = input.float(1.5, "KC, ATR", minval = 0.5, step = 0.1, group = gP, inline = "sq")
+energyLen  = input.int(120, "Окно нормы волатильности", minval = 10, group = gP)
+eLo        = input.float(0.70, "Энергия: рынок спит", minval = 0.1, step = 0.05, group = gP, inline = "en")
+eHi        = input.float(1.40, "рынок живой",         minval = 0.2, step = 0.05, group = gP, inline = "en")
+
+gD = "Вердикт и сигналы"
+actThr  = input.float(45.0, "Порог действия", minval = 5, maxval = 100, step = 1, group = gD,
+     tooltip = "Ниже него ни продолжение, ни разворот не считаются рабочей темой.")
+margin  = input.float(8.0, "Запас победителя", minval = 0, maxval = 50, step = 1, group = gD,
+     tooltip = "Насколько одна мера должна обойти другую, чтобы вердикт не был «смешанно».")
+trigGap = input.int(5, "Пауза между стрелками, баров", minval = 0, group = gD)
+
+gSt = "Статистика фаз"
+statOn = input.bool(true, "Считать статистику", group = gSt)
+statH  = input.int(10, "Горизонт оценки, баров", minval = 1, maxval = 200, group = gSt,
+     tooltip = "Через столько баров после бара измеряется, продолжил ли рынок движение в сторону тренда.")
+
+gView = "Вид"
+showTable  = input.bool(true,  "Панель вердикта", group = gView)
+showComps  = input.bool(true,  "Строки компонентов", group = gView)
+showCtx    = input.bool(true,  "Строки контекста", group = gView)
+showStats  = input.bool(true,  "Таблица статистики фаз", group = gView)
+showRibbon = input.bool(true,  "Лента EMA на графике", group = gView)
+ribLen1    = input.int(13, "Лента: доп. EMA", minval = 2, group = gView, inline = "rb")
+ribLen2    = input.int(34, "и ещё одна",      minval = 2, group = gView, inline = "rb")
+showBands  = input.bool(true,  "Границы перегрева на графике", group = gView)
+showStruct = input.bool(true,  "Уровни структуры и метки BOS/CHoCH", group = gView)
+showSignal = input.bool(true,  "Стрелки входа по тренду", group = gView)
+showLabel  = input.bool(true,  "Вердикт табличкой у цены", group = gView)
+paintBars  = input.bool(true,  "Красить свечи по фазе", group = gView)
+showMeters = input.bool(true,  "Меры продолжения/разворота в панели", group = gView)
+showHtfLn  = input.bool(true,  "Линия старшего ТФ в панели", group = gView)
+cLong  = input.color(#0B7A69, "Лонг",   group = gView, inline = "c")
+cShort = input.color(#B8412F, "Шорт",   group = gView, inline = "c")
+cBrass = input.color(#A9701C, "Акцент", group = gView, inline = "c")
+cCalm  = input.color(#6C7A89, "Покой",  group = gView, inline = "c")
+
+// ── утилиты ────────────────────────────────────────────────────────────────────
+f_clamp(float x, float lo, float hi) => math.max(lo, math.min(hi, x))
+f_01(float x) => f_clamp(x, 0.0, 1.0)
+f_sgn(float x) => x > 0 ? 1.0 : x < 0 ? -1.0 : 0.0
+
+// шкала 0…1 блоками — считается только на последнем баре, в таблице
+f_bar(float v, int cells) =>
+    int on = int(math.round(f_01(v) * cells))
+    string s = ""
+    for i = 0 to cells - 1
+        s := s + (i < on ? "▰" : "▱")
+    s
+
+// знаковая шкала −1…+1 с нулём посередине
+f_bar2(float v, int half) =>
+    int on = int(math.round(f_01(math.abs(v)) * half))
+    string l = ""
+    string r = ""
+    for i = 0 to half - 1
+        l := l + (v < 0 and (half - i) <= on ? "▰" : "▱")
+        r := r + (v > 0 and (i + 1) <= on ? "▰" : "▱")
+    l + "│" + r
+
+f_arrow(float v) => v > 0.25 ? "▲" : v < -0.25 ? "▼" : "•"
+
+f_phase(int p) =>
+    switch p
+        0 => "ФЛЭТ"
+        1 => "СЖАТИЕ"
+        2 => "ЗАРОЖДЕНИЕ"
+        3 => "РАЗГОН"
+        4 => "ХОД"
+        5 => "ОТКАТ"
+        6 => "ИСТОЩЕНИЕ"
+        7 => "СЛОМ"
+        => "—"
+
+// ── общие ряды ─────────────────────────────────────────────────────────────────
+rng   = math.max(high - low, syminfo.mintick)
+vol   = nz(volume, 0.0)
+volMa = ta.sma(vol, volLen)
+hasVol= volMa > 0
+
+atr  = ta.atr(atrLen)
+emaF = ta.ema(close, lenF)
+emaM = ta.ema(close, lenM)
+emaS = ta.ema(close, lenS)
+emaA = ta.ema(close, lenA)
+rib1 = ta.ema(close, ribLen1)
+rib2 = ta.ema(close, ribLen2)
+
+rsi = ta.rsi(close, rsiLen)
+[macdLine, macdSig_, hist] = ta.macd(close, macdF, macdSl, macdSig)
+[diPlus, diMinus, adx] = ta.dmi(adxLen, adxLen)
+
+delta = vol * ((close - low) - (high - close)) / rng
+cvd   = ta.cum(delta)
+
+lr0   = ta.linreg(close, qLen, 0)
+lr1   = ta.linreg(close, qLen, 1)
+slope = lr0 - lr1
+corr  = ta.correlation(close, bar_index, qLen)
+er    = math.abs(close - close[qLen]) / math.max(math.sum(math.abs(close - close[1]), qLen), 1e-9)
+
+hiN = ta.highest(high, statH)
+loN = ta.lowest(low, statH)
+
+// ── Q · ход: качество движения × его размах ────────────────────────────────────
+r2    = f_01(nz(corr * corr))
+adxN  = f_01((adx - adxLo) / math.max(adxHi - adxLo, 1e-9))
+qual  = f_01(0.40 * r2 + 0.30 * f_01(er / erFull) + 0.30 * adxN)
+moveN = atr > 0 ? slope * qLen / atr : 0.0
+mag   = f_01(math.abs(moveN) / qFull)
+diBal = diPlus + diMinus > 0 ? (diPlus - diMinus) / (diPlus + diMinus) : 0.0
+agree = f_sgn(slope) * diBal > 0 ? 1.0 : 0.65   // DMI не согласен с наклоном — компонент душится
+cQ    = f_sgn(slope) * f_01(0.55 * qual + 0.45 * mag) * agree
+
+// ── L · расположение: порядок EMA и разнос ленты ───────────────────────────────
+stack   = (close > emaF ? 1.0 : -1.0) + (emaF > emaM ? 1.0 : -1.0)
+         + (emaM > emaS ? 1.0 : -1.0) + (close > emaA ? 1.0 : -1.0)
+spreadN = atr > 0 ? f_01(math.abs(emaF - emaS) / (spreadFull * atr)) : 0.0
+cL      = f_clamp((stack / 4.0) * (0.55 + 0.45 * spreadN), -1, 1)
+
+// ── S · структура: свинги, BOS и CHoCH ─────────────────────────────────────────
+// Пивот подтверждается через pivLen баров — уровень появляется с задержкой,
+// зато потом уже не переписывается.
+ph = ta.pivothigh(high, pivLen, pivLen)
+pl = ta.pivotlow(low, pivLen, pivLen)
+
+var float lastPH = na
+var float prevPH = na
+var float lastPL = na
+var float prevPL = na
+var bool  phTaken = true
+var bool  plTaken = true
+var int   phBar = na
+var int   plBar = na
+
+if not na(ph)
+    prevPH  := lastPH
+    lastPH  := ph
+    phBar   := bar_index - pivLen
+    phTaken := false
+if not na(pl)
+    prevPL  := lastPL
+    lastPL  := pl
+    plBar   := bar_index - pivLen
+    plTaken := false
+
+hh = not na(lastPH) and not na(prevPH) and lastPH > prevPH
+lh = not na(lastPH) and not na(prevPH) and lastPH < prevPH
+hl = not na(lastPL) and not na(prevPL) and lastPL > prevPL
+ll = not na(lastPL) and not na(prevPL) and lastPL < prevPL
+cS = 0.5 * ((hh ? 1.0 : lh ? -1.0 : 0.0) + (hl ? 1.0 : ll ? -1.0 : 0.0))
+
+evUp = not na(lastPH) and not phTaken and close > lastPH
+evDn = not na(lastPL) and not plTaken and close < lastPL
+// широкий бар может снять оба уровня — решает сторона закрытия
+int evSide = evUp and evDn ? (close >= open ? 1 : -1) : evUp ? 1 : evDn ? -1 : 0
+
+var int bias   = 0     // структурный уклон: куда был последний пробой
+var int evType = 0     // 0 — ничего, 1 — BOS (по тренду), 2 — CHoCH (слом характера)
+var int evDir  = 0
+var int evBar  = -100000
+
+if evUp
+    phTaken := true
+if evDn
+    plTaken := true
+if evSide != 0
+    evType := (evSide == 1 ? bias >= 0 : bias <= 0) ? 1 : 2
+    evDir  := evSide
+    evBar  := bar_index
+    bias   := evSide
+
+sinceEv    = bar_index - evBar
+bosFresh   = evType == 1 and sinceEv <= memBars
+chochFresh = evType == 2 and sinceEv <= memBars
+
+// ── M · импульс ────────────────────────────────────────────────────────────────
+histN = atr > 0 ? f_clamp(hist / (histFull * atr), -1, 1) : 0.0
+macdN = atr > 0 ? f_clamp(macdLine / (2.0 * histFull * atr), -1, 1) : 0.0
+rsiN  = f_clamp((rsi - 50.0) / rsiFull, -1, 1)
+rocN  = atr > 0 ? f_clamp((close - close[rocLen]) / (rocFull * atr), -1, 1) : 0.0
+cM    = f_clamp(0.35 * histN + 0.20 * macdN + 0.25 * rsiN + 0.20 * rocN, -1, 1)
+
+// ── V · участие ────────────────────────────────────────────────────────────────
+cvdSl = (cvd - cvd[cvdLen]) / math.max(volMa * cvdLen, 1e-9)
+upv   = math.sum(close > close[1] ? vol : 0.0, cvdLen)
+dnv   = math.sum(close < close[1] ? vol : 0.0, cvdLen)
+bal   = upv + dnv > 0 ? (upv - dnv) / (upv + dnv) : 0.0
+cV    = hasVol ? f_clamp(0.6 * f_clamp(cvdSl / cvdFull, -1, 1) + 0.4 * bal, -1, 1) : 0.0
+
+// ── H · старший таймфрейм ──────────────────────────────────────────────────────
+// тот же мини-движок, посчитанный в контексте старшего ТФ
+f_mini() =>
+    e1 = ta.ema(close, htfFast)
+    e2 = ta.ema(close, htfSlow)
+    a  = ta.atr(14)
+    s  = ta.linreg(close, htfQ, 0) - ta.linreg(close, htfQ, 1)
+    cr = ta.correlation(close, bar_index, htfQ)
+    d  = (close > e1 ? 1.0 : -1.0) + (e1 > e2 ? 1.0 : -1.0) + (s > 0 ? 1.0 : -1.0)
+    q  = f_01(0.5 * f_01(nz(cr * cr)) + 0.5 * f_01(math.abs(s) * htfQ / math.max(a, 1e-9) / 1.5))
+    (d / 3.0) * q
+
+f_miniLag(simple int lag) =>
+    v = f_mini()
+    v[lag]
+
+htfLag = htfClosed ? 1 : 0
+h1 = nz(request.security(syminfo.tickerid, htf1, f_miniLag(htfLag), lookahead = barmerge.lookahead_off))
+h2 = nz(request.security(syminfo.tickerid, htf2, f_miniLag(htfLag), lookahead = barmerge.lookahead_off))
+cH = f_clamp((wH1 * h1 + wH2 * h2) / math.max(wH1 + wH2, 1e-9), -1, 1)
+
+// ── скор тренда ────────────────────────────────────────────────────────────────
+wSum   = wQ + wL + wSt + wM + wV + wH
+raw    = wQ * cQ + wL * cL + wSt * cS + wM * cM + wV * cV + wH * cH
+trend0 = 100.0 * f_clamp(raw / math.max(wSum, 1e-9), -1, 1)
+trend  = smoothLen > 1 ? ta.ema(trend0, smoothLen) : trend0
+
+dir      = trend >= 0 ? 1 : -1
+strength = math.abs(trend)
+alive    = strength >= chopThr
+
+// возраст тренда — сколько баров прошло с последнего «мертвого» состояния
+var int calmBar = 0
+if not alive
+    calmBar := bar_index
+age = bar_index - calmBar
+
+// ── контекст: растяжение, дивергенция, климакс, затухание ──────────────────────
+extRaw = atr > 0 ? (close - emaM) / atr : 0.0
+extDir = extRaw * dir
+xExt   = f_01((extDir - extLo) / math.max(extFull - extLo, 1e-9))
+
+hiW    = ta.highest(high, divLen)[1]
+loW    = ta.lowest(low, divLen)[1]
+rsiHiW = ta.highest(rsi, divLen)[1]
+rsiLoW = ta.lowest(rsi, divLen)[1]
+cvdHiW = ta.highest(cvd, divLen)[1]
+cvdLoW = ta.lowest(cvd, divLen)[1]
+
+newHi = not na(hiW) and high > hiW
+newLo = not na(loW) and low  < loW
+dvBearR = newHi ? f_01((rsiHiW - rsi) / divRsi) : 0.0
+dvBullR = newLo ? f_01((rsi - rsiLoW) / divRsi) : 0.0
+dvBearC = hasVol and newHi ? f_01((cvdHiW - cvd) / math.max(volMa * divVol, 1e-9)) : 0.0
+dvBullC = hasVol and newLo ? f_01((cvd - cvdLoW) / math.max(volMa * divVol, 1e-9)) : 0.0
+dvBear  = hasVol ? 0.6 * dvBearR + 0.4 * dvBearC : dvBearR
+dvBull  = hasVol ? 0.6 * dvBullR + 0.4 * dvBullC : dvBullR
+xDiv0   = dir == 1 ? dvBear : dvBull
+xDiv    = ta.highest(xDiv0, divMem)
+
+rvol   = hasVol ? vol / volMa : 1.0
+xVol   = hasVol ? f_01((rvol - climaxLo) / math.max(climaxHi - climaxLo, 1e-9)) : 0.0
+qPk    = ta.highest(qual, decayLen)
+xDecay = qPk > 0 ? f_01((qPk - qual) / qPk / decayFull) : 0.0
+xAge   = f_01((age - ageLo) * 1.0 / math.max(ageHi - ageLo, 1))
+
+exh = f_01(0.30 * xExt + 0.26 * xDiv + 0.16 * xVol + 0.16 * xDecay + 0.12 * xAge)
+
+// сжатие: полосы Боллинджера внутри каналов Кельтнера
+bbDev   = bbMult * ta.stdev(close, bbLen)
+kcRng   = kcMult * ta.atr(bbLen)
+squeeze = bbDev < kcRng
+
+// энергия рынка: активность против собственной нормы
+atrNorm = ta.sma(atr, energyLen)
+volRat  = atrNorm > 0 ? atr / atrNorm : 1.0
+eVol    = f_01((rvol - eLo) / math.max(eHi - eLo, 1e-9))
+eAtr    = f_01((volRat - eLo) / math.max(eHi - eLo, 1e-9))
+energy  = hasVol ? 0.5 * eVol + 0.5 * eAtr : eAtr
+
+// ── откат: глубина, близость к ленте, остывание импульса ───────────────────────
+swHi = ta.highest(high, pbLook)
+swLo = ta.lowest(low, pbLook)
+retr = atr > 0 ? (dir == 1 ? (swHi - close) / atr : (close - swLo) / atr) : 0.0
+pbDepthQ = retr < pbLo ? f_01(retr / math.max(pbLo, 1e-9))
+         : retr <= pbHi ? 1.0
+         : f_01(1.0 - (retr - pbHi) / math.max(pbHi, 1e-9))
+nearRib = atr > 0 ? f_01(1.0 - math.abs(close - emaM) / (ribbonTol * atr)) : 0.0
+cooling = math.abs(hist) < math.abs(hist[1])
+pbQual  = f_01(0.50 * pbDepthQ + 0.30 * nearRib + 0.20 * (cooling ? 1.0 : 0.0))
+         * (cS * dir >= 0 ? 1.0 : 0.6)
+isPullback = alive and retr >= pbLo
+
+// ── фаза ───────────────────────────────────────────────────────────────────────
+momUp   = hist * dir > hist[1] * dir
+impulse = alive and extDir >= impulseExt and momUp
+ignite  = alive and bosFresh and evDir == dir and age <= igniteWin
+
+int phase = chochFresh ? 7
+          : alive and exh >= exhThr ? 6
+          : not alive ? (squeeze ? 1 : 0)
+          : ignite ? 2
+          : impulse ? 3
+          : isPullback ? 5
+          : 4
+
+var int phaseBar = 0
+if phase != phase[1]
+    phaseBar := bar_index
+phaseAge = bar_index - phaseBar
+
+// ── две меры: продолжение и разворот ───────────────────────────────────────────
+strN     = f_01((strength - chopThr) / math.max(strongThr * 1.25 - chopThr, 1e-9))
+htfAlign = f_01((1.0 + cH * dir) / 2.0)
+structOk = f_01((1.0 + cS * dir) / 2.0)
+revChoch = chochFresh ? f_01(1.0 - sinceEv * 1.0 / math.max(memBars, 1)) : 0.0
+
+cont = 100.0 * f_01(0.28 * strN + 0.20 * htfAlign + 0.18 * structOk + 0.18 * pbQual + 0.16 * energy)
+     * (1.0 - 0.65 * exh)
+rev  = 100.0 * f_01(0.30 * exh + 0.22 * xDiv + 0.20 * revChoch + 0.16 * xExt + 0.12 * (1.0 - htfAlign))
+     * f_01(0.30 + 0.70 * strN)
+
+// ── вердикт ────────────────────────────────────────────────────────────────────
+int verdict = not alive ? 3
+             : cont >= rev + margin and cont >= actThr ? 1
+             : rev >= cont + margin and rev >= actThr ? 2
+             : 0
+
+string vTxt = verdict == 1 ? "ЛОВИТЬ ПРОДОЛЖЕНИЕ"
+             : verdict == 2 ? "ИСКАТЬ РАЗВОРОТ"
+             : verdict == 3 ? "ФЛЭТ · ВНЕ РЫНКА"
+             : "СМЕШАННО · ЖДАТЬ"
+
+string hint = ""
+string hintShort = ""
+if phase == 0
+    hint := "Флэт: продолжения нет. Работать от краёв диапазона или стоять вне рынка."
+    hintShort := "края диапазона / вне рынка"
+else if phase == 1
+    hint := "Сжатие: края не фейдить, готовится импульс. Ждать пробой и идти за ним."
+    hintShort := "ждать пробой, края не фейдить"
+else if phase == 2
+    hint := "Зарождение: вход по первому откату к быстрой EMA, стоп за сломанным уровнем."
+    hintShort := "вход по первому откату"
+else if phase == 3
+    hint := "Разгон: по рынку уже поздно. Ждать откат к ленте, разворот пока не ловить."
+    hintShort := "ждать откат, не ловить разворот"
+else if phase == 4
+    hint := "Ход: продолжение работает. Добирать на откатах, разворот не искать."
+    hintShort := "добирать на откатах"
+else if phase == 5
+    hint := "Откат: зона входа по тренду у EMA " + str.tostring(lenF) + "/" + str.tostring(lenM)
+          + ". Триггер — закрытие бара в сторону тренда."
+    hintShort := "вход по тренду от ленты"
+else if phase == 6
+    hint := "Истощение: продолжение опасно, но разворот — только после слома структуры."
+    hintShort := "продолжение опасно, ждать слом"
+else
+    hint := "Слом структуры: ждать возврат к сломанному уровню и работать в новую сторону."
+    hintShort := "работать в новую сторону"
+
+// ── триггер входа по тренду ────────────────────────────────────────────────────
+crossBack = dir == 1 ? close > emaF and close[1] <= emaF[1] : close < emaF and close[1] >= emaF[1]
+barWith   = dir == 1 ? close > open : close < open
+barsOk    = not confirmed or barstate.isconfirmed
+
+var int lastTrigBar = -100000
+contTrigRaw = verdict == 1 and (phase == 5 or phase == 2 or phase == 4) and crossBack and barWith
+             and barsOk and bar_index - lastTrigBar > trigGap
+if contTrigRaw
+    lastTrigBar := bar_index
+contTrig = contTrigRaw
+
+chochNow  = evSide != 0 and evType == 2 and barsOk
+phaseNew  = phase != phase[1]
+verdictNew= verdict != verdict[1]
+
+// ── цвета ──────────────────────────────────────────────────────────────────────
+dirCol = dir == 1 ? cLong : cShort
+phCol  = phase == 0 ? cCalm
+       : phase == 1 ? cBrass
+       : phase == 6 ? cBrass
+       : phase == 7 ? (dir == 1 ? cShort : cLong)
+       : dirCol
+phTr   = phase == 5 ? 40 : phase == 4 ? 20 : phase == 0 ? 55 : 0
+
+// ── статистика фаз: что фаза давала через statH баров ──────────────────────────
+var array<int>   stN   = array.new_int(9, 0)
+var array<int>   stWin = array.new_int(9, 0)
+var array<float> stFwd = array.new_float(9, 0.0)
+var array<float> stMfe = array.new_float(9, 0.0)
+var array<float> stMae = array.new_float(9, 0.0)
+
+f_stat(int b, float fwd, float mfe, float mae) =>
+    array.set(stN,   b, array.get(stN, b) + 1)
+    array.set(stFwd, b, array.get(stFwd, b) + fwd)
+    array.set(stMfe, b, array.get(stMfe, b) + mfe)
+    array.set(stMae, b, array.get(stMae, b) + mae)
+    if fwd > 0
+        array.set(stWin, b, array.get(stWin, b) + 1)
+    b
+
+if statOn and barstate.isconfirmed and bar_index > statH + lenA
+    int   pPast = phase[statH]
+    int   dPast = dir[statH]
+    float aPast = atr[statH]
+    float cPast = close[statH]
+    if not na(aPast) and aPast > 0 and not na(cPast)
+        float fwd = (close - cPast) * dPast / aPast
+        float mfe = (dPast == 1 ? hiN - cPast : cPast - loN) / aPast
+        float mae = (dPast == 1 ? cPast - loN : hiN - cPast) / aPast
+        f_stat(pPast, fwd, mfe, mae)
+        f_stat(8, fwd, mfe, mae)
+
+// ── панель ─────────────────────────────────────────────────────────────────────
+plot(showMeters ? cont : na, "Продолжение", color = color.new(cLong, 78), style = plot.style_columns)
+plot(showMeters ? -rev : na, "Разворот",    color = color.new(cShort, 78), style = plot.style_columns)
+pZero  = plot(0.0, "Нулевая линия", color = color.new(color.gray, 100), editable = false)
+pTrend = plot(trend, "Тренд", color = phCol, linewidth = 2)
+fill(pTrend, pZero, color = color.new(dirCol, 88), title = "Заливка тренда")
+plot(showHtfLn ? cH * 100.0 : na, "Старший ТФ", color = color.new(cBrass, 45), linewidth = 1)
+
+hline(0.0, "Ноль", color = color.new(color.gray, 60))
+hline(chopThr,    "Тренд жив",     color = color.new(color.gray, 45), linestyle = hline.style_dotted)
+hline(-chopThr,   "Тренд жив −",   color = color.new(color.gray, 45), linestyle = hline.style_dotted)
+hline(strongThr,  "Сильный тренд", color = color.new(cBrass, 40), linestyle = hline.style_dashed)
+hline(-strongThr, "Сильный тренд −", color = color.new(cBrass, 40), linestyle = hline.style_dashed)
+bgcolor(color.new(phCol, 93), title = "Фон фазы")
+
+// ── график ─────────────────────────────────────────────────────────────────────
+ribCol = color.new(phCol, 30)
+plot(showRibbon ? emaF : na, "EMA быстрая",  color = ribCol, linewidth = 2, force_overlay = true)
+plot(showRibbon ? rib1 : na, "EMA лента 1",  color = color.new(phCol, 62), linewidth = 1, force_overlay = true)
+plot(showRibbon ? emaM : na, "EMA средняя",  color = color.new(phCol, 48), linewidth = 1, force_overlay = true)
+plot(showRibbon ? rib2 : na, "EMA лента 2",  color = color.new(phCol, 70), linewidth = 1, force_overlay = true)
+plot(showRibbon ? emaS : na, "EMA медленная",color = color.new(phCol, 20), linewidth = 2, force_overlay = true)
+plot(showRibbon ? emaA : na, "EMA якорная",  color = color.new(color.gray, 45), linewidth = 1, force_overlay = true)
+plot(showBands ? emaM + extFull * atr : na, "Перегрев вверх", color = color.new(cBrass, 55),
+     style = plot.style_circles, linewidth = 1, force_overlay = true)
+plot(showBands ? emaM - extFull * atr : na, "Перегрев вниз",  color = color.new(cBrass, 55),
+     style = plot.style_circles, linewidth = 1, force_overlay = true)
+
+pcCol = paintBars ? color.new(phCol, phTr) : na
+plotcandle(paintBars ? open : na, paintBars ? high : na, paintBars ? low : na, paintBars ? close : na,
+     "Окраска фазы", color = pcCol, wickcolor = pcCol, bordercolor = pcCol, force_overlay = true)
+
+plotshape(showSignal and contTrig and dir == 1 ? low : na, "Вход по тренду ↑", shape.triangleup,
+     location.absolute, color = cLong, size = size.small, force_overlay = true)
+plotshape(showSignal and contTrig and dir == -1 ? high : na, "Вход по тренду ↓", shape.triangledown,
+     location.absolute, color = cShort, size = size.small, force_overlay = true)
+
+// уровни структуры: что должно сломаться, чтобы тренд продолжился или развернулся
+var line lnH = na
+var line lnL = na
+if showStruct
+    if not na(ph)
+        line.delete(lnH)
+        lnH := line.new(phBar, lastPH, bar_index + 3, lastPH, color = color.new(cShort, 35),
+             style = line.style_dotted, width = 1, force_overlay = true)
+    else if not na(lnH)
+        line.set_x2(lnH, bar_index + 3)
+    if not na(pl)
+        line.delete(lnL)
+        lnL := line.new(plBar, lastPL, bar_index + 3, lastPL, color = color.new(cLong, 35),
+             style = line.style_dotted, width = 1, force_overlay = true)
+    else if not na(lnL)
+        line.set_x2(lnL, bar_index + 3)
+
+if showStruct and evSide != 0
+    label.new(bar_index, evSide == 1 ? high : low,
+         text = (evType == 1 ? "BOS" : "CHoCH") + (evSide == 1 ? " ↑" : " ↓"),
+         style = evSide == 1 ? label.style_label_down : label.style_label_up,
+         color = color.new(evType == 1 ? (evSide == 1 ? cLong : cShort) : cBrass, 25),
+         textcolor = color.white, size = size.tiny, force_overlay = true)
+
+// вердикт табличкой прямо у цены
+var label vLbl = na
+if showLabel and barstate.islast
+    label.delete(vLbl)
+    vLbl := label.new(bar_index + 3, close,
+         text = str.format(
+             "TIDE · {0} · {1}\n{2}   {3,number,#}\nтренд {4,number,#}   прод {5,number,#} / разв {6,number,#}\n{7} {8}   {9} {10}   энергия {11,number,#.0}×\nоткат {12,number,#.00} ATR   до EMA{13} {14,number,#.00} ATR\n{15}",
+             dir == 1 ? "LONG" : "SHORT", f_phase(phase), vTxt, math.max(cont, rev),
+             trend, cont, rev,
+             htf1, f_arrow(h1), htf2, f_arrow(h2), volRat,
+             retr, lenM, math.abs(extRaw), hint),
+         style = label.style_label_left,
+         color = color.new(verdict == 1 ? dirCol : verdict == 2 ? cBrass : cCalm, 82),
+         textcolor = chart.fg_color, size = size.small, textalign = text.align_left,
+         force_overlay = true)
+
+// ── панель вердикта ────────────────────────────────────────────────────────────
+var table tD = table.new(position.top_right, 3, 22, border_width = 1)
+
+f_row(table t, int r, string a, string b, string c, color bg, color tc) =>
+    table.cell(t, 0, r, a, text_color = color.gray,     text_size = size.tiny, text_halign = text.align_left,  bgcolor = bg)
+    table.cell(t, 1, r, b, text_color = tc,             text_size = size.tiny, text_halign = text.align_right, bgcolor = bg)
+    table.cell(t, 2, r, c, text_color = chart.fg_color, text_size = size.tiny, text_halign = text.align_right, bgcolor = bg)
+    r
+
+if showTable and barstate.islast
+    bgH = color.new(color.gray, 85)
+    int r = 0
+    f_row(tD, r, "TIDE", syminfo.ticker + " · " + timeframe.period, f_phase(phase), bgH, chart.fg_color)
+    r += 1
+    bgV = color.new(verdict == 1 ? dirCol : verdict == 2 ? cBrass : cCalm, 78)
+    table.cell(tD, 0, r, "ВЕРДИКТ", text_color = color.gray, text_size = size.tiny,
+         text_halign = text.align_left, bgcolor = bgV)
+    table.cell(tD, 1, r, vTxt, text_color = chart.fg_color, text_size = size.small,
+         text_halign = text.align_right, bgcolor = bgV)
+    table.cell(tD, 2, r, str.tostring(math.round(math.max(cont, rev))), text_color = chart.fg_color,
+         text_size = size.small, text_halign = text.align_right, bgcolor = bgV)
+    r += 1
+    f_row(tD, r, "ЧТО ДЕЛАТЬ", hintShort, "", na, chart.fg_color)
+    r += 1
+    f_row(tD, r, "Фаза", f_phase(phase) + " · " + (dir == 1 ? "LONG" : "SHORT"),
+         str.tostring(phaseAge) + " бар", na, phCol)
+    r += 1
+    f_row(tD, r, "Тренд", str.tostring(trend, "#.0"), f_bar2(trend / 100.0, 5), na, phCol)
+    r += 1
+    f_row(tD, r, "Продолжение", str.tostring(cont, "#.0"), f_bar(cont / 100.0, 10), na, cLong)
+    r += 1
+    f_row(tD, r, "Разворот", str.tostring(rev, "#.0"), f_bar(rev / 100.0, 10), na, cShort)
+    r += 1
+    if showComps
+        f_row(tD, r, "КОМПОНЕНТ", "ЗНАЧ", "−1 … +1", bgH, color.gray)
+        r += 1
+        f_row(tD, r, "Q ход",          str.tostring(cQ, "#.00"), f_bar2(cQ, 5), na, cQ > 0 ? cLong : cShort)
+        r += 1
+        f_row(tD, r, "L расположение", str.tostring(cL, "#.00"), f_bar2(cL, 5), na, cL > 0 ? cLong : cShort)
+        r += 1
+        f_row(tD, r, "S структура",    str.tostring(cS, "#.00"), f_bar2(cS, 5), na, cS > 0 ? cLong : cShort)
+        r += 1
+        f_row(tD, r, "M импульс",      str.tostring(cM, "#.00"), f_bar2(cM, 5), na, cM > 0 ? cLong : cShort)
+        r += 1
+        f_row(tD, r, "V участие",      hasVol ? str.tostring(cV, "#.00") : "нет объёма",
+             hasVol ? f_bar2(cV, 5) : "—", na, cV > 0 ? cLong : cShort)
+        r += 1
+        f_row(tD, r, "H старший ТФ",   str.tostring(cH, "#.00"),
+             htf1 + " " + f_arrow(h1) + "  " + htf2 + " " + f_arrow(h2), na, cH > 0 ? cLong : cShort)
+        r += 1
+    if showCtx
+        f_row(tD, r, "КОНТЕКСТ", "", "", bgH, color.gray)
+        r += 1
+        f_row(tD, r, "Истощение", str.tostring(exh, "#.00"), f_bar(exh, 10), na,
+             exh >= exhThr ? cBrass : chart.fg_color)
+        r += 1
+        f_row(tD, r, "Энергия",
+             (hasVol ? str.tostring(rvol, "#.0") + "× об · " : "") + str.tostring(volRat, "#.0") + "× ATR",
+             f_bar(energy, 10), na, energy < 0.35 ? cBrass : chart.fg_color)
+        r += 1
+        f_row(tD, r, "Откат от экстремума", str.tostring(retr, "#.00") + " ATR", f_bar(pbQual, 10), na, chart.fg_color)
+        r += 1
+        f_row(tD, r, "Растяжение от EMA" + str.tostring(lenM), str.tostring(extDir, "#.00") + " ATR",
+             f_bar(xExt, 10), na, xExt > 0.7 ? cBrass : chart.fg_color)
+        r += 1
+        f_row(tD, r, "Дивергенция", str.tostring(xDiv, "#.00"), f_bar(xDiv, 10), na,
+             xDiv > 0.5 ? cBrass : chart.fg_color)
+        r += 1
+        f_row(tD, r, "Структура",
+             evType == 0 ? "—" : (evType == 1 ? "BOS" : "CHoCH") + (evDir == 1 ? " ↑" : " ↓"),
+             evType == 0 ? "" : str.tostring(sinceEv) + " бар назад", na,
+             evType == 2 ? cBrass : chart.fg_color)
+        r += 1
+        f_row(tD, r, "Сжатие", squeeze ? "да" : "нет", squeeze ? "ждать пробой" : "", na,
+             squeeze ? cBrass : chart.fg_color)
+
+// ── таблица статистики фаз ─────────────────────────────────────────────────────
+var table tS = table.new(position.bottom_right, 6, 11, border_width = 1)
+
+f_srow(table t, int r, string a, string b, string c, string d, string e, string f, color bg, color tc) =>
+    table.cell(t, 0, r, a, text_color = tc,         text_size = size.tiny, text_halign = text.align_left,  bgcolor = bg)
+    table.cell(t, 1, r, b, text_color = chart.fg_color, text_size = size.tiny, text_halign = text.align_right, bgcolor = bg)
+    table.cell(t, 2, r, c, text_color = chart.fg_color, text_size = size.tiny, text_halign = text.align_right, bgcolor = bg)
+    table.cell(t, 3, r, d, text_color = chart.fg_color, text_size = size.tiny, text_halign = text.align_right, bgcolor = bg)
+    table.cell(t, 4, r, e, text_color = chart.fg_color, text_size = size.tiny, text_halign = text.align_right, bgcolor = bg)
+    table.cell(t, 5, r, f, text_color = color.gray,     text_size = size.tiny, text_halign = text.align_right, bgcolor = bg)
+    r
+
+if statOn and showStats and barstate.islast
+    bgH = color.new(color.gray, 85)
+    f_srow(tS, 0, "ФАЗА · через " + str.tostring(statH) + " бар", "БАРОВ", "ПРОДОЛЖИЛ", "ХОД, ATR", "MFE", "MAE", bgH, color.gray)
+    for i = 0 to 7
+        int n = array.get(stN, i)
+        float fwd = n > 0 ? array.get(stFwd, i) / n : na
+        float wr  = n > 0 ? 100.0 * array.get(stWin, i) / n : na
+        float mfe = n > 0 ? array.get(stMfe, i) / n : na
+        float mae = n > 0 ? array.get(stMae, i) / n : na
+        f_srow(tS, i + 1, f_phase(i), str.tostring(n),
+             n > 0 ? str.tostring(wr, "#.0") + "%" : "—",
+             n > 0 ? str.tostring(fwd, "#.000") : "—",
+             n > 0 ? str.tostring(mfe, "#.00") : "—",
+             n > 0 ? str.tostring(mae, "#.00") : "—",
+             i == phase ? color.new(phCol, 80) : na,
+             i == phase ? phCol : chart.fg_color)
+    int nb = array.get(stN, 8)
+    f_srow(tS, 9, "все бары (база)", str.tostring(nb),
+         nb > 0 ? str.tostring(100.0 * array.get(stWin, 8) / nb, "#.0") + "%" : "—",
+         nb > 0 ? str.tostring(array.get(stFwd, 8) / nb, "#.000") : "—",
+         nb > 0 ? str.tostring(array.get(stMfe, 8) / nb, "#.00") : "—",
+         nb > 0 ? str.tostring(array.get(stMae, 8) / nb, "#.00") : "—", bgH, color.gray)
+    f_srow(tS, 10, "фазу стоит торговать, если её строка обгоняет базу", "", "", "", "", "", bgH, color.gray)
+
+// ── алерты ─────────────────────────────────────────────────────────────────────
+alertcondition(contTrig, "TIDE · вход по тренду", "TIDE: продолжение тренда")
+alertcondition(contTrig and dir == 1,  "TIDE · продолжение LONG",  "TIDE: продолжение вверх")
+alertcondition(contTrig and dir == -1, "TIDE · продолжение SHORT", "TIDE: продолжение вниз")
+alertcondition(chochNow, "TIDE · слом структуры", "TIDE: CHoCH, характер движения сменился")
+alertcondition(phaseNew and barsOk, "TIDE · смена фазы", "TIDE: сменилась фаза тренда")
+alertcondition(verdictNew and barsOk, "TIDE · смена вердикта", "TIDE: сменился вердикт")
+
+if (contTrig or (verdictNew and barsOk))
+    alert(str.format("TIDE {0} {1} · {2} · {3} · {4} | тренд {5,number,#} прод {6,number,#} разв {7,number,#} | {8} {9} {10} {11} | откат {12,number,#.00} ATR, растяжение {13,number,#.00} ATR | {14}",
+         syminfo.ticker, timeframe.period, dir == 1 ? "LONG" : "SHORT", f_phase(phase), vTxt,
+         trend, cont, rev, htf1, f_arrow(h1), htf2, f_arrow(h2), retr, extDir, hint),
+         alert.freq_once_per_bar_close)
