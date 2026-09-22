@@ -450,10 +450,10 @@ flipS = verdict == -1 and verdict[1] != -1
 flip  = flipL or flipS
 
 // ── калибровка: что реально случилось после вердикта ───────────────────────────
-var array<int>   kN = array.new_int(4, 0)
-var array<int>   kW = array.new_int(4, 0)
-var array<float> kR = array.new_float(4, 0.0)
-var array<int>   kB = array.new_int(4, 0)
+var array<int>   bkN = array.new_int(4, 0)
+var array<int>   bkW = array.new_int(4, 0)
+var array<float> bkR = array.new_float(4, 0.0)
+var array<int>   bkB = array.new_int(4, 0)
 var float cumR  = 0.0
 var float peakR = 0.0
 var float ddR   = 0.0
@@ -490,11 +490,11 @@ if calibOn and simSide != 0
     if done
         float cst = simRisk > 0 ? costTicks * syminfo.mintick / simRisk : 0.0
         float rNet = r - cst
-        array.set(kN, simBk, array.get(kN, simBk) + 1)
-        array.set(kR, simBk, array.get(kR, simBk) + rNet)
-        array.set(kB, simBk, array.get(kB, simBk) + (bar_index - simBar))
+        array.set(bkN, simBk, array.get(bkN, simBk) + 1)
+        array.set(bkR, simBk, array.get(bkR, simBk) + rNet)
+        array.set(bkB, simBk, array.get(bkB, simBk) + (bar_index - simBar))
         if rNet > 0
-            array.set(kW, simBk, array.get(kW, simBk) + 1)
+            array.set(bkW, simBk, array.get(bkW, simBk) + 1)
         cumR  += rNet
         peakR := math.max(peakR, cumR)
         ddR   := math.max(ddR, peakR - cumR)
@@ -680,18 +680,18 @@ if calibOn and showCal and barstate.islast
     names = array.from("< 45", "45–60", "60–75", "≥ 75")
     float bestR = -1e9
     for i = 0 to 3
-        if array.get(kN, i) > 0
-            bestR := math.max(bestR, array.get(kR, i) / array.get(kN, i))
+        if array.get(bkN, i) > 0
+            bestR := math.max(bestR, array.get(bkR, i) / array.get(bkN, i))
     int totN = 0
     int totW = 0
     for i = 0 to 3
-        int n = array.get(kN, i)
-        float rr = n > 0 ? array.get(kR, i) / n : na
-        float wr = n > 0 ? 100.0 * array.get(kW, i) / n : na
-        float bs = n > 0 ? array.get(kB, i) * 1.0 / n : na
+        int n = array.get(bkN, i)
+        float rr = n > 0 ? array.get(bkR, i) / n : na
+        float wr = n > 0 ? 100.0 * array.get(bkW, i) / n : na
+        float bs = n > 0 ? array.get(bkB, i) * 1.0 / n : na
         bool hot = n > 0 and not na(rr) and math.abs(rr - bestR) < 1e-9
         totN += n
-        totW += array.get(kW, i)
+        totW += array.get(bkW, i)
         f_krow(tK, i + 1, array.get(names, i), str.tostring(n),
              n > 0 ? str.tostring(wr, "#.0") + "%" : "—",
              n > 0 ? f_sig(rr, "#.000") : "—",
