@@ -1,0 +1,817 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="Презентация доклада «Национальная и мировая валютные системы»: 16 слайдов от Парижской системы 1867 года до цифрового рубля.">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style>
+<title>Национальная и мировая валютные системы — презентация</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Old+Standard+TT:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --paper:#F1F3EE;
+  --paper-2:#E6EAE3;
+  --ink:#14231F;
+  --ink-2:#4D5B56;
+  --rule:#C9D1CB;
+  --green:#1E5B4A;
+  --green-soft:#9CC3B4;
+  --gold:#A57F22;
+  --gold-soft:#E3CF97;
+  --serial:#A63A2B;
+  --tip-bg:#14231F;
+  --tip-ink:#F1F3EE;
+  --display:"Old Standard TT", "Times New Roman", Georgia, serif;
+  --sans:"IBM Plex Sans", "Segoe UI", Roboto, Arial, sans-serif;
+  --mono:"IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --paper:#0F1816; --paper-2:#17231F; --ink:#E4EBE6; --ink-2:#A3B2AC; --rule:#2C3B36;
+    --green:#6DBBA2; --green-soft:#2F5B4E; --gold:#D8B35A; --gold-soft:#5C4A1E; --serial:#E0806F;
+    --tip-bg:#E4EBE6; --tip-ink:#0F1816;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --paper:#0F1816; --paper-2:#17231F; --ink:#E4EBE6; --ink-2:#A3B2AC; --rule:#2C3B36;
+  --green:#6DBBA2; --green-soft:#2F5B4E; --gold:#D8B35A; --gold-soft:#5C4A1E; --serial:#E0806F;
+  --tip-bg:#E4EBE6; --tip-ink:#0F1816;
+}
+
+html{height:100%;box-sizing:border-box}
+*,*::before,*::after{box-sizing:inherit}
+body{height:100%;margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:clamp(15px,1.25vw,19px);line-height:1.55;overflow:hidden;-webkit-font-smoothing:antialiased}
+
+.app{height:100%;display:grid;grid-template-rows:auto minmax(0,1fr) auto;grid-template-columns:minmax(0,1fr)}
+.bar{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px clamp(16px,4vw,56px);border-bottom:1px solid var(--rule)}
+.bar .mark{font-family:var(--display);font-size:1.05em;letter-spacing:.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar .mark i{color:var(--ink-2)}
+.serial{font-family:var(--mono);font-size:13px;color:var(--serial);letter-spacing:.14em;white-space:nowrap;font-variant-numeric:tabular-nums}
+
+.stage{position:relative;overflow:hidden}
+.slide{position:absolute;inset:0;overflow-y:auto;padding-block:clamp(24px,5vh,64px);padding-inline:clamp(16px,6vw,96px);opacity:0;visibility:hidden;transform:translateX(24px);transition:opacity .45s ease,transform .45s ease,visibility 0s linear .45s}
+.slide.on{opacity:1;visibility:visible;transform:none;transition:opacity .45s ease,transform .45s ease}
+.slide.prev{transform:translateX(-24px)}
+.inner{max-width:1180px;margin-inline:auto;min-height:100%;display:flex;flex-direction:column;justify-content:center;gap:clamp(18px,3vh,32px)}
+
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--green)}
+h1,h2,h3{font-family:var(--display);font-weight:400;margin:0;text-wrap:balance;line-height:1.08}
+h1{font-size:clamp(40px,6.2vw,92px);letter-spacing:-.01em}
+h2{font-size:clamp(30px,3.7vw,56px)}
+h3{font-size:clamp(20px,1.7vw,26px)}
+p{margin:0;max-width:62ch}
+.lead{font-size:1.15em;color:var(--ink-2);max-width:56ch}
+em.g{font-style:normal;color:var(--gold)}
+strong{font-weight:600}
+
+/* кнопки навигации */
+.nav{display:flex;align-items:center;gap:12px;padding:10px clamp(16px,4vw,56px);border-top:1px solid var(--rule)}
+.nav .progress{flex:1;height:2px;background:var(--rule);position:relative}
+.nav .progress span{position:absolute;inset:0 auto 0 0;background:var(--green);transition:width .45s ease}
+button{font:inherit;font-size:14px;color:var(--ink);background:transparent;border:1px solid var(--rule);border-radius:3px;padding:7px 12px;cursor:pointer;line-height:1.2}
+button:hover{border-color:var(--green);color:var(--green)}
+button:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--green);outline-offset:2px}
+.nav .arrow{width:40px;padding:7px 0;font-size:16px}
+.hint{font-family:var(--mono);font-size:11px;color:var(--ink-2);letter-spacing:.06em}
+
+/* оглавление */
+.toc{position:absolute;inset:0;background:var(--paper);overflow-y:auto;padding-block:32px;padding-inline:clamp(16px,6vw,96px);z-index:5}
+.toc ol{list-style:none;margin:0 auto;padding:0;max-width:1000px;display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:0 32px;counter-reset:s}
+.toc li button{width:100%;text-align:left;border:0;border-bottom:1px solid var(--rule);border-radius:0;padding:12px 0;display:flex;gap:14px;font-size:16px}
+.toc li button b{font-family:var(--mono);font-weight:400;color:var(--serial);font-size:13px;padding-top:2px;min-width:2.2em}
+
+/* титульный */
+.title-grid{display:grid;grid-template-columns:1.25fr 1fr;align-items:center;gap:clamp(20px,4vw,64px)}
+.rosette{width:100%;aspect-ratio:1;max-width:100%;display:block}
+.meta{display:flex;flex-wrap:wrap;gap:8px 28px;font-family:var(--mono);font-size:13px;color:var(--ink-2);letter-spacing:.04em}
+.denom{font-family:var(--display);font-style:italic;color:var(--gold);font-size:1.25em}
+
+/* большие цифры */
+.figs{display:grid;grid-template-columns:repeat(3,1fr);gap:0;border-top:1px solid var(--ink)}
+.fig{padding:22px 24px 8px 0;border-right:1px solid var(--rule)}
+.fig + .fig{padding-left:24px}
+.fig:last-child{border-right:0}
+.fig .n{font-family:var(--display);font-size:clamp(46px,5.4vw,84px);line-height:1;color:var(--green);font-variant-numeric:lining-nums}
+.fig .n small{font-size:.42em;color:var(--ink-2)}
+.fig p{margin-top:12px;color:var(--ink-2);font-size:.95em}
+.src{font-family:var(--mono);font-size:11.5px;color:var(--ink-2);letter-spacing:.02em}
+
+/* уровни систем */
+.levels{display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(12px,2vw,24px)}
+.level{border:1px solid var(--rule);padding:20px 22px;display:flex;flex-direction:column;gap:10px;background:var(--paper)}
+.level.hl{border-color:var(--green);background:var(--paper-2)}
+.level .k{font-family:var(--mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2)}
+.level .ex{margin-top:auto;padding-top:10px;border-top:1px dashed var(--rule);font-size:.9em;color:var(--ink-2)}
+.formula{font-family:var(--display);font-size:clamp(20px,2vw,30px);display:flex;flex-wrap:wrap;align-items:baseline;gap:.4em}
+.formula span{color:var(--ink-2);font-size:.7em;font-family:var(--sans)}
+
+/* элементы НВС */
+.els{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--ink)}
+.el{padding:16px 20px 16px 0;border-bottom:1px solid var(--rule)}
+.el h3{font-size:clamp(18px,1.45vw,22px);margin-bottom:6px}
+.el p{font-size:.9em;color:var(--ink-2)}
+.el:nth-child(3n+2),.el:nth-child(3n+3){padding-left:20px;border-left:1px solid var(--rule)}
+
+/* пары НВС — МВС */
+.pairs{border-top:1px solid var(--ink)}
+.pairs .hd,.pair{display:grid;grid-template-columns:1fr 40px 1fr;align-items:center;gap:8px}
+.pairs .hd{padding:10px 0;font-family:var(--mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2);border-bottom:1px solid var(--rule)}
+.pair{padding:9px 0;border-bottom:1px solid var(--rule);transition:background .2s}
+.pair:hover,.pair:focus-visible{background:var(--paper-2)}
+.pair .ar{text-align:center;color:var(--gold);font-family:var(--display)}
+.pair div:last-child{color:var(--green)}
+
+/* таймлайн */
+.scroll-x{overflow-x:auto;padding-bottom:6px}
+.tl{min-width:680px;position:relative}
+.tl .axis{position:relative;height:26px;border-top:1px solid var(--ink);margin-top:8px}
+.tl .axis span{position:absolute;top:6px;transform:translateX(-50%);font-family:var(--mono);font-size:12px;color:var(--ink-2)}
+.tl .bands{position:relative;height:150px}
+.band{position:absolute;bottom:0;border-radius:2px 2px 0 0;padding:10px 10px;display:flex;flex-direction:column;justify-content:flex-start;overflow:hidden;cursor:default}
+.band b{font-family:var(--display);font-weight:400;font-size:clamp(17px,1.5vw,22px);line-height:1.1}
+.band small{font-family:var(--mono);font-size:11px;opacity:.85}
+.band.gold{background:var(--gold-soft);color:var(--ink)}
+.band.fiat{background:var(--green);color:var(--paper)}
+.tl .ev{position:absolute;bottom:0;width:0;border-left:1px dashed var(--ink-2);height:170px}
+.tl .ev i{position:absolute;top:-4px;left:4px;font-style:normal;font-family:var(--mono);font-size:11px;color:var(--ink-2);white-space:nowrap}
+.legend{display:flex;flex-wrap:wrap;gap:8px 24px;font-size:.88em;color:var(--ink-2)}
+.legend span{display:inline-flex;align-items:center;gap:8px}
+.legend i{width:14px;height:14px;border-radius:2px;display:inline-block}
+
+/* колонки */
+.two{display:grid;grid-template-columns:1fr 1fr;gap:clamp(20px,4vw,56px)}
+.col{display:flex;flex-direction:column;gap:12px}
+.col .when{font-family:var(--mono);font-size:13px;color:var(--gold);letter-spacing:.06em}
+ul.dash{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:8px}
+ul.dash li{padding-left:22px;position:relative;max-width:60ch}
+ul.dash li::before{content:"—";position:absolute;left:0;color:var(--gold)}
+
+/* Бреттон-Вудс */
+.bw{display:grid;grid-template-columns:auto 1fr;gap:clamp(20px,4vw,56px);align-items:start}
+.coin{width:clamp(150px,17vw,230px);aspect-ratio:1;border-radius:50%;border:1px solid var(--gold);display:grid;place-items:center;text-align:center;position:relative;color:var(--gold)}
+.coin::before{content:"";position:absolute;inset:8px;border-radius:50%;border:1px dashed var(--gold);opacity:.7}
+.coin b{font-family:var(--display);font-weight:400;font-size:clamp(40px,4.4vw,64px);line-height:1;display:block}
+.coin small{font-family:var(--mono);font-size:11px;letter-spacing:.1em;color:var(--ink-2)}
+.facts{display:grid;grid-template-columns:repeat(3,1fr);gap:0;border-top:1px solid var(--ink)}
+.facts div{padding:12px 16px 12px 0}
+.facts div+div{padding-left:16px;border-left:1px solid var(--rule)}
+.facts b{display:block;font-family:var(--display);font-weight:400;font-size:clamp(22px,2vw,30px);color:var(--green)}
+.facts span{font-size:.88em;color:var(--ink-2)}
+.quote{border-left:2px solid var(--gold);padding:4px 0 4px 18px;max-width:64ch}
+.quote b{font-family:var(--display);font-weight:400;font-size:1.2em}
+
+/* принципы */
+.princ{display:grid;grid-template-columns:repeat(2,1fr);gap:0 clamp(20px,4vw,56px)}
+.pr{display:grid;grid-template-columns:auto 1fr;gap:16px;padding:16px 0;border-top:1px solid var(--rule)}
+.pr .glyph{font-family:var(--display);font-size:34px;line-height:1;color:var(--gold);width:1.2em}
+.pr h3{margin-bottom:4px}
+.pr p{color:var(--ink-2);font-size:.93em}
+
+/* диаграммы */
+.chart{display:flex;flex-direction:column;gap:6px}
+.row{display:grid;grid-template-columns:minmax(120px,210px) 1fr;gap:14px;align-items:center;padding:3px 0;border-radius:2px}
+.row .lbl{font-size:.95em;line-height:1.25}
+.row .track{position:relative;height:30px}
+.row .fill{position:absolute;left:0;top:3px;bottom:3px;background:var(--green-soft);border-radius:0 3px 3px 0;transition:width .8s cubic-bezier(.2,.7,.2,1)}
+.row.hl .fill{background:var(--green)}
+.row .val{position:absolute;top:50%;transform:translateY(-50%);font-family:var(--mono);font-size:13px;font-variant-numeric:tabular-nums;color:var(--ink);padding-left:8px;white-space:nowrap}
+.row:hover .fill,.row:focus-visible .fill{filter:brightness(.92)}
+.grid-ticks{display:grid;grid-template-columns:minmax(120px,210px) 1fr;gap:14px}
+.ticks{position:relative;height:18px;border-top:1px solid var(--rule)}
+.ticks span{position:absolute;top:3px;transform:translateX(-50%);font-family:var(--mono);font-size:11px;color:var(--ink-2)}
+.chart .gl{position:absolute;top:-4px;bottom:-4px;width:1px;background:var(--rule);opacity:.6}
+.tip{position:fixed;z-index:10;pointer-events:none;background:var(--tip-bg);color:var(--tip-ink);font-size:13px;line-height:1.4;padding:8px 10px;border-radius:3px;max-width:280px;opacity:0;transition:opacity .12s}
+.tip.show{opacity:1}
+.chart-wrap{display:grid;grid-template-columns:1fr 1.15fr;gap:clamp(20px,4vw,56px);align-items:center}
+
+/* тенденции */
+.trends{display:grid;grid-template-columns:repeat(5,1fr);gap:0;border-top:1px solid var(--ink)}
+.tr{padding:16px 16px 16px 0;display:flex;flex-direction:column;gap:8px}
+.tr+.tr{padding-left:16px;border-left:1px solid var(--rule)}
+.tr .sym{font-family:var(--display);font-size:30px;color:var(--gold);line-height:1}
+.tr p{font-size:.9em;color:var(--ink-2)}
+
+/* цифровой рубль */
+.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:0;position:relative}
+.step{padding:18px 16px 0 0;position:relative;border-top:2px solid var(--rule)}
+.step.now{border-top-color:var(--green)}
+.step::before{content:"";position:absolute;top:-7px;left:0;width:12px;height:12px;border-radius:50%;background:var(--paper);border:2px solid var(--rule)}
+.step.now::before{background:var(--green);border-color:var(--green)}
+.step .d{font-family:var(--mono);font-size:13px;color:var(--serial);letter-spacing:.06em}
+.step h3{margin:6px 0}
+.step p{font-size:.9em;color:var(--ink-2)}
+.parity{font-family:var(--display);font-size:clamp(56px,7vw,110px);line-height:1;color:var(--green)}
+.forms{display:flex;flex-wrap:wrap;gap:8px}
+.chip{font-family:var(--mono);font-size:12px;letter-spacing:.06em;border:1px solid var(--rule);border-radius:999px;padding:5px 12px;color:var(--ink-2)}
+.chip.on{border-color:var(--green);color:var(--green)}
+
+/* выводы */
+.concl{display:grid;grid-template-columns:repeat(2,1fr);gap:0 clamp(20px,4vw,56px);counter-reset:c}
+.concl p{padding:14px 0;border-top:1px solid var(--rule);max-width:none}
+.concl p b{font-family:var(--display);font-weight:400;font-size:1.15em;display:block;margin-bottom:4px;color:var(--green)}
+
+.refs{columns:2;column-gap:48px;font-size:.86em;color:var(--ink-2);padding-left:1.4em;margin:0}
+.refs li{break-inside:avoid;margin-bottom:8px}
+.refs a{color:var(--green);word-break:break-word}
+
+@media (max-width:900px){
+  .title-grid,.two,.chart-wrap,.bw{grid-template-columns:1fr}
+  .rosette{max-width:320px;margin-inline:auto}
+  .levels{grid-template-columns:1fr}
+  .els{grid-template-columns:1fr 1fr}
+  .el:nth-child(3n+2),.el:nth-child(3n+3){padding-left:0;border-left:0}
+  .el:nth-child(even){padding-left:16px;border-left:1px solid var(--rule)}
+  .trends{grid-template-columns:1fr 1fr}
+  .tr:nth-child(odd){padding-left:0;border-left:0}
+  .steps{grid-template-columns:1fr 1fr;row-gap:24px}
+  .princ,.concl{grid-template-columns:1fr}
+  .refs{columns:1}
+  .hint{display:none}
+}
+@media (max-width:640px){
+  #fsBtn{display:none}
+  .nav{gap:8px}
+}
+@media (max-width:560px){
+  .figs,.facts{grid-template-columns:1fr}
+  .fig,.fig+.fig,.facts div,.facts div+div{padding-left:0;border-left:0;border-right:0;border-bottom:1px solid var(--rule)}
+  .els,.trends,.steps{grid-template-columns:1fr}
+  .el:nth-child(even),.tr+.tr{padding-left:0;border-left:0}
+  .pairs .hd,.pair{grid-template-columns:1fr 24px 1fr;font-size:.9em}
+  .row,.grid-ticks{grid-template-columns:100px 1fr}
+  .bar .mark{font-size:.95em}
+}
+@media (prefers-reduced-motion:reduce){
+  .slide,.slide.on,.row .fill,.nav .progress span{transition:none}
+}
+</style>
+<style>
+a.sitelink{font-size:14px;color:var(--ink);border:1px solid var(--rule);border-radius:3px;padding:7px 12px;line-height:1.2;text-decoration:none;white-space:nowrap}
+a.sitelink:hover{border-color:var(--green);color:var(--green)}
+a.sitelink:focus-visible{outline:2px solid var(--green);outline-offset:2px}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <header class="bar">
+    <div class="mark">Национальная и мировая валютные системы <i>· доклад</i></div>
+    <div class="serial" id="serial" aria-live="polite">№ 01 / 16</div>
+  </header>
+
+  <main class="stage" id="stage">
+
+    <!-- 1 -->
+    <section class="slide" data-title="Титульный слайд">
+      <div class="inner">
+        <div class="title-grid">
+          <div style="display:flex;flex-direction:column;gap:24px">
+            <div class="eyebrow">Тема 2 · Валютные отношения в мировой экономике</div>
+            <h1>Национальная и&nbsp;мировая валютные системы</h1>
+            <p class="lead">Как государства организуют обмен валют — от золотой монеты 1867 года до цифрового рубля 2026-го.</p>
+            <div class="meta"><span>Доклад</span><span>2026</span><span class="denom">Вопрос № 4</span></div>
+          </div>
+          <canvas class="rosette" id="rosette" aria-hidden="true"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2 -->
+    <section class="slide" data-title="Масштаб валютных отношений">
+      <div class="inner">
+        <div class="eyebrow">Введение · почему это важно</div>
+        <h2>Валютные системы обслуживают триллионы долларов в&nbsp;день</h2>
+        <div class="figs">
+          <div class="fig"><div class="n">9,6 <small>трлн $</small></div><p>среднедневной оборот мирового валютного рынка в апреле 2025 г.</p><div class="src">БМР, обследование 2025</div></div>
+          <div class="fig"><div class="n">57 <small>%</small></div><p>мировых валютных резервов хранится в долларах США (I кв. 2026 г.)</p><div class="src">МВФ, COFER</div></div>
+          <div class="fig"><div class="n">53,7 <small>%</small></div><p>российского экспорта в 2025 г. оплачено в рублях</p><div class="src">Банк России</div></div>
+        </div>
+        <p class="lead">Чтобы такой поток платежей был предсказуемым, нужны правила: чем платить, по какому курсу менять, в чём хранить резервы. Эти правила и есть валютная система.</p>
+      </div>
+    </section>
+
+    <!-- 3 -->
+    <section class="slide" data-title="Понятие валютной системы">
+      <div class="inner">
+        <div class="eyebrow">I · Понятия</div>
+        <h2>Валютная система — форма организации валютных отношений</h2>
+        <div class="formula">Валютные отношения <span>— содержание,</span> валютная система <span>— организационная форма, закреплённая законом или договором</span></div>
+        <div class="levels">
+          <div class="level"><div class="k">Уровень 1</div><h3>Национальная</h3><p>Форма организации валютных отношений одной страны, закреплённая её законодательством.</p><div class="ex">Россия: рубль, 173-ФЗ, Банк России</div></div>
+          <div class="level"><div class="k">Уровень 2</div><h3>Региональная</h3><p>Договорная форма организации валютных отношений группы стран.</p><div class="ex">Еврозона: 21 страна с 1 января 2026 г.</div></div>
+          <div class="level hl"><div class="k">Уровень 3</div><h3>Мировая</h3><p>Глобальная форма, закреплённая межгосударственными соглашениями.</p><div class="ex">Ямайская система, надзор МВФ</div></div>
+        </div>
+        <p>Исторически первична <strong>национальная</strong> система: мировая складывается на её основе, когда валюты ведущих стран начинают служить международным платёжным и резервным средством.</p>
+      </div>
+    </section>
+
+    <!-- 4 -->
+    <section class="slide" data-title="Элементы национальной валютной системы">
+      <div class="inner">
+        <div class="eyebrow">I · Национальная валютная система</div>
+        <h2>Девять элементов национальной системы</h2>
+        <div class="els">
+          <div class="el"><h3>Национальная валюта</h3><p>Законное платёжное средство — рубль в наличной, безналичной и цифровой форме</p></div>
+          <div class="el"><h3>Конвертируемость</h3><p>Условия обмена на иностранные валюты по текущим и капитальным операциям</p></div>
+          <div class="el"><h3>Паритет</h3><p>Основа соотношения с другими валютами: раньше золото, сегодня рынок</p></div>
+          <div class="el"><h3>Режим курса</h3><p>Фиксированный, плавающий или промежуточный</p></div>
+          <div class="el"><h3>Валютное регулирование</h3><p>Правила операций, ограничения, валютный контроль</p></div>
+          <div class="el"><h3>Валютная ликвидность</h3><p>Резервы: валюта, золото, позиция в МВФ, СДР</p></div>
+          <div class="el"><h3>Международные расчёты</h3><p>Аккредитивы, инкассо, банковские переводы</p></div>
+          <div class="el"><h3>Валютный рынок и рынок золота</h3><p>Порядок торговли, участники, инфраструктура</p></div>
+          <div class="el"><h3>Органы регулирования</h3><p>Центральный банк, минфин, налоговая и таможня</p></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5 -->
+    <section class="slide" data-title="Национальная и мировая: сопоставление">
+      <div class="inner">
+        <div class="eyebrow">II · Мировая валютная система</div>
+        <h2>Каждому элементу — свой аналог на мировом уровне</h2>
+        <div class="pairs" role="table" aria-label="Сопоставление элементов">
+          <div class="hd" role="row"><div role="columnheader">Национальная система — закон страны</div><div></div><div role="columnheader">Мировая система — межгосударственный договор</div></div>
+          <div class="pair" role="row" tabindex="0"><div>Национальная валюта</div><div class="ar">→</div><div>Резервные валюты и СДР</div></div>
+          <div class="pair" role="row" tabindex="0"><div>Конвертируемость валюты</div><div class="ar">→</div><div>Условия взаимной конвертируемости</div></div>
+          <div class="pair" role="row" tabindex="0"><div>Паритет валюты</div><div class="ar">→</div><div>Унифицированный режим паритетов</div></div>
+          <div class="pair" role="row" tabindex="0"><div>Режим курса</div><div class="ar">→</div><div>Регламентация режимов курсов</div></div>
+          <div class="pair" role="row" tabindex="0"><div>Валютные ограничения</div><div class="ar">→</div><div>Межгосударственное регулирование ограничений</div></div>
+          <div class="pair" role="row" tabindex="0"><div>Резервы страны</div><div class="ar">→</div><div>Регулирование мировой валютной ликвидности</div></div>
+          <div class="pair" role="row" tabindex="0"><div>Правила расчётов</div><div class="ar">→</div><div>Унификация векселей и чеков</div></div>
+          <div class="pair" role="row" tabindex="0"><div>Валютный рынок и рынок золота</div><div class="ar">→</div><div>Мировые валютные рынки и рынки золота</div></div>
+          <div class="pair" role="row" tabindex="0"><div>Центральный банк, минфин</div><div class="ar">→</div><div>МВФ, Банк международных расчётов</div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6 -->
+    <section class="slide" data-title="Эволюция: четыре системы">
+      <div class="inner">
+        <div class="eyebrow">II · Эволюция мировой валютной системы</div>
+        <h2>Четыре системы за 160 лет: от золота к плавающим курсам</h2>
+        <div class="scroll-x">
+          <div class="tl" id="timeline"></div>
+        </div>
+        <div class="legend"><span><i style="background:var(--gold-soft)"></i>Золото в основе системы</span><span><i style="background:var(--green)"></i>Золото демонетизировано</span><span><i style="border-left:1px dashed var(--ink-2);width:1px;border-radius:0"></i>Ключевые события</span></div>
+        <p>Каждая смена системы — ответ на кризис предыдущей: золота не хватало растущей экономике, а привязка к валюте одной страны сталкивала её интересы с потребностями всего мира.</p>
+      </div>
+    </section>
+
+    <!-- 7 -->
+    <section class="slide" data-title="Парижская и Генуэзская системы">
+      <div class="inner">
+        <div class="eyebrow">II · Эволюция · золотой век</div>
+        <h2>Золото как мера всех валют</h2>
+        <div class="two">
+          <div class="col">
+            <div class="when">1867 · ПАРИЖСКАЯ КОНФЕРЕНЦИЯ</div>
+            <h3>Парижская система</h3>
+            <p><strong>Золотомонетный стандарт.</strong></p>
+            <ul class="dash">
+              <li>у каждой валюты официальное золотое содержание;</li>
+              <li>банкноты свободно меняются на золото, золото свободно вывозится;</li>
+              <li>курс колеблется лишь в пределах «золотых точек» — стоимости пересылки золота.</li>
+            </ul>
+            <p class="src">Распалась в Первую мировую войну: воюющие страны прекратили размен.</p>
+          </div>
+          <div class="col">
+            <div class="when">1922 · ГЕНУЭЗСКАЯ КОНФЕРЕНЦИЯ</div>
+            <h3>Генуэзская система</h3>
+            <p><strong>Золотодевизный стандарт.</strong></p>
+            <ul class="dash">
+              <li>наряду с золотом в резервах — девизы: фунт стерлингов и доллар;</li>
+              <li>размен ограничен: на слитки (Великобритания, Франция) или на девизы;</li>
+              <li>свободно колеблющиеся курсы.</li>
+            </ul>
+            <p class="src">Разрушена Великой депрессией: Великобритания отменила размен в 1931 г., США — в 1933 г.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 8 -->
+    <section class="slide" data-title="Бреттон-Вудская система">
+      <div class="inner">
+        <div class="eyebrow">II · Эволюция · 1944–1973</div>
+        <h2>Бреттон-Вудс: доллар «как золото»</h2>
+        <div class="bw">
+          <div class="coin"><div><b>$35</b><small>ЗА ТРОЙСКУЮ УНЦИЮ</small></div></div>
+          <div class="col" style="gap:18px">
+            <div class="facts">
+              <div><b>44</b><span>государства подписали соглашение в июле 1944 г.</span></div>
+              <div><b>±1%</b><span>допустимое отклонение курса от паритета к доллару</span></div>
+              <div><b>МВФ, МБРР</b><span>институты надзора и кредитования</span></div>
+            </div>
+            <div class="quote"><b>Дилемма Триффина.</b> Чтобы миру хватало ликвидности, США должны выпускать доллары за рубеж; чем больше долларов накапливается, тем меньше доверия к их размену на золото.</div>
+            <ul class="dash">
+              <li><strong>15 августа 1971 г.</strong> — Р. Никсон приостановил обмен долларов на золото;</li>
+              <li><strong>декабрь 1971 г.</strong> — Смитсоновское соглашение: $38 за унцию, коридор ±2,25%;</li>
+              <li><strong>1973 г.</strong> — ведущие страны перешли к плавающим курсам.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 9 -->
+    <section class="slide" data-title="Ямайская система">
+      <div class="inner">
+        <div class="eyebrow">II · Эволюция · с 1976 г. по сей день</div>
+        <h2>Ямайская система: четыре принципа</h2>
+        <p class="lead">Соглашение в Кингстоне (январь 1976 г.), поправка к Уставу МВФ вступила в силу в апреле 1978 г.</p>
+        <div class="princ">
+          <div class="pr"><div class="glyph">⊕</div><div><h3>Стандарт СДР</h3><p>Задуман вместо золотодевизного. На деле основой стал многовалютный стандарт с доминированием доллара.</p></div></div>
+          <div class="pr"><div class="glyph">Au</div><div><h3>Демонетизация золота</h3><p>Отменены официальная цена золота и золотые паритеты: золото больше не мера стоимости.</p></div></div>
+          <div class="pr"><div class="glyph">⇄</div><div><h3>Свобода выбора режима курса</h3><p>Плавание, привязка к одной валюте или к корзине — на усмотрение страны.</p></div></div>
+          <div class="pr"><div class="glyph">§</div><div><h3>Надзор МВФ</h3><p>Фонд следит за валютной политикой стран-членов и кредитует их при кризисах.</p></div></div>
+        </div>
+        <p><strong>Плюс:</strong> гибкость, курсы гасят внешние шоки. <strong>Минус:</strong> волатильность и валютные кризисы — Латинская Америка 1980-х, Азия и Россия 1997–1998 гг.</p>
+      </div>
+    </section>
+
+    <!-- 10 -->
+    <section class="slide" data-title="Доллар в мировых резервах">
+      <div class="inner">
+        <div class="eyebrow">III · Современное состояние</div>
+        <div class="chart-wrap">
+          <div class="col" style="gap:16px">
+            <h2>Многовалютная на бумаге, долларовая на деле</h2>
+            <p>В 2000 г. доля доллара в резервах превышала 70%, сегодня — около 57%. Снижается медленно, а на валютном рынке доллар участвует примерно в <strong>89%</strong> всех сделок (БМР, 2025).</p>
+            <p class="src">Наведите на строку, чтобы увидеть подробности.</p>
+          </div>
+          <div class="col">
+            <div class="chart" id="c-res" aria-label="Валютная структура мировых резервов, I кв. 2026 г."></div>
+            <p class="src">Валютная структура мировых резервов, I кв. 2026 г., %. Источник: МВФ, COFER (30.06.2026)</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 11 -->
+    <section class="slide" data-title="СДР — счётная единица МВФ">
+      <div class="inner">
+        <div class="eyebrow">III · Современное состояние</div>
+        <div class="chart-wrap">
+          <div class="col" style="gap:16px">
+            <h2>СДР: корзина из пяти валют</h2>
+            <p>Специальные права заимствования созданы МВФ в <strong>1969 г.</strong> как дополнительный резервный актив. Юань вошёл в корзину в 2016 г. Веса пересматриваются раз в пять лет; следующий пересмотр — до конца июля 2027 г.</p>
+            <p>СДР — не валюта для частных расчётов, а счётная единица и резервный актив государств.</p>
+          </div>
+          <div class="col">
+            <div class="chart" id="c-sdr" aria-label="Веса валют в корзине СДР"></div>
+            <p class="src">Веса валют в корзине СДР с 1 августа 2022 г., %. Источник: МВФ, пресс-релиз № 22/153</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 12 -->
+    <section class="slide" data-title="Тенденции 2020-х">
+      <div class="inner">
+        <div class="eyebrow">III · Тенденции</div>
+        <h2>Куда движется мировая валютная система</h2>
+        <div class="trends">
+          <div class="tr"><div class="sym">%</div><h3>Диверсификация резервов</h3><p>Доля доллара снижается, растут «нетрадиционные» валюты: канадский и австралийский доллары, юань</p></div>
+          <div class="tr"><div class="sym">Au</div><h3>Возвращение золота</h3><p>Центробанки скупают золото; в 2025 г. оно обогнало гособлигации США в резервах (во многом из-за цены)</p></div>
+          <div class="tr"><div class="sym">€</div><h3>Регионализация</h3><p>Укрепляются валютные союзы: с 2026 г. в еврозоне 21 страна после вступления Болгарии</p></div>
+          <div class="tr"><div class="sym">⇄</div><h3>Расчёты в нацвалютах</h3><p>Торговля переходит на собственные валюты, строится альтернативная платёжная инфраструктура</p></div>
+          <div class="tr"><div class="sym">◈</div><h3>Цифровые валюты ЦБ</h3><p>Китай, Россия, Индия внедряют цифровую форму национальной валюты</p></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 13 -->
+    <section class="slide" data-title="Валютная система России">
+      <div class="inner">
+        <div class="eyebrow">IV · Российская Федерация</div>
+        <div class="chart-wrap">
+          <div class="col" style="gap:14px">
+            <h2>Валютная система России</h2>
+            <ul class="dash">
+              <li><strong>Валюта</strong> — рубль в трёх формах: наличной, безналичной, цифровой;</li>
+              <li><strong>Режим курса</strong> — плавающий с 10 ноября 2014 г., таргетирование инфляции;</li>
+              <li><strong>Закон</strong> — 173-ФЗ «О валютном регулировании и валютном контроле»;</li>
+              <li><strong>Органы</strong> — Правительство и Банк России, ФНС, ФТС, уполномоченные банки;</li>
+              <li><strong>Конвертируемость</strong> — полная с 2006 г., с 2022 г. ограничения по капиталу.</li>
+            </ul>
+          </div>
+          <div class="col">
+            <h3>В чём оплачен экспорт России в 2025 г.</h3>
+            <div class="chart" id="c-ru" aria-label="Валюты расчётов за экспорт России в 2025 г."></div>
+            <p class="src">%, источник: Банк России (по данным «Известий», 03.03.2026). «Прочие» рассчитаны как остаток. В 2021 г. около 85% расчётов шло в западных валютах.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 14 -->
+    <section class="slide" data-title="Цифровой рубль">
+      <div class="inner">
+        <div class="eyebrow">IV · Российская Федерация</div>
+        <div class="two" style="align-items:end">
+          <div class="col">
+            <h2>Цифровой рубль — третья форма национальной валюты</h2>
+            <div class="forms"><span class="chip">наличные</span><span class="chip">безналичные</span><span class="chip on">цифровые</span></div>
+          </div>
+          <div class="col" style="gap:4px">
+            <div class="parity">1&nbsp;:&nbsp;1</div>
+            <p>Курс к обычному рублю. Цифровые рубли хранятся на платформе Банка России, банки — посредники.</p>
+          </div>
+        </div>
+        <div class="steps">
+          <div class="step"><div class="d">24.07.2023</div><h3>Закон № 340-ФЗ</h3><p>Правовая основа цифрового рубля</p></div>
+          <div class="step now"><div class="d">01.09.2026</div><h3>Массовый запуск</h3><p>Крупнейшие банки и торговля с выручкой &gt; 120 млн руб. в год</p></div>
+          <div class="step"><div class="d">01.09.2027</div><h3>Вторая волна</h3><p>Порог выручки снижается до 30 млн руб.</p></div>
+          <div class="step"><div class="d">01.09.2028</div><h3>Третья волна</h3><p>Порог — 20 млн руб.; обязанность у всех банков</p></div>
+        </div>
+        <p class="src">Использование цифровых валют ЦБ в трансграничных расчётах пока на стадии обсуждения.</p>
+      </div>
+    </section>
+
+    <!-- 15 -->
+    <section class="slide" data-title="Выводы">
+      <div class="inner">
+        <div class="eyebrow">Заключение</div>
+        <h2>Выводы</h2>
+        <div class="concl">
+          <p><b>Национальная — основа</b>Мировая система строится на национальных, и каждому её элементу соответствует элемент национальной, но регулируемый договором государств.</p>
+          <p><b>Смена систем — ответ на кризис</b>Париж → Генуя → Бреттон-Вудс → Ямайка: от золотой монеты к плавающим курсам и многовалютному стандарту.</p>
+          <p><b>Доллар по-прежнему в центре</b>≈57% мировых резервов и ≈89% валютных сделок — формально многовалютная система остаётся долларовой.</p>
+          <p><b>Тренд — многополярность</b>Золото, региональные союзы, расчёты в нацвалютах и цифровые валюты. Россия — на острие: более половины экспорта в рублях.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 16 -->
+    <section class="slide" data-title="Источники">
+      <div class="inner">
+        <div class="eyebrow">Источники</div>
+        <h2>Список источников</h2>
+        <ol class="refs">
+          <li>Федеральный закон от 10.12.2003 № 173-ФЗ «О валютном регулировании и валютном контроле».</li>
+          <li>Федеральный закон от 10.07.2002 № 86-ФЗ «О Центральном банке Российской Федерации (Банке России)».</li>
+          <li>Федеральный закон от 24.07.2023 № 340-ФЗ (о цифровом рубле).</li>
+          <li>Международные валютно-кредитные отношения / под ред. Л. Н. Красавиной. — М. : Юрайт.</li>
+          <li>Эйхенгрин Б. Глобализация капитала: история международной денежной системы. — М. : Дело, 2009.</li>
+          <li>Эйхенгрин Б. Непомерная привилегия: взлёт и падение доллара. — М. : Изд-во Института Гайдара, 2013.</li>
+          <li>IMF. <a href="https://data.imf.org/en/news/imf%20data%20brief%20july%201" target="_blank" rel="noopener">Currency Composition of Official Foreign Exchange Reserves, 2026Q1</a>.</li>
+          <li>IMF. <a href="https://www.imf.org/en/about/factsheets/sheets/2023/special-drawing-rights-sdr" target="_blank" rel="noopener">Special Drawing Rights (SDR): Factsheet</a>.</li>
+          <li>IMF. <a href="https://www.imf.org/en/news/articles/2022/05/14/pr22153-imf-board-concludes-sdr-valuation-review" target="_blank" rel="noopener">Press Release No. 22/153</a>.</li>
+          <li>BIS. <a href="https://www.bis.org/statistics/rpfx25_fx.htm" target="_blank" rel="noopener">OTC foreign exchange turnover in April 2025</a>.</li>
+          <li>Банк России. <a href="https://cbr.ru/press/event/?id=25772" target="_blank" rel="noopener">Массовое внедрение цифрового рубля начнётся 1 сентября 2026 года</a>.</li>
+          <li>Известия. <a href="https://iz.ru/2052227/2026-03-03/rekordnye-raschety-v-natcvaliutakh-uderzhat-rubl-krepkim-na-dolgoe-vremia" target="_blank" rel="noopener">Рекордные расчёты в нацвалютах…</a> — 03.03.2026.</li>
+          <li>Коммерсантъ. <a href="https://www.kommersant.ru/doc/8625334" target="_blank" rel="noopener">Цифровой рубль с 1 сентября 2026</a>. — 28.04.2026.</li>
+          <li>ECB. <a href="https://www.ecb.europa.eu/euro/changeover/bulgaria/html/index.en.html" target="_blank" rel="noopener">Bulgaria joins the euro area</a>.</li>
+        </ol>
+      </div>
+    </section>
+
+    <div class="toc" id="toc" hidden><ol id="toc-list"></ol></div>
+  </main>
+
+  <nav class="nav" aria-label="Навигация по слайдам">
+    <button class="arrow" id="prev" aria-label="Предыдущий слайд">←</button>
+    <button class="arrow" id="next" aria-label="Следующий слайд">→</button>
+    <div class="progress" aria-hidden="true"><span id="prog"></span></div>
+    <span class="hint">← → · пробел · F — весь экран</span>
+    <a class="sitelink" href="index.html" title="Вернуться на сайт доклада">← Сайт</a>
+    <button id="tocBtn" aria-expanded="false">Все слайды</button>
+    <button id="fsBtn">На весь экран</button>
+  </nav>
+</div>
+<div class="tip" id="tip" role="tooltip"></div>
+
+<script>
+(function(){
+  const slides=[...document.querySelectorAll('.slide')];
+  const N=slides.length;
+  const serial=document.getElementById('serial');
+  const prog=document.getElementById('prog');
+  const toc=document.getElementById('toc');
+  const tocBtn=document.getElementById('tocBtn');
+  let cur=0;
+  const pad=n=>String(n).padStart(2,'0');
+
+  function go(i){
+    i=Math.max(0,Math.min(N-1,i));
+    slides.forEach((s,k)=>{s.classList.toggle('on',k===i);s.classList.toggle('prev',k<i);s.setAttribute('aria-hidden',k===i?'false':'true');});
+    cur=i;
+    serial.textContent='№ '+pad(i+1)+' / '+pad(N);
+    prog.style.width=((i+1)/N*100)+'%';
+    try{history.replaceState(null,'','#s'+(i+1));}catch(e){}
+    slides[i].scrollTop=0;
+    animateCharts(slides[i]);
+  }
+
+  // оглавление
+  const list=document.getElementById('toc-list');
+  slides.forEach((s,k)=>{
+    const li=document.createElement('li');
+    const b=document.createElement('button');
+    b.innerHTML='<b>'+pad(k+1)+'</b><span></span>';
+    b.querySelector('span').textContent=s.dataset.title;
+    b.addEventListener('click',()=>{closeToc();go(k);});
+    li.appendChild(b);list.appendChild(li);
+  });
+  function openToc(){toc.hidden=false;tocBtn.setAttribute('aria-expanded','true');tocBtn.textContent='Закрыть';}
+  function closeToc(){toc.hidden=true;tocBtn.setAttribute('aria-expanded','false');tocBtn.textContent='Все слайды';}
+  tocBtn.addEventListener('click',()=>toc.hidden?openToc():closeToc());
+
+  document.getElementById('prev').addEventListener('click',()=>go(cur-1));
+  document.getElementById('next').addEventListener('click',()=>go(cur+1));
+
+  const fsBtn=document.getElementById('fsBtn');
+  function toggleFs(){
+    try{
+      if(document.fullscreenElement){document.exitFullscreen().catch(()=>{});}
+      else if(document.documentElement.requestFullscreen){document.documentElement.requestFullscreen().catch(()=>{fsBtn.textContent='Недоступно';});}
+      else{fsBtn.textContent='Недоступно';}
+    }catch(e){fsBtn.textContent='Недоступно';}
+  }
+  fsBtn.addEventListener('click',toggleFs);
+  document.addEventListener('fullscreenchange',()=>{fsBtn.textContent=document.fullscreenElement?'Выйти из полноэкранного':'На весь экран';});
+
+  document.addEventListener('keydown',e=>{
+    if(e.target.closest&&e.target.closest('input,textarea'))return;
+    const k=e.key;
+    if(k==='ArrowRight'||k==='PageDown'||(k===' '&&!e.target.closest('button'))){e.preventDefault();go(cur+1);}
+    else if(k==='ArrowLeft'||k==='PageUp'){e.preventDefault();go(cur-1);}
+    else if(k==='Home'){go(0);} else if(k==='End'){go(N-1);}
+    else if(k==='Escape'&&!toc.hidden){closeToc();}
+    else if(k==='f'||k==='F'||k==='а'||k==='А'){toggleFs();}
+  });
+
+  // свайп
+  let sx=null,sy=null;
+  const stage=document.getElementById('stage');
+  stage.addEventListener('touchstart',e=>{sx=e.touches[0].clientX;sy=e.touches[0].clientY;},{passive:true});
+  stage.addEventListener('touchend',e=>{
+    if(sx===null)return;
+    const dx=e.changedTouches[0].clientX-sx, dy=e.changedTouches[0].clientY-sy;
+    if(Math.abs(dx)>60&&Math.abs(dx)>Math.abs(dy)*1.5){go(cur+(dx<0?1:-1));}
+    sx=sy=null;
+  });
+
+  // подсказка
+  const tip=document.getElementById('tip');
+  function showTip(el,text){
+    tip.textContent=text;tip.classList.add('show');
+    const r=el.getBoundingClientRect();
+    const w=tip.offsetWidth,h=tip.offsetHeight;
+    let x=Math.min(window.innerWidth-w-12,Math.max(12,r.left+r.width/2-w/2));
+    let y=r.top-h-8; if(y<8)y=r.bottom+8;
+    tip.style.left=x+'px';tip.style.top=y+'px';
+  }
+  function hideTip(){tip.classList.remove('show');}
+
+  // диаграммы
+  const fmt=v=>v.toFixed(v%1===0?0:(String(v).split('.')[1]||'').length).replace('.',',');
+  function bars(id,data,max,ticks,unit){
+    const el=document.getElementById(id);
+    data.forEach(d=>{
+      const row=document.createElement('div');
+      row.className='row'+(d.hl?' hl':'');
+      row.tabIndex=0;
+      row.setAttribute('role','img');
+      row.setAttribute('aria-label',d.label+': '+fmt(d.v)+unit);
+      row.innerHTML='<div class="lbl"></div><div class="track"></div>';
+      row.querySelector('.lbl').textContent=d.label;
+      const tr=row.querySelector('.track');
+      ticks.forEach(t=>{const g=document.createElement('i');g.className='gl';g.style.left=(t/max*100)+'%';tr.appendChild(g);});
+      const f=document.createElement('div');f.className='fill';f.dataset.w=(d.v/max*100)+'%';f.style.width='0%';
+      const v=document.createElement('span');v.className='val';v.textContent=fmt(d.v)+unit;v.dataset.l=(d.v/max*100)+'%';v.style.left='0%';
+      tr.appendChild(f);tr.appendChild(v);
+      const t=d.note;
+      row.addEventListener('mouseenter',()=>showTip(f,t));
+      row.addEventListener('mouseleave',hideTip);
+      row.addEventListener('focus',()=>showTip(f,t));
+      row.addEventListener('blur',hideTip);
+      el.appendChild(row);
+    });
+    const tk=document.createElement('div');tk.className='grid-ticks';
+    tk.innerHTML='<div></div><div class="ticks"></div>';
+    ticks.forEach(t=>{const s=document.createElement('span');s.style.left=(t/max*100)+'%';s.textContent=t;tk.querySelector('.ticks').appendChild(s);});
+    el.appendChild(tk);
+  }
+  bars('c-res',[
+    {label:'Доллар США',v:57.13,hl:true,note:'Доллар США — 57,13% (рост с 56,42% в IV кв. 2025 г.; в 2000 г. — более 70%)'},
+    {label:'Евро',v:20.03,note:'Евро — 20,03% (снижение с 20,38% в IV кв. 2025 г.)'},
+    {label:'Фунт, канад. и австрал. доллары, франк',v:9.23,note:'Фунт стерлингов, канадский и австралийский доллары, швейцарский франк — вместе 9,23% (расчётно)'},
+    {label:'Прочие валюты',v:6.18,note:'Прочие валюты — 6,18%: первое снижение после семи кварталов роста'},
+    {label:'Японская иена',v:5.44,note:'Японская иена — 5,44% (−0,4 п. п. за квартал, наибольшее снижение)'},
+    {label:'Китайский юань',v:1.99,note:'Китайский юань — 1,99% (рост с 1,95%)'}
+  ],60,[0,20,40,60],'%');
+  bars('c-sdr',[
+    {label:'Доллар США',v:43.38,hl:true,note:'Доллар США — 43,38% (в 2016 г. — 41,73%)'},
+    {label:'Евро',v:29.31,note:'Евро — 29,31%'},
+    {label:'Китайский юань',v:12.28,note:'Китайский юань — 12,28%: в корзине с 1 октября 2016 г.'},
+    {label:'Японская иена',v:7.59,note:'Японская иена — 7,59%'},
+    {label:'Фунт стерлингов',v:7.44,note:'Фунт стерлингов — 7,44%'}
+  ],50,[0,25,50],'%');
+  bars('c-ru',[
+    {label:'Российский рубль',v:53.7,hl:true,note:'Рубль — 53,7% расчётов за экспорт (+12,4 п. п. за год); за импорт — 54,4%'},
+    {label:'Юань и другие валюты',v:31.9,note:'Юань и другие валюты, в основном «дружественных» стран — 31,9% (расчётно)'},
+    {label:'Доллар США и евро',v:14.4,note:'Доллар и евро — 14,4% экспорта и 15% импорта'}
+  ],60,[0,20,40,60],'%');
+
+  const reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function animateCharts(slide){
+    slide.querySelectorAll('.fill').forEach(f=>{
+      if(reduce){f.style.width=f.dataset.w;return;}
+      f.style.width='0%';
+      requestAnimationFrame(()=>requestAnimationFrame(()=>{f.style.width=f.dataset.w;}));
+    });
+    slide.querySelectorAll('.val').forEach(v=>{v.style.left=v.dataset.l;});
+  }
+
+  // таймлайн
+  (function(){
+    const tl=document.getElementById('timeline');
+    const A=1860,B=2030,X=y=>((y-A)/(B-A)*100)+'%';
+    const bands=[
+      {a:1867,b:1922,t:'Парижская',s:'золотомонетный',c:'gold',h:62},
+      {a:1922,b:1944,t:'Генуэзская',s:'золотодевизный',c:'gold',h:78},
+      {a:1944,b:1976,t:'Бреттон-Вудская',s:'$35 за унцию',c:'gold',h:96},
+      {a:1976,b:2026,t:'Ямайская',s:'многовалютный',c:'fiat',h:118}
+    ];
+    const evs=[[1914,'1914 · война'],[1931,'1931 · отказ Британии'],[1971,'1971 · «шок Никсона»'],[2026,'2026']];
+    let html='<div class="bands">';
+    bands.forEach(b=>{html+='<div class="band '+b.c+'" style="left:'+X(b.a)+';width:calc('+X(b.b)+' - '+X(b.a)+' - 2px);height:'+b.h+'px" title="'+b.t+' система, '+b.a+'–'+(b.b===2026?'н. в.':b.b)+'"><b>'+b.t+'</b><small>'+b.a+'–'+(b.b===2026?'н. в.':b.b)+' · '+b.s+'</small></div>';});
+    evs.forEach((e,i)=>{html+='<div class="ev" style="left:'+X(e[0])+';height:'+(132+ (i%2)*18)+'px"><i>'+e[1]+'</i></div>';});
+    html+='</div><div class="axis">';
+    for(let y=1860;y<=2020;y+=20){html+='<span style="left:'+X(y)+'">'+y+'</span>';}
+    html+='</div>';
+    tl.innerHTML=html;
+  })();
+
+  // гильоширная розетка
+  const cv=document.getElementById('rosette');
+  function drawRosette(){
+    const r=cv.getBoundingClientRect(); if(!r.width)return;
+    const dpr=Math.min(2,window.devicePixelRatio||1);
+    cv.width=r.width*dpr;cv.height=r.width*dpr;
+    const c=cv.getContext('2d');c.setTransform(dpr,0,0,dpr,0,0);
+    const cs=getComputedStyle(document.documentElement);
+    const green=cs.getPropertyValue('--green').trim(), gold=cs.getPropertyValue('--gold').trim();
+    const W=r.width,cx=W/2,cy=W/2,R=W*0.46;
+    c.clearRect(0,0,W,W);
+    c.lineWidth=0.6;
+    // внешнее кольцо
+    function ring(r0,amp,lobes,count,color,alpha){
+      c.strokeStyle=color;c.globalAlpha=alpha;
+      for(let k=0;k<count;k++){
+        const ph=k/count*Math.PI*2/lobes;
+        c.beginPath();
+        for(let t=0;t<=Math.PI*2+0.01;t+=0.01){
+          const rr=r0+amp*Math.sin(lobes*t+ph*lobes);
+          const x=cx+rr*Math.cos(t),y=cy+rr*Math.sin(t);
+          t===0?c.moveTo(x,y):c.lineTo(x,y);
+        }
+        c.stroke();
+      }
+    }
+    ring(R*0.84,R*0.07,24,9,green,0.5);
+    ring(R*0.6,R*0.08,16,8,gold,0.75);
+    // спирограф в центре
+    c.strokeStyle=green;c.globalAlpha=0.6;c.beginPath();
+    const a=R*0.36,b=R*0.13,d=R*0.2;
+    for(let t=0;t<=Math.PI*2*13;t+=0.01){
+      const x=cx+(a-b)*Math.cos(t)+d*Math.cos((a-b)/b*t);
+      const y=cy+(a-b)*Math.sin(t)-d*Math.sin((a-b)/b*t);
+      t===0?c.moveTo(x,y):c.lineTo(x,y);
+    }
+    c.stroke();
+    c.globalAlpha=1;c.fillStyle=cs.getPropertyValue('--paper').trim();
+    c.beginPath();c.arc(cx,cy,R*0.24,0,Math.PI*2);c.fill();
+    c.strokeStyle=gold;c.lineWidth=0.8;c.beginPath();c.arc(cx,cy,R*0.24,0,Math.PI*2);c.stroke();
+    c.lineWidth=1;c.strokeStyle=gold;
+    c.beginPath();c.arc(cx,cy,R*0.99,0,Math.PI*2);c.stroke();
+    c.beginPath();c.arc(cx,cy,R*0.95,0,Math.PI*2);c.stroke();
+    // номинал
+    c.fillStyle=gold;c.textAlign='center';c.textBaseline='middle';
+    c.font='italic '+Math.round(R*0.15)+'px "Old Standard TT", Georgia, serif';
+    c.fillText('1867',cx,cy-R*0.02);
+    c.font=Math.round(R*0.055)+'px "IBM Plex Mono", monospace';
+    c.fillStyle=green;
+    c.fillText('— 2026 —',cx,cy+R*0.12);
+  }
+  const redraw=()=>requestAnimationFrame(drawRosette);
+  window.addEventListener('resize',redraw);
+  try{window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',redraw);}catch(e){}
+  try{new MutationObserver(redraw).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});}catch(e){}
+  if(document.fonts&&document.fonts.ready){document.fonts.ready.then(redraw);}
+
+  const fromHash=()=>{const m=/^#s(\d+)$/.exec(location.hash||'');return m?parseInt(m[1],10)-1:0;};
+  window.addEventListener('hashchange',()=>{const i=fromHash();if(i!==cur)go(i);});
+  go(fromHash());
+  redraw();
+})();
+</script>
+
+</body>
+</html>
