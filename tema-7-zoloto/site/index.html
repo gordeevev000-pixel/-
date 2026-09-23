@@ -1,0 +1,1183 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Демонетизация золота</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Forum&family=Golos+Text:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap">
+<style>
+:root {
+  --paper: #F0F1EB;
+  --plate: #F8F8F4;
+  --ink: #16211C;
+  --ink-2: #44514A;
+  --muted: #6F7B74;
+  --rule: #D2D6CD;
+  --rule-2: #E2E5DD;
+  --gold: #9C6F18;
+  --gold-soft: #DCC48E;
+  --gold-wash: rgba(165, 118, 28, .10);
+  --c-gold: #A5761C;
+  --c-green: #00806A;
+  --engrave: #2C5A4B;
+  --bar-hi: #F6DE92;
+  --bar-mid: #D6A640;
+  --bar-lo: #8F6212;
+  --bar-ink: #5A3D08;
+  --shadow: 0 1px 0 rgba(22, 33, 28, .04), 0 12px 32px -18px rgba(22, 33, 28, .28);
+  --display: "Forum", "Times New Roman", Georgia, serif;
+  --sans: "Golos Text", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #0D1411;
+    --plate: #141D19;
+    --ink: #E7EAE2;
+    --ink-2: #B4BEB7;
+    --muted: #87938C;
+    --rule: #2B3631;
+    --rule-2: #1C2622;
+    --gold: #D1A445;
+    --gold-soft: #6E5320;
+    --gold-wash: rgba(209, 164, 69, .12);
+    --c-gold: #BA8A2A;
+    --c-green: #2F9A86;
+    --engrave: #7FB5A1;
+    --shadow: 0 1px 0 rgba(0, 0, 0, .2), 0 16px 40px -20px rgba(0, 0, 0, .7);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #0D1411;
+  --plate: #141D19;
+  --ink: #E7EAE2;
+  --ink-2: #B4BEB7;
+  --muted: #87938C;
+  --rule: #2B3631;
+  --rule-2: #1C2622;
+  --gold: #D1A445;
+  --gold-soft: #6E5320;
+  --gold-wash: rgba(209, 164, 69, .12);
+  --c-gold: #BA8A2A;
+  --c-green: #2F9A86;
+  --engrave: #7FB5A1;
+  --shadow: 0 1px 0 rgba(0, 0, 0, .2), 0 16px 40px -20px rgba(0, 0, 0, .7);
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html { scroll-snap-type: y proximity; scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font: 400 17px/1.55 var(--sans);
+  -webkit-font-smoothing: antialiased;
+}
+[hidden] { display: none !important; }
+img, svg, canvas { max-width: 100%; }
+:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; border-radius: 2px; }
+
+/* ---------- верхняя панель ---------- */
+.topbar {
+  position: fixed; inset: 0 0 auto 0; z-index: 20;
+  padding: env(safe-area-inset-top, 0px) max(16px, 3vw) 0;
+  background: color-mix(in srgb, var(--paper) 86%, transparent);
+  -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--rule-2);
+}
+.topbar-row { height: 54px; display: flex; align-items: center; gap: 20px; }
+.brand { display: flex; align-items: baseline; gap: 10px; white-space: nowrap; min-width: 0; }
+.brand b { font: 400 20px/1 var(--display); letter-spacing: .02em; }
+.brand span { font: 500 11px/1 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.eras { flex: 1; display: flex; justify-content: center; gap: clamp(8px, 1.6vw, 22px); list-style: none; margin: 0; padding: 0; }
+.eras li { font: 500 12px/1 var(--mono); letter-spacing: .06em; color: var(--muted); opacity: .55; position: relative; padding-block: 6px; transition: color .25s, opacity .25s; }
+.eras li.on { color: var(--gold); opacity: 1; }
+.eras li.on::after { content: ""; position: absolute; left: 0; right: 0; bottom: -2px; height: 2px; background: var(--gold); border-radius: 2px; }
+.tools { display: flex; align-items: center; gap: 6px; margin-left: auto; }
+.counter { font: 500 12px/1 var(--mono); color: var(--ink-2); letter-spacing: .06em; font-variant-numeric: tabular-nums; margin-right: 6px; }
+.icon-btn {
+  appearance: none; border: 1px solid var(--rule); background: var(--plate); color: var(--ink);
+  width: 34px; height: 34px; border-radius: 6px; display: grid; place-items: center; cursor: pointer;
+}
+.icon-btn:hover { border-color: var(--gold); color: var(--gold); }
+.icon-btn svg { width: 16px; height: 16px; }
+.progress { position: absolute; left: 0; bottom: -1px; height: 2px; width: 0; background: var(--gold); transition: width .35s ease; }
+
+/* ---------- навигация ---------- */
+.dots { position: fixed; right: max(12px, 1.4vw); top: 50%; transform: translateY(-50%); z-index: 15; display: flex; flex-direction: column; gap: 7px; list-style: none; margin: 0; padding: 0; }
+.dots button { appearance: none; border: 0; background: none; padding: 5px 0; width: 26px; display: flex; justify-content: flex-end; cursor: pointer; }
+.dots button i { display: block; height: 2px; width: 10px; background: var(--rule); border-radius: 2px; transition: width .25s, background .25s; }
+.dots button:hover i { background: var(--muted); width: 16px; }
+.dots button[aria-current="true"] i { background: var(--gold); width: 22px; }
+.pager { position: fixed; right: max(16px, 2vw); bottom: calc(16px + env(safe-area-inset-bottom, 0px)); z-index: 20; display: flex; gap: 6px; }
+.pager .icon-btn { width: 40px; height: 40px; box-shadow: var(--shadow); }
+@media (max-width: 1080px) { .eras { display: none; } }
+@media (max-width: 900px) { .dots { display: none; } }
+@media (max-width: 520px) { .brand span { display: none; } }
+
+/* ---------- слайды ---------- */
+.slide {
+  position: relative; min-height: 100svh;
+  padding: calc(86px + env(safe-area-inset-top, 0px)) max(16px, 6vw) 72px;
+  display: flex; align-items: center;
+  scroll-snap-align: start;
+  border-bottom: 1px solid var(--rule-2);
+}
+.inner { width: 100%; max-width: 1160px; margin-inline: auto; }
+.eyebrow { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; font: 500 12px/1.3 var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+.eyebrow .no { color: var(--gold); }
+.eyebrow .sep { width: 28px; height: 1px; background: var(--rule); }
+h1, h2, h3 { margin: 0; font-weight: 400; text-wrap: balance; }
+h1 { font: 400 clamp(2.3rem, 1.3rem + 3.4vw, 4.2rem)/1.04 var(--display); letter-spacing: -.01em; }
+h2 { font: 400 clamp(2rem, 1.3rem + 2.5vw, 3.3rem)/1.06 var(--display); margin-top: 14px; letter-spacing: -.005em; }
+h3 { font: 600 1.05rem/1.3 var(--sans); }
+.lead { font-size: clamp(1.05rem, .96rem + .4vw, 1.28rem); line-height: 1.5; color: var(--ink-2); max-width: 60ch; margin: 16px 0 0; text-wrap: pretty; }
+p { margin: 0; text-wrap: pretty; }
+.small { font-size: 14px; color: var(--muted); line-height: 1.5; }
+.mono { font-family: var(--mono); }
+.gold { color: var(--gold); }
+
+.cols { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(24px, 4vw, 64px); margin-top: clamp(24px, 4vh, 44px); align-items: start; }
+.cols.wide-left { grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); }
+.cols.wide-right { grid-template-columns: minmax(0, .85fr) minmax(0, 1.3fr); }
+@media (max-width: 880px) { .cols, .cols.wide-left, .cols.wide-right { grid-template-columns: 1fr; } }
+
+/* список-«клейма» */
+.points { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+.points li { position: relative; padding-left: 26px; line-height: 1.5; }
+.points li::before { content: ""; position: absolute; left: 3px; top: .62em; width: 7px; height: 7px; background: var(--gold); transform: rotate(45deg); }
+.points b { font-weight: 600; }
+
+/* пробирное клеймо — рамка для ключевых фактов */
+.hallmark {
+  position: relative; padding: 22px 24px 20px; border-radius: 4px;
+  border: 1.5px solid var(--gold);
+  box-shadow: inset 0 0 0 4px var(--paper), inset 0 0 0 5px color-mix(in srgb, var(--gold) 55%, transparent);
+}
+.hallmark .v { font: 400 clamp(2.2rem, 1.6rem + 2.4vw, 3.6rem)/1 var(--display); color: var(--gold); letter-spacing: -.01em; }
+.hallmark .k { font: 500 11px/1.3 var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--muted); margin-bottom: 12px; }
+.hallmark p { margin-top: 12px; color: var(--ink-2); }
+.hallmark.compact .v { font-size: clamp(1.9rem, 1.4rem + 1.4vw, 2.6rem); }
+
+.plate { background: var(--plate); border: 1px solid var(--rule-2); border-radius: 6px; padding: 22px 24px; }
+
+.quote { border-left: 2px solid var(--gold); padding: 4px 0 4px 20px; }
+.quote q { font: 400 clamp(1.3rem, 1.1rem + .8vw, 1.8rem)/1.25 var(--display); quotes: "«" "»"; }
+.quote cite { display: block; margin-top: 10px; font: 500 12px/1.3 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-style: normal; }
+
+/* ---------- 1. титул ---------- */
+.title-grid { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: clamp(24px, 4vw, 56px); align-items: center; }
+@media (max-width: 900px) { .title-grid { grid-template-columns: 1fr; } }
+.title-grid h1 { margin-top: 20px; }
+.title-meta { margin-top: 28px; display: flex; flex-wrap: wrap; gap: 8px 22px; font: 500 13px/1.4 var(--mono); color: var(--ink-2); }
+.title-meta span { display: inline-flex; gap: 8px; }
+.title-meta em { font-style: normal; color: var(--muted); }
+.ingot-wrap { position: relative; aspect-ratio: 1 / .82; max-width: 560px; width: 100%; justify-self: center; }
+.ingot-wrap canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+.ingot-wrap svg { position: absolute; left: 4%; right: 4%; top: 20%; width: 92%; height: auto; filter: drop-shadow(0 18px 22px rgba(60, 40, 0, .22)); }
+.hint { margin-top: 36px; font: 500 12px/1.4 var(--mono); color: var(--muted); letter-spacing: .06em; display: flex; gap: 10px; align-items: center; }
+.hint kbd { font: inherit; border: 1px solid var(--rule); border-radius: 4px; padding: 2px 6px; background: var(--plate); color: var(--ink-2); }
+@media (hover: none) { .hint .keys { display: none; } }
+.stamp { transform-box: fill-box; transform-origin: center; animation: press .55s cubic-bezier(.2, .8, .2, 1) both; }
+.stamp.s2 { animation-delay: .25s; } .stamp.s3 { animation-delay: .45s; } .stamp.s4 { animation-delay: .6s; }
+@keyframes press { from { transform: scale(1.18); opacity: .3; } to { transform: scale(1); opacity: 1; } }
+.shine { animation: shine 2.4s .9s ease-in-out both; }
+@keyframes shine { from { transform: translateX(-420px); } to { transform: translateX(560px); } }
+
+/* ---------- 2. парадокс ---------- */
+.paradox { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: clamp(16px, 3vw, 40px); align-items: stretch; margin-top: clamp(28px, 5vh, 52px); }
+.paradox .vs { align-self: center; font: 400 clamp(2rem, 4vw, 3.4rem)/1 var(--display); color: var(--muted); }
+@media (max-width: 760px) { .paradox { grid-template-columns: 1fr; } .paradox .vs { justify-self: center; } }
+.question { margin-top: clamp(24px, 4vh, 40px); font: 400 clamp(1.3rem, 1.1rem + .9vw, 1.9rem)/1.3 var(--display); max-width: 42ch; }
+
+/* ---------- 3. матрица функций ---------- */
+.table-wrap { position: relative; overflow-x: auto; margin-top: clamp(24px, 4vh, 40px); }
+.matrix { border-collapse: collapse; width: 100%; min-width: 640px; }
+.matrix th, .matrix td { position: relative; padding: 14px 12px; border-bottom: 1px solid var(--rule); text-align: center; }
+.matrix thead th { font: 500 11px/1.3 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); vertical-align: bottom; }
+.matrix thead th b { display: block; font: 400 20px/1.1 var(--display); letter-spacing: 0; text-transform: none; color: var(--ink); margin-top: 4px; }
+.matrix tbody th { text-align: left; font-weight: 600; font-size: 16px; }
+.matrix tbody th small { display: block; font-weight: 400; font-size: 13px; color: var(--muted); }
+.fx { display: inline-block; width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid var(--gold); vertical-align: middle; }
+.fx.full { background: var(--gold); }
+.fx.half { background: linear-gradient(90deg, var(--gold) 50%, transparent 50%); }
+.fx.none { border-color: var(--rule); border-style: dashed; }
+.legend { display: flex; flex-wrap: wrap; gap: 8px 22px; margin-top: 16px; font-size: 14px; color: var(--ink-2); }
+.legend span { display: inline-flex; align-items: center; gap: 8px; }
+.legend .fx { width: 14px; height: 14px; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* ---------- 4. хронология систем ---------- */
+.systems { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0; margin-top: clamp(28px, 5vh, 52px); position: relative; }
+.systems::before { content: ""; position: absolute; left: 0; right: 0; top: 23px; height: 1px; background: var(--rule); }
+.sys { position: relative; padding: 0 18px 0 0; }
+.sys .yr { position: relative; display: inline-block; font: 700 14px/1 var(--mono); letter-spacing: .06em; padding: 8px 10px; border: 1.5px solid var(--gold); color: var(--gold); background: var(--paper); border-radius: 3px; }
+.sys h3 { margin-top: 18px; font: 400 26px/1.1 var(--display); }
+.sys .std { margin-top: 6px; font-weight: 600; color: var(--ink-2); }
+.sys dl { margin: 14px 0 0; display: grid; gap: 8px; }
+.sys dt { font: 500 11px/1.3 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.sys dd { margin: 0; font-size: 15px; line-height: 1.45; }
+@media (max-width: 900px) {
+  .systems { grid-template-columns: 1fr; gap: 26px; }
+  .systems::before { left: 23px; right: auto; top: 0; bottom: 0; width: 1px; height: auto; }
+  .sys { padding: 0 0 0 0; }
+}
+
+/* ---------- хроника ---------- */
+.chron { list-style: none; margin: 0; padding: 0; }
+.chron li { display: grid; grid-template-columns: 116px minmax(0, 1fr); gap: 16px; padding: 11px 0; border-bottom: 1px solid var(--rule-2); }
+.chron li:first-child { border-top: 1px solid var(--rule-2); }
+.chron time { font: 700 13px/1.5 var(--mono); color: var(--gold); letter-spacing: .03em; }
+.chron li.key time, .chron li.key span { color: var(--ink); }
+.chron li.key { background: var(--gold-wash); padding-inline: 10px; margin-inline: -10px; }
+
+/* ---------- сетки карточек ---------- */
+.cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(18px, 2.4vw, 32px); margin-top: clamp(26px, 4.5vh, 48px); }
+.cards.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.cards.five { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+@media (max-width: 1000px) { .cards.five { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 880px) { .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 560px) { .cards, .cards.two, .cards.five { grid-template-columns: 1fr; } }
+.card { border-top: 1.5px solid var(--ink); padding-top: 14px; }
+.card .idx { font: 500 12px/1 var(--mono); color: var(--gold); letter-spacing: .08em; }
+.card h3 { margin-top: 10px; }
+.card p { margin-top: 8px; color: var(--ink-2); font-size: 15.5px; line-height: 1.5; }
+.card.stamped { border: 1.5px solid var(--gold); border-radius: 4px; padding: 16px 16px 18px; box-shadow: inset 0 0 0 3px var(--paper), inset 0 0 0 4px color-mix(in srgb, var(--gold) 45%, transparent); }
+.card.stamped h3 { margin-top: 0; font: 400 21px/1.15 var(--display); }
+
+/* ---------- графики ---------- */
+.chart { position: relative; }
+.chart svg { display: block; width: 100%; height: auto; overflow: visible; }
+.chart .grid { stroke: var(--rule-2); stroke-width: 1; }
+.chart .base { stroke: var(--rule); stroke-width: 1; }
+.chart .tick { fill: var(--muted); font: 500 12px var(--mono); font-variant-numeric: tabular-nums; }
+.chart .lbl { fill: var(--ink); font: 600 13px var(--sans); }
+.chart .note { fill: var(--ink-2); font: 400 12.5px var(--sans); }
+.chart .ref { stroke: var(--muted); stroke-width: 1; }
+.chart .bar { fill: var(--c-gold); }
+.chart .bar.soft { fill: var(--gold-soft); }
+.chart .bar.hl { fill: var(--c-gold); }
+.chart .hit { fill: transparent; cursor: default; }
+.chart .hit:focus { outline: none; }
+.chart .hit:focus-visible { stroke: var(--gold); stroke-width: 1.5; }
+.chart .line { fill: none; stroke: var(--c-gold); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.chart .area { fill: var(--c-gold); opacity: .10; }
+.chart .dot { fill: var(--c-gold); stroke: var(--paper); stroke-width: 2; }
+.chart .guide { stroke: var(--muted); stroke-width: 1; }
+.chart-title { font: 600 15px/1.3 var(--sans); }
+.chart-sub { font-size: 13.5px; color: var(--muted); margin: 4px 0 12px; }
+.tip {
+  position: absolute; z-index: 5; pointer-events: none; transform: translate(-50%, calc(-100% - 10px));
+  background: var(--ink); color: var(--paper); padding: 7px 10px; border-radius: 5px; font: 500 13px/1.35 var(--sans); white-space: nowrap; box-shadow: var(--shadow);
+}
+.tip b { font-family: var(--mono); font-weight: 700; }
+details.data { margin-top: 10px; font-size: 14px; color: var(--ink-2); }
+details.data summary { cursor: pointer; font: 500 12px/1.4 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); width: fit-content; }
+details.data summary:hover { color: var(--gold); }
+details.data table { border-collapse: collapse; margin-top: 8px; font-variant-numeric: tabular-nums; }
+details.data td, details.data th { padding: 4px 14px 4px 0; border-bottom: 1px solid var(--rule-2); text-align: left; font-weight: 400; }
+details.data td:last-child { text-align: right; }
+
+/* горизонтальные бары (цена, держатели) */
+.hbars { display: grid; gap: 9px; margin: 0; padding: 0; list-style: none; }
+.hbars li { display: grid; grid-template-columns: 124px minmax(0, 1fr); gap: 14px; align-items: center; }
+.hbars .lab { font: 500 13px/1.25 var(--mono); color: var(--ink-2); text-align: right; }
+.hbars .track { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.hbars .fill { height: 14px; border-radius: 0 4px 4px 0; min-width: 2px; background: var(--c-gold); flex: none; }
+.hbars .fill.off { background: var(--c-green); }
+.hbars .fill.soft { background: var(--gold-soft); }
+.hbars .val { font: 700 14px/1 var(--mono); white-space: nowrap; }
+.hbars li.big .lab { color: var(--ink); }
+.key { display: flex; flex-wrap: wrap; gap: 8px 20px; margin-bottom: 16px; font-size: 14px; color: var(--ink-2); }
+.key span { display: inline-flex; align-items: center; gap: 8px; }
+.key i { width: 14px; height: 10px; border-radius: 0 3px 3px 0; background: var(--c-gold); }
+.key i.off { background: var(--c-green); }
+@media (max-width: 520px) { .hbars li { grid-template-columns: 92px minmax(0, 1fr); gap: 10px; } .hbars .lab { font-size: 12px; } }
+
+/* куб */
+.cube-fig { display: grid; grid-template-columns: minmax(0, 1fr); justify-items: center; }
+.cube-fig svg { width: min(100%, 420px); height: auto; }
+.cube-fig .edge { stroke: var(--gold); stroke-width: 1.5; fill: none; }
+.cube-fig .f1 { fill: var(--bar-mid); } .cube-fig .f2 { fill: var(--bar-lo); } .cube-fig .f3 { fill: var(--bar-hi); }
+.cube-fig .dim { stroke: var(--muted); stroke-width: 1; }
+.cube-fig text { fill: var(--ink-2); font: 500 13px var(--mono); }
+.cube-fig .person { stroke: var(--ink); stroke-width: 1.6; fill: none; stroke-linecap: round; }
+
+.stats { display: grid; gap: 22px; }
+.stat .v { font: 400 clamp(2.2rem, 1.6rem + 2.2vw, 3.4rem)/1 var(--display); }
+.stat .v small { font-size: .5em; color: var(--muted); margin-left: 6px; }
+.stat p { margin-top: 6px; color: var(--ink-2); max-width: 42ch; }
+
+/* два столбца «не вернулось / усилилось» */
+.split { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0; margin-top: clamp(26px, 4.5vh, 48px); border-top: 1.5px solid var(--ink); }
+.split > div { padding: 20px 28px 8px 0; }
+.split > div + div { padding-left: 28px; border-left: 1px solid var(--rule); }
+.split h3 { font: 500 12px/1.3 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin-bottom: 14px; }
+.split .points.lost li::before { background: transparent; border: 1.5px solid var(--muted); width: 6px; height: 6px; }
+@media (max-width: 760px) { .split { grid-template-columns: 1fr; } .split > div + div { padding-left: 0; border-left: 0; border-top: 1px solid var(--rule); } }
+
+.concl { list-style: none; counter-reset: c; margin: clamp(22px, 4vh, 40px) 0 0; padding: 0; display: grid; gap: 14px; }
+.concl li { counter-increment: c; display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 12px; align-items: baseline; line-height: 1.5; }
+.concl li::before { content: counter(c); font: 400 28px/1 var(--display); color: var(--gold); }
+.finale { margin-top: clamp(24px, 4vh, 40px); padding: 22px 26px; background: var(--ink); color: var(--paper); border-radius: 6px; font: 400 clamp(1.25rem, 1.05rem + .8vw, 1.75rem)/1.3 var(--display); }
+.finale em { font-style: normal; color: var(--gold-soft); }
+:root[data-theme="dark"] .finale em { color: var(--bar-lo); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .finale em { color: var(--bar-lo); } }
+
+.refs { margin: clamp(20px, 3vh, 32px) 0 0; padding-left: 22px; display: grid; gap: 8px; font-size: 14.5px; color: var(--ink-2); line-height: 1.45; columns: 2; column-gap: 40px; }
+.refs li { break-inside: avoid; }
+@media (max-width: 860px) { .refs { columns: 1; } }
+.thanks { font: 400 clamp(2.4rem, 1.6rem + 3vw, 4.4rem)/1 var(--display); margin-top: clamp(28px, 5vh, 56px); }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
+@media (max-width: 640px) {
+  body { font-size: 16px; }
+  .slide { padding-bottom: 88px; }
+  .chron li { grid-template-columns: 92px minmax(0, 1fr); }
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-row">
+    <div class="brand"><b>Au</b><span>Тема 2 · вопрос 7</span></div>
+    <ol class="eras" aria-label="Эпохи">
+      <li data-era="1867">1867</li><li data-era="1922">1922</li><li data-era="1944">1944</li><li data-era="1971">1971</li><li data-era="1976">1976</li><li data-era="1999">1999</li><li data-era="2022">2022</li><li data-era="2026">2026</li>
+    </ol>
+    <div class="tools">
+      <span class="counter" id="counter">01 / 19</span>
+      <button class="icon-btn" id="themeBtn" type="button" aria-label="Сменить тему оформления" title="Светлая / тёмная тема">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 2a6 6 0 0 0 0 12z" fill="currentColor"/></svg>
+      </button>
+      <button class="icon-btn" id="fsBtn" type="button" aria-label="Полноэкранный режим" title="Полный экран (F)">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 6V2h4M10 2h4v4M14 10v4h-4M6 14H2v-4"/></svg>
+      </button>
+    </div>
+  </div>
+  <div class="progress" id="progress"></div>
+</header>
+
+<ul class="dots" id="dots" aria-label="Слайды"></ul>
+<div class="pager">
+  <button class="icon-btn" id="prevBtn" type="button" aria-label="Предыдущий слайд"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 10l4-4 4 4"/></svg></button>
+  <button class="icon-btn" id="nextBtn" type="button" aria-label="Следующий слайд"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 6l4 4 4-4"/></svg></button>
+</div>
+
+<main id="deck">
+
+<!-- 1. Титул -->
+<section class="slide" id="title" data-title="Титул">
+  <div class="inner title-grid">
+    <div>
+      <div class="eyebrow"><span class="no">Тема 2</span><span class="sep"></span><span>Валютные отношения в мировой экономике</span></div>
+      <h1>Тенденция снижения роли золота в мировой валютной системе</h1>
+      <p class="lead">Как золото прошло путь от монеты в кошельке до «страхового» актива в хранилищах центральных банков — и почему в 2020-х оно снова в центре внимания.</p>
+      <div class="title-meta">
+        <span><em>Доклад</em> вопрос 7</span>
+        <span><em>Автор</em> [Фамилия И. О.], гр. [____]</span>
+        <span><em>Год</em> 2026</span>
+      </div>
+      <div class="hint"><span class="keys"><kbd>→</kbd> <kbd>пробел</kbd> — дальше · <kbd>F</kbd> — полный экран</span><span>↓ листайте</span></div>
+    </div>
+    <div class="ingot-wrap" aria-hidden="true">
+      <canvas id="guilloche"></canvas>
+      <svg viewBox="0 0 520 250">
+        <defs>
+          <linearGradient id="gTop" x1="0" y1="0" x2="1" y2="1"><stop offset="0" style="stop-color:var(--bar-hi)"/><stop offset=".55" style="stop-color:var(--bar-mid)"/><stop offset="1" style="stop-color:var(--bar-hi)"/></linearGradient>
+          <linearGradient id="gFront" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--bar-mid)"/><stop offset="1" style="stop-color:var(--bar-lo)"/></linearGradient>
+          <linearGradient id="gShine" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity=".55"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
+          <clipPath id="barClip"><path d="M128 40 H392 L424 104 L462 214 H58 L96 104 Z"/></clipPath>
+        </defs>
+        <path d="M128 40 H392 L424 104 H96 Z" fill="url(#gTop)"/>
+        <path d="M96 104 H424 L462 214 H58 Z" fill="url(#gFront)"/>
+        <path d="M128 40 H392 L424 104 L462 214 H58 L96 104 Z" fill="none" style="stroke:var(--bar-lo)" stroke-width="1.2" stroke-opacity=".6"/>
+        <path d="M96 104 H424" style="stroke:var(--bar-hi)" stroke-width="1.2" stroke-opacity=".8"/>
+        <g clip-path="url(#barClip)"><rect class="shine" x="-120" y="0" width="120" height="250" fill="url(#gShine)" transform="skewX(-18)"/></g>
+        <g class="stamp s1"><text x="260" y="79" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="13" letter-spacing="2" style="fill:var(--bar-ink)" fill-opacity=".8">1 УНЦ. = 31,1035 Г</text></g>
+        <g class="stamp s2"><text x="260" y="148" text-anchor="middle" font-family="Forum, serif" font-size="30" letter-spacing="6" style="fill:var(--bar-ink)">ЗОЛОТО · AU</text></g>
+        <g class="stamp s3"><text x="260" y="186" text-anchor="middle" font-family="JetBrains Mono, monospace" font-weight="700" font-size="28" letter-spacing="3" style="fill:var(--bar-ink)">999,9</text></g>
+        <g class="stamp s4"><text x="260" y="205" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11" letter-spacing="2" style="fill:var(--bar-ink)" fill-opacity=".75">№ 15·08·1971</text></g>
+      </svg>
+    </div>
+  </div>
+</section>
+
+<!-- 2. Парадокс -->
+<section class="slide" id="paradox" data-title="Парадокс золота">
+  <div class="inner">
+    <div class="eyebrow"><span class="no">Введение</span><span class="sep"></span><span>Актуальность</span></div>
+    <h2>Парадокс золота</h2>
+    <div class="paradox">
+      <div class="hallmark">
+        <div class="k">1 апреля 1978 г.</div>
+        <div class="v">Не деньги</div>
+        <p>Вторая поправка к Статьям соглашения МВФ: отменены официальная цена и золотые паритеты — золото юридически демонетизировано.</p>
+      </div>
+      <div class="vs">и&nbsp;всё&nbsp;же</div>
+      <div class="hallmark">
+        <div class="k">Итоги 2024 г. · ЕЦБ</div>
+        <div class="v">≈ 20 %</div>
+        <p>мировых резервов — золото стало вторым резервным активом после доллара (46 %), обогнав евро (16 %).</p>
+      </div>
+    </div>
+    <p class="question">Снижение роли золота — необратимый исторический процесс или мы наблюдаем его «ремонетизацию»?</p>
+  </div>
+</section>
+
+<!-- 3. Функции -->
+<section class="slide" id="functions" data-title="Функции золота">
+  <div class="inner">
+    <div class="eyebrow"><span class="no">01</span><span class="sep"></span><span>Золото как денежный металл</span></div>
+    <h2>Пять функций денег: что золото утратило</h2>
+    <p class="lead">Демонетизация — это постепенная потеря золотом денежных функций. Сохранилась по сути одна: средство накопления.</p>
+    <div class="table-wrap">
+      <table class="matrix">
+        <thead>
+          <tr>
+            <th scope="col" style="text-align:left">Функция</th>
+            <th scope="col">1867<b>Парижская</b></th>
+            <th scope="col">1922<b>Генуэзская</b></th>
+            <th scope="col">1944<b>Бреттон-Вудская</b></th>
+            <th scope="col">1976<b>Ямайская</b></th>
+          </tr>
+        </thead>
+        <tbody id="matrixBody"></tbody>
+      </table>
+    </div>
+    <div class="legend"><span><i class="fx full"></i>выполняет</span><span><i class="fx half"></i>частично, с ограничениями</span><span><i class="fx none"></i>утрачена</span></div>
+  </div>
+</section>
+
+<!-- 4. Четыре системы -->
+<section class="slide" id="systems" data-title="Четыре валютные системы">
+  <div class="inner">
+    <div class="eyebrow"><span class="no">02</span><span class="sep"></span><span>Эволюция мировых валютных систем</span></div>
+    <h2>Четыре системы — четыре шага от золота</h2>
+    <div class="systems">
+      <div class="sys">
+        <span class="yr">1867–1914</span>
+        <h3>Парижская</h3>
+        <div class="std">Золотомонетный стандарт</div>
+        <dl><dt>Размен</dt><dd>Свободный: банкноты ↔ золотые монеты</dd><dt>Курсы</dt><dd>Монетные паритеты, «золотые точки»</dd></dl>
+      </div>
+      <div class="sys">
+        <span class="yr">1922–1936</span>
+        <h3>Генуэзская</h3>
+        <div class="std">Золотодевизный стандарт</div>
+        <dl><dt>Размен</dt><dd>Только слитками или через девизы</dd><dt>Курсы</dt><dd>Свободно колеблющиеся</dd></dl>
+      </div>
+      <div class="sys">
+        <span class="yr">1944–1971</span>
+        <h3>Бреттон-Вудская</h3>
+        <div class="std">Золотодолларовый стандарт</div>
+        <dl><dt>Размен</dt><dd>Только долларов и только для ЦБ — по 35 $ за унцию</dd><dt>Курсы</dt><dd>Фиксированные, ±1 %</dd></dl>
+      </div>
+      <div class="sys">
+        <span class="yr">с 1976/78</span>
+        <h3>Ямайская</h3>
+        <div class="std">Стандарт СДР, де-факто доллар</div>
+        <dl><dt>Размен</dt><dd>Отсутствует — золото юридически демонетизировано</dd><dt>Курсы</dt><dd>Свободный выбор режима</dd></dl>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 5. Парижская -->
+<section class="slide" id="paris" data-title="Парижская система" data-era="1867">
+  <div class="inner">
+    <div class="eyebrow"><span class="no">2.1</span><span class="sep"></span><span>Парижская валютная система · 1867</span></div>
+    <h2>Золотомонетный стандарт: пик роли золота</h2>
+    <div class="cols wide-left">
+      <ul class="points">
+        <li>У каждой валюты — законодательно установленное <b>золотое содержание</b>.</li>
+        <li>Банкноты <b>свободно разменивались</b> на золото; золотые монеты — в обращении.</li>
+        <li>Золото свободно ввозилось и вывозилось, продавалось и покупалось.</li>
+        <li>Курсы — по <b>монетным паритетам</b>, колебания лишь в пределах «золотых точек» (≈ ±1 %: стоимость перевозки и страхования золота).</li>
+        <li>Денежная масса жёстко привязана к золотому запасу; дефицит платёжного баланса покрывался вывозом золота.</li>
+      </ul>
+      <div class="stats">
+        <div class="hallmark">
+          <div class="k">Парижская конференция 1867 г.</div>
+          <div class="v">Единственная</div>
+          <p>форма мировых денег — золото.</p>
+        </div>
+        <ul class="chron" aria-label="Переход стран к золотому стандарту">
+          <li><time>1816</time><span>Великобритания (де-факто)</span></li>
+          <li><time>1873</time><span>Германия</span></li>
+          <li><time>1879</time><span>США (фактически)</span></li>
+          <li><time>1897</time><span>Россия (реформа С. Ю. Витте), Япония</span></li>
+          <li class="key"><time>1914</time><span>Война: размен прекращён, вывоз золота запрещён</span></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 6. Генуэзская -->
+<section class="slide" id="genoa" data-title="Генуэзская система" data-era="1922">
+  <div class="inner">
+    <div class="eyebrow"><span class="no">2.2</span><span class="sep"></span><span>Генуэзская валютная система · 1922</span></div>
+    <h2>Золотодевизный стандарт: золото уходит из кошельков</h2>
+    <div class="cols">
+      <div style="display:grid; gap:26px">
+        <ul class="points">
+          <li>Наряду с золотом — <b>девизы</b>: платёжные средства в иностранных валютах, разменных на золото (фунт, доллар).</li>
+          <li>Золотые монеты во внутреннем обращении больше не используются.</li>
+          <li>Великобритания (1925) и Франция (1928) — <b>золотослитковый стандарт</b>; ≈ 30 стран — золотодевизный.</li>
+          <li>Золотые паритеты сохранены, курсы — свободно колеблющиеся.</li>
+        </ul>
+        <div class="quote"><q>Золотой стандарт — уже варварский пережиток</q><cite>Дж. М. Кейнс, «Трактат о денежной реформе», 1923</cite></div>
+      </div>
+      <div style="display:grid; gap:22px">
+        <div class="hallmark">
+          <div class="k">Слиток Банка Англии · 1925</div>
+          <div class="v">12,4 кг = 1 700 £</div>
+          <p>Минимальный обмен банкнот на золото — только стандартный слиток. Во Франции — 215 тыс. франков.</p>
+        </div>
+        <ul class="chron" aria-label="Крах Генуэзской системы">
+          <li><time>1929–1933</time><span>Мировой экономический кризис</span></li>
+          <li><time>1931</time><span>Великобритания отказывается от золотого стандарта</span></li>
+          <li><time>1933</time><span>США: запрет частного владения монетарным золотом</span></li>
+          <li class="key"><time>1934</time><span>Девальвация доллара: 20,67 $ → 35 $ за унцию</span></li>
+          <li><time>1936</time><span>Франция и «золотой блок»</span></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 7. Бреттон-Вудс -->
+<section class="slide" id="bw" data-title="Бреттон-Вудская система" data-era="1944">
+  <div class="inner">
+    <div class="eyebrow"><span class="no">2.3</span><span class="sep"></span><span>Бреттон-Вудская валютная система · 1944</span></div>
+    <h2>Золотодолларовый стандарт: золото — только для центробанков</h2>
+    <div class="cols wide-right">
+      <div style="display:grid; gap:22px">
+        <div class="hallmark">
+          <div class="k">Официальная цена · 1934–1971</div>
+          <div class="v">35 $ = 1 унция</div>
+          <p>Обмен долларов на золото — только для центральных банков и правительств.</p>
+        </div>
+        <ul class="points">
+          <li>44 страны, июль 1944 г.; созданы <b>МВФ</b> и <b>МБРР</b>.</li>
+          <li>Паритеты — в золоте или долларах; отклонение курса ≤ <b>±1 %</b>.</li>
+          <li>Четверть квоты в МВФ, как правило, вносилась золотом.</li>
+        </ul>
+      </div>
+      <div class="plate">
+        <div class="chart-title">Золотой запас США, тонн</div>
+        <div class="chart-sub">Доллары за рубежом росли — золото уходило из Форт-Нокса</div>
+        <div class="chart" id="chartUsa"></div>
+        <details class="data"><summary>Данные</summary>
+          <table><tr><th>1949</th><td>21 700</td></tr><tr><th>1960</th><td>15 800</td></tr><tr><th>1965</th><td>12 300</td></tr><tr><th>1971, август</th><td>9 070</td></tr><tr><th>2026</th><td>8 133</td></tr></table>
+          <p class="small">Министерство финансов США, World Gold Council; округлено.</p>
+        </details>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 8. Триффин и 1971 -->
+<section class="slide" id="triffin" data-title="Дилемма Триффина и 1971 год" data-era="1971">
+  <div class="inner">
+    <div class="eyebrow"><span class="no">2.3</span><span class="sep"></span><span>Кризис золотодолларового стандарта</span></div>
+    <h2>Дилемма Триффина и «закрытие золотого окна»</h2>
+    <div class="cols">
+      <div style="display:grid; gap:22px">
+        <p class="lead" style="margin-top:0">Миру нужно всё больше долларов — значит, США должны иметь дефицит платёжного баланса. Но чем больше долларов за рубежом, тем меньше веры в их обмен на золото по 35 $.</p>
+        <div class="quote"><q>Нельзя одновременно снабжать мир ликвидностью и сохранять доверие к обратимости доллара</q><cite>Суть дилеммы Р. Триффина, 1960</cite></div>
+      </div>
+      <ul class="chron">
+        <li><time>10.1960</time><span>Золото в Лондоне — 40 $ за унцию</span></li>
+        <li><time>1961</time><span>Лондонский золотой пул: 8 ЦБ удерживают цену</span></li>
+        <li><time>1965</time><span>Ш. де Голль: Франция меняет доллары на золото</span></li>
+        <li><time>03.1968</time><span>Двухуровневый рынок: официальный и свободный</span></li>
+        <li><time>1969</time><span>МВФ вводит СДР — «бумажное золото»</span></li>
+        <li class="key"><time>15.08.1971</time><span>Р. Никсон прекращает обмен долларов на золото</span></li>
+        <li><time>12.1971</time><span>Смитсоновское соглашение: 38 $ за унцию</span></li>
+        <li><time>02.1973</time><span>42,22 $ за унцию</span></li>
+        <li><time>03.1973</time><span>Переход к плавающим курсам</span></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- 9. Ямайская -->
+<section class="slide" id="jamaica" data-title="Ямайская система" data-era="1976">
+  <div class="inner">
+    <div class="eyebrow"><span class="no">2.4</span><span class="sep"></span><span>Ямайская валютная система · Кингстон, 1976 → 1978</span></div>
+    <h2>Юридическая демонетизация золота</h2>
+    <p class="lead">Вторая поправка к Статьям соглашения МВФ вступила в силу 1 апреля 1978 г. Золото вытеснили не СДР, а кредитные деньги ведущих стран — прежде всего доллар.</p>
+    <div class="cards five">
+      <div class="card stamped"><h3>Нет официальной цены</h3><p>ЦБ покупают и продают золото как товар — по рыночной цене.</p></div>
+      <div class="card stamped"><h3>Нет золотых паритетов</h3><p>У валют больше нет золотого содержания; золото — не мера стоимости.</p></div>
+      <div class="card stamped"><h3>Нет золота в МВФ-расчётах</h3><p>Квоты и платежи Фонду — без золота; МВФ не вправе поддерживать цену.</p></div>
+      <div class="card stamped"><h3>⅓ золота МВФ</h3><p>1/6 (25 млн унций) продана на аукционах 1976–1980, ещё 1/6 возвращена странам.</p></div>
+      <div class="card stamped"><h3>Стандарт СДР</h3><p>Свободный выбор режима курса; де-факто — многовалютная система.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 10. Причины -->
+<section class="slide" id="causes" data-title="Причины демонетизации">
+  <div class="inner">
+    <div class="eyebrow"><span class="no">3.1</span><span class="sep"></span><span>Причины</span></div>
+    <h2>Почему золото перестало быть деньгами</h2>
+    <div class="cards">
+      <div class="card"><span class="idx">01</span><h3>Мало и неэластично</h3><p>Добыча (≈ 3,6 тыс. т в год) не поспевает за ростом производства и торговли — привязка к золоту давит дефляцией.</p></div>
+      <div class="card"><span class="idx">02</span><h3>Кредитные деньги удобнее</h3><p>Банкноты, безналичные и цифровые деньги дешевле и быстрее металла; их ценность — доверие к государству.</p></div>
+      <div class="card"><span class="idx">03</span><h3>«Золотые оковы»</h3><p>Золотой стандарт лишает ЦБ гибкости: опыт Великой депрессии — кризис усиливается и перекидывается на другие страны.</p></div>
+      <div class="card"><span class="idx">04</span><h3>Возвышение доллара</h3><p>Лидерство США сделало доллар мировой валютой, а демонетизация закрепила «непомерную привилегию».</p></div>
+      <div class="card"><span class="idx">05</span><h3>Неудобный резерв</h3><p>Хранение и перевозка стоят денег, процентов золото не приносит, а после 1978 г. его цена крайне волатильна.</p></div>
+      <div class="card"><span class="idx">06</span><h3>Политика МВФ и США</h3><p>Аукционные продажи 1970-х должны были превратить золото в обычный биржевой товар.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 11. Масштаб -->
+<section class="slide" id="scale" data-title="Сколько золота в мире">
+  <div class="inner">
+    <div class="eyebrow"><span class="no">3.1</span><span class="sep"></span><span>Причина № 1 в цифрах</span></div>
+    <h2>Всё золото мира поместится в один куб</h2>
+    <div class="cols">
+      <figure class="cube-fig" style="margin:0">
+        <svg viewBox="0 0 420 340" role="img" aria-label="Куб со стороной 22 метра — объём всего добытого золота; рядом силуэт человека в масштабе">
+          <polygon class="f3" points="110,90 250,40 390,90 250,140"/>
+          <polygon class="f1" points="110,90 250,140 250,300 110,250"/>
+          <polygon class="f2" points="250,140 390,90 390,250 250,300"/>
+          <path class="edge" d="M110 90 L250 40 L390 90 L390 250 L250 300 L110 250 Z M110 90 L250 140 L390 90 M250 140 V300"/>
+          <line class="dim" x1="92" y1="96" x2="92" y2="256"/><line class="dim" x1="86" y1="90" x2="98" y2="90"/><line class="dim" x1="86" y1="250" x2="98" y2="250"/>
+          <text x="80" y="176" text-anchor="end">22 м</text>
+          <g class="person" transform="translate(52 300)"><circle cx="0" cy="-11.5" r="1.8"/><path d="M0 -9.5 V-4 M0 -4 L-2 0 M0 -4 L2 0 M-2.6 -8 L2.6 -8"/></g>
+          <text x="40" y="324">человек 1,8 м</text>
+        </svg>
+      </figure>
+      <div class="stats">
+        <div class="stat"><div class="v">≈ 216 000<small>т</small></div><p>всё золото, добытое за историю человечества (оценка World Gold Council, конец 2024 г.) — куб со стороной ≈ 22 м.</p></div>
+        <div class="stat"><div class="v">≈ 3 600<small>т/год</small></div><p>мировая добыча — лишь ≈ 1,7 % накопленного запаса в год.</p></div>
+        <div class="stat"><div class="v">≈ 30<small>трлн $</small></div><p>стоимость всего золота при 4 400 $ за унцию — сопоставима лишь с годовым объёмом мировой торговли.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 12. Доля в резервах -->
+<section class="slide" id="share" data-title="Доля золота в резервах">
+  <div class="inner">
+    <div class="eyebrow"><span class="no">3.2</span><span class="sep"></span><span>Проявления тенденции</span></div>
+    <h2>Доля золота в мировых резервах: с 70 % до 9 %</h2>
+    <div class="cols wide-left">
+      <div class="plate">
+        <div class="chart-title">Доля золота в официальных резервах мира, %</div>
+        <div class="chart-sub">Оценка: до 1971 г. — по цене 35 $, далее — по рыночной стоимости</div>
+        <div class="chart" id="chartShare"></div>
+        <details class="data"><summary>Данные</summary>
+          <table><tr><th>1950</th><td>≈ 70 %</td></tr><tr><th>1960</th><td>≈ 63 %</td></tr><tr><th>1970</th><td>≈ 40 %</td></tr><tr><th>1980</th><td>≈ 60 %</td></tr><tr><th>1990</th><td>≈ 31 %</td></tr><tr><th>2000</th><td>≈ 13 %</td></tr><tr><th>2010</th><td>≈ 13 %</td></tr><tr><th>2015</th><td>≈ 9 %</td></tr><tr><th>2020</th><td>≈ 14 %</td></tr><tr><th>2024</th><td>≈ 20 %</td></tr><tr><th>2025</th><td>≈ 27 %</td></tr></table>
+          <p class="small">МВФ (IFS), ЕЦБ, World Gold Council; значения округлены.</p>
+        </details>
+      </div>
+      <div style="display:grid; gap:22px">
+        <ul class="points">
+          <li><b>1914–1930-е:</b> золотые монеты уходят из обращения, размен для населения отменён.</li>
+          <li><b>1971:</b> прекращён размен долларов для центральных банков.</li>
+          <li><b>1976–1978:</b> отменены официальная цена и паритеты.</li>
+          <li><b>1980:</b> всплеск доли — не покупки, а скачок цены до 850 $.</li>
+        </ul>
+        <div class="hallmark">
+          <div class="k">Памятник эпохе фиксированной цены</div>
+          <div class="v">42,2222 $</div>
+          <p>По этой «законодательной» цене Казначейство США до сих пор учитывает свои 8 133 т золота — всего ≈ 11 млрд $.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 13. Продажи -->
+<section class="slide" id="sales" data-title="Распродажа золота ЦБ" data-era="1999">
+  <div class="inner">
+    <div class="eyebrow"><span class="no">3.2</span><span class="sep"></span><span>1989–2009 · центральные банки — нетто-продавцы</span></div>
+    <h2>«Мёртвый актив»: двадцать лет распродаж</h2>
+    <p class="lead">Золото не приносит процентов, и центральные банки Европы и Канады меняли его на доходные валютные облигации.</p>
+    <div class="cards two" style="grid-template-columns:repeat(auto-fit, minmax(220px, 1fr))">
+      <div class="hallmark compact"><div class="k">Банк Англии · 1999–2002</div><div class="v">395 т</div><p>проданы у многолетнего минимума цены — 250–300 $ за унцию.</p></div>
+      <div class="hallmark compact"><div class="k">Нац. банк Швейцарии · 2000-е</div><div class="v">≈ 1 550 т</div><p>реализованы после отказа франка от золотого обеспечения.</p></div>
+      <div class="hallmark compact"><div class="k">Вашингтонское соглашение · 1999</div><div class="v">≤ 400 т/год</div><p>лимит продаж европейских ЦБ, чтобы не обрушить рынок (действовал до 2019 г.).</p></div>
+      <div class="hallmark compact"><div class="k">МВФ · 2009–2010</div><div class="v">403,3 т</div><p>⅛ запаса Фонда — на льготные кредиты беднейшим странам.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 14. Разворот -->
+<section class="slide" id="reversal" data-title="Разворот: ЦБ покупают" data-era="2022">
+  <div class="inner">
+    <div class="eyebrow"><span class="no">4.1</span><span class="sep"></span><span>Контртенденция</span></div>
+    <h2>Разворот: центральные банки снова покупают</h2>
+    <div class="cols wide-left">
+      <div class="plate">
+        <div class="chart-title">Нетто-покупки золота центральными банками, т</div>
+        <div class="chart-sub">С 2010 г. — нетто-покупатели впервые с 1988 г.</div>
+        <div class="chart" id="chartCb"></div>
+        <details class="data"><summary>Данные</summary>
+          <table id="cbTable"></table>
+          <p class="small">World Gold Council, Gold Demand Trends; округлено, возможны пересмотры.</p>
+        </details>
+      </div>
+      <div style="display:grid; gap:22px">
+        <div class="hallmark">
+          <div class="k">Триггер 2022 г.</div>
+          <div class="v">≈ 300 млрд $</div>
+          <p>резервов Банка России заблокированы на Западе. Золото в собственном хранилище — ничей долг, его нельзя заморозить.</p>
+        </div>
+        <ul class="points">
+          <li><b>2025:</b> 863 т; крупнейший покупатель — <b>Польша</b>, далее Китай, Турция, Индия, Казахстан.</li>
+          <li><b>Репатриация:</b> Бундесбанк вернул 674 т из Парижа и Нью-Йорка (2013–2017).</li>
+          <li><b>Опрос WGC 2026:</b> рекордные 45 % ЦБ намерены нарастить свои запасы; 89 % ждут роста мировых.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 15. Цена -->
+<section class="slide" id="price" data-title="Цена золота" data-era="2026">
+  <div class="inner">
+    <div class="eyebrow"><span class="no">4.1</span><span class="sep"></span><span>От фиксированной цены — к рыночной</span></div>
+    <h2>Цена унции: от 20,67 $ до 5 586 $</h2>
+    <div class="cols wide-right">
+      <div style="display:grid; gap:22px">
+        <p class="lead" style="margin-top:0">Пока цена была официальной, золото измеряло стоимость. Став рыночной, она сама превратилась в объект спекуляций: только за 2026 г. — рекорд в январе и падение ниже 4 000 $ в июне.</p>
+        <div class="hallmark">
+          <div class="k">Исторический максимум</div>
+          <div class="v">5 586 $</div>
+          <p>за тройскую унцию, 29 января 2026 г. В сентябре 2026 г. — около 4 400 $.</p>
+        </div>
+      </div>
+      <div class="plate">
+        <div class="chart-title">Цена золота, долл. за тройскую унцию</div>
+        <div class="key"><span><i class="off"></i>официальная (фиксированная)</span><span><i></i>рыночная</span></div>
+        <ul class="hbars" id="priceBars"></ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 16. Держатели и Россия -->
+<section class="slide" id="holders" data-title="Держатели золота и Россия" data-era="2026">
+  <div class="inner">
+    <div class="eyebrow"><span class="no">4.2</span><span class="sep"></span><span>Официальные запасы · 2026</span></div>
+    <h2>Кто держит золото — и место России</h2>
+    <div class="cols wide-left">
+      <div class="plate">
+        <div class="chart-title">Крупнейшие официальные держатели, т</div>
+        <div class="chart-sub">Всего у ЦБ и международных организаций — ≈ 36 000 т</div>
+        <ul class="hbars" id="holderBars"></ul>
+      </div>
+      <div class="stats">
+        <div class="stat"><div class="v gold">≈ 2 290<small>т</small></div><p>золота в резервах Банка России (≈ 73–74 млн тройских унций, середина 2026 г.).</p></div>
+        <div class="stat"><div class="v gold">48 %</div><p>доля золота в международных резервах России в январе 2026 г. — максимум с 1995 г.; к середине года ≈ 44 % на фоне коррекции цены и продаж из ФНБ.</p></div>
+        <div class="stat"><div class="v gold">0 % НДС</div><p>при покупке слитков гражданами — с 1 марта 2022 г.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 17. Перспективы -->
+<section class="slide" id="outlook" data-title="Демонетизация или ремонетизация">
+  <div class="inner">
+    <div class="eyebrow"><span class="no">4.3</span><span class="sep"></span><span>Перспективы</span></div>
+    <h2>Демонетизация или ремонетизация?</h2>
+    <div class="split">
+      <div>
+        <h3>Не вернулось</h3>
+        <ul class="points lost">
+          <li>Ни одна валюта не имеет золотого содержания.</li>
+          <li>Цены товаров не выражаются в золоте — нет функции меры стоимости.</li>
+          <li>Золото не обращается и не служит средством платежа между государствами.</li>
+          <li>Добыча по-прежнему несопоставима с потребностью мира в ликвидности.</li>
+          <li>Ни одна крупная экономика не готова отказаться от собственной денежной политики.</li>
+        </ul>
+      </div>
+      <div>
+        <h3>Усилилось</h3>
+        <ul class="points">
+          <li><b>Резервный актив без риска контрагента</b> — не является чьим-либо долгом.</li>
+          <li><b>Диверсификация резервов</b> на фоне фрагментации и дедолларизации.</li>
+          <li><b>Страховка</b> от кризисов, инфляции и геополитики.</li>
+          <li><b>Залог</b> в операциях ЦБ и финансовых институтов.</li>
+          <li>Проекты расчётных единиц с частичным золотым обеспечением (БРИКС) — пока лишь дискуссии.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 18. Выводы -->
+<section class="slide" id="conclusions" data-title="Выводы">
+  <div class="inner">
+    <div class="eyebrow"><span class="no">Заключение</span><span class="sep"></span><span>Выводы</span></div>
+    <h2>Выводы</h2>
+    <ol class="concl">
+      <li><span>Снижение роли золота — долгосрочная тенденция XX века: золотомонетный → золотодевизный → золотодолларовый стандарт → юридическая демонетизация (1976–1978).</span></li>
+      <li><span>Причины: ограниченность золота, развитие кредитных денег, потребность в гибкой денежно-кредитной политике, возвышение доллара.</span></li>
+      <li><span>Проявления: конец размена и обращения, отмена официальной цены и паритетов, падение доли в резервах ≈ с 70 % до &lt; 10 %, распродажи ЦБ 1989–2009 гг.</span></li>
+      <li><span>С 2010 г., а особенно после 2022 г. — контртенденция: ЦБ покупают &gt; 1 000 т в год, доля золота в резервах выросла до 20–27 %.</span></li>
+      <li><span>Возврата к золотому стандарту нет: золото сохранило лишь функцию средства накопления — но как резервный актив его значение растёт.</span></li>
+    </ol>
+    <p class="finale">Юридически золото демонетизировано окончательно. Фактически — это <em>самый нейтральный резервный актив</em> мира.</p>
+  </div>
+</section>
+
+<!-- 19. Источники -->
+<section class="slide" id="sources" data-title="Источники">
+  <div class="inner">
+    <div class="eyebrow"><span class="no">Источники</span><span class="sep"></span><span>Данные на сентябрь 2026 г., значения округлены</span></div>
+    <h2>Литература и данные</h2>
+    <ol class="refs">
+      <li>Статьи соглашения Международного валютного фонда. — imf.org.</li>
+      <li>Кейнс Дж. М. Трактат о денежной реформе // Избранные произведения. — М.: Экономика, 1993.</li>
+      <li>Красавина Л. Н. (ред.) Международные валютно-кредитные и финансовые отношения. — М.: Финансы и статистика, 2005.</li>
+      <li>Кругман П., Обстфельд М. Международная экономика: теория и политика. — СПб.: Питер.</li>
+      <li>Моисеев С. Р. Международные валютно-кредитные отношения. — М.: Дело и Сервис, 2003.</li>
+      <li>Эйхенгрин Б. Непомерная привилегия. — М.: Изд-во Института Гайдара, 2013.</li>
+      <li>Банк России. Международные резервы Российской Федерации. — cbr.ru.</li>
+      <li>Arslanalp S., Eichengreen B., Simpson-Bell C. Gold as International Reserves: A Barbarous Relic No More? — IMF WP 23/14, 2023.</li>
+      <li>Eichengreen B. Golden Fetters. — Oxford University Press, 1992.</li>
+      <li>ECB. The international role of the euro. — June 2025.</li>
+      <li>Triffin R. Gold and the Dollar Crisis. — Yale University Press, 1960.</li>
+      <li>World Gold Council. Gold Demand Trends: Full Year 2025; Central Bank Gold Reserves Survey 2026. — gold.org.</li>
+    </ol>
+    <p class="thanks">Спасибо за внимание</p>
+  </div>
+</section>
+
+</main>
+
+<script>
+(function () {
+  "use strict";
+  var NS = "http://www.w3.org/2000/svg";
+  var nf = new Intl.NumberFormat("ru-RU");
+  var fmt = function (v) { return nf.format(v); };
+
+  function el(tag, attrs, parent) {
+    var n = document.createElementNS(NS, tag);
+    for (var k in attrs) n.setAttribute(k, attrs[k]);
+    if (parent) parent.appendChild(n);
+    return n;
+  }
+  function txt(parent, x, y, s, cls, anchor) {
+    var t = el("text", { x: x, y: y, "class": cls, "text-anchor": anchor || "middle" }, parent);
+    t.textContent = s;
+    return t;
+  }
+
+  // ---------- подсказки ----------
+  function tipFor(host) {
+    var tip = document.createElement("div");
+    tip.className = "tip"; tip.hidden = true; host.appendChild(tip);
+    return {
+      show: function (target, html) {
+        var hb = host.getBoundingClientRect(), tb = target.getBoundingClientRect();
+        tip.innerHTML = html; tip.hidden = false;
+        var x = tb.left + tb.width / 2 - hb.left;
+        var half = tip.offsetWidth / 2;
+        x = Math.max(half, Math.min(hb.width - half, x));
+        tip.style.left = x + "px";
+        tip.style.top = (tb.top - hb.top) + "px";
+      },
+      hide: function () { tip.hidden = true; }
+    };
+  }
+  function bindHit(hit, tip, html, onEnter, onLeave) {
+    hit.setAttribute("tabindex", "0");
+    hit.setAttribute("aria-label", html.replace(/<[^>]+>/g, ""));
+    var on = function () { tip.show(hit, html); if (onEnter) onEnter(); };
+    var off = function () { tip.hide(); if (onLeave) onLeave(); };
+    hit.addEventListener("pointerenter", on);
+    hit.addEventListener("pointerleave", off);
+    hit.addEventListener("focus", on);
+    hit.addEventListener("blur", off);
+  }
+
+  // ---------- столбчатая диаграмма ----------
+  function barChart(host, cfg) {
+    var W = cfg.w || 640, H = cfg.h || 300, m = { t: 30, r: 8, b: 40, l: 56 };
+    var iw = W - m.l - m.r, ih = H - m.t - m.b;
+    var svg = el("svg", { viewBox: "0 0 " + W + " " + H, role: "img", "aria-label": cfg.label }, host);
+    var y = function (v) { return m.t + ih - v / cfg.max * ih; };
+    cfg.ticks.forEach(function (t) {
+      el("line", { x1: m.l, x2: W - m.r, y1: y(t), y2: y(t), "class": t === 0 ? "base" : "grid" }, svg);
+      txt(svg, m.l - 10, y(t) + 4, fmt(t), "tick", "end");
+    });
+    var n = cfg.data.length, band = iw / n, bw = Math.min(cfg.bar || 24, band * .62), r = 4;
+    var tip = tipFor(host);
+    if (cfg.ref) {
+      el("line", { x1: m.l, x2: W - m.r, y1: y(cfg.ref.v), y2: y(cfg.ref.v), "class": "ref" }, svg);
+      el("line", { x1: m.l, x2: m.l + 16, y1: 12, y2: 12, "class": "ref" }, svg);
+      txt(svg, m.l + 22, 16, cfg.ref.label, "note", "start");
+    }
+    cfg.data.forEach(function (d, i) {
+      var cx = m.l + band * i + band / 2, x0 = cx - bw / 2, x1 = cx + bw / 2, top = y(d.v), base = y(0);
+      el("path", { d: "M" + x0 + "," + base + " V" + (top + r) + " Q" + x0 + "," + top + " " + (x0 + r) + "," + top +
+        " H" + (x1 - r) + " Q" + x1 + "," + top + " " + x1 + "," + (top + r) + " V" + base + " Z",
+        "class": "bar" + (d.soft ? " soft" : "") }, svg);
+      if (d.show) txt(svg, cx, top - 8, fmt(d.v), "lbl");
+      if (d.axis !== false) {
+        var parts = String(d.label).split("\n");
+        parts.forEach(function (p, k) { txt(svg, cx, H - m.b + 20 + k * 14, p, "tick"); });
+      }
+      var hit = el("rect", { x: m.l + band * i, y: m.t, width: band, height: ih, "class": "hit" }, svg);
+      bindHit(hit, tip, (d.tipLabel || String(d.label).replace("\n", " ")) + ": <b>" + fmt(d.v) + "</b> " + (cfg.unit || ""));
+    });
+  }
+
+  // ---------- линейный график ----------
+  function lineChart(host, cfg) {
+    var W = 640, H = 310, m = { t: 26, r: 18, b: 34, l: 48 };
+    var iw = W - m.l - m.r, ih = H - m.t - m.b;
+    var svg = el("svg", { viewBox: "0 0 " + W + " " + H, role: "img", "aria-label": cfg.label }, host);
+    var x = function (v) { return m.l + (v - cfg.x0) / (cfg.x1 - cfg.x0) * iw; };
+    var y = function (v) { return m.t + ih - v / cfg.max * ih; };
+    cfg.yTicks.forEach(function (t) {
+      el("line", { x1: m.l, x2: W - m.r, y1: y(t), y2: y(t), "class": t === 0 ? "base" : "grid" }, svg);
+      txt(svg, m.l - 10, y(t) + 4, t + " %", "tick", "end");
+    });
+    cfg.xTicks.forEach(function (t) { txt(svg, x(t), H - m.b + 20, t, "tick"); });
+    var d = cfg.data;
+    var line = d.map(function (p, i) { return (i ? "L" : "M") + x(p[0]).toFixed(1) + "," + y(p[1]).toFixed(1); }).join(" ");
+    el("path", { d: line + " L" + x(d[d.length - 1][0]) + "," + y(0) + " L" + x(d[0][0]) + "," + y(0) + " Z", "class": "area" }, svg);
+    el("path", { d: line, "class": "line" }, svg);
+    var guide = el("line", { x1: 0, x2: 0, y1: m.t, y2: y(0), "class": "guide", visibility: "hidden" }, svg);
+    var tip = tipFor(host);
+    (cfg.notes || []).forEach(function (nt) {
+      var p = d.filter(function (q) { return q[0] === nt.at; })[0];
+      nt.text.forEach(function (line, k) { txt(svg, x(p[0]) + nt.dx, y(p[1]) + nt.dy + k * 15, line, k === 0 ? "lbl" : "note", nt.anchor || "middle"); });
+    });
+    d.forEach(function (p, i) {
+      var dot = el("circle", { cx: x(p[0]), cy: y(p[1]), r: 4, "class": "dot" }, svg);
+      var prev = i ? x(d[i - 1][0]) : m.l, next = i < d.length - 1 ? x(d[i + 1][0]) : W - m.r;
+      var a = i ? (prev + x(p[0])) / 2 : m.l, b = i < d.length - 1 ? (x(p[0]) + next) / 2 : W - m.r;
+      var hit = el("rect", { x: a, y: m.t, width: b - a, height: ih, "class": "hit" }, svg);
+      bindHit(hit, tip, p[0] + " г.: <b>≈ " + p[1] + " %</b>",
+        function () { guide.setAttribute("x1", x(p[0])); guide.setAttribute("x2", x(p[0])); guide.setAttribute("visibility", "visible"); dot.setAttribute("r", 6); },
+        function () { guide.setAttribute("visibility", "hidden"); dot.setAttribute("r", 4); });
+    });
+    // точки поверх зон наведения не перехватывают курсор
+    svg.querySelectorAll(".dot").forEach(function (c) { c.style.pointerEvents = "none"; svg.appendChild(c); });
+  }
+
+  // ---------- горизонтальные полосы ----------
+  function hbars(list, rows, max) {
+    rows.forEach(function (r) {
+      var li = document.createElement("li");
+      if (r.big) li.className = "big";
+      var w = Math.max(0.4, r.v / max * 100);
+      li.innerHTML = '<span class="lab">' + r.label + '</span><span class="track"><span class="fill ' + (r.cls || "") +
+        '" style="width:calc((100% - 5.5em) * ' + (w / 100).toFixed(4) + ')"></span><span class="val">' + (r.approx ? "≈ " : "") + fmt(r.v) + (r.suffix || "") + "</span></span>";
+      list.appendChild(li);
+    });
+  }
+
+  // ---------- данные ----------
+  barChart(document.getElementById("chartUsa"), {
+    w: 520, h: 290, max: 25000, ticks: [0, 5000, 10000, 15000, 20000, 25000], bar: 24, unit: "т",
+    label: "Золотой запас США: 1949 — 21 700 т, 1960 — 15 800 т, 1965 — 12 300 т, август 1971 — 9 070 т, 2026 — 8 133 т",
+    data: [
+      { label: "1949", v: 21700, show: true },
+      { label: "1960", v: 15800, show: true },
+      { label: "1965", v: 12300, show: true },
+      { label: "1971\nавгуст", v: 9070, show: true, tipLabel: "Август 1971" },
+      { label: "2026", v: 8133, show: true, soft: true }
+    ]
+  });
+
+  var cb = [[2010, 79], [2011, 481], [2012, 569], [2013, 629], [2014, 601], [2015, 580], [2016, 395], [2017, 379], [2018, 656], [2019, 605], [2020, 255], [2021, 450], [2022, 1082], [2023, 1037], [2024, 1045], [2025, 863]];
+  barChart(document.getElementById("chartCb"), {
+    w: 640, h: 300, max: 1250, ticks: [0, 250, 500, 750, 1000, 1250], bar: 22, unit: "т",
+    ref: { v: 473, label: "среднее 2010–2021 гг. — 473 т" },
+    label: "Нетто-покупки золота центральными банками 2010–2025 гг.; в 2022–2024 гг. — более 1 000 т в год, в 2025 г. — 863 т",
+    data: cb.map(function (d) {
+      return { label: d[0] % 3 === 0 ? String(d[0]) : "", tipLabel: String(d[0]), v: d[1], soft: d[0] < 2022, show: d[0] === 2022 || d[0] === 2025 };
+    })
+  });
+  var cbTable = document.getElementById("cbTable");
+  cbTable.innerHTML = cb.map(function (d) { return "<tr><th>" + d[0] + "</th><td>" + fmt(d[1]) + "</td></tr>"; }).join("");
+
+  lineChart(document.getElementById("chartShare"), {
+    label: "Доля золота в мировых официальных резервах: 1950 — около 70 %, 1970 — 40 %, 1980 — 60 %, 2015 — около 9 %, 2025 — около 27 %",
+    x0: 1946, x1: 2028, max: 80, yTicks: [0, 20, 40, 60, 80], xTicks: [1950, 1960, 1970, 1980, 1990, 2000, 2010, 2020],
+    data: [[1950, 70], [1960, 63], [1970, 40], [1980, 60], [1990, 31], [2000, 13], [2010, 13], [2015, 9], [2020, 14], [2024, 20], [2025, 27]],
+    notes: [
+      { at: 1950, dx: 0, dy: -14, text: ["≈ 70 %"] },
+      { at: 1970, dx: -10, dy: 24, anchor: "end", text: ["≈ 40 %", "1971: размен закрыт"] },
+      { at: 1980, dx: 12, dy: -18, anchor: "start", text: ["≈ 60 %", "скачок цены"] },
+      { at: 2015, dx: 0, dy: -14, text: ["≈ 9 %"] },
+      { at: 2025, dx: 0, dy: -14, text: ["≈ 27 %"] }
+    ]
+  });
+
+  hbars(document.getElementById("priceBars"), [
+    { label: "до 1933", v: 20.67, cls: "off" },
+    { label: "1934–1971", v: 35, cls: "off" },
+    { label: "дек. 1971", v: 38, cls: "off" },
+    { label: "февр. 1973", v: 42.22, cls: "off" },
+    { label: "янв. 1980", v: 850 },
+    { label: "1999", v: 252, approx: true },
+    { label: "сент. 2011", v: 1900, approx: true },
+    { label: "авг. 2020", v: 2070, approx: true },
+    { label: "окт. 2025", v: 4380, approx: true },
+    { label: "29.01.2026", v: 5586, big: true },
+    { label: "сент. 2026", v: 4400, approx: true }
+  ], 5586);
+
+  hbars(document.getElementById("holderBars"), [
+    { label: "США", v: 8133, cls: "soft" },
+    { label: "Германия", v: 3350, cls: "soft" },
+    { label: "МВФ", v: 2814, cls: "soft" },
+    { label: "Италия", v: 2452, cls: "soft" },
+    { label: "Франция", v: 2437, cls: "soft" },
+    { label: "Китай", v: 2390, cls: "soft", approx: true },
+    { label: "Россия", v: 2290, approx: true, big: true },
+    { label: "Швейцария", v: 1040, cls: "soft" },
+    { label: "Индия", v: 880, cls: "soft", approx: true },
+    { label: "Япония", v: 846, cls: "soft" }
+  ], 8133);
+
+  // ---------- матрица функций ----------
+  var F = { f: ["full", "выполняет"], h: ["half", "частично"], n: ["none", "утрачена"] };
+  var rows = [
+    ["Мера стоимости", "золотое содержание валют", "f", "f", "h", "n"],
+    ["Средство обращения", "монеты в кошельках", "f", "n", "n", "n"],
+    ["Средство платежа", "погашение долгов", "f", "h", "h", "n"],
+    ["Средство накопления", "сокровище, резерв", "f", "f", "f", "f"],
+    ["Мировые деньги", "международные расчёты", "f", "h", "h", "h"]
+  ];
+  var sys = ["Парижская", "Генуэзская", "Бреттон-Вудская", "Ямайская"];
+  document.getElementById("matrixBody").innerHTML = rows.map(function (r) {
+    return "<tr><th scope=\"row\">" + r[0] + "<small>" + r[1] + "</small></th>" + r.slice(2).map(function (c, i) {
+      return "<td><i class=\"fx " + F[c][0] + "\" aria-hidden=\"true\"></i><span class=\"sr\">" + sys[i] + ": " + F[c][1] + "</span></td>";
+    }).join("") + "</tr>";
+  }).join("");
+
+  // ---------- гильош за слитком ----------
+  var cv = document.getElementById("guilloche");
+  function drawGuilloche() {
+    var box = cv.getBoundingClientRect();
+    if (!box.width) return;
+    var dpr = Math.min(window.devicePixelRatio || 1, 2);
+    cv.width = box.width * dpr; cv.height = box.height * dpr;
+    var c = cv.getContext("2d");
+    c.setTransform(dpr, 0, 0, dpr, 0, 0);
+    c.clearRect(0, 0, box.width, box.height);
+    var col = getComputedStyle(document.documentElement).getPropertyValue("--engrave").trim() || "#2C5A4B";
+    var cx = box.width / 2, cy = box.height / 2, S = Math.min(box.width, box.height) / 2 * .96;
+    c.strokeStyle = col; c.lineWidth = .6;
+    for (var k = 0; k < 3; k++) {
+      var R = S * (1 - k * .16), r = R * (0.23 + k * .02), dd = R * (0.58 - k * .05);
+      c.globalAlpha = .28 - k * .06;
+      c.beginPath();
+      for (var t = 0; t <= Math.PI * 2 * 13 + .01; t += .012) {
+        var px = (R - r) * Math.cos(t) + dd * Math.cos((R - r) / r * t);
+        var py = (R - r) * Math.sin(t) - dd * Math.sin((R - r) / r * t);
+        var s = S / (R - r + dd);
+        if (t === 0) c.moveTo(cx + px * s * (1 - k * .16), cy + py * s * (1 - k * .16));
+        else c.lineTo(cx + px * s * (1 - k * .16), cy + py * s * (1 - k * .16));
+      }
+      c.stroke();
+    }
+    c.globalAlpha = 1;
+  }
+  drawGuilloche();
+  var rz; window.addEventListener("resize", function () { clearTimeout(rz); rz = setTimeout(drawGuilloche, 120); });
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(drawGuilloche);
+  new MutationObserver(drawGuilloche).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+  if (window.matchMedia) {
+    var mq = window.matchMedia("(prefers-color-scheme: dark)");
+    if (mq.addEventListener) mq.addEventListener("change", drawGuilloche);
+  }
+
+  // ---------- навигация по слайдам ----------
+  var slides = Array.prototype.slice.call(document.querySelectorAll(".slide"));
+  var total = slides.length, current = 0;
+  var counter = document.getElementById("counter"), progress = document.getElementById("progress");
+  var eras = document.querySelectorAll(".eras li");
+  var dots = document.getElementById("dots");
+  var pad = function (n) { return (n < 10 ? "0" : "") + n; };
+
+  slides.forEach(function (s, i) {
+    var li = document.createElement("li");
+    var b = document.createElement("button");
+    b.type = "button"; b.innerHTML = "<i></i>";
+    b.setAttribute("aria-label", (i + 1) + ". " + (s.dataset.title || ""));
+    b.title = s.dataset.title || "";
+    b.addEventListener("click", function () { go(i); });
+    li.appendChild(b); dots.appendChild(li);
+  });
+  var dotBtns = dots.querySelectorAll("button");
+
+  function mark(i) {
+    current = i;
+    counter.textContent = pad(i + 1) + " / " + pad(total);
+    progress.style.width = (i / (total - 1) * 100) + "%";
+    var era = slides[i].dataset.era || "";
+    eras.forEach(function (e) { e.classList.toggle("on", e.dataset.era === era); });
+    dotBtns.forEach(function (b, k) { b.setAttribute("aria-current", k === i ? "true" : "false"); });
+  }
+  function go(i) {
+    i = Math.max(0, Math.min(total - 1, i));
+    slides[i].scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
+    mark(i);
+  }
+  var io = new IntersectionObserver(function (entries) {
+    entries.forEach(function (en) { if (en.isIntersecting) mark(slides.indexOf(en.target)); });
+  }, { rootMargin: "-45% 0px -45% 0px", threshold: 0 });
+  slides.forEach(function (s) { io.observe(s); });
+  mark(0);
+
+  document.getElementById("prevBtn").addEventListener("click", function () { go(current - 1); });
+  document.getElementById("nextBtn").addEventListener("click", function () { go(current + 1); });
+  document.addEventListener("keydown", function (e) {
+    if (e.altKey || e.ctrlKey || e.metaKey) return;
+    var tag = (e.target.tagName || "").toLowerCase();
+    if (tag === "input" || tag === "textarea" || tag === "select") return;
+    var k = e.key;
+    if (k === "ArrowDown" || k === "ArrowRight" || k === "PageDown" || (k === " " && tag !== "button" && tag !== "summary")) { e.preventDefault(); go(current + 1); }
+    else if (k === "ArrowUp" || k === "ArrowLeft" || k === "PageUp") { e.preventDefault(); go(current - 1); }
+    else if (k === "Home") { e.preventDefault(); go(0); }
+    else if (k === "End") { e.preventDefault(); go(total - 1); }
+    else if (k === "f" || k === "F" || k === "а" || k === "А") { toggleFs(); }
+  });
+
+  // ---------- полный экран и тема ----------
+  var fsBtn = document.getElementById("fsBtn");
+  if (!document.fullscreenEnabled) fsBtn.hidden = true;
+  function toggleFs() {
+    try {
+      var p = document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen();
+      if (p && p.catch) p.catch(function () {});
+    } catch (err) {}
+  }
+  fsBtn.addEventListener("click", toggleFs);
+
+  var root = document.documentElement;
+  try { var saved = localStorage.getItem("au-theme"); if (saved) root.setAttribute("data-theme", saved); } catch (err) {}
+  document.getElementById("themeBtn").addEventListener("click", function () {
+    var cur = root.getAttribute("data-theme") || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+    var next = cur === "dark" ? "light" : "dark";
+    root.setAttribute("data-theme", next);
+    try { localStorage.setItem("au-theme", next); } catch (err) {}
+  });
+})();
+</script>
+</body>
+</html>
