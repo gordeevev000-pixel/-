@@ -332,11 +332,6 @@ b, strong { font-weight: 700; }
 .refs li { display: grid; grid-template-columns: 1.9em 1fr; font-size: .74em; line-height: 1.4; color: var(--fg-2); }
 .refs li::before { counter-increment: r; content: counter(r); font: 800 1em var(--num); color: var(--fg); }
 
-/* ---------- Текст выступления ---------- */
-.notes { display: grid; grid-template-columns: 9.5rem minmax(0, 68ch); gap: 8px 28px; margin-top: 18px; padding-inline: 2px; }
-.notes-label { font: 700 11.5px/1.9 var(--head); letter-spacing: .12em; text-transform: uppercase; color: var(--chrome-2); }
-.notes p { margin: 0; font-size: 15.5px; line-height: 1.62; color: #cfd0d6; }
-
 /* ---------- Текучая раскладка (узкие экраны, режим чтения) ---------- */
 @container frame (width < 1000px) {
   .deck:not(.present) .slide-inner { aspect-ratio: auto; font-size: 15px; padding: 1.9em 1.7em 1.9em; overflow: hidden; }
@@ -366,7 +361,6 @@ b, strong { font-weight: 700; }
   .deck:not(.present) .title-grid { gap: 1.8em; }
 }
 @media (max-width: 760px) {
-  .notes { grid-template-columns: 1fr; gap: 2px; }
   .show-btn span { display: none; }
   .show-btn { padding: 11px 13px; }
   .top-in { gap: 10px; }
@@ -376,7 +370,6 @@ b, strong { font-weight: 700; }
 .deck.present { position: fixed; inset: 0; z-index: 50; max-width: none; margin: 0; background: var(--stage-2); display: block; }
 .deck.present .slide { display: none; }
 .deck.present .slide.is-current { display: grid; place-items: center; width: 100%; height: 100%; }
-.deck.present .notes { display: none; }
 .deck.present .frame { width: min(100vw, calc(100vh * 16 / 9)); width: min(100vw, calc(100dvh * 16 / 9)); }
 .deck.present .slide.is-current .slide-inner { animation: enter .28s ease-out both; }
 @keyframes enter { from { opacity: .35; transform: translateX(.6%); } to { opacity: 1; transform: none; } }
@@ -397,16 +390,7 @@ b, strong { font-weight: 700; }
 .segs button.cur::after { background: var(--c); height: 4px; box-shadow: 0 0 0 2px #0c0d10, 0 0 0 3.5px var(--c); }
 .pbtn { border: 1px solid var(--chrome-line); background: var(--btn); color: var(--chrome); padding: 7px 11px; cursor: pointer; font: 600 13px/1 var(--head); }
 .pbtn:hover { border-color: #4a4d57; }
-.pbtn[aria-pressed="true"] { background: var(--e-paris); color: #1b1406; border-color: var(--e-paris); }
 .pcount { font: 600 12.5px/1 var(--num); color: var(--chrome-2); min-width: 4.8em; text-align: center; }
-.pnotes {
-  position: fixed; left: 50%; bottom: 64px; z-index: 61; transform: translateX(-50%);
-  width: min(760px, calc(100vw - 32px)); max-height: 38vh; overflow: auto;
-  background: #1a1c21; border: 1px solid var(--chrome-line); padding: 16px 20px;
-  box-shadow: 0 20px 60px -20px rgba(0, 0, 0, .7);
-}
-.pnotes .notes-label { display: block; margin-bottom: 6px; }
-.pnotes p { margin: 0; font-size: 16px; line-height: 1.6; color: var(--chrome); }
 
 @media (prefers-reduced-motion: reduce) {
   * { scroll-behavior: auto !important; transition: none !important; animation: none !important; }
@@ -432,8 +416,8 @@ b, strong { font-weight: 700; }
 </header>
 
 <p class="howto">
-  <span>20 слайдов · ≈ 12–15 минут</span>
-  <span>Показ: <kbd>←</kbd> <kbd>→</kbd> слайды · <kbd>N</kbd> текст выступления · <kbd>F</kbd> полный экран · <kbd>Esc</kbd> выход</span>
+  <span>20 слайдов · ≈ 10 минут</span>
+  <span>Показ: <kbd>←</kbd> <kbd>→</kbd> слайды · <kbd>F</kbd> полный экран · <kbd>Esc</kbd> выход</span>
   <span>Графики интерактивные: наведите курсор</span>
 </p>
 
@@ -458,7 +442,6 @@ b, strong { font-weight: 700; }
       </div>
     </div>
   </div></div>
-  <aside class="notes"><span class="notes-label">Что сказать</span><p>Добрый день. Тема моего доклада — эволюция мировой валютной системы от Парижской до Ямайской. За 160 лет мир четыре раза договаривался о новых «правилах игры»: что служит мировыми деньгами, как устанавливаются валютные курсы и кто следит за порядком. Я расскажу, как была устроена каждая система, почему она перестала работать и что из этого следует для сегодняшнего дня.</p></aside>
 </section>
 
 <!-- 02 · Понятие -->
@@ -491,7 +474,6 @@ b, strong { font-weight: 700; }
       </div>
     </div>
   </div></div>
-  <aside class="notes"><span class="notes-label">Что сказать</span><p>Сначала о понятии. Мировая валютная система — это форма организации международных валютных отношений, закреплённая межгосударственными соглашениями. Её элементы: формы мировых денег, условия конвертируемости, режим курсов, правила расчётов, режим валютных рынков и рынков золота, международные институты. Главное, что отличает одну систему от другой, — ответ на вопрос, что лежит в основе мировых денег: золото, золото вместе с долларом или набор ведущих валют и расчётная единица СДР.</p></aside>
 </section>
 
 <!-- 03 · Шкала времени -->
@@ -504,7 +486,6 @@ b, strong { font-weight: 700; }
       <p class="small muted" style="margin-top:.9em">Каждая смена системы приходится на войну или глубокий кризис. Нажмите на строку, чтобы перейти к системе.</p>
     </div>
   </div></div>
-  <aside class="notes"><span class="notes-label">Что сказать</span><p>Вот вся история на одной шкале. Парижская система действовала с 1867 года до Первой мировой войны, Генуэзская — с 1922 года до Второй мировой. Бреттон-Вудская возникла в 1944 году; фактически она закончилась в 1971-м, когда США прекратили обмен долларов на золото, а формально — в 1976-м. С тех пор действует Ямайская система. Обратите внимание: каждая смена приходится на войну или глубокий кризис.</p></aside>
 </section>
 
 <!-- 04 · Париж: рождение -->
@@ -531,7 +512,6 @@ b, strong { font-weight: 700; }
       </div>
     </div>
   </div></div>
-  <aside class="notes"><span class="notes-label">Что сказать</span><p>Первая система сложилась стихийно. Великобритания перешла к золотому стандарту уже в 1816–1821 годах, а Парижская конференция 1867 года закрепила золото как единственную форму мировых денег. Дальше — цепная реакция: Германия, страны Латинского монетного союза, США, Япония. Россия перешла к золоту в 1897 году благодаря реформе Витте: рубль приравняли к 0,774234 грамма чистого золота.</p></aside>
 </section>
 
 <!-- 05 · Париж: принципы -->
@@ -558,7 +538,6 @@ b, strong { font-weight: 700; }
       </div>
     </div>
   </div></div>
-  <aside class="notes"><span class="notes-label">Что сказать</span><p>Принципы системы: в обращении находились золотые монеты; у каждой валюты было золотое содержание; валюты свободно менялись на золото, а золото свободно перемещалось между странами. Отсюда монетный паритет: фунт содержал 7,32 грамма чистого золота, доллар — 1,50 грамма, значит, фунт стоил 4,8665 доллара. Рыночный курс колебался вокруг этой величины совсем немного.</p></aside>
 </section>
 
 <!-- 06 · Париж: механизм -->
@@ -590,7 +569,6 @@ b, strong { font-weight: 700; }
       </div>
     </div>
   </div></div>
-  <aside class="notes"><span class="notes-label">Что сказать</span><p>Почему курс колебался так мало? Из-за «золотых точек». Если курс фунта уходил от паритета дальше, чем стоила пересылка золота, выгоднее было отправить само золото. Поэтому курс держался в узком коридоре, обычно в пределах процента. Ползунок меняет стоимость пересылки — видно, как расширяется коридор. Справа — механизм Юма: дефицит платёжного баланса вызывает отток золота, денежная масса и цены снижаются, экспорт растёт, и равновесие восстанавливается само.</p></aside>
 </section>
 
 <!-- 07 · Париж: оценка и крах -->
@@ -626,7 +604,6 @@ b, strong { font-weight: 700; }
       </div>
     </div>
   </div></div>
-  <aside class="notes"><span class="notes-label">Что сказать</span><p>Система давала стабильность курсов и цен и способствовала первой глобализации. Но за это приходилось платить: количество денег зависело от добычи золота, экономика страдала от дефляции, а государства не могли вести собственную денежную политику. Первая мировая война всё это разрушила: воюющие страны прекратили размен, запретили вывоз золота и начали печатать деньги для финансирования войны.</p></aside>
 </section>
 
 <!-- 08 · Генуя: конференция -->
@@ -658,7 +635,6 @@ b, strong { font-weight: 700; }
       </div>
     </div>
   </div></div>
-  <aside class="notes"><span class="notes-label">Что сказать</span><p>После войны Европа столкнулась с инфляцией и нехваткой золота: большая его часть ушла в США. На Генуэзской конференции 1922 года, где была и советская делегация во главе с Чичериным, решили вернуться к золоту, но экономить его — хранить резервы в валютах, которые обмениваются на золото, то есть в девизах. Резервная валюта официально не закреплялась: за лидерство боролись фунт и доллар.</p></aside>
 </section>
 
 <!-- 09 · Генуя: три формы -->
@@ -693,7 +669,6 @@ b, strong { font-weight: 700; }
       </div>
     </div>
   </div></div>
-  <aside class="notes"><span class="notes-label">Что сказать</span><p>Размен на золото существовал в трёх формах. В США сохранились золотые монеты. Великобритания и Франция ввели золотослитковый стандарт: банкноты меняли только на слитки — в Лондоне весом около 12,4 кг, примерно на 1700 фунтов. Остальные страны меняли свои деньги на девизы — фунты и доллары, а уже их на золото. Великобритания вернулась к довоенному паритету, фунт оказался переоценён, и Кейнс резко критиковал это решение.</p></aside>
 </section>
 
 <!-- 10 · Генуя: распад -->
@@ -725,7 +700,6 @@ b, strong { font-weight: 700; }
       </div>
     </div>
   </div></div>
-  <aside class="notes"><span class="notes-label">Что сказать</span><p>Система не пережила Великую депрессию. В 1931 году рухнул австрийский Creditanstalt, Германия ввела валютный контроль, а в сентябре Великобритания отменила размен фунта. В 1933 году ушли США и девальвировали доллар: унция золота подорожала с 20,67 до 35 долларов. Последним в 1936 году распался «золотой блок» во главе с Францией. Мир разделился на валютные блоки и вёл валютные войны.</p></aside>
 </section>
 
 <!-- 11 · Бреттон-Вудс: конференция -->
@@ -753,7 +727,6 @@ b, strong { font-weight: 700; }
       <p class="small muted" style="margin-top:.9em">СССР участвовал в конференции, но соглашения не ратифицировал. Россия — член МВФ с 1 июня 1992 г.</p>
     </div>
   </div></div>
-  <aside class="notes"><span class="notes-label">Что сказать</span><p>Уроки 30-х годов учли. В июле 1944 года в Бреттон-Вудсе собрались 44 страны, включая СССР. Спорили два плана: Кейнс предлагал наднациональную валюту «банкор» и ответственность и должников, и кредиторов; Уайт — фонд из взносов стран с опорой на золото и доллар. Победил американский план: у США было около 70 % золотых запасов капиталистического мира. Конференция создала МВФ и Международный банк реконструкции и развития.</p></aside>
 </section>
 
 <!-- 12 · Бреттон-Вудс: архитектура -->
@@ -815,7 +788,6 @@ b, strong { font-weight: 700; }
       </div>
     </div>
   </div></div>
-  <aside class="notes"><span class="notes-label">Что сказать</span><p>Схема системы простая. Золото привязано к доллару: 35 долларов за тройскую унцию, и только доллар меняется на золото — для центральных банков. Остальные валюты привязаны к доллару фиксированными паритетами: фунт — 2,80 доллара, марка — 4,20 за доллар, иена — 360. Отклонение допускалось в пределах одного процента, а менять паритет более чем на 10 % можно было только с согласия МВФ.</p></aside>
 </section>
 
 <!-- 13 · Бреттон-Вудс: Триффин -->
@@ -841,7 +813,6 @@ b, strong { font-weight: 700; }
       </div>
     </div>
   </div></div>
-  <aside class="notes"><span class="notes-label">Что сказать</span><p>Но в систему была встроена ловушка — дилемма Триффина. Чтобы мир получал доллары, США должны были тратить за рубежом больше, чем зарабатывают. А чем больше долларов накапливалось за границей, тем меньше верилось, что их можно обменять на золото. Золотой запас США сократился с 24,6 миллиарда долларов в 1949 году до 10,2 миллиарда в 1971-м, а долларовые обязательства перед иностранцами превысили его ещё к 1960 году.</p></aside>
 </section>
 
 <!-- 14 · Бреттон-Вудс: хроника -->
@@ -866,7 +837,6 @@ b, strong { font-weight: 700; }
       <p class="small muted" style="margin-top:1em">Причины: дилемма Триффина, дефицит платёжного баланса и инфляция в США (война во Вьетнаме), усиление Европы и Японии, рынок евродолларов и «горячие деньги».</p>
     </div>
   </div></div>
-  <aside class="notes"><span class="notes-label">Что сказать</span><p>Кризис развивался десятилетие. В 1960 году цена золота в Лондоне подскочила до 40 долларов, центральные банки создали золотой пул, Франция при де Голле меняла доллары на золото, в 1967 году был девальвирован фунт, в 1968-м рынок золота разделился на два яруса. Кульминация — 15 августа 1971 года: Никсон «закрыл золотое окно». После двух девальваций доллара весной 1973 года ведущие валюты перешли к плаванию.</p></aside>
 </section>
 
 <!-- 15 · Ямайка: принципы -->
@@ -898,7 +868,6 @@ b, strong { font-weight: 700; }
       </div>
     </div>
   </div></div>
-  <aside class="notes"><span class="notes-label">Что сказать</span><p>Новые правила оформили в январе 1976 года на Ямайке, а в силу они вступили в 1978 году через Вторую поправку к Уставу МВФ. Золото юридически демонетизировано: официальной цены и золотых паритетов больше нет. Основой объявлены СДР, а страны получили право самостоятельно выбирать режим курса. МВФ перешёл от контроля паритетов к надзору за курсовой политикой.</p></aside>
 </section>
 
 <!-- 16 · Ямайка: режимы -->
@@ -930,7 +899,6 @@ b, strong { font-weight: 700; }
       <p class="src">Классификация режимов — по МВФ (Annual Report on Exchange Arrangements and Exchange Restrictions).</p>
     </div>
   </div></div>
-  <aside class="notes"><span class="notes-label">Что сказать</span><p>Свобода выбора дала целый спектр режимов. На одном краю — жёсткая фиксация: Эквадор и Панама используют доллар, Гонконг живёт с валютным управлением. В середине — привязки: саудовский риал к доллару, датская крона к евро. На другом краю — плавающие курсы: доллар, евро, иена, фунт. Рубль плавает с ноября 2014 года.</p></aside>
 </section>
 
 <!-- 17 · Ямайка: сегодня -->
@@ -957,7 +925,6 @@ b, strong { font-weight: 700; }
       </div>
     </div>
   </div></div>
-  <aside class="notes"><span class="notes-label">Что сказать</span><p>Формально основа системы — СДР, но на деле главная валюта — доллар. Сравните: в корзине СДР доллар весит 43 %, а в мировых резервах занимает 57 %. Юань в корзине — 12 %, а в резервах — всего 2 %. Золото юридически больше не деньги, но центральные банки покупают его рекордными темпами, а цена выросла с официальных 35 долларов примерно до 4250 — более чем в сто раз.</p></aside>
 </section>
 
 <!-- 18 · Сравнение -->
@@ -983,7 +950,6 @@ b, strong { font-weight: 700; }
       </table>
     </div>
   </div></div>
-  <aside class="notes"><span class="notes-label">Что сказать</span><p>Сведём всё в одну таблицу. Основа менялась от золотых монет к валютам и СДР, курсы — от «золотых точек» через фиксированные паритеты к свободному выбору, регулирование — от рыночного автоматизма к МВФ, «Группе семи» и «Группе двадцати». Каждая система рухнула по своей причине, но всякий раз это было противоречие между её правилами и реальностью.</p></aside>
 </section>
 
 <!-- 19 · Выводы -->
@@ -1001,7 +967,6 @@ b, strong { font-weight: 700; }
       <p class="law">Валютная система живёт, пока её правила совпадают с реальным распределением экономической силы.</p>
     </div>
   </div></div>
-  <aside class="notes"><span class="notes-label">Что сказать</span><p>Итак, четыре вывода. Роль золота последовательно снижалась. Регулирование стало институциональным. Курсы стали гибкими. И во всех системах доминировала валюта сильнейшей экономики — сначала фунт, затем доллар. Общая закономерность: система живёт, пока её правила совпадают с реальным распределением экономической силы. Сегодня это распределение снова меняется — растёт роль Китая, расчётов в национальных валютах и цифровых валют, — поэтому вопрос о следующей системе открыт.</p></aside>
 </section>
 
 <!-- 20 · Спасибо -->
@@ -1029,7 +994,6 @@ b, strong { font-weight: 700; }
       </div>
     </div>
   </div></div>
-  <aside class="notes"><span class="notes-label">Что сказать</span><p>Спасибо за внимание! Готов(а) ответить на вопросы.</p></aside>
 </section>
 
 </main>
@@ -1039,11 +1003,9 @@ b, strong { font-weight: 700; }
   <span class="pcount" id="p-count">1 / 20</span>
   <button class="pbtn" id="p-next" type="button" aria-label="Следующий слайд">→</button>
   <div class="segs" id="segs"></div>
-  <button class="pbtn" id="p-notes" type="button" aria-pressed="false" title="Текст выступления (N)">Текст</button>
   <button class="pbtn" id="p-fs" type="button" title="Полный экран (F)">⤢</button>
   <button class="pbtn" id="p-exit" type="button" title="Выйти из показа (Esc)">Выйти</button>
 </div>
-<div class="pnotes" id="pnotes" hidden><span class="notes-label">Что сказать</span><p id="pnotes-text"></p></div>
 <div id="tip" role="tooltip" hidden></div>
 </div>
 
@@ -1328,8 +1290,8 @@ b, strong { font-weight: 700; }
   })();
 
   /* ---------- Навигация и режим показа ---------- */
-  let cur = 0, presenting = false, notesOn = false, weFull = false;
-  const pbar = $("#pbar"), segs = $("#segs"), count = $("#p-count"), pnotes = $("#pnotes"), pnText = $("#pnotes-text");
+  let cur = 0, presenting = false, weFull = false;
+  const pbar = $("#pbar"), segs = $("#segs"), count = $("#p-count");
   const eraColor = { gold: "var(--e-paris)", paris: "var(--e-paris)", genoa: "var(--e-genoa)", bw: "var(--e-bw)", jam: "var(--e-jam)", plain: "#e9e9ec" };
   slides.forEach((s, i) => {
     const b = document.createElement("button");
@@ -1344,7 +1306,6 @@ b, strong { font-weight: 700; }
     slides.forEach((s, k) => s.classList.toggle("is-current", k === cur));
     [...segs.children].forEach((b, k) => { b.classList.toggle("done", k < cur); b.classList.toggle("cur", k === cur); });
     count.textContent = `${cur + 1} / ${N}`;
-    pnText.textContent = $(".notes p", slides[cur]).textContent;
     try { history.replaceState(null, "", "#s" + (cur + 1)); } catch (e) { /* без адреса */ }
     tip.hidden = true;
   }
@@ -1358,7 +1319,7 @@ b, strong { font-weight: 700; }
     presenting = true;
     document.documentElement.classList.add("presenting");
     deck.classList.add("present");
-    pbar.hidden = false; pnotes.hidden = !notesOn;
+    pbar.hidden = false;
     show(cur);
     wakeBar();
   }
@@ -1367,7 +1328,7 @@ b, strong { font-weight: 700; }
     presenting = false;
     document.documentElement.classList.remove("presenting");
     deck.classList.remove("present");
-    pbar.hidden = true; pnotes.hidden = true;
+    pbar.hidden = true;
     slides.forEach((s) => s.classList.remove("is-current"));
     if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(() => {});
     weFull = false;
@@ -1378,11 +1339,6 @@ b, strong { font-weight: 700; }
     if (document.fullscreenElement) { document.exitFullscreen().catch(() => {}); weFull = false; return; }
     if (el.requestFullscreen) el.requestFullscreen().then(() => { weFull = true; }).catch(() => {});
   }
-  function toggleNotes() {
-    notesOn = !notesOn;
-    $("#p-notes").setAttribute("aria-pressed", String(notesOn));
-    pnotes.hidden = !(presenting && notesOn);
-  }
   document.addEventListener("fullscreenchange", () => {
     if (!document.fullscreenElement && weFull && presenting) { weFull = false; exit(); }
   });
@@ -1392,7 +1348,6 @@ b, strong { font-weight: 700; }
   $("#p-next").addEventListener("click", (e) => { e.stopPropagation(); show(cur + 1); });
   $("#p-exit").addEventListener("click", (e) => { e.stopPropagation(); exit(); });
   $("#p-fs").addEventListener("click", (e) => { e.stopPropagation(); toggleFull(); });
-  $("#p-notes").addEventListener("click", (e) => { e.stopPropagation(); toggleNotes(); });
 
   document.addEventListener("keydown", (e) => {
     if (e.altKey || e.ctrlKey || e.metaKey) return;
@@ -1408,7 +1363,6 @@ b, strong { font-weight: 700; }
     else if (k === "Home") { e.preventDefault(); show(0); }
     else if (k === "End") { e.preventDefault(); show(N - 1); }
     else if (k === "Escape") { e.preventDefault(); exit(); }
-    else if (k === "n" || k === "N" || k === "т" || k === "Т") { e.preventDefault(); toggleNotes(); }
     else if (k === "f" || k === "F" || k === "а" || k === "А") { e.preventDefault(); toggleFull(); }
     wakeBar();
   });
@@ -1416,7 +1370,7 @@ b, strong { font-weight: 700; }
   // клик по слайду: левая треть — назад, остальное — вперёд
   deck.addEventListener("click", (e) => {
     if (!presenting) return;
-    if (e.target.closest("a, button, input, label, output, [contenteditable], [data-tip], [role=button], .notes")) return;
+    if (e.target.closest("a, button, input, label, output, [contenteditable], [data-tip], [role=button]")) return;
     if (getSelection && String(getSelection()).length) return;
     e.clientX < innerWidth / 3 ? show(cur - 1) : show(cur + 1);
   });
