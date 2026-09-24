@@ -6,72 +6,28 @@
 <title>От Парижа до Ямайки</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Prata&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700;800&family=Unbounded:wght@500;700;800&display=swap">
 <style>
+/* Единый облик по замыслу: у каждой эпохи свой цвет фона, сцена вокруг слайдов — графитовая */
 :root {
-  color-scheme: light;
-  --paper: #edf0e7;
-  --paper-2: #f7f8f3;
-  --stage: #d9ded3;
-  --ink: #13241d;
-  --ink-2: #43534a;
-  --muted: #66756c;
-  --rule: #c9d1c3;
-  --rule-2: #dfe4da;
-  --gold: #7e5e0c;
-  --gold-line: #b08a33;
-  --seal: #a0302a;
-  --on-strong: #ffffff;
-  --paris: #a67a06;
-  --genoa: #8a4fc0;
-  --bw: #1a8a5a;
-  --jam: #2f62c0;
-  --shadow: 0 1px 0 rgba(19, 36, 29, .05), 0 18px 48px -26px rgba(19, 36, 29, .35);
-  --display: "Prata", "Georgia", "Times New Roman", serif;
-  --sans: "Golos Text", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
-  --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
-}
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    color-scheme: dark;
-    --paper: #0c1411;
-    --paper-2: #121c18;
-    --stage: #060a08;
-    --ink: #e6ebe3;
-    --ink-2: #b3beb6;
-    --muted: #8a978f;
-    --rule: #2a3a33;
-    --rule-2: #1e2b25;
-    --gold: #d8b25e;
-    --gold-line: #9c7b34;
-    --seal: #e0685e;
-    --on-strong: #0c1411;
-    --paris: #b98c26;
-    --genoa: #9d72dc;
-    --bw: #2c9866;
-    --jam: #5a8ae0;
-    --shadow: 0 1px 0 rgba(0, 0, 0, .3), 0 18px 48px -26px rgba(0, 0, 0, .8);
-  }
-}
-:root[data-theme="dark"] {
   color-scheme: dark;
-  --paper: #0c1411;
-  --paper-2: #121c18;
-  --stage: #060a08;
-  --ink: #e6ebe3;
-  --ink-2: #b3beb6;
-  --muted: #8a978f;
-  --rule: #2a3a33;
-  --rule-2: #1e2b25;
-  --gold: #d8b25e;
-  --gold-line: #9c7b34;
-  --seal: #e0685e;
-  --on-strong: #0c1411;
-  --paris: #b98c26;
-  --genoa: #9d72dc;
-  --bw: #2c9866;
-  --jam: #5a8ae0;
-  --shadow: 0 1px 0 rgba(0, 0, 0, .3), 0 18px 48px -26px rgba(0, 0, 0, .8);
+  --stage: #16171b;
+  --stage-2: #0c0d10;
+  --chrome: #ececef;
+  --chrome-2: #a3a5ae;
+  --chrome-line: #2b2d34;
+  --btn: #1f2127;
+  --e-paris: #e8b23a;
+  --e-genoa: #d65a4b;
+  --e-bw: #5b86e5;
+  --e-jam: #25b3a9;
+  /* цвета эпох для графиков на светлом фоне */
+  --c-paris: #b8840c;
+  --c-genoa: #b03a2e;
+  --c-bw: #2d5bc0;
+  --c-jam: #00908a;
+  --head: "Onest", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  --num: "Unbounded", "Onest", "Arial Black", sans-serif;
 }
 
 * { box-sizing: border-box; }
@@ -79,431 +35,388 @@ html { -webkit-text-size-adjust: 100%; }
 body {
   margin: 0;
   padding-inline: 16px;
-  padding-block: 0 64px;
-  background: var(--paper);
-  color: var(--ink);
-  font: 400 16px/1.5 var(--sans);
+  padding-block: 0 72px;
+  background: var(--stage);
+  color: var(--chrome);
+  font: 400 16px/1.5 var(--head);
   -webkit-font-smoothing: antialiased;
 }
 html.presenting, html.presenting body { overflow: hidden; }
 a { color: inherit; }
 button { font: inherit; color: inherit; }
-:focus-visible { outline: 2px solid var(--gold-line); outline-offset: 2px; }
+:focus-visible { outline: 2px solid var(--e-paris); outline-offset: 2px; }
 [hidden] { display: none !important; }
 
 /* ---------- Шапка ---------- */
 .top {
   position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20;
   margin-inline: -16px; padding-inline: 16px;
-  background: color-mix(in srgb, var(--paper) 90%, transparent);
+  background: color-mix(in srgb, var(--stage) 92%, transparent);
   backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-  border-bottom: 1px solid var(--rule);
+  border-bottom: 1px solid var(--chrome-line);
 }
-.top-in {
-  max-width: 1200px; margin: 0 auto; min-height: 56px;
-  display: flex; align-items: center; gap: 20px;
-}
-.brand { display: flex; flex-direction: column; line-height: 1.15; text-decoration: none; flex: none; }
-.brand b { font: 400 18px/1.1 var(--display); letter-spacing: .01em; }
-.brand span { font: 500 10.5px/1.4 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
-.eras { display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; flex: 1; min-width: 0; }
+.top-in { max-width: 1200px; margin: 0 auto; min-height: 58px; display: flex; align-items: center; gap: 22px; }
+.brand { flex: none; text-decoration: none; font: 800 17px/1.1 var(--head); letter-spacing: -.01em; }
+.eras { display: flex; gap: 2px; overflow-x: auto; scrollbar-width: none; flex: 1; min-width: 0; }
 .eras::-webkit-scrollbar { display: none; }
 .eras a {
-  flex: none; display: inline-flex; align-items: center; gap: 8px;
-  padding: 7px 10px; border-radius: 6px; text-decoration: none;
-  font: 500 13.5px/1 var(--sans); color: var(--ink-2);
+  flex: none; display: inline-flex; align-items: center; gap: 8px; padding: 8px 11px;
+  text-decoration: none; font: 500 14px/1 var(--head); color: var(--chrome-2);
 }
-.eras a i { width: 14px; height: 4px; border-radius: 1px; background: var(--era); }
-.eras a:hover { background: color-mix(in srgb, var(--ink) 6%, transparent); color: var(--ink); }
-.eras a[aria-current="true"] { color: var(--ink); background: color-mix(in srgb, var(--era) 14%, transparent); }
+.eras a i { width: 10px; height: 10px; background: var(--dot); }
+.eras a:hover { color: var(--chrome); background: #22242a; }
+.eras a[aria-current="true"] { color: var(--chrome); background: #25272e; }
+.eras a[data-era="paris"] { --dot: var(--e-paris); }
+.eras a[data-era="genoa"] { --dot: var(--e-genoa); }
+.eras a[data-era="bw"] { --dot: var(--e-bw); }
+.eras a[data-era="jam"] { --dot: var(--e-jam); }
+.eras a[data-era="plain"] { --dot: #ffffff; }
 .show-btn {
-  flex: none; display: inline-flex; align-items: center; gap: 10px;
-  border: 0; border-radius: 6px; padding: 10px 16px; cursor: pointer;
-  background: var(--ink); color: var(--paper); font: 600 14px/1 var(--sans);
+  flex: none; display: inline-flex; align-items: center; gap: 10px; cursor: pointer;
+  border: 0; padding: 11px 18px; background: var(--e-paris); color: #1b1406; font: 700 14px/1 var(--head);
 }
-.show-btn svg { width: 11px; height: 12px; fill: currentColor; }
-.show-btn:hover { background: color-mix(in srgb, var(--ink) 86%, var(--gold-line)); }
-.readbar { position: absolute; left: 0; bottom: -1px; height: 2px; width: 0; background: var(--gold-line); }
+.show-btn svg { width: 10px; height: 12px; fill: currentColor; }
+.show-btn:hover { background: #f1c257; }
+.readbar { position: absolute; left: 0; bottom: -1px; height: 2px; width: 0; background: var(--e-paris); }
 
 .howto {
-  max-width: 1200px; margin: 22px auto 26px;
-  display: flex; flex-wrap: wrap; gap: 8px 22px; align-items: baseline;
-  font: 500 12px/1.5 var(--mono); letter-spacing: .04em; color: var(--muted);
+  max-width: 1200px; margin: 24px auto 28px;
+  display: flex; flex-wrap: wrap; gap: 8px 26px; align-items: baseline;
+  font: 500 13px/1.6 var(--head); color: var(--chrome-2);
 }
-.howto kbd {
-  font: 500 11px/1 var(--mono); padding: 3px 6px; border-radius: 4px;
-  border: 1px solid var(--rule); background: var(--paper-2); color: var(--ink-2);
-}
+.howto kbd { font: 600 11.5px/1 var(--head); padding: 3px 7px; background: var(--btn); border: 1px solid var(--chrome-line); color: var(--chrome); }
 
 /* ---------- Колода ---------- */
-.deck { max-width: 1200px; margin: 0 auto; display: grid; gap: 64px; }
-.slide { scroll-margin-top: 76px; }
-.slide[data-era="paris"] { --era: var(--paris); }
-.slide[data-era="genoa"] { --era: var(--genoa); }
-.slide[data-era="bw"] { --era: var(--bw); }
-.slide[data-era="jam"] { --era: var(--jam); }
-.slide[data-era="gold"] { --era: var(--gold-line); }
-.eras a[data-era="paris"] { --era: var(--paris); }
-.eras a[data-era="genoa"] { --era: var(--genoa); }
-.eras a[data-era="bw"] { --era: var(--bw); }
-.eras a[data-era="jam"] { --era: var(--jam); }
-.eras a[data-era="gold"] { --era: var(--gold-line); }
+.deck { max-width: 1200px; margin: 0 auto; display: grid; gap: 56px; }
+.slide { scroll-margin-top: 80px; }
+
+.slide[data-era="gold"], .slide[data-era="paris"] {
+  --bg: #e8b23a; --fg: #1b1406; --fg-2: #4d3a10; --line: rgba(27, 20, 6, .2); --tint: rgba(27, 20, 6, .08);
+  --inv-bg: #1b1406; --inv-fg: #f4d27e; --accent: #8e3226; --mark: #1b1406; --ghost: rgba(27, 20, 6, .085);
+}
+.slide[data-era="genoa"] {
+  --bg: #8e3226; --fg: #fff4ee; --fg-2: #f2c6ba; --line: rgba(255, 244, 238, .22); --tint: rgba(255, 244, 238, .09);
+  --inv-bg: #fff4ee; --inv-fg: #6b2118; --accent: #f5c451; --mark: #f5c451; --ghost: rgba(255, 244, 238, .07);
+}
+.slide[data-era="bw"] {
+  --bg: #16336f; --fg: #ffffff; --fg-2: #c3ceea; --line: rgba(255, 255, 255, .2); --tint: rgba(255, 255, 255, .08);
+  --inv-bg: #ffffff; --inv-fg: #16336f; --accent: #f5c451; --mark: #f5c451; --ghost: rgba(255, 255, 255, .06);
+}
+.slide[data-era="jam"] {
+  --bg: #f5f7f6; --fg: #0e1a1f; --fg-2: #4a585e; --line: rgba(14, 26, 31, .14); --tint: #e3ebe9;
+  --inv-bg: #0b7a75; --inv-fg: #ffffff; --accent: #0b7a75; --mark: #0b7a75; --ghost: rgba(11, 122, 117, .08);
+}
+.slide[data-era="plain"] {
+  --bg: #ffffff; --fg: #111318; --fg-2: #50545e; --line: rgba(17, 19, 24, .13); --tint: #eff1f3;
+  --inv-bg: #111318; --inv-fg: #ffffff; --accent: #b03a2e; --mark: #111318; --ghost: rgba(17, 19, 24, .05);
+}
 
 .frame { container: frame / inline-size; }
 .slide-inner {
-  position: relative;
+  position: relative; isolation: isolate;
   aspect-ratio: 16 / 9;
   font-size: 1.55cqi;
-  padding: 2.3em 3.3em 2.1em;
-  background: var(--paper-2);
-  border: 1px solid var(--rule);
-  border-radius: 4px;
-  box-shadow: var(--shadow);
+  padding: 2.2em 3.2em 2.2em;
+  background: var(--bg); color: var(--fg);
   display: flex; flex-direction: column;
   overflow: hidden;
+  font-family: var(--head);
 }
-.slide-inner::before {
-  content: ""; position: absolute; inset: .85em; pointer-events: none;
-  border: 1px solid color-mix(in srgb, var(--gold-line) 38%, transparent);
-  border-radius: 2px;
+.ghost {
+  position: absolute; right: -.06em; bottom: -.2em; z-index: -1; pointer-events: none;
+  font: 800 14em/1 var(--num); letter-spacing: -.04em; color: var(--ghost); user-select: none;
 }
-.s-head {
-  display: flex; justify-content: space-between; align-items: center; gap: 1em;
-  font: 500 .68em/1.2 var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--ink-2);
-}
-.era-tag { display: inline-flex; align-items: center; gap: .9em; }
-.era-tag i { width: 2.4em; height: .5em; border-radius: 1px; background: var(--era); flex: none; }
-.serial { color: var(--seal); letter-spacing: .2em; white-space: nowrap; }
-.s-title {
-  font: 400 2.25em/1.1 var(--display);
-  margin: .5em 0 .55em; letter-spacing: -.004em; text-wrap: balance; max-width: 27em;
-}
-.s-body { flex: 1; min-height: 0; display: flex; flex-direction: column; justify-content: center; padding-bottom: 1.2em; }
-:where(.s-body) p { margin: 0 0 .75em; font-size: .95em; line-height: 1.46; }
+.s-head { display: flex; justify-content: space-between; align-items: center; gap: 1em; }
+.sec { display: inline-flex; align-items: center; gap: .7em; font: 700 .7em/1.2 var(--head); letter-spacing: .09em; text-transform: uppercase; color: var(--fg); }
+.sec i { width: .75em; height: .75em; background: var(--fg); flex: none; }
+.pg { font: 500 .66em/1 var(--num); color: var(--fg-2); letter-spacing: .02em; white-space: nowrap; }
+.s-title { font: 800 2.45em/1.02 var(--head); letter-spacing: -.028em; margin: .55em 0 .6em; text-wrap: balance; max-width: 24em; }
+.s-body { flex: 1; min-height: 0; display: flex; flex-direction: column; justify-content: center; padding-bottom: 1em; }
+:where(.s-body) p { margin: 0 0 .75em; font-size: .95em; line-height: 1.45; }
 :where(.s-body) p:last-child { margin-bottom: 0; }
 .s-body:is(.grid-2, .grid-3) { align-content: center; }
-.muted { color: var(--ink-2); }
+.muted { color: var(--fg-2); }
 .small { font-size: .8em !important; line-height: 1.45; }
-.mono { font-family: var(--mono); }
-.src { font: 400 .66em/1.45 var(--mono); color: var(--muted); letter-spacing: .02em; margin-top: .8em; }
+.src { font: 500 .66em/1.45 var(--head); color: var(--fg-2); margin-top: .8em; }
+b, strong { font-weight: 700; }
 
-.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 2.4em; align-items: start; }
-.grid-2.l { grid-template-columns: 1.2fr 1fr; }
-.grid-2.r { grid-template-columns: 1fr 1.25fr; }
-.grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.6em; align-items: start; }
-.stack { display: grid; gap: 1.1em; align-content: start; }
-:is(.grid-2, .grid-3, .title-grid, .pm, .forms, .spec-cols, .stack) > * { min-width: 0; }
+.grid-2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 2.6em; align-items: start; }
+.grid-2.l { grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); }
+.grid-2.r { grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); }
+.stack { display: grid; gap: 1.2em; align-content: start; }
+:is(.grid-2, .title-grid, .pm, .forms, .spec-cols, .stack) > * { min-width: 0; }
 
-.label {
-  font: 500 .66em/1.3 var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--muted);
-  margin: 0 0 .9em; display: block;
-}
+.label { display: block; margin: 0 0 .85em; font: 700 .64em/1.3 var(--head); letter-spacing: .1em; text-transform: uppercase; color: var(--fg-2); }
 
-/* нумерованные принципы */
-.plist { list-style: none; margin: 0; padding: 0; display: grid; gap: .62em; counter-reset: p; }
-.plist li { display: grid; grid-template-columns: 2.1em 1fr; font-size: .93em; line-height: 1.38; }
-.plist li::before {
-  counter-increment: p; content: counter(p, decimal-leading-zero);
-  font: 500 .78em/1.8 var(--mono); color: var(--muted);
-}
-.plist b, .plist strong { font-weight: 600; }
-.blist { list-style: none; margin: 0; padding: 0; display: grid; gap: .5em; }
-.blist li { position: relative; padding-left: 1.2em; font-size: .9em; line-height: 1.38; }
-.blist li::before { content: ""; position: absolute; left: 0; top: .62em; width: .55em; height: 1px; background: var(--ink-2); }
+.plist { list-style: none; margin: 0; padding: 0; display: grid; gap: .7em; counter-reset: p; }
+.plist li { display: grid; grid-template-columns: 2.3em 1fr; font-size: .93em; line-height: 1.37; }
+.plist li::before { counter-increment: p; content: counter(p); font: 800 1.05em/1.25 var(--num); color: var(--fg); }
+.blist { list-style: none; margin: 0; padding: 0; display: grid; gap: .55em; }
+.blist li { position: relative; padding-left: 1.25em; font-size: .9em; line-height: 1.38; }
+.blist li::before { content: ""; position: absolute; left: 0; top: .5em; width: .5em; height: .5em; background: var(--fg); }
 
-/* факты: крупное значение + подпись */
-.facts { display: grid; gap: 1em; margin: 0; }
-.facts div { display: grid; grid-template-columns: 5.4em 1fr; gap: 1em; align-items: baseline; }
-.facts dt { font: 400 1.45em/1 var(--display); color: var(--ink); }
-.facts dd { margin: 0; font-size: .88em; line-height: 1.4; color: var(--ink-2); }
+.facts { display: grid; gap: 1.1em; margin: 0; }
+.facts div { display: grid; grid-template-columns: 5.2em 1fr; gap: 1em; align-items: baseline; }
+.facts dt { font: 800 1.35em/1 var(--num); letter-spacing: -.02em; }
+.facts dd { margin: 0; font-size: .88em; line-height: 1.4; color: var(--fg-2); }
 
-.box {
-  border: 1px solid color-mix(in srgb, var(--era) 40%, var(--rule));
-  background: color-mix(in srgb, var(--era) 7%, var(--paper-2));
-  border-radius: 3px; padding: .95em 1.15em;
-}
+.box { background: var(--tint); padding: 1em 1.2em; }
 .box p { font-size: .88em; }
-.box .label { margin-bottom: .55em; }
+.box .label { margin-bottom: .5em; }
+.box.inv { background: var(--inv-bg); color: var(--inv-fg); }
+.box.inv .label { color: var(--inv-fg); opacity: .75; }
 
-.kpi { display: grid; gap: .25em; }
-.kpi .v { font: 400 3.1em/1 var(--display); letter-spacing: -.01em; }
-.kpi .d { font-size: .82em; line-height: 1.4; color: var(--ink-2); }
-
-.chip {
-  display: inline-flex; align-items: center; gap: .5em;
-  font: 500 .7em/1 var(--mono); letter-spacing: .04em;
-  padding: .45em .7em; border-radius: 999px; border: 1px solid var(--rule); color: var(--ink-2);
-  background: var(--paper-2);
-}
-.chips { display: flex; flex-wrap: wrap; gap: .45em; }
+.kpi { display: grid; gap: .3em; }
+.kpi .v { font: 800 2.5em/1 var(--num); letter-spacing: -.03em; }
+.kpi .d { font-size: .82em; line-height: 1.4; color: var(--fg-2); }
 
 /* ---------- Графики ---------- */
 .chart { position: relative; }
 .chart svg { display: block; width: 100%; height: auto; overflow: visible; }
-.chart text { font-family: var(--sans); }
-.tick { fill: var(--muted); font: 500 13px var(--mono); }
-.axis { stroke: var(--rule); stroke-width: 1; }
-.grid-line { stroke: var(--rule-2); stroke-width: 1; }
-.ev-line { stroke: var(--rule); stroke-width: 1; }
-.lbl { fill: var(--ink); font-size: 15px; }
-.lbl-2 { fill: var(--ink-2); font-size: 13px; }
-.lbl-b { fill: var(--ink); font-size: 14px; font-weight: 600; }
-.lbl-on { fill: #fff; font-size: 13.5px; font-weight: 600; }
-.f-paris { fill: var(--paris); } .f-genoa { fill: var(--genoa); } .f-bw { fill: var(--bw); } .f-jam { fill: var(--jam); }
-.f-ink { fill: var(--ink); } .f-ink2 { fill: var(--ink-2); } .f-paper { fill: var(--paper-2); }
-.s-ink { stroke: var(--ink); } .s-ink2 { stroke: var(--ink-2); } .s-paper { stroke: var(--paper-2); }
+.chart text { font-family: var(--head); }
+.tick { fill: var(--fg-2); font: 600 13px var(--head); }
+.axis { stroke: var(--line); stroke-width: 1.2; }
+.grid-line { stroke: var(--line); stroke-width: 1; opacity: .7; }
+.ev-line { stroke: var(--line); stroke-width: 1; }
+.lbl { fill: var(--fg); font-size: 15px; }
+.lbl-2 { fill: var(--fg-2); font-size: 13px; }
+.lbl-b { fill: var(--fg); font-size: 14px; font-weight: 700; }
+.lbl-on { fill: #fff; font-size: 13.5px; font-weight: 700; }
+.f-paris { fill: var(--c-paris); } .f-genoa { fill: var(--c-genoa); } .f-bw { fill: var(--c-bw); } .f-jam { fill: var(--c-jam); }
+.f-mark { fill: var(--mark); } .f-fg { fill: var(--fg); } .f-fg2 { fill: var(--fg-2); } .f-bg { fill: var(--bg); } .f-tint { fill: var(--tint); }
+.s-fg { stroke: var(--fg); } .s-fg2 { stroke: var(--fg-2); } .s-bg { stroke: var(--bg); } .s-mark { stroke: var(--mark); }
 .tl-row { cursor: pointer; }
-.tl-row:hover .tl-bar, .tl-row:focus-visible .tl-bar { filter: brightness(1.08) saturate(1.1); }
+.tl-row:hover .tl-bar, .tl-row:focus-visible .tl-bar { filter: brightness(1.1) saturate(1.1); }
 .tl-row:hover .lbl, .tl-row:focus-visible .lbl { text-decoration: underline; text-underline-offset: 3px; }
 .tl-row:focus { outline: none; }
 .hit { fill: transparent; }
 [data-tip] { cursor: help; }
 .tl-row[data-tip] { cursor: pointer; }
 
-.slider { display: flex; align-items: center; gap: .9em; margin-top: .7em; font-size: .8em; color: var(--ink-2); }
-.slider input { flex: 1; accent-color: var(--paris); min-width: 0; }
-.slider output { font: 500 1em var(--mono); color: var(--ink); min-width: 3.2em; text-align: right; }
+.slider { display: flex; align-items: center; gap: .9em; margin-top: .8em; font-size: .8em; color: var(--fg); font-weight: 600; }
+.slider input { flex: 1; accent-color: var(--fg); min-width: 0; }
+.slider output { font: 700 1em var(--num); min-width: 3.6em; text-align: right; }
 
-.legend { display: flex; flex-wrap: wrap; gap: .4em 1.4em; font-size: .78em; color: var(--ink-2); margin-bottom: .5em; }
+.legend { display: flex; flex-wrap: wrap; gap: .4em 1.4em; font-size: .78em; color: var(--fg-2); margin-bottom: .6em; }
 .legend span { display: inline-flex; align-items: center; gap: .5em; }
-.legend i { width: 1.1em; height: .6em; border-radius: 1px; display: inline-block; }
+.legend i { width: 1.1em; height: .7em; display: inline-block; }
 
 #tip {
   position: fixed; left: 0; top: 0; z-index: 200; pointer-events: none;
-  max-width: 280px; padding: 8px 11px; border-radius: 6px;
-  background: var(--ink); color: var(--paper);
-  font: 500 13px/1.45 var(--sans); white-space: pre-line;
-  box-shadow: 0 10px 30px -12px rgba(0, 0, 0, .5);
+  max-width: 280px; padding: 9px 12px;
+  background: #0c0d10; color: #f2f2f4; border: 1px solid #2b2d34;
+  font: 500 13px/1.45 var(--head); white-space: pre-line;
+  box-shadow: 0 12px 30px -12px rgba(0, 0, 0, .6);
 }
+
+/* ---------- Титул ---------- */
+.title-grid { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 3em; align-items: center; flex: 1; min-height: 0; }
+.kicker { font: 700 .7em/1.5 var(--head); letter-spacing: .09em; text-transform: uppercase; margin: 0 0 1.2em; max-width: 30em; text-wrap: balance; }
+.hero-title { font: 800 5em/.92 var(--head); letter-spacing: -.045em; margin: 0 0 .35em; text-wrap: balance; }
+.hero-sub { font: 500 1.25em/1.32 var(--head); color: var(--fg-2); margin: 0 0 1.8em; max-width: 20em; text-wrap: balance; }
+.byline { display: grid; gap: .4em; font-size: .85em; color: var(--fg-2); }
+.byline div { display: flex; gap: .6em; flex-wrap: wrap; align-items: baseline; }
+.fill { color: var(--fg); font-weight: 700; border-bottom: 2px solid var(--line); min-width: 6em; display: inline-block; outline: none; padding: 0 .15em; cursor: text; }
+.fill:empty::before { content: attr(data-placeholder); color: var(--fg-2); font-weight: 500; }
+.fill:focus { border-bottom-color: var(--fg); }
+.eb-list { display: grid; gap: 1.05em; }
+.eb { display: grid; gap: .35em; }
+.eb .bar {
+  width: var(--w); background: var(--b); color: var(--t);
+  padding: .5em .7em .45em; display: flex; align-items: baseline; justify-content: space-between; gap: .6em;
+  min-width: max-content;
+}
+.eb .bar b { font: 800 2.1em/1 var(--num); letter-spacing: -.03em; }
+.eb .bar em { font: 700 .72em/1 var(--head); font-style: normal; letter-spacing: .06em; text-transform: uppercase; opacity: .85; white-space: nowrap; }
+.eb span { font-size: .8em; font-weight: 600; color: var(--fg-2); }
+.eb-cap { font: 700 .64em/1.3 var(--head); letter-spacing: .1em; text-transform: uppercase; color: var(--fg-2); margin: 0 0 .1em; }
 
 /* ---------- Отдельные слайды ---------- */
-.title-grid { display: grid; grid-template-columns: 1.15fr 1fr; gap: 2em; align-items: center; flex: 1; min-height: 0; }
-.hero-eyebrow { text-wrap: balance; font: 500 .7em/1.5 var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--ink-2); margin: 0 0 1.4em; }
-.hero-title { font: 400 4.6em/.98 var(--display); margin: 0 0 .35em; letter-spacing: -.015em; text-wrap: balance; }
-.hero-sub { font-size: 1.22em; line-height: 1.38; color: var(--ink-2); margin: 0 0 1.6em; max-width: 21em; text-wrap: balance; }
-.era-strip { display: grid; grid-template-columns: repeat(4, auto); justify-content: start; gap: .3em 1.6em; margin-bottom: 2em; }
-.era-strip div { display: grid; gap: .25em; }
-.era-strip b { font: 400 1.5em/1 var(--display); }
-.era-strip span { font: 500 .66em/1.2 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--ink-2); display: flex; align-items: center; gap: .6em; }
-.era-strip i { width: 1.6em; height: .45em; border-radius: 1px; }
-.byline { display: grid; gap: .35em; font-size: .85em; color: var(--ink-2); }
-.byline div { display: flex; gap: .6em; flex-wrap: wrap; align-items: baseline; }
-.fill {
-  color: var(--ink); border-bottom: 1px dashed var(--rule); min-width: 6em; display: inline-block;
-  outline: none; padding: 0 .15em; cursor: text;
-}
-.fill:empty::before { content: attr(data-placeholder); color: var(--muted); }
-.fill:focus { border-bottom-color: var(--gold-line); }
-.rosette { width: 100%; aspect-ratio: 1; display: block; max-height: 100%; }
-.rosette-wrap { position: relative; align-self: stretch; display: grid; place-items: center; min-height: 0; }
+.def { font: 700 1.45em/1.22 var(--head); letter-spacing: -.015em; margin: 0 0 1em; text-wrap: balance; }
+.q3 { display: grid; gap: .5em; }
+.q3 div { display: grid; grid-template-columns: .55em 1fr auto; gap: .9em; align-items: center; padding: .8em 1em; background: var(--tint); }
+.q3 i { width: .55em; align-self: stretch; }
+.q3 b { font: 800 1.15em/1.2 var(--head); letter-spacing: -.01em; }
+.q3 span { font: 700 .66em/1.3 var(--head); letter-spacing: .08em; text-transform: uppercase; color: var(--fg-2); text-align: right; }
 
-.q3 { display: grid; gap: .7em; }
-.q3 div {
-  display: grid; grid-template-columns: 1fr auto; gap: 1em; align-items: center;
-  padding: .75em 1em; border: 1px solid var(--rule); border-radius: 3px; background: var(--paper-2);
-}
-.q3 b { font: 400 1.2em/1.2 var(--display); }
-.q3 span { font: 500 .66em/1.3 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-2); display: flex; gap: .5em; align-items: center; justify-content: flex-end; flex-wrap: wrap; }
-.q3 i { width: 1.4em; height: .45em; border-radius: 1px; display: inline-block; }
-.def { font: 400 1.5em/1.3 var(--display); margin: 0 0 1em; text-wrap: balance; }
-
-.parity { display: grid; gap: .55em; font-variant-numeric: tabular-nums; }
+.parity { display: grid; gap: .6em; font-variant-numeric: tabular-nums; }
 .parity .row { display: flex; justify-content: space-between; gap: 1em; align-items: baseline; font-size: .9em; }
-.parity .row b { font: 500 1.05em var(--mono); }
-.parity .res { border-top: 1px solid color-mix(in srgb, var(--era) 45%, var(--rule)); padding-top: .55em; }
-.parity .res b { font: 400 1.6em/1 var(--display); }
+.parity .row b { font: 700 1em var(--num); }
+.parity .res { border-top: 2px solid currentColor; padding-top: .6em; margin-top: .2em; }
+.parity .res b { font: 800 1.9em/1 var(--num); letter-spacing: -.03em; }
 
-.chain { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; position: relative; }
-.chain li {
-  position: relative; padding: .5em .9em .5em 2.6em; font-size: .88em; line-height: 1.35;
-  border: 1px solid var(--rule); background: var(--paper-2); border-radius: 3px;
-}
-.chain li + li { margin-top: 1.25em; }
-.chain li + li::before {
-  content: "↓"; position: absolute; left: 1.1em; top: -1.35em; font: 500 1em/1.2 var(--mono); color: var(--ink-2);
-}
-.chain li b { position: absolute; left: .85em; top: .55em; font: 500 .8em var(--mono); color: var(--muted); }
-.chain-back { margin-top: .7em; font: 500 .72em/1.4 var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--ink-2); }
+.chain { list-style: none; margin: 0; padding: 0; display: grid; gap: .35em; }
+.chain li { display: grid; grid-template-columns: 2em 1fr; align-items: center; padding: .55em .9em; font-size: .88em; line-height: 1.3; background: var(--tint); }
+.chain li b { font: 800 1em var(--num); }
+.chain li:last-child { background: var(--inv-bg); color: var(--inv-fg); }
+.chain-back { margin-top: .8em; font: 700 .7em/1.4 var(--head); letter-spacing: .08em; text-transform: uppercase; color: var(--fg-2); }
 
-.pm { display: grid; grid-template-columns: 1fr 1fr; gap: 2.2em; }
-.pm h3 { font: 400 1.25em/1.2 var(--display); margin: 0 0 .7em; display: flex; align-items: center; gap: .5em; }
-.pm h3 span { font: 500 .75em/1 var(--mono); width: 1.5em; height: 1.5em; display: inline-grid; place-items: center; border-radius: 50%; border: 1px solid var(--rule); }
-.crash {
-  margin-top: 1.5em; display: grid; grid-template-columns: auto 1fr; gap: 1.6em; align-items: center;
-  padding-top: 1.2em; border-top: 1px solid var(--rule);
-}
-.crash .yr { font: 400 3.4em/1 var(--display); color: var(--seal); }
+.pm { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2em; }
+.pm > div { background: var(--tint); padding: 1.1em 1.3em; }
+.pm h3 { font: 800 1.2em/1.2 var(--head); margin: 0 0 .7em; letter-spacing: -.01em; }
+.crash { margin-top: 1.2em; display: grid; grid-template-columns: auto 1fr; gap: 1.4em; align-items: center; padding: 1.1em 1.3em; background: var(--inv-bg); color: var(--inv-fg); }
+.crash .yr { font: 800 3.2em/1 var(--num); letter-spacing: -.04em; }
 .crash p { font-size: .92em; margin: 0; }
 
-.forms { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.4em; }
-.form { display: grid; gap: .8em; align-content: start; padding: 1.1em 1.2em 1.2em; border: 1px solid var(--rule); border-radius: 3px; background: var(--paper-2); }
-.form h3 { font: 400 1.25em/1.15 var(--display); margin: 0; }
-.form .who { font: 500 .68em/1.4 var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--ink-2); }
-.path { display: flex; flex-wrap: wrap; align-items: center; gap: .4em; font-size: .82em; }
-.path span { padding: .35em .6em; border-radius: 3px; border: 1px solid var(--rule); background: var(--paper); white-space: nowrap; }
-.path span.au { border-color: color-mix(in srgb, var(--paris) 55%, var(--rule)); background: color-mix(in srgb, var(--paris) 12%, var(--paper)); }
-.path em { font-style: normal; color: var(--muted); font-family: var(--mono); }
-.form p { font-size: .82em !important; color: var(--ink-2); margin: 0 !important; }
+.forms { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.1em; }
+.form { display: grid; gap: .8em; align-content: start; padding: 1.15em 1.25em 1.3em; background: var(--tint); }
+.form h3 { font: 800 1.2em/1.12 var(--head); margin: 0; letter-spacing: -.015em; }
+.form .who { font: 700 .66em/1.4 var(--head); letter-spacing: .08em; text-transform: uppercase; color: var(--fg-2); }
+.path { display: flex; flex-wrap: wrap; align-items: center; gap: .35em; font-size: .8em; font-weight: 600; }
+.path span { padding: .35em .6em; background: var(--inv-bg); color: var(--inv-fg); white-space: nowrap; }
+.path span.au { background: var(--accent); color: #2a1a02; }
+.path em { font-style: normal; font-weight: 700; }
+.form p { font-size: .82em !important; color: var(--fg-2); margin: 0 !important; }
 
-.vs { display: grid; grid-template-columns: 9.5em 1fr 1fr; border-top: 1px solid var(--rule); }
-.vs > div { padding: .6em .8em .6em 0; border-bottom: 1px solid var(--rule-2); font-size: .86em; line-height: 1.38; }
-.vs .h { font: 400 1.25em/1.2 var(--display); padding-top: .7em; }
-.vs .h small { display: block; font: 500 .55em/1.4 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin-top: .2em; }
-.vs .k { font: 500 .66em/1.5 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); padding-top: .9em; }
-.vs .win { position: relative; }
-.outcome { margin-top: 1.1em; display: flex; gap: 1em; align-items: baseline; flex-wrap: wrap; }
-.outcome b { font: 400 1.2em/1.2 var(--display); }
+.stat-row { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .8em; margin-bottom: 1.3em; }
+.stat-row div { background: var(--tint); padding: .8em .9em; display: grid; gap: .3em; align-content: start; }
+.stat-row b { font: 800 1.45em/1 var(--num); letter-spacing: -.03em; }
+.stat-row span { font-size: .76em; color: var(--fg-2); line-height: 1.3; }
+.vs { display: grid; grid-template-columns: 9em 1fr 1fr; }
+.vs > div { padding: .55em .9em; font-size: .86em; line-height: 1.36; }
+.vs > div:nth-child(6n+4), .vs > div:nth-child(6n+5), .vs > div:nth-child(6n+6) { background: var(--tint); }
+.vs .h { font: 800 1.2em/1.15 var(--head); padding-top: .2em; padding-bottom: .6em; letter-spacing: -.01em; }
+.vs .h small { display: block; font: 700 .52em/1.5 var(--head); letter-spacing: .1em; text-transform: uppercase; color: var(--fg-2); margin-top: .25em; }
+.vs .h.win small { color: var(--accent); }
+.vs .k { font: 700 .66em/1.5 var(--head); letter-spacing: .08em; text-transform: uppercase; color: var(--fg-2); padding-top: .95em; }
 
-.stat-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1em; margin-bottom: 1.3em; }
-.stat-row div { border-top: 2px solid var(--era); padding-top: .5em; display: grid; gap: .2em; }
-.stat-row b { font: 400 1.7em/1 var(--display); }
-.stat-row span { font-size: .78em; color: var(--ink-2); line-height: 1.3; }
+.dilemma { display: grid; gap: .6em; }
+.dilemma .root { padding: .8em 1em; background: var(--inv-bg); color: var(--inv-fg); font-size: .92em; font-weight: 700; }
+.dilemma .forks { display: grid; grid-template-columns: 1fr 1fr; gap: .6em; }
+.dilemma .fork { background: var(--tint); padding: .8em .95em; display: grid; gap: .45em; align-content: start; }
+.dilemma .fork b { font-size: .88em; }
+.dilemma .fork span { font-size: .82em; color: var(--fg-2); line-height: 1.38; }
+.dilemma .fork .bad { color: var(--accent); font-weight: 700; }
+.quote { font: 800 1.25em/1.25 var(--head); letter-spacing: -.015em; margin: .6em 0 0; }
+.quote small { display: block; font: 500 .6em/1.45 var(--head); letter-spacing: 0; color: var(--fg-2); margin-top: .45em; }
 
-.dilemma { display: grid; gap: .8em; }
-.dilemma .root { padding: .7em 1em; border-radius: 3px; background: var(--ink); color: var(--paper); font-size: .9em; }
-.dilemma .forks { display: grid; grid-template-columns: 1fr 1fr; gap: .8em; }
-.dilemma .fork { border: 1px solid var(--rule); border-radius: 3px; padding: .75em .9em; background: var(--paper-2); display: grid; gap: .45em; align-content: start; }
-.dilemma .fork b { font-size: .86em; }
-.dilemma .fork span { font-size: .82em; color: var(--ink-2); line-height: 1.38; }
-.dilemma .fork .bad { color: var(--seal); font-weight: 600; }
-.quote { font: 400 1.15em/1.35 var(--display); margin: .4em 0 0; }
-.quote small { display: block; font: 500 .56em/1.4 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-top: .5em; }
+.chron { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: repeat(5, auto); grid-auto-flow: column; gap: .45em 1.4em; }
+.chron li { display: grid; grid-template-columns: 6.6em 1fr; gap: .9em; align-items: baseline; font-size: .86em; line-height: 1.34; padding: .55em .8em; background: var(--tint); }
+.chron time { font: 700 .82em/1.5 var(--num); color: var(--accent); letter-spacing: -.01em; }
+.chron li.key { background: var(--inv-bg); color: var(--inv-fg); }
+.chron li.key time { color: var(--inv-fg); }
+.chron li.key span { font-weight: 700; }
 
-.chron { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: repeat(5, auto); grid-auto-flow: column; gap: .75em 2.6em; }
-.chron li { display: grid; grid-template-columns: 7.2em 1fr; gap: .9em; font-size: .86em; line-height: 1.36; padding-bottom: .75em; border-bottom: 1px solid var(--rule-2); }
-.chron time { font: 500 .88em/1.5 var(--mono); color: var(--ink-2); }
-.chron li.key { border-bottom-color: color-mix(in srgb, var(--era) 60%, var(--rule)); }
-.chron li.key time { color: var(--seal); }
-.chron li.key span { font-weight: 600; }
-
-.spec-bar { display: grid; grid-template-columns: 1fr 1.2fr 1fr; gap: 3px; margin-bottom: .6em; }
-.spec-bar div { padding: .7em .9em; font: 400 1.05em/1.2 var(--display); border-radius: 2px; }
-.spec-bar .z1 { background: color-mix(in srgb, var(--jam) 92%, var(--paper-2)); color: var(--on-strong); }
-.spec-bar .z2 { background: color-mix(in srgb, var(--jam) 45%, var(--paper-2)); color: var(--ink); }
-.spec-bar .z3 { background: color-mix(in srgb, var(--jam) 16%, var(--paper-2)); color: var(--ink); }
-.spec-axis { display: flex; justify-content: space-between; gap: 1em; font: 500 .66em/1.4 var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin-bottom: 1.3em; }
+.spec-bar { display: grid; grid-template-columns: 1fr 1.2fr 1fr; gap: 0; margin-bottom: .6em; }
+.spec-bar div { padding: .75em .9em; font: 800 1.05em/1.2 var(--head); letter-spacing: -.01em; }
+.spec-bar .z1 { background: #0b7a75; color: #ffffff; }
+.spec-bar .z2 { background: #6fbdb7; color: #0e1a1f; }
+.spec-bar .z3 { background: #cfe8e5; color: #0e1a1f; }
+.spec-axis { display: flex; justify-content: space-between; gap: 1em; font: 700 .64em/1.4 var(--head); letter-spacing: .08em; text-transform: uppercase; color: var(--fg-2); margin-bottom: 1.3em; }
 .spec-cols { display: grid; grid-template-columns: 1fr 1.2fr 1fr; gap: 1.6em; }
-.spec-cols h4 { margin: 0 0 .4em; font: 500 .66em/1.4 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.spec-cols h4 { margin: 0 0 .4em; font: 700 .64em/1.4 var(--head); letter-spacing: .1em; text-transform: uppercase; color: var(--fg-2); }
 .spec-cols p { font-size: .84em !important; }
-.spec-cols .ex { display: grid; gap: .45em; margin-top: .6em; }
-.spec-cols .ex div { font-size: .82em; line-height: 1.35; padding-left: .8em; border-left: 2px solid color-mix(in srgb, var(--jam) 50%, var(--rule)); }
-.spec-cols .ex b { font-weight: 600; }
+.spec-cols .ex { display: grid; gap: .4em; margin-top: .6em; }
+.spec-cols .ex div { font-size: .82em; line-height: 1.35; padding: .45em .7em; background: var(--tint); }
 
-.gold-kpi .was { font: 400 1.6em/1 var(--display); color: var(--muted); text-decoration: line-through; text-decoration-thickness: 1px; }
-.gold-kpi .now { font: 400 3.3em/1 var(--display); color: var(--gold); }
-.gold-kpi .x { font: 500 .8em var(--mono); color: var(--ink-2); }
+.gold-kpi .was-row { display: flex; align-items: baseline; gap: .6em; flex-wrap: wrap; }
+.gold-kpi .was { font: 700 1.5em/1 var(--num); color: var(--fg-2); text-decoration-thickness: 2px; }
+.gold-kpi .now { font: 800 3.1em/1 var(--num); letter-spacing: -.04em; color: #8a5f00; }
+.gold-kpi .x { font-size: .8em; font-weight: 600; color: var(--fg-2); }
 
 .cmp-wrap { overflow-x: auto; }
-.compare { width: 100%; border-collapse: collapse; font-size: .74em; line-height: 1.35; }
-.compare th, .compare td { text-align: left; vertical-align: top; padding: .5em .7em .5em 0; border-bottom: 1px solid var(--rule-2); }
-.compare thead th { font: 400 1.35em/1.15 var(--display); padding-bottom: .45em; border-bottom: 2px solid var(--c); }
-.compare thead th small { display: block; font: 500 .52em/1.5 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
-.compare tbody th { font: 500 .82em/1.4 var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); width: 9.5em; font-weight: 500; }
-.compare .col-hot { background: color-mix(in srgb, var(--c) 9%, transparent); }
-.compare [data-c="paris"] { --c: var(--paris); } .compare [data-c="genoa"] { --c: var(--genoa); }
-.compare [data-c="bw"] { --c: var(--bw); } .compare [data-c="jam"] { --c: var(--jam); }
-.compare td, .compare thead th[data-c] { padding-left: .6em; }
+.compare { width: 100%; border-collapse: separate; border-spacing: 3px; font-size: .74em; line-height: 1.33; }
+.compare th, .compare td { text-align: left; vertical-align: top; padding: .5em .7em; }
+.compare thead th[data-c] { font: 800 1.3em/1.1 var(--head); letter-spacing: -.01em; background: var(--hb); color: var(--ht); padding: .6em .7em .55em; }
+.compare thead th small { display: block; font: 700 .52em/1.5 var(--head); letter-spacing: .08em; text-transform: uppercase; opacity: .8; margin-top: .2em; }
+.compare tbody th { font: 700 .78em/1.4 var(--head); letter-spacing: .06em; text-transform: uppercase; color: var(--fg-2); width: 9em; }
+.compare tbody td { background: var(--tint); }
+.compare tbody td.col-hot { background: color-mix(in srgb, var(--hb) 16%, #ffffff); }
+.compare [data-c="paris"] { --hb: #e8b23a; --ht: #1b1406; } .compare [data-c="genoa"] { --hb: #8e3226; --ht: #fff4ee; }
+.compare [data-c="bw"] { --hb: #16336f; --ht: #ffffff; } .compare [data-c="jam"] { --hb: #0b7a75; --ht: #ffffff; }
 
-.trends { display: grid; gap: .1em; }
-.trend { display: grid; grid-template-columns: 8.2em 1fr; gap: 1.2em; align-items: baseline; padding: .65em 0; border-bottom: 1px solid var(--rule-2); }
-.trend dt { font: 500 .7em/1.4 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
-.trend dd { margin: 0; font-size: .95em; display: flex; flex-wrap: wrap; gap: .4em .6em; align-items: baseline; }
-.trend dd em { font-style: normal; color: var(--muted); font-family: var(--mono); }
-.law { font: 400 1.55em/1.3 var(--display); margin: 1.1em 0 0; text-wrap: balance; max-width: 24em; }
+.trends { display: grid; gap: .45em; margin: 0; }
+.trend { display: grid; grid-template-columns: 9em 1fr; gap: 1.2em; align-items: baseline; padding: .7em 1em; background: var(--tint); }
+.trend dt { font: 800 .95em/1.3 var(--head); }
+.trend dd { margin: 0; font-size: .92em; display: flex; flex-wrap: wrap; gap: .3em .55em; align-items: baseline; }
+.trend dd em { font-style: normal; font-weight: 800; color: var(--accent); }
+.law { font: 800 1.5em/1.2 var(--head); letter-spacing: -.02em; margin: .9em 0 0; padding: .8em 1em; background: var(--inv-bg); color: var(--inv-fg); text-wrap: balance; }
 
-.thanks { font: 400 3.6em/1 var(--display); margin: 0 0 .4em; letter-spacing: -.01em; }
-.refs { list-style: none; margin: 0; padding: 0; display: grid; gap: .45em; counter-reset: r; }
-.refs li { display: grid; grid-template-columns: 1.8em 1fr; font-size: .74em; line-height: 1.4; color: var(--ink-2); }
-.refs li::before { counter-increment: r; content: counter(r) "."; font-family: var(--mono); color: var(--muted); }
+.thanks { font: 800 4.4em/.94 var(--head); letter-spacing: -.045em; margin: 0 0 .35em; }
+.refs { list-style: none; margin: 0; padding: 0; display: grid; gap: .5em; counter-reset: r; }
+.refs li { display: grid; grid-template-columns: 1.9em 1fr; font-size: .74em; line-height: 1.4; color: var(--fg-2); }
+.refs li::before { counter-increment: r; content: counter(r); font: 800 1em var(--num); color: var(--fg); }
 
 /* ---------- Текст выступления ---------- */
-.notes {
-  display: grid; grid-template-columns: 9.5rem minmax(0, 68ch); gap: 8px 28px;
-  margin-top: 18px; padding-inline: 4px;
-}
-.notes-label { font: 500 11px/1.9 var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
-.notes p { margin: 0; font-size: 15.5px; line-height: 1.6; color: var(--ink-2); }
+.notes { display: grid; grid-template-columns: 9.5rem minmax(0, 68ch); gap: 8px 28px; margin-top: 18px; padding-inline: 2px; }
+.notes-label { font: 700 11.5px/1.9 var(--head); letter-spacing: .12em; text-transform: uppercase; color: var(--chrome-2); }
+.notes p { margin: 0; font-size: 15.5px; line-height: 1.62; color: #cfd0d6; }
 
 /* ---------- Текучая раскладка (узкие экраны, режим чтения) ---------- */
 @container frame (width < 1000px) {
-  .deck:not(.present) .slide-inner { aspect-ratio: auto; font-size: 15px; padding: 1.9em 1.7em 1.8em; overflow: visible; }
+  .deck:not(.present) .slide-inner { aspect-ratio: auto; font-size: 15px; padding: 1.9em 1.7em 1.9em; overflow: hidden; }
   .deck:not(.present) .s-body { padding-bottom: 0; }
-  .deck:not(.present) .hero-title { font-size: 3.4em; }
-  .deck:not(.present) .rosette-wrap { max-width: 340px; width: 100%; justify-self: center; }
+  .deck:not(.present) .hero-title { font-size: 3.6em; }
+  .deck:not(.present) .ghost { font-size: 10em; }
 }
 @container frame (width < 720px) {
-  .deck:not(.present) .slide-inner { padding: 1.6em 1.25em 1.5em; }
-  .deck:not(.present) .slide-inner::before { inset: .5em; }
-  .deck:not(.present) .s-title { font-size: 1.7em; }
-  .deck:not(.present) .hero-title { font-size: 2.6em; }
-  .deck:not(.present) :is(.grid-2, .grid-2.l, .grid-2.r, .grid-3, .title-grid, .pm, .forms, .spec-cols, .spec-bar, .dilemma .forks, .stat-row) { grid-template-columns: minmax(0, 1fr); }
+  .deck:not(.present) .slide-inner { padding: 1.5em 1.2em 1.6em; }
+  .deck:not(.present) .s-title { font-size: 1.85em; }
+  .deck:not(.present) .hero-title { font-size: 2.8em; }
+  .deck:not(.present) .ghost { font-size: 7em; }
+  .deck:not(.present) :is(.grid-2, .grid-2.l, .grid-2.r, .title-grid, .pm, .forms, .spec-cols, .spec-bar, .dilemma .forks, .stat-row) { grid-template-columns: minmax(0, 1fr); }
   .deck:not(.present) .stat-row { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
   .deck:not(.present) .chron { grid-template-columns: 1fr; grid-template-rows: none; grid-auto-flow: row; }
-  .deck:not(.present) .chron li { grid-template-columns: 6.4em 1fr; }
-  .deck:not(.present) .vs { grid-template-columns: 6.2em 1fr 1fr; }
-  .deck:not(.present) .era-strip { grid-template-columns: repeat(2, auto); }
+  .deck:not(.present) .chron li { grid-template-columns: 6em 1fr; }
+  .deck:not(.present) .vs { grid-template-columns: 5.2em minmax(0, 1fr) minmax(0, 1fr); }
+  .deck:not(.present) .vs > div { padding-inline: .5em; overflow-wrap: anywhere; }
+  .deck:not(.present) .vs .h { font-size: 1.05em; }
   .deck:not(.present) .chart { overflow-x: auto; }
   .deck:not(.present) .chart svg { min-width: 540px; }
   .deck:not(.present) #chart-timeline svg { min-width: 860px; }
   .deck:not(.present) .s-head { flex-wrap: wrap; }
-  .deck:not(.present) .rosette-wrap { max-width: 250px; }
-  .deck:not(.present) .crash { grid-template-columns: 1fr; gap: .6em; }
+  .deck:not(.present) .crash { grid-template-columns: 1fr; gap: .5em; }
   .deck:not(.present) .facts div { grid-template-columns: 4.6em 1fr; }
   .deck:not(.present) .trend { grid-template-columns: 1fr; gap: .3em; }
+  .deck:not(.present) .title-grid { gap: 1.8em; }
 }
 @media (max-width: 760px) {
   .notes { grid-template-columns: 1fr; gap: 2px; }
-  .brand span { display: none; }
   .show-btn span { display: none; }
-  .show-btn { padding: 10px 12px; }
+  .show-btn { padding: 11px 13px; }
   .top-in { gap: 10px; }
 }
 
 /* ---------- Режим показа ---------- */
-.deck.present {
-  position: fixed; inset: 0; z-index: 50; max-width: none; margin: 0;
-  background: var(--stage); display: block;
-}
+.deck.present { position: fixed; inset: 0; z-index: 50; max-width: none; margin: 0; background: var(--stage-2); display: block; }
 .deck.present .slide { display: none; }
 .deck.present .slide.is-current { display: grid; place-items: center; width: 100%; height: 100%; }
 .deck.present .notes { display: none; }
 .deck.present .frame { width: min(100vw, calc(100vh * 16 / 9)); width: min(100vw, calc(100dvh * 16 / 9)); }
-.deck.present .slide-inner { border-radius: 0; box-shadow: none; border: 0; }
+.deck.present .slide.is-current .slide-inner { animation: enter .28s ease-out both; }
+@keyframes enter { from { opacity: .35; transform: translateX(.6%); } to { opacity: 1; transform: none; } }
 .deck.present .fill { border-bottom-color: transparent; }
 .deck.present .byline div:has(.fill:empty) { display: none; }
 
 .pbar {
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 60;
   padding: 10px 16px calc(10px + env(safe-area-inset-bottom, 0px));
-  display: flex; align-items: center; gap: 14px;
-  background: linear-gradient(to top, color-mix(in srgb, var(--stage) 92%, transparent), transparent);
+  display: flex; align-items: center; gap: 12px;
+  background: linear-gradient(to top, rgba(12, 13, 16, .92), rgba(12, 13, 16, 0));
   transition: opacity .3s;
 }
-.pbar.idle { opacity: .12; }
+.pbar.idle { opacity: .1; }
 .pbar:hover, .pbar:focus-within { opacity: 1; }
 .segs { flex: 1; display: flex; gap: 3px; min-width: 60px; }
-.segs button { flex: 1; height: 14px; border: 0; padding: 5px 0; background: none; cursor: pointer; }
-.segs button::after { content: ""; display: block; height: 4px; border-radius: 1px; background: color-mix(in srgb, var(--c) 28%, var(--rule)); }
+.segs button { flex: 1; height: 16px; border: 0; padding: 6px 0; background: none; cursor: pointer; }
+.segs button::after { content: ""; display: block; height: 4px; background: color-mix(in srgb, var(--c) 30%, #2b2d34); }
 .segs button.done::after { background: var(--c); }
-.segs button.cur::after { background: var(--c); height: 4px; box-shadow: 0 0 0 1.5px var(--paper-2), 0 0 0 2.5px var(--c); }
-.pbtn {
-  border: 1px solid var(--rule); background: var(--paper-2); color: var(--ink);
-  border-radius: 6px; padding: 7px 11px; cursor: pointer; font: 500 13px/1 var(--sans);
-  display: inline-flex; align-items: center; gap: 6px;
-}
-.pbtn[aria-pressed="true"] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
-.pcount { font: 500 13px/1 var(--mono); color: var(--ink-2); min-width: 4.6em; text-align: center; font-variant-numeric: tabular-nums; }
+.segs button.cur::after { background: var(--c); height: 4px; box-shadow: 0 0 0 2px #0c0d10, 0 0 0 3.5px var(--c); }
+.pbtn { border: 1px solid var(--chrome-line); background: var(--btn); color: var(--chrome); padding: 7px 11px; cursor: pointer; font: 600 13px/1 var(--head); }
+.pbtn:hover { border-color: #4a4d57; }
+.pbtn[aria-pressed="true"] { background: var(--e-paris); color: #1b1406; border-color: var(--e-paris); }
+.pcount { font: 600 12.5px/1 var(--num); color: var(--chrome-2); min-width: 4.8em; text-align: center; }
 .pnotes {
   position: fixed; left: 50%; bottom: 64px; z-index: 61; transform: translateX(-50%);
   width: min(760px, calc(100vw - 32px)); max-height: 38vh; overflow: auto;
-  background: var(--paper-2); border: 1px solid var(--rule); border-radius: 8px;
-  box-shadow: 0 20px 60px -20px rgba(0, 0, 0, .45); padding: 16px 20px;
+  background: #1a1c21; border: 1px solid var(--chrome-line); padding: 16px 20px;
+  box-shadow: 0 20px 60px -20px rgba(0, 0, 0, .7);
 }
 .pnotes .notes-label { display: block; margin-bottom: 6px; }
-.pnotes p { margin: 0; font-size: 16px; line-height: 1.6; color: var(--ink); }
+.pnotes p { margin: 0; font-size: 16px; line-height: 1.6; color: var(--chrome); }
 
 @media (prefers-reduced-motion: reduce) {
-  * { scroll-behavior: auto !important; transition: none !important; }
+  * { scroll-behavior: auto !important; transition: none !important; animation: none !important; }
 }
 </style>
 </head>
@@ -512,15 +425,15 @@ button { font: inherit; color: inherit; }
 
 <header class="top" id="top">
   <div class="top-in">
-    <a class="brand" href="#s1"><b>От Парижа до Ямайки</b><span>Тема 2 · вопрос 5</span></a>
+    <a class="brand" href="#s1">От Парижа до Ямайки</a>
     <nav class="eras" aria-label="Разделы">
       <a href="#s4" data-era="paris" data-from="4"><i></i>Париж</a>
       <a href="#s8" data-era="genoa" data-from="8"><i></i>Генуя</a>
       <a href="#s11" data-era="bw" data-from="11"><i></i>Бреттон-Вудс</a>
       <a href="#s15" data-era="jam" data-from="15"><i></i>Ямайка</a>
-      <a href="#s18" data-era="gold" data-from="18"><i></i>Итоги</a>
+      <a href="#s18" data-era="plain" data-from="18"><i></i>Итоги</a>
     </nav>
-    <button class="show-btn" id="start" type="button" title="Показ слайдов на весь экран (клавиша P)"><svg viewBox="0 0 11 12" aria-hidden="true"><path d="M0 0l11 6-11 6z"/></svg><span>Показать слайды</span></button>
+    <button class="show-btn" id="start" type="button" title="Показ слайдов на весь экран (клавиша P)"><svg viewBox="0 0 10 12" aria-hidden="true"><path d="M0 0l10 6-10 6z"/></svg><span>Показать слайды</span></button>
   </div>
   <div class="readbar" id="readbar"></div>
 </header>
@@ -528,7 +441,7 @@ button { font: inherit; color: inherit; }
 <p class="howto">
   <span>20 слайдов · ≈ 12–15 минут</span>
   <span>Показ: <kbd>←</kbd> <kbd>→</kbd> слайды · <kbd>N</kbd> текст выступления · <kbd>F</kbd> полный экран · <kbd>Esc</kbd> выход</span>
-  <span>Графики интерактивны — наведите курсор</span>
+  <span>Графики интерактивные: наведите курсор</span>
 </p>
 
 <main class="deck" id="deck">
@@ -536,33 +449,33 @@ button { font: inherit; color: inherit; }
 <!-- 01 · Титул -->
 <section class="slide" id="s1" data-era="gold">
   <div class="frame"><div class="slide-inner">
-    <header class="s-head"><span class="era-tag"><i></i>Доклад · Мировая экономика</span><span class="serial"></span></header>
+    <header class="s-head"><span class="sec"><i></i>Доклад · Мировая экономика</span><span class="pg"></span></header>
     <div class="title-grid">
       <div>
-        <p class="hero-eyebrow">Тема 2. Валютные отношения в мировой экономике · Вопрос 5</p>
-        <h1 class="hero-title">От Парижа до Ямайки</h1>
+        <p class="kicker">Тема 2. Валютные отношения в мировой экономике · Вопрос 5</p>
+        <h1 class="hero-title">От Парижа до&nbsp;Ямайки</h1>
         <p class="hero-sub">Парижская, Генуэзская, Бреттон-Вудская и Ямайская валютные системы</p>
-        <div class="era-strip">
-          <div><b>1867</b><span><i style="background:var(--paris)"></i>Париж</span></div>
-          <div><b>1922</b><span><i style="background:var(--genoa)"></i>Генуя</span></div>
-          <div><b>1944</b><span><i style="background:var(--bw)"></i>Бреттон-Вудс</span></div>
-          <div><b>1976</b><span><i style="background:var(--jam)"></i>Кингстон</span></div>
-        </div>
         <div class="byline">
           <div>Докладчик: <span class="fill" contenteditable="true" spellcheck="false" data-key="name" data-placeholder="впишите фамилию и имя"></span></div>
           <div>Группа: <span class="fill" contenteditable="true" spellcheck="false" data-key="group" data-placeholder="номер группы"></span></div>
         </div>
       </div>
-      <div class="rosette-wrap"><canvas class="rosette" id="rosette" aria-hidden="true"></canvas></div>
+      <div class="eb-list" role="img" aria-label="Продолжительность систем: Парижская 47 лет, Генуэзская 17 лет, Бреттон-Вудская 32 года, Ямайская действует 50 лет">
+        <p class="eb-cap">Сколько прожила каждая система</p>
+        <div class="eb" style="--w:94%;--b:#1b1406;--t:#f4d27e"><div class="bar"><b>1867</b><em>47 лет</em></div><span>Парижская · золотомонетный стандарт</span></div>
+        <div class="eb" style="--w:40%;--b:#8e3226;--t:#fff4ee"><div class="bar"><b>1922</b><em>17 лет</em></div><span>Генуэзская · золотодевизный стандарт</span></div>
+        <div class="eb" style="--w:64%;--b:#16336f;--t:#ffffff"><div class="bar"><b>1944</b><em>32 года</em></div><span>Бреттон-Вудская · золотодолларовый стандарт</span></div>
+        <div class="eb" style="--w:100%;--b:#0b7a75;--t:#ffffff"><div class="bar"><b>1976</b><em>50 лет и действует</em></div><span>Ямайская · стандарт СДР, многовалютный</span></div>
+      </div>
     </div>
   </div></div>
   <aside class="notes"><span class="notes-label">Что сказать</span><p>Добрый день. Тема моего доклада — эволюция мировой валютной системы от Парижской до Ямайской. За 160 лет мир четыре раза договаривался о новых «правилах игры»: что служит мировыми деньгами, как устанавливаются валютные курсы и кто следит за порядком. Я расскажу, как была устроена каждая система, почему она перестала работать и что из этого следует для сегодняшнего дня.</p></aside>
 </section>
 
 <!-- 02 · Понятие -->
-<section class="slide" id="s2" data-era="gold">
+<section class="slide" id="s2" data-era="plain">
   <div class="frame"><div class="slide-inner">
-    <header class="s-head"><span class="era-tag"><i></i>Введение · Понятие</span><span class="serial"></span></header>
+    <header class="s-head"><span class="sec"><i></i>Введение · Понятие</span><span class="pg"></span></header>
     <h2 class="s-title">Что такое мировая валютная система</h2>
     <div class="s-body grid-2 l">
       <div>
@@ -580,11 +493,11 @@ button { font: inherit; color: inherit; }
       </div>
       <div>
         <span class="label">Главный вопрос каждой эпохи</span>
-        <p class="def" style="font-size:1.25em">Что лежит в основе мировых денег?</p>
+        <p class="def" style="font-size:1.3em">Что лежит в основе мировых денег?</p>
         <div class="q3">
-          <div><b>Золото</b><span><i style="background:var(--paris)"></i>Париж <i style="background:var(--genoa)"></i>Генуя</span></div>
-          <div><b>Золото и доллар США</b><span><i style="background:var(--bw)"></i>Бреттон-Вудс</span></div>
-          <div><b>СДР и ведущие валюты</b><span><i style="background:var(--jam)"></i>Ямайка</span></div>
+          <div><i style="background:linear-gradient(#e8b23a 50%, #8e3226 50%)"></i><b>Золото</b><span>Париж, Генуя</span></div>
+          <div><i style="background:#16336f"></i><b>Золото и доллар США</b><span>Бреттон-Вудс</span></div>
+          <div><i style="background:#0b7a75"></i><b>СДР и ведущие валюты</b><span>Ямайка</span></div>
         </div>
       </div>
     </div>
@@ -593,9 +506,9 @@ button { font: inherit; color: inherit; }
 </section>
 
 <!-- 03 · Шкала времени -->
-<section class="slide" id="s3" data-era="gold">
+<section class="slide" id="s3" data-era="plain">
   <div class="frame"><div class="slide-inner">
-    <header class="s-head"><span class="era-tag"><i></i>Введение · Хронология</span><span class="serial"></span></header>
+    <header class="s-head"><span class="sec"><i></i>Введение · Хронология</span><span class="pg"></span></header>
     <h2 class="s-title">Четыре системы за 160 лет</h2>
     <div class="s-body">
       <figure class="chart" id="chart-timeline" style="margin:0"></figure>
@@ -608,7 +521,8 @@ button { font: inherit; color: inherit; }
 <!-- 04 · Париж: рождение -->
 <section class="slide" id="s4" data-era="paris">
   <div class="frame"><div class="slide-inner">
-    <header class="s-head"><span class="era-tag"><i></i>I · Парижская система · 1867–1914</span><span class="serial"></span></header>
+    <div class="ghost" aria-hidden="true">1867</div>
+    <header class="s-head"><span class="sec"><i></i>I · Парижская система · 1867–1914</span><span class="pg"></span></header>
     <h2 class="s-title">Золото — единственные мировые деньги</h2>
     <div class="s-body grid-2 r">
       <div class="stack">
@@ -616,7 +530,7 @@ button { font: inherit; color: inherit; }
           <div><dt>1816</dt><dd>Великобритания первой переходит к золотому монометаллизму; с 1821 г. банкноты Банка Англии свободно меняются на золото</dd></div>
           <div><dt>1867</dt><dd>Парижская монетная конференция признаёт золото единственной формой мировых денег</dd></div>
         </dl>
-        <div class="box">
+        <div class="box inv">
           <span class="label">Россия</span>
           <p>Реформа С. Ю. Витте 1895–1897 гг.: <b>1 рубль = 0,774234 г</b> чистого золота, кредитные билеты свободно меняются на золотую монету.</p>
         </div>
@@ -634,7 +548,8 @@ button { font: inherit; color: inherit; }
 <!-- 05 · Париж: принципы -->
 <section class="slide" id="s5" data-era="paris">
   <div class="frame"><div class="slide-inner">
-    <header class="s-head"><span class="era-tag"><i></i>I · Парижская система · 1867–1914</span><span class="serial"></span></header>
+    <div class="ghost" aria-hidden="true">1867</div>
+    <header class="s-head"><span class="sec"><i></i>I · Парижская система · 1867–1914</span><span class="pg"></span></header>
     <h2 class="s-title">Шесть принципов золотомонетного стандарта</h2>
     <div class="s-body grid-2 l">
       <ol class="plist">
@@ -645,11 +560,11 @@ button { font: inherit; color: inherit; }
         <li><span>Денежная масса <b>жёстко привязана</b> к золотому запасу; дефицит платёжного баланса покрывается золотом</span></li>
         <li><span>Курсы складываются на рынке, но колеблются лишь в пределах <b>«золотых точек»</b></span></li>
       </ol>
-      <div class="box parity">
+      <div class="box inv parity">
         <span class="label">Монетный паритет</span>
         <div class="row"><span>1 фунт стерлингов</span><b>7,32238 г</b></div>
         <div class="row"><span>1 доллар США</span><b>1,50463 г</b></div>
-        <div class="row small muted"><span>7,32238 ÷ 1,50463</span><span>чистого золота</span></div>
+        <div class="row small"><span>7,32238 ÷ 1,50463</span><span>чистого золота</span></div>
         <div class="row res"><span>1 £ =</span><b>4,8665 $</b></div>
       </div>
     </div>
@@ -660,7 +575,8 @@ button { font: inherit; color: inherit; }
 <!-- 06 · Париж: механизм -->
 <section class="slide" id="s6" data-era="paris">
   <div class="frame"><div class="slide-inner">
-    <header class="s-head"><span class="era-tag"><i></i>I · Парижская система · механизм</span><span class="serial"></span></header>
+    <div class="ghost" aria-hidden="true">1867</div>
+    <header class="s-head"><span class="sec"><i></i>I · Парижская система · механизм</span><span class="pg"></span></header>
     <h2 class="s-title">«Золотые точки» и саморегулирование</h2>
     <div class="s-body grid-2 l">
       <div>
@@ -691,12 +607,13 @@ button { font: inherit; color: inherit; }
 <!-- 07 · Париж: оценка и крах -->
 <section class="slide" id="s7" data-era="paris">
   <div class="frame"><div class="slide-inner">
-    <header class="s-head"><span class="era-tag"><i></i>I · Парижская система · итог</span><span class="serial"></span></header>
+    <div class="ghost" aria-hidden="true">1914</div>
+    <header class="s-head"><span class="sec"><i></i>I · Парижская система · итог</span><span class="pg"></span></header>
     <h2 class="s-title">Стабильность ценой гибкости</h2>
     <div class="s-body">
       <div class="pm">
         <div>
-          <h3><span>+</span>Достоинства</h3>
+          <h3>Достоинства</h3>
           <ul class="blist">
             <li>устойчивые валютные курсы и цены</li>
             <li>высокое доверие к валютам</li>
@@ -705,7 +622,7 @@ button { font: inherit; color: inherit; }
           </ul>
         </div>
         <div>
-          <h3><span>−</span>Недостатки</h3>
+          <h3>Недостатки</h3>
           <ul class="blist">
             <li>количество денег зависит от добычи золота, а не от нужд экономики</li>
             <li>дефляционная направленность</li>
@@ -726,15 +643,16 @@ button { font: inherit; color: inherit; }
 <!-- 08 · Генуя: конференция -->
 <section class="slide" id="s8" data-era="genoa">
   <div class="frame"><div class="slide-inner">
-    <header class="s-head"><span class="era-tag"><i></i>II · Генуэзская система · 1922–1939</span><span class="serial"></span></header>
+    <div class="ghost" aria-hidden="true">1922</div>
+    <header class="s-head"><span class="sec"><i></i>II · Генуэзская система · 1922–1939</span><span class="pg"></span></header>
     <h2 class="s-title">Генуя, 1922: экономить золото</h2>
     <div class="s-body grid-2">
       <div class="stack">
         <dl class="facts">
           <div><dt>1922</dt><dd>10 апреля — 19 мая, Генуэзская международная экономическая конференция</dd></div>
-          <div><dt>29 + 5</dt><dd>государств и британских доминионов; Советская Россия (делегация Г. В. Чичерина); США — лишь наблюдатель</dd></div>
+          <div><dt>29+5</dt><dd>государств и британских доминионов; Советская Россия (делегация Г. В. Чичерина); США — лишь наблюдатель</dd></div>
         </dl>
-        <div class="box">
+        <div class="box inv">
           <span class="label">Главная идея</span>
           <p>Вернуться к золоту, но хранить часть резервов в <b>девизах</b> — иностранных валютах, которые меняются на золото.</p>
         </div>
@@ -757,7 +675,8 @@ button { font: inherit; color: inherit; }
 <!-- 09 · Генуя: три формы -->
 <section class="slide" id="s9" data-era="genoa">
   <div class="frame"><div class="slide-inner">
-    <header class="s-head"><span class="era-tag"><i></i>II · Генуэзская система · формы размена</span><span class="serial"></span></header>
+    <div class="ghost" aria-hidden="true">1922</div>
+    <header class="s-head"><span class="sec"><i></i>II · Генуэзская система · формы размена</span><span class="pg"></span></header>
     <h2 class="s-title">Три способа добраться до золота</h2>
     <div class="s-body">
       <div class="forms">
@@ -780,7 +699,7 @@ button { font: inherit; color: inherit; }
           <p>Золото доступно только через валюту другой страны.</p>
         </div>
       </div>
-      <div class="box" style="margin-top:1.4em">
+      <div class="box inv" style="margin-top:1.2em">
         <p><b>1925 — ошибка Черчилля.</b> Великобритания вернулась к довоенному паритету 4,86 $ за фунт. Фунт оказался переоценён, британский экспорт подорожал. Дж. М. Кейнс ответил памфлетом «Экономические последствия мистера Черчилля».</p>
       </div>
     </div>
@@ -791,7 +710,8 @@ button { font: inherit; color: inherit; }
 <!-- 10 · Генуя: распад -->
 <section class="slide" id="s10" data-era="genoa">
   <div class="frame"><div class="slide-inner">
-    <header class="s-head"><span class="era-tag"><i></i>II · Генуэзская система · распад</span><span class="serial"></span></header>
+    <div class="ghost" aria-hidden="true">1931</div>
+    <header class="s-head"><span class="sec"><i></i>II · Генуэзская система · распад</span><span class="pg"></span></header>
     <h2 class="s-title">Великая депрессия: бегство от золота</h2>
     <div class="s-body grid-2 l">
       <div>
@@ -822,14 +742,15 @@ button { font: inherit; color: inherit; }
 <!-- 11 · Бреттон-Вудс: конференция -->
 <section class="slide" id="s11" data-era="bw">
   <div class="frame"><div class="slide-inner">
-    <header class="s-head"><span class="era-tag"><i></i>III · Бреттон-Вудская система · 1944–1976</span><span class="serial"></span></header>
+    <div class="ghost" aria-hidden="true">1944</div>
+    <header class="s-head"><span class="sec"><i></i>III · Бреттон-Вудская система · 1944–1976</span><span class="pg"></span></header>
     <h2 class="s-title">Бреттон-Вудс, июль 1944: Кейнс против Уайта</h2>
     <div class="s-body">
       <div class="stat-row">
-        <div><b>1–22 июля</b><span>1944 г., штат Нью-Гэмпшир, США</span></div>
+        <div><b>1–22.07</b><span>1944 г., штат Нью-Гэмпшир, США</span></div>
         <div><b>44</b><span>государства, включая СССР</span></div>
         <div><b>≈ 70 %</b><span>золотых запасов капиталистического мира — у США</span></div>
-        <div><b>МВФ + МБРР</b><span>созданы по итогам конференции</span></div>
+        <div><b>МВФ+МБРР</b><span>созданы по итогам конференции</span></div>
       </div>
       <div class="vs">
         <div></div>
@@ -849,44 +770,45 @@ button { font: inherit; color: inherit; }
 <!-- 12 · Бреттон-Вудс: архитектура -->
 <section class="slide" id="s12" data-era="bw">
   <div class="frame"><div class="slide-inner">
-    <header class="s-head"><span class="era-tag"><i></i>III · Бреттон-Вудская система · устройство</span><span class="serial"></span></header>
+    <div class="ghost" aria-hidden="true">1944</div>
+    <header class="s-head"><span class="sec"><i></i>III · Бреттон-Вудская система · устройство</span><span class="pg"></span></header>
     <h2 class="s-title">Золото — доллар — все остальные</h2>
     <div class="s-body grid-2">
       <figure class="chart" style="margin:0">
         <svg viewBox="0 0 560 390" role="img" aria-label="Схема: золото привязано к доллару по 35 долларов за унцию, остальные валюты привязаны к доллару фиксированными паритетами с коридором плюс-минус 1 процент">
-          <defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="f-ink2"/></marker></defs>
-          <rect x="190" y="8" width="180" height="62" rx="4" style="fill:color-mix(in srgb, var(--paris) 16%, var(--paper-2));stroke:var(--paris)"/>
-          <text x="280" y="38" text-anchor="middle" style="font:400 24px var(--display)" class="f-ink">Золото</text>
-          <text x="280" y="58" text-anchor="middle" class="lbl-2" style="font-size:12.5px">1 тройская унция = 31,1035 г</text>
-          <line x1="280" y1="72" x2="280" y2="136" class="s-ink2" stroke-width="1.5" marker-start="url(#ah)" marker-end="url(#ah)"/>
-          <text x="294" y="100" class="lbl-b">35 $ за унцию</text>
+          <defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="f-fg"/></marker></defs>
+          <rect x="190" y="8" width="180" height="62" style="fill:#f5c451"/>
+          <text x="280" y="38" text-anchor="middle" style="font:800 23px var(--head);fill:#16336f">Золото</text>
+          <text x="280" y="58" text-anchor="middle" style="font:600 12.5px var(--head);fill:#16336f">1 тройская унция = 31,1035 г</text>
+          <line x1="280" y1="72" x2="280" y2="136" class="s-fg" stroke-width="2" marker-start="url(#ah)" marker-end="url(#ah)"/>
+          <text x="294" y="100" class="lbl-b" style="fill:#f5c451">35 $ за унцию</text>
           <text x="294" y="118" class="lbl-2" style="font-size:12.5px">размен только для центральных банков</text>
-          <circle cx="280" cy="180" r="42" class="f-bw"/>
-          <text x="280" y="193" text-anchor="middle" style="font:400 36px var(--display);fill:#fff">$</text>
+          <circle cx="280" cy="180" r="42" class="f-fg"/>
+          <text x="280" y="194" text-anchor="middle" style="font:800 36px var(--num);fill:#16336f">$</text>
           <text x="332" y="176" class="lbl-b">Доллар США</text>
           <text x="332" y="194" class="lbl-2" style="font-size:12.5px">резервная валюта и валюта интервенций</text>
-          <line x1="252" y1="212" x2="118" y2="290" class="s-ink2" stroke-width="1.5" marker-end="url(#ah)"/>
-          <line x1="280" y1="224" x2="280" y2="290" class="s-ink2" stroke-width="1.5" marker-end="url(#ah)"/>
-          <line x1="308" y1="212" x2="442" y2="290" class="s-ink2" stroke-width="1.5" marker-end="url(#ah)"/>
+          <line x1="252" y1="212" x2="118" y2="290" class="s-fg" stroke-width="2" marker-end="url(#ah)"/>
+          <line x1="280" y1="224" x2="280" y2="290" class="s-fg" stroke-width="2" marker-end="url(#ah)"/>
+          <line x1="308" y1="212" x2="442" y2="290" class="s-fg" stroke-width="2" marker-end="url(#ah)"/>
           <text x="176" y="246" text-anchor="end" class="lbl-2">±1 %</text>
           <text x="288" y="262" class="lbl-2">±1 %</text>
           <text x="384" y="246" class="lbl-2">±1 %</text>
           <g>
-            <rect x="30" y="294" width="160" height="80" rx="4" class="f-paper" style="stroke:var(--rule)"/>
+            <rect x="30" y="294" width="160" height="80" class="f-tint"/>
             <text x="110" y="318" text-anchor="middle" class="lbl-2">Фунт стерлингов</text>
-            <text x="110" y="344" text-anchor="middle" style="font:400 20px var(--display)" class="f-ink">1 £ = 2,80 $</text>
+            <text x="110" y="344" text-anchor="middle" style="font:800 19px var(--head)" class="f-fg">1 £ = 2,80 $</text>
             <text x="110" y="364" text-anchor="middle" class="tick">1949–1967</text>
           </g>
           <g>
-            <rect x="200" y="294" width="160" height="80" rx="4" class="f-paper" style="stroke:var(--rule)"/>
+            <rect x="200" y="294" width="160" height="80" class="f-tint"/>
             <text x="280" y="318" text-anchor="middle" class="lbl-2">Марка ФРГ</text>
-            <text x="280" y="344" text-anchor="middle" style="font:400 20px var(--display)" class="f-ink">4,20 DM = 1 $</text>
+            <text x="280" y="344" text-anchor="middle" style="font:800 19px var(--head)" class="f-fg">4,20 DM = 1 $</text>
             <text x="280" y="364" text-anchor="middle" class="tick">1949–1961</text>
           </g>
           <g>
-            <rect x="370" y="294" width="160" height="80" rx="4" class="f-paper" style="stroke:var(--rule)"/>
+            <rect x="370" y="294" width="160" height="80" class="f-tint"/>
             <text x="450" y="318" text-anchor="middle" class="lbl-2">Японская иена</text>
-            <text x="450" y="344" text-anchor="middle" style="font:400 20px var(--display)" class="f-ink">360 ¥ = 1 $</text>
+            <text x="450" y="344" text-anchor="middle" style="font:800 19px var(--head)" class="f-fg">360 ¥ = 1 $</text>
             <text x="450" y="364" text-anchor="middle" class="tick">1949–1971</text>
           </g>
         </svg>
@@ -910,7 +832,8 @@ button { font: inherit; color: inherit; }
 <!-- 13 · Бреттон-Вудс: Триффин -->
 <section class="slide" id="s13" data-era="bw">
   <div class="frame"><div class="slide-inner">
-    <header class="s-head"><span class="era-tag"><i></i>III · Бреттон-Вудская система · противоречие</span><span class="serial"></span></header>
+    <div class="ghost" aria-hidden="true">1960</div>
+    <header class="s-head"><span class="sec"><i></i>III · Бреттон-Вудская система · противоречие</span><span class="pg"></span></header>
     <h2 class="s-title">Дилемма Триффина</h2>
     <div class="s-body grid-2">
       <div class="dilemma">
@@ -935,20 +858,21 @@ button { font: inherit; color: inherit; }
 <!-- 14 · Бреттон-Вудс: хроника -->
 <section class="slide" id="s14" data-era="bw">
   <div class="frame"><div class="slide-inner">
-    <header class="s-head"><span class="era-tag"><i></i>III · Бреттон-Вудская система · распад</span><span class="serial"></span></header>
+    <div class="ghost" aria-hidden="true">1971</div>
+    <header class="s-head"><span class="sec"><i></i>III · Бреттон-Вудская система · распад</span><span class="pg"></span></header>
     <h2 class="s-title">Хроника распада, 1960–1973</h2>
     <div class="s-body">
       <ol class="chron">
-        <li><time>Окт. 1960</time><span>Цена золота в Лондоне подскакивает до 40 $ за унцию</span></li>
+        <li><time>10.1960</time><span>Цена золота в Лондоне подскакивает до 40 $ за унцию</span></li>
         <li><time>1961</time><span>«Золотой пул» восьми центральных банков удерживает цену на 35 $</span></li>
         <li><time>1965</time><span>Франция при Ш. де Голле меняет доллары на золото</span></li>
-        <li><time>Нояб. 1967</time><span>Девальвация фунта: 2,80 → 2,40 $ (−14,3 %)</span></li>
-        <li><time>Март 1968</time><span>Распад пула, «двухъярусный» рынок: 35 $ для ЦБ, свободная цена для остальных</span></li>
+        <li><time>11.1967</time><span>Девальвация фунта: 2,80 → 2,40 $ (−14,3 %)</span></li>
+        <li><time>03.1968</time><span>Распад пула, «двухъярусный» рынок: 35 $ для ЦБ, свободная цена для остальных</span></li>
         <li><time>1969</time><span>Созданы СДР (первая поправка к Уставу МВФ); распределения — с 1970 г.</span></li>
         <li class="key"><time>15.08.1971</time><span>Р. Никсон приостанавливает обмен долларов на золото</span></li>
-        <li><time>Дек. 1971</time><span>Смитсоновское соглашение: 38 $ за унцию, коридор ±2,25 %</span></li>
-        <li><time>Февр. 1973</time><span>Вторая девальвация доллара: 42,22 $ за унцию</span></li>
-        <li><time>Март 1973</time><span>Ведущие валюты переходят к плаванию</span></li>
+        <li><time>12.1971</time><span>Смитсоновское соглашение: 38 $ за унцию, коридор ±2,25 %</span></li>
+        <li><time>02.1973</time><span>Вторая девальвация доллара: 42,22 $ за унцию</span></li>
+        <li><time>03.1973</time><span>Ведущие валюты переходят к плаванию</span></li>
       </ol>
       <p class="small muted" style="margin-top:1em">Причины: дилемма Триффина, дефицит платёжного баланса и инфляция в США (война во Вьетнаме), усиление Европы и Японии, рынок евродолларов и «горячие деньги».</p>
     </div>
@@ -959,7 +883,8 @@ button { font: inherit; color: inherit; }
 <!-- 15 · Ямайка: принципы -->
 <section class="slide" id="s15" data-era="jam">
   <div class="frame"><div class="slide-inner">
-    <header class="s-head"><span class="era-tag"><i></i>IV · Ямайская система · с 1976 г.</span><span class="serial"></span></header>
+    <div class="ghost" aria-hidden="true">1976</div>
+    <header class="s-head"><span class="sec"><i></i>IV · Ямайская система · с 1976 г.</span><span class="pg"></span></header>
     <h2 class="s-title">Кингстон, январь 1976: золото больше не деньги</h2>
     <div class="s-body grid-2 r">
       <div class="stack">
@@ -967,7 +892,7 @@ button { font: inherit; color: inherit; }
           <div><dt>1976</dt><dd>7–8 января, совещание Временного комитета МВФ в Кингстоне (Ямайка)</dd></div>
           <div><dt>1978</dt><dd>1 апреля вступает в силу Вторая поправка к Статьям Соглашения МВФ</dd></div>
         </dl>
-        <div class="box">
+        <div class="box inv">
           <span class="label">Золото МВФ</span>
           <p>25 млн унций продано на аукционах, ещё 25 млн возвращено странам-членам — всего треть запаса фонда.</p>
         </div>
@@ -990,7 +915,8 @@ button { font: inherit; color: inherit; }
 <!-- 16 · Ямайка: режимы -->
 <section class="slide" id="s16" data-era="jam">
   <div class="frame"><div class="slide-inner">
-    <header class="s-head"><span class="era-tag"><i></i>IV · Ямайская система · курсовые режимы</span><span class="serial"></span></header>
+    <div class="ghost" aria-hidden="true">1976</div>
+    <header class="s-head"><span class="sec"><i></i>IV · Ямайская система · курсовые режимы</span><span class="pg"></span></header>
     <h2 class="s-title">Свобода выбора: спектр курсовых режимов</h2>
     <div class="s-body">
       <div class="spec-bar"><div class="z1">Жёсткая фиксация</div><div class="z2">Мягкая фиксация</div><div class="z3">Плавающие курсы</div></div>
@@ -1021,11 +947,12 @@ button { font: inherit; color: inherit; }
 <!-- 17 · Ямайка: сегодня -->
 <section class="slide" id="s17" data-era="jam">
   <div class="frame"><div class="slide-inner">
-    <header class="s-head"><span class="era-tag"><i></i>IV · Ямайская система · сегодня</span><span class="serial"></span></header>
+    <div class="ghost" aria-hidden="true">2026</div>
+    <header class="s-head"><span class="sec"><i></i>IV · Ямайская система · сегодня</span><span class="pg"></span></header>
     <h2 class="s-title">Формально — СДР, фактически — доллар</h2>
     <div class="s-body grid-2 l">
       <div>
-        <div class="legend"><span><i style="background:var(--jam)"></i>Вес в корзине СДР (с 01.08.2022)</span><span><i style="background:var(--ink-2)"></i>Доля в мировых валютных резервах (I кв. 2026)</span></div>
+        <div class="legend"><span><i style="background:var(--c-jam)"></i>Вес в корзине СДР (с 01.08.2022)</span><span><i style="background:#0e1a1f"></i>Доля в мировых валютных резервах (I кв. 2026)</span></div>
         <figure class="chart" id="chart-sdr" style="margin:0"></figure>
         <p class="src">МВФ: пересмотр корзины СДР 2022 г.; COFER, I кв. 2026 г.</p>
       </div>
@@ -1034,7 +961,7 @@ button { font: inherit; color: inherit; }
         <div class="was-row"><s class="was">35 $</s> <span class="x">официальная цена до 1971 г.</span></div>
         <div class="now">≈ 4 250 $</div>
         <div class="x">сентябрь 2026 · в ≈ 120 раз выше · в начале 2026 г. — выше 5 000 $</div>
-        <div class="box" style="margin-top:.6em">
+        <div class="box inv" style="margin-top:.6em">
           <p><b>289 т</b> золота купили центральные банки во II квартале 2026 г. — рекорд для второго квартала. В 2022–2024 гг. — более 1000 т в год.</p>
         </div>
         <p class="src" style="margin-top:0">World Gold Council; Trading Economics.</p>
@@ -1045,9 +972,9 @@ button { font: inherit; color: inherit; }
 </section>
 
 <!-- 18 · Сравнение -->
-<section class="slide" id="s18" data-era="gold">
+<section class="slide" id="s18" data-era="plain">
   <div class="frame"><div class="slide-inner">
-    <header class="s-head"><span class="era-tag"><i></i>Итоги · Сравнение</span><span class="serial"></span></header>
+    <header class="s-head"><span class="sec"><i></i>Итоги · Сравнение</span><span class="pg"></span></header>
     <h2 class="s-title">Четыре системы в одной таблице</h2>
     <div class="s-body cmp-wrap">
       <table class="compare" id="compare">
@@ -1071,9 +998,9 @@ button { font: inherit; color: inherit; }
 </section>
 
 <!-- 19 · Выводы -->
-<section class="slide" id="s19" data-era="gold">
+<section class="slide" id="s19" data-era="plain">
   <div class="frame"><div class="slide-inner">
-    <header class="s-head"><span class="era-tag"><i></i>Итоги · Выводы</span><span class="serial"></span></header>
+    <header class="s-head"><span class="sec"><i></i>Итоги · Выводы</span><span class="pg"></span></header>
     <h2 class="s-title">Четыре сквозные тенденции</h2>
     <div class="s-body">
       <dl class="trends">
@@ -1091,12 +1018,12 @@ button { font: inherit; color: inherit; }
 <!-- 20 · Спасибо -->
 <section class="slide" id="s20" data-era="gold">
   <div class="frame"><div class="slide-inner">
-    <header class="s-head"><span class="era-tag"><i></i>Спасибо</span><span class="serial"></span></header>
-    <div class="s-body grid-2" style="align-items:center;margin-top:1.5em">
+    <div class="ghost" aria-hidden="true">Au</div>
+    <header class="s-head"><span class="sec"><i></i>Спасибо</span><span class="pg"></span></header>
+    <div class="s-body grid-2" style="align-items:center">
       <div>
         <p class="thanks">Спасибо за&nbsp;внимание</p>
-        <p class="muted" style="font-size:1.15em">Готов(а) ответить на вопросы.</p>
-        <div class="rosette-wrap" style="max-width:15em;margin-top:1.4em"><canvas class="rosette" id="rosette-2" aria-hidden="true"></canvas></div>
+        <p style="font-size:1.2em;font-weight:600">Готов(а) ответить на вопросы.</p>
       </div>
       <div>
         <span class="label">Источники</span>
@@ -1155,7 +1082,7 @@ button { font: inherit; color: inherit; }
   const deck = $("#deck");
   const slides = $$(".slide", deck);
   const N = slides.length;
-  slides.forEach((s, i) => { const ser = $(".serial", s); if (ser) ser.textContent = "№ " + String(i + 1).padStart(2, "0") + " / " + N; });
+  slides.forEach((s, i) => { const pg = $(".pg", s); if (pg) pg.textContent = String(i + 1).padStart(2, "0") + " / " + N; });
 
   /* ---------- Подсказки ---------- */
   const tip = $("#tip");
@@ -1195,7 +1122,7 @@ button { font: inherit; color: inherit; }
     svg.append(S("line", { x1: 262, x2: 980, y1: 26, y2: 26, class: "axis" }));
     for (const y of [1820, 1850, 1880, 1910, 1940, 1970, 2000]) {
       svg.append(S("text", { x: X(y), y: 16, "text-anchor": "middle", class: "tick" }, y));
-      svg.append(S("line", { x1: X(y), x2: X(y), y1: 22, y2: 26, class: "axis" }));
+      svg.append(S("line", { x1: X(y), x2: X(y), y1: 21, y2: 26, class: "axis" }));
     }
     const events = [
       { y: 1914, t: "Первая мировая война", lvl: 0, a: "end" },
@@ -1208,20 +1135,20 @@ button { font: inherit; color: inherit; }
       svg.append(S("line", { x1: X(e.y), x2: X(e.y), y1: 30, y2: 262 + e.lvl * 26, class: "ev-line" }));
       const dx = e.a === "end" ? 4 : e.a === "start" ? -4 : 0;
       svg.append(S("text", { x: X(e.y) + dx, y: 280 + e.lvl * 26, "text-anchor": e.a, class: "lbl-2" },
-        S("tspan", { class: "tick", style: "font-weight:600" }, e.y + " · "), e.t));
+        S("tspan", { style: "font-weight:800;fill:var(--fg)" }, e.y + " · "), e.t));
     }
     rows.forEach((r, i) => {
       const y = 62 + i * 54;
       const g = S("g", { class: "tl-row", tabindex: 0, role: "button", "aria-label": `${r.n} система — перейти к слайдам`, "data-tip": r.tip });
       g.append(S("rect", { x: 0, y: y - 24, width: 990, height: 48, class: "hit" }));
-      g.append(S("text", { x: 0, y: y - 2, class: "lbl", style: "font-weight:600" }, r.n));
+      g.append(S("text", { x: 0, y: y - 2, class: "lbl", style: "font-weight:800" }, r.n));
       g.append(S("text", { x: 0, y: y + 16, class: "lbl-2" }, r.s));
       if (r.pre) {
-        g.append(S("rect", { x: X(r.pre), y: y - 13, width: X(r.a) - X(r.pre) - 2, height: 26, rx: 4, class: "f-" + r.c, opacity: .22 }));
-        g.append(S("text", { x: (X(r.pre) + X(r.a)) / 2, y: y + 5, "text-anchor": "middle", class: "lbl-2", style: "font-size:12px" }, "Великобритания с 1821 г."));
+        g.append(S("rect", { x: X(r.pre), y: y - 13, width: X(r.a) - X(r.pre) - 2, height: 26, class: "f-" + r.c, opacity: .2 }));
+        g.append(S("text", { x: (X(r.pre) + X(r.a)) / 2, y: y + 5, "text-anchor": "middle", class: "lbl-2", style: "font-size:12px;font-weight:600" }, "Великобритания с 1821 г."));
       }
-      g.append(S("rect", { x: X(r.a), y: y - 13, width: X(r.b) - X(r.a), height: 26, rx: 4, class: "tl-bar f-" + r.c }));
-      if (r.fade) g.append(S("rect", { x: X(r.fade), y: y - 13, width: X(r.b) - X(r.fade), height: 26, rx: 4, style: "fill:var(--paper-2)", opacity: .5 }));
+      g.append(S("rect", { x: X(r.a), y: y - 13, width: X(r.b) - X(r.a), height: 26, class: "tl-bar f-" + r.c }));
+      if (r.fade) g.append(S("rect", { x: X(r.fade), y: y - 13, width: X(r.b) - X(r.fade), height: 26, style: "fill:#ffffff", opacity: .55 }));
       const label = r.c === "jam" ? "с 1976 г. по н. в." : `${r.a}–${r.b}`;
       if (X(r.b) - X(r.a) > 110) g.append(S("text", { x: X(r.a) + 10, y: y + 5, class: "lbl-on" }, label));
       else g.append(S("text", { x: X(r.b) + 8, y: y + 5, class: "lbl-b" }, label));
@@ -1239,29 +1166,28 @@ button { font: inherit; color: inherit; }
     const X = (y) => 36 + (y - 1815) / (1905 - 1815) * 540;
     const svg = S("svg", { viewBox: "0 0 600 220", role: "img", "aria-label": "Переход к золотому стандарту: Великобритания 1821, Германия 1873, Латинский союз 1870-е, США 1879, Россия и Япония 1897" });
     const base = 118;
-    svg.append(S("line", { x1: 30, x2: 585, y1: base, y2: base, class: "axis" }));
+    svg.append(S("line", { x1: 30, x2: 585, y1: base, y2: base, class: "s-fg", "stroke-width": 2 }));
     for (const y of [1820, 1840, 1860, 1880, 1900]) {
-      svg.append(S("line", { x1: X(y), x2: X(y), y1: base, y2: base + 6, class: "axis" }));
-      svg.append(S("text", { x: X(y), y: base + 22, "text-anchor": "middle", class: "tick" }, y));
+      svg.append(S("line", { x1: X(y), x2: X(y), y1: base, y2: base + 7, class: "s-fg", "stroke-width": 2 }));
+      svg.append(S("text", { x: X(y), y: base + 24, "text-anchor": "middle", class: "tick" }, y));
     }
-    // Парижская конференция
-    svg.append(S("path", { d: `M${X(1867)} ${base - 9} l7 9 -7 9 -7 -9z`, class: "f-ink" }));
-    svg.append(S("text", { x: X(1867), y: base + 50, "text-anchor": "middle", class: "lbl-b", style: "font-size:13px" }, "1867 · Парижская конференция"));
-    svg.append(S("line", { x1: X(1867), x2: X(1867), y1: base + 10, y2: base + 36, class: "ev-line" }));
+    svg.append(S("rect", { x: X(1867) - 8, y: base - 8, width: 16, height: 16, transform: `rotate(45 ${X(1867)} ${base})`, style: "fill:#8e3226" }));
+    svg.append(S("text", { x: X(1867), y: base + 52, "text-anchor": "middle", class: "lbl-b", style: "font-size:13.5px" }, "1867 · Парижская конференция"));
+    svg.append(S("line", { x1: X(1867), x2: X(1867), y1: base + 11, y2: base + 37, class: "ev-line" }));
     const pts = [
       { y: 1821, t: "Великобритания", ly: 60, a: "start", dx: -6, tip: "Великобритания, 1816–1821\nЗакон о монете 1816 г.; с 1821 г. свободный размен банкнот на золото" },
       { y: 1873, t: "Германия", ly: 34, a: "end", dx: 4, tip: "Германия, 1871–1873\nЗолотая марка; французская контрибуция пошла на золотой запас" },
-      { y: 1876, t: "Латинский союз", ly: 190, a: "end", dx: 4, tip: "Латинский монетный союз, 1870-е\nФранция, Бельгия, Италия, Швейцария прекращают свободную чеканку серебра" },
+      { y: 1876, t: "Латинский союз", ly: 192, a: "end", dx: 4, tip: "Латинский монетный союз, 1870-е\nФранция, Бельгия, Италия, Швейцария прекращают свободную чеканку серебра" },
       { y: 1879, t: "США", ly: 66, a: "start", dx: -4, tip: "США, 1879 (1900)\nВозобновлён размен на золото; Закон о золотом стандарте 1900 г." },
       { y: 1897, t: "Япония", ly: 34, a: "middle", dx: 0, tip: "Япония, 1897\nПереход за счёт контрибуции после японо-китайской войны" },
-      { y: 1897, t: "Россия", ly: 190, a: "middle", dx: 0, below: true, tip: "Россия, 1895–1897\nРеформа Витте: 1 рубль = 0,774234 г чистого золота" },
+      { y: 1897, t: "Россия", ly: 192, a: "middle", dx: 0, tip: "Россия, 1895–1897\nРеформа Витте: 1 рубль = 0,774234 г чистого золота" },
     ];
     for (const p of pts) {
       const x = X(p.y), up = p.ly < base;
-      svg.append(S("line", { x1: x, x2: x, y1: up ? p.ly + 8 : base + 8, y2: up ? base - 8 : p.ly - 18, class: "ev-line" }));
+      svg.append(S("line", { x1: x, x2: x, y1: up ? p.ly + 8 : base + 9, y2: up ? base - 9 : p.ly - 18, class: "ev-line" }));
       const g = S("g", { tabindex: 0, "data-tip": p.tip });
-      g.append(S("circle", { cx: x, cy: base, r: 6.5, class: "f-paris s-paper", "stroke-width": 2 }));
-      g.append(S("text", { x: x + p.dx, y: p.ly, "text-anchor": p.a, class: "lbl", style: "font-size:14.5px" }, p.t, S("tspan", { class: "tick" }, " " + p.y)));
+      g.append(S("circle", { cx: x, cy: base, r: 7, class: "f-fg s-bg", "stroke-width": 2.5 }));
+      g.append(S("text", { x: x + p.dx, y: p.ly, "text-anchor": p.a, class: "lbl", style: "font-size:15px;font-weight:700" }, p.t, S("tspan", { class: "tick" }, " " + p.y)));
       g.append(S("rect", { x: x - 12, y: base - 12, width: 24, height: 24, class: "hit" }));
       svg.append(g);
     }
@@ -1279,16 +1205,16 @@ button { font: inherit; color: inherit; }
       svg.append(S("line", { x1: x0, x2: x1, y1: Y(v), y2: Y(v), class: "grid-line" }));
       svg.append(S("text", { x: x0 - 8, y: Y(v) + 4, "text-anchor": "end", class: "tick" }, fmt(v, 2)));
     }
-    svg.append(S("text", { x: x0, y: 274, class: "lbl-2", style: "font-size:12.5px" }, "время → · долл. США за 1 фунт стерлингов"));
-    const band = S("rect", { x: x0, width: x1 - x0, style: "fill:color-mix(in srgb, var(--paris) 13%, transparent)" });
-    const upL = S("line", { x1: x0, x2: x1, class: "s-ink2", "stroke-width": 1.2 });
-    const loL = S("line", { x1: x0, x2: x1, class: "s-ink2", "stroke-width": 1.2 });
-    const parL = S("line", { x1: x0, x2: x1, y1: Y(par), y2: Y(par), style: "stroke:var(--paris)", "stroke-width": 2 });
-    const path = S("path", { class: "s-ink", fill: "none", "stroke-width": 2.2, "stroke-linejoin": "round", "stroke-linecap": "round" });
-    const tUp = S("text", { x: x1 + 10, class: "lbl-2" }), tUpV = S("text", { x: x1 + 10, class: "lbl-b" });
-    const tLo = S("text", { x: x1 + 10, class: "lbl-2" }), tLoV = S("text", { x: x1 + 10, class: "lbl-b" });
-    const tPar = S("text", { x: x1 + 10, y: Y(par) - 2, class: "lbl-2" }, "паритет");
-    const tParV = S("text", { x: x1 + 10, y: Y(par) + 16, class: "lbl-b" }, "4,8665");
+    svg.append(S("text", { x: x0, y: 274, class: "lbl-2", style: "font-size:12.5px;font-weight:600" }, "время → · долл. США за 1 фунт стерлингов"));
+    const band = S("rect", { x: x0, width: x1 - x0, style: "fill:rgba(255,255,255,.42)" });
+    const upL = S("line", { x1: x0, x2: x1, class: "s-fg", "stroke-width": 1.4 });
+    const loL = S("line", { x1: x0, x2: x1, class: "s-fg", "stroke-width": 1.4 });
+    const parL = S("line", { x1: x0, x2: x1, y1: Y(par), y2: Y(par), style: "stroke:#8e3226", "stroke-width": 2.5 });
+    const path = S("path", { class: "s-fg", fill: "none", "stroke-width": 2.6, "stroke-linejoin": "round", "stroke-linecap": "round" });
+    const tUp = S("text", { x: x1 + 10, class: "lbl-2", style: "font-weight:600" }), tUpV = S("text", { x: x1 + 10, class: "lbl-b" });
+    const tLo = S("text", { x: x1 + 10, class: "lbl-2", style: "font-weight:600" }), tLoV = S("text", { x: x1 + 10, class: "lbl-b" });
+    const tPar = S("text", { x: x1 + 10, y: Y(par) - 2, class: "lbl-2", style: "font-weight:600" }, "паритет");
+    const tParV = S("text", { x: x1 + 10, y: Y(par) + 16, class: "lbl-b", style: "fill:#8e3226" }, "4,8665");
     svg.append(band, upL, loL, parL, path, tUp, tUpV, tLo, tLoV, tPar, tParV);
     const wave = [];
     for (let i = 0; i <= 140; i++) {
@@ -1347,9 +1273,9 @@ button { font: inherit; color: inherit; }
       const y = top + i * pitch;
       const g = S("g", { tabindex: 0, "data-tip": r.t });
       g.append(S("rect", { x: 0, y: y - pitch / 2, width: 600, height: pitch, class: "hit" }));
-      g.append(S("text", { x: x0 - 12, y: y + 5, "text-anchor": "end", class: "lbl", style: "font-size:14.5px" }, r.n));
-      g.append(S("line", { x1: x0, x2: X(r.d), y1: y, y2: y, style: "stroke:color-mix(in srgb, var(--genoa) 45%, var(--rule))", "stroke-width": 2 }));
-      g.append(S("circle", { cx: X(r.d), cy: y, r: 6.5, class: "f-genoa s-paper", "stroke-width": 2 }));
+      g.append(S("text", { x: x0 - 12, y: y + 5, "text-anchor": "end", class: "lbl", style: "font-size:15px;font-weight:600" }, r.n));
+      g.append(S("line", { x1: x0, x2: X(r.d), y1: y, y2: y, style: "stroke:rgba(255,244,238,.4)", "stroke-width": 3 }));
+      g.append(S("circle", { cx: X(r.d), cy: y, r: 7, class: "f-mark s-bg", "stroke-width": 2.5 }));
       svg.append(g);
     });
     host.append(svg);
@@ -1366,13 +1292,13 @@ button { font: inherit; color: inherit; }
       svg.append(S("line", { x1: x0, x2: x1, y1: Y(v), y2: Y(v), class: v ? "grid-line" : "axis" }));
       svg.append(S("text", { x: x0 - 8, y: Y(v) + 4, "text-anchor": "end", class: "tick" }, v));
     }
-    const band = (x1 - x0) / data.length, w = 26;
+    const band = (x1 - x0) / data.length, w = 30;
     data.forEach(([yr, v], i) => {
-      const cx = x0 + band * (i + .5), top = Y(v), r = 4;
+      const cx = x0 + band * (i + .5), top = Y(v);
       const oz = v / 35 * 1000, t = oz * 31.1035 / 1000;
       const g = S("g", { tabindex: 0, "data-tip": `${yr}: ${fmt(v)} млрд долл.\n≈ ${Math.round(oz)} млн тройских унций ≈ ${(Math.round(t / 100) * 100).toLocaleString("ru-RU")} т` });
-      g.append(S("path", { d: `M${cx - w / 2} ${yB} V${top + r} Q${cx - w / 2} ${top} ${cx - w / 2 + r} ${top} H${cx + w / 2 - r} Q${cx + w / 2} ${top} ${cx + w / 2} ${top + r} V${yB} Z`, class: "f-bw" }));
-      g.append(S("text", { x: cx, y: top - 8, "text-anchor": "middle", class: "lbl-b" }, fmt(v)));
+      g.append(S("rect", { x: cx - w / 2, y: top, width: w, height: yB - top, class: "f-mark" }));
+      g.append(S("text", { x: cx, y: top - 8, "text-anchor": "middle", class: "lbl-b", style: "font-size:15px" }, fmt(v)));
       g.append(S("text", { x: cx, y: yB + 20, "text-anchor": "middle", class: "tick" }, yr));
       g.append(S("rect", { x: cx - band / 2, y: yT - 10, width: band, height: yB - yT + 30, class: "hit" }));
       svg.append(g);
@@ -1386,21 +1312,21 @@ button { font: inherit; color: inherit; }
     const rows = [["Доллар США", 43.38, 57.1], ["Евро", 29.31, 20.0], ["Юань", 12.28, 2.0], ["Иена", 7.59, 5.4], ["Фунт стерлингов", 7.44, 4.6, true], ["Прочие", null, 10.8, true]];
     const x0 = 150, x1 = 520, max = 60;
     const X = (v) => x0 + v / max * (x1 - x0);
-    const pitch = 44, top = 14;
+    const pitch = 46, top = 12;
     const H = top + rows.length * pitch;
     const svg = S("svg", { viewBox: `0 0 580 ${H}`, role: "img", "aria-label": "Вес в корзине СДР и доля в мировых резервах: доллар 43,38 и 57,1 процента, евро 29,31 и 20,0, юань 12,28 и 2,0, иена 7,59 и 5,4, фунт 7,44 и около 4,6" });
-    svg.append(S("line", { x1: x0, x2: x0, y1: 4, y2: H - 4, class: "axis" }));
+    svg.append(S("line", { x1: x0, x2: x0, y1: 4, y2: H - 4, class: "s-fg", "stroke-width": 1.5 }));
     rows.forEach(([n, a, b, approx], i) => {
       const y = top + i * pitch;
       const g = S("g", { tabindex: 0, "data-tip": `${n}\nКорзина СДР: ${a == null ? "не входит" : fmt(a, 2) + " %"}\nМировые резервы: ${approx ? "≈ " : ""}${fmt(b)} %` });
       g.append(S("rect", { x: 0, y: y - 4, width: 580, height: pitch, class: "hit" }));
-      g.append(S("text", { x: x0 - 12, y: y + 17, "text-anchor": "end", class: "lbl", style: "font-size:14.5px" }, n));
+      g.append(S("text", { x: x0 - 12, y: y + 18, "text-anchor": "end", class: "lbl", style: "font-size:15px;font-weight:600" }, n));
       if (a != null) {
-        g.append(S("rect", { x: x0, y: y + 2, width: X(a) - x0, height: 13, rx: 2, class: "f-jam" }));
-        g.append(S("text", { x: X(a) + 6, y: y + 13, class: "lbl-2", style: "font-size:12.5px" }, fmt(a, 2)));
+        g.append(S("rect", { x: x0, y: y + 2, width: X(a) - x0, height: 14, class: "f-jam" }));
+        g.append(S("text", { x: X(a) + 6, y: y + 14, class: "lbl-2", style: "font-size:12.5px;font-weight:600" }, fmt(a, 2)));
       }
-      g.append(S("rect", { x: x0, y: y + 17, width: X(b) - x0, height: 13, rx: 2, class: "f-ink2" }));
-      g.append(S("text", { x: X(b) + 6, y: y + 28, class: "lbl-b", style: "font-size:13px" }, (approx ? "≈ " : "") + fmt(b)));
+      g.append(S("rect", { x: x0, y: y + 18, width: X(b) - x0, height: 14, class: "f-fg" }));
+      g.append(S("text", { x: X(b) + 6, y: y + 30, class: "lbl-b", style: "font-size:13px" }, (approx ? "≈ " : "") + fmt(b)));
       svg.append(g);
     });
     host.append(svg);
@@ -1411,98 +1337,10 @@ button { font: inherit; color: inherit; }
     const t = $("#compare");
     t.addEventListener("pointerover", (e) => {
       const c = e.target.closest("[data-c]"); const key = c && c.dataset.c;
-      $$("[data-c]", t).forEach((el) => el.classList.toggle("col-hot", !!key && el.dataset.c === key && el.tagName === "TD"));
+      $$("td[data-c]", t).forEach((el) => el.classList.toggle("col-hot", !!key && el.dataset.c === key));
     });
     t.addEventListener("pointerleave", () => $$(".col-hot", t).forEach((el) => el.classList.remove("col-hot")));
   })();
-
-  /* ---------- Гильош ---------- */
-  const rosettes = [];
-  function makeRosette(canvas, opts = {}) {
-    const ctx = canvas.getContext("2d");
-    const st = { canvas, ctx, rot: 0, visible: false, size: 0, ...opts };
-    function draw() {
-      const box = canvas.getBoundingClientRect();
-      const size = Math.min(box.width, box.height || box.width);
-      if (size < 20) return;
-      const dpr = Math.min(devicePixelRatio || 1, 2);
-      if (st.size !== size || canvas.width !== Math.round(size * dpr)) {
-        canvas.width = Math.round(size * dpr); canvas.height = Math.round(size * dpr); st.size = size;
-      }
-      const css = getComputedStyle(canvas);
-      const line = css.getPropertyValue("--gold-line").trim() || "#b08a33";
-      const ink = css.getPropertyValue("--gold").trim() || "#7e5e0c";
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      ctx.clearRect(0, 0, size, size);
-      const R = size / 2, cx = R, cy = R;
-      ctx.strokeStyle = line; ctx.lineWidth = Math.max(.5, size / 900);
-      const band = (r0, amp, k, n, rot, alpha) => {
-        ctx.globalAlpha = alpha;
-        const steps = k * 22;
-        for (let j = 0; j < n; j++) {
-          const ph = j / n * Math.PI * 2;
-          ctx.beginPath();
-          for (let s = 0; s <= steps; s++) {
-            const th = s / steps * Math.PI * 2;
-            const r = r0 + amp * Math.sin(k * (th + rot) + ph);
-            const x = cx + r * Math.cos(th), y = cy + r * Math.sin(th);
-            s ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
-          }
-          ctx.stroke();
-        }
-      };
-      band(R * .9, R * .05, 36, 16, st.rot, .75);
-      band(R * .72, R * .07, 20, 14, -st.rot * 1.4, .7);
-      // центральная розетка (гипотрохоида 12:5)
-      ctx.globalAlpha = .8;
-      const a = R * .5, b = a * 5 / 12, d = b * 1.2, turns = 5, steps = 1400;
-      for (let j = 0; j < 5; j++) {
-        const off = st.rot * .6 + j * Math.PI * 2 / 60;
-        ctx.beginPath();
-        for (let s = 0; s <= steps; s++) {
-          const t = s / steps * Math.PI * 2 * turns;
-          const x0 = (a - b) * Math.cos(t) + d * Math.cos((a - b) / b * t);
-          const y0 = (a - b) * Math.sin(t) - d * Math.sin((a - b) / b * t);
-          const x = cx + x0 * Math.cos(off) - y0 * Math.sin(off), y = cy + x0 * Math.sin(off) + y0 * Math.cos(off);
-          s ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
-        }
-        ctx.stroke();
-      }
-      ctx.globalAlpha = 1;
-      ctx.beginPath(); ctx.arc(cx, cy, R * .985, 0, Math.PI * 2); ctx.stroke();
-      ctx.beginPath(); ctx.arc(cx, cy, R * .6, 0, Math.PI * 2); ctx.stroke();
-      if (st.label) {
-        ctx.fillStyle = css.getPropertyValue("--paper-2").trim() || "#f7f8f3";
-        ctx.beginPath(); ctx.arc(cx, cy, R * .17, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-        ctx.fillStyle = ink; ctx.textAlign = "center"; ctx.textBaseline = "middle";
-        ctx.font = `400 ${R * .16}px Prata, Georgia, serif`;
-        ctx.fillText("Au", cx, cy + R * .01);
-        ctx.font = `500 ${R * .045}px "IBM Plex Mono", monospace`;
-        ctx.fillText("79", cx, cy - R * .105);
-      }
-    }
-    st.draw = draw;
-    new ResizeObserver(() => draw()).observe(canvas);
-    new IntersectionObserver((es) => { st.visible = es[0].isIntersecting; }).observe(canvas);
-    draw();
-    rosettes.push(st);
-    return st;
-  }
-  makeRosette($("#rosette"), { label: true });
-  makeRosette($("#rosette-2"), { label: false });
-  let last = 0;
-  function tick(ts) {
-    if (!reduced.matches && !document.hidden && ts - last > 33) {
-      const dt = last ? Math.min(ts - last, 100) : 16; last = ts;
-      for (const r of rosettes) if (r.visible) { r.rot += dt * .000035; r.draw(); }
-    }
-    requestAnimationFrame(tick);
-  }
-  requestAnimationFrame(tick);
-  const redrawAll = () => rosettes.forEach((r) => r.draw());
-  if (document.fonts && document.fonts.ready) document.fonts.ready.then(redrawAll);
-  matchMedia("(prefers-color-scheme: dark)").addEventListener("change", redrawAll);
-  new MutationObserver(redrawAll).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
 
   /* ---------- Имя докладчика (хранится только в этом браузере) ---------- */
   $$(".fill[data-key]").forEach((el) => {
@@ -1514,10 +1352,10 @@ button { font: inherit; color: inherit; }
   /* ---------- Навигация и режим показа ---------- */
   let cur = 0, presenting = false, notesOn = false, weFull = false;
   const pbar = $("#pbar"), segs = $("#segs"), count = $("#p-count"), pnotes = $("#pnotes"), pnText = $("#pnotes-text");
-  const eraOf = (s) => ({ paris: "var(--paris)", genoa: "var(--genoa)", bw: "var(--bw)", jam: "var(--jam)" }[s.dataset.era] || "var(--gold-line)");
+  const eraColor = { gold: "var(--e-paris)", paris: "var(--e-paris)", genoa: "var(--e-genoa)", bw: "var(--e-bw)", jam: "var(--e-jam)", plain: "#e9e9ec" };
   slides.forEach((s, i) => {
     const b = document.createElement("button");
-    b.type = "button"; b.style.setProperty("--c", eraOf(s));
+    b.type = "button"; b.style.setProperty("--c", eraColor[s.dataset.era] || "#e9e9ec");
     b.setAttribute("aria-label", "Слайд " + (i + 1));
     b.addEventListener("click", (e) => { e.stopPropagation(); show(i); });
     segs.append(b);
