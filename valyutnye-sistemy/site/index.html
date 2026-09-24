@@ -213,12 +213,7 @@ b, strong { font-weight: 700; }
 .title-grid { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 3em; align-items: center; flex: 1; min-height: 0; }
 .kicker { font: 700 .7em/1.5 var(--head); letter-spacing: .09em; text-transform: uppercase; margin: 0 0 1.2em; max-width: 30em; text-wrap: balance; }
 .hero-title { font: 800 5em/.92 var(--head); letter-spacing: -.045em; margin: 0 0 .35em; text-wrap: balance; }
-.hero-sub { font: 500 1.25em/1.32 var(--head); color: var(--fg-2); margin: 0 0 1.8em; max-width: 20em; text-wrap: balance; }
-.byline { display: grid; gap: .4em; font-size: .85em; color: var(--fg-2); }
-.byline div { display: flex; gap: .6em; flex-wrap: wrap; align-items: baseline; }
-.fill { color: var(--fg); font-weight: 700; border-bottom: 2px solid var(--line); min-width: 6em; display: inline-block; outline: none; padding: 0 .15em; cursor: text; }
-.fill:empty::before { content: attr(data-placeholder); color: var(--fg-2); font-weight: 500; }
-.fill:focus { border-bottom-color: var(--fg); }
+.hero-sub { font: 500 1.25em/1.32 var(--head); color: var(--fg-2); margin: 0; max-width: 20em; text-wrap: balance; }
 .eb-list { display: grid; gap: 1.05em; }
 .eb { display: grid; gap: .35em; }
 .eb .bar {
@@ -385,8 +380,6 @@ b, strong { font-weight: 700; }
 .deck.present .frame { width: min(100vw, calc(100vh * 16 / 9)); width: min(100vw, calc(100dvh * 16 / 9)); }
 .deck.present .slide.is-current .slide-inner { animation: enter .28s ease-out both; }
 @keyframes enter { from { opacity: .35; transform: translateX(.6%); } to { opacity: 1; transform: none; } }
-.deck.present .fill { border-bottom-color: transparent; }
-.deck.present .byline div:has(.fill:empty) { display: none; }
 
 .pbar {
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 60;
@@ -455,10 +448,6 @@ b, strong { font-weight: 700; }
         <p class="kicker">Тема 2. Валютные отношения в мировой экономике · Вопрос 5</p>
         <h1 class="hero-title">От Парижа до&nbsp;Ямайки</h1>
         <p class="hero-sub">Парижская, Генуэзская, Бреттон-Вудская и Ямайская валютные системы</p>
-        <div class="byline">
-          <div>Докладчик: <span class="fill" contenteditable="true" spellcheck="false" data-key="name" data-placeholder="впишите фамилию и имя"></span></div>
-          <div>Группа: <span class="fill" contenteditable="true" spellcheck="false" data-key="group" data-placeholder="номер группы"></span></div>
-        </div>
       </div>
       <div class="eb-list" role="img" aria-label="Продолжительность систем: Парижская 47 лет, Генуэзская 17 лет, Бреттон-Вудская 32 года, Ямайская действует 50 лет">
         <p class="eb-cap">Сколько прожила каждая система</p>
@@ -1067,10 +1056,6 @@ b, strong { font-weight: 700; }
   const NS = "http://www.w3.org/2000/svg";
   const reduced = matchMedia("(prefers-reduced-motion: reduce)");
   const fmt = (n, d = 1) => n.toFixed(d).replace(".", ",");
-  const store = {
-    get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
-    set(k, v) { try { localStorage.setItem(k, v); } catch (e) { /* хранилище недоступно */ } },
-  };
 
   function S(tag, attrs = {}, ...kids) {
     const el = document.createElementNS(NS, tag);
@@ -1341,13 +1326,6 @@ b, strong { font-weight: 700; }
     });
     t.addEventListener("pointerleave", () => $$(".col-hot", t).forEach((el) => el.classList.remove("col-hot")));
   })();
-
-  /* ---------- Имя докладчика (хранится только в этом браузере) ---------- */
-  $$(".fill[data-key]").forEach((el) => {
-    const v = store.get("fx-" + el.dataset.key); if (v) el.textContent = v;
-    el.addEventListener("input", () => store.set("fx-" + el.dataset.key, el.textContent.trim()));
-    el.addEventListener("keydown", (e) => { e.stopPropagation(); if (e.key === "Enter") { e.preventDefault(); el.blur(); } });
-  });
 
   /* ---------- Навигация и режим показа ---------- */
   let cur = 0, presenting = false, notesOn = false, weFull = false;
