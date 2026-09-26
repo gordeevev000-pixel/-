@@ -1,0 +1,553 @@
+//@version=6
+// ═══════════════════════════════════════════════════════════════════════════════
+//  MARKUP · авторазметка графика: каналы, горизонтальные уровни, MTF-средние
+//
+//  Повторяет ручную технику разметки:
+//    • каналы тренда — линия тренда от экстремума через следующие свинги того же типа,
+//      параллель через противоположную сторону, пунктир посередине;
+//      нисходящий — оранжевый, восходящий — зелёный, несколько масштабов сразу
+//    • белые горизонтальные уровни от значимых свингов: тянутся вправо и живут
+//      после пробоя — поддержка становится сопротивлением
+//    • лента средних рабочего ТФ и те же периоды со старших ТФ тонкими линиями
+//      с подписями «200 (15м)»; совпавшие средние подписываются через «=»
+//      Цвет — по периоду: 20 оранжевый, 50 синий, 100 фиолетовый, 200 жёлтый.
+//
+//  Жизненный цикл канала:
+//    якорь — экстремум, с которого начался ход (у нисходящего — максимум);
+//    линия тренда — касательная от якоря ко всем свингам того же типа после него:
+//      свинг выше линии делает её положе, свинг ниже канал не трогает;
+//    противоположная граница — параллель через самый дальний свинг с другой стороны,
+//      самые дальние выбросы можно не учитывать — обычно это первый пролив от вершины;
+//    слом — закрытие за линией тренда дальше доли ширины канала или выход за якорь:
+//      разворот, новый канал от экстремума внутри сломанного;
+//    ускорение — закрытие за противоположной границей дальше доли ширины:
+//      канал перестраивается в ту же сторону от последнего свинга.
+//  Решения принимаются только на закрытых барах: внутри бара канал не перерисовывается.
+// ═══════════════════════════════════════════════════════════════════════════════
+
+indicator("MARKUP · каналы, уровни, MTF-средние", "MARKUP", overlay = true,
+     max_lines_count = 500, max_labels_count = 500)
+
+// ── входные параметры ──────────────────────────────────────────────────────────
+gCh = "Каналы"
+chOn    = input.bool(true, "Рисовать каналы", group = gCh)
+brkK    = input.float(0.15, "Слом: закрытие за линией тренда, доля ширины", minval = 0, step = 0.05, group = gCh)
+accK    = input.float(0.35, "Ускорение: закрытие за противоположной границей, доля ширины", minval = 0, step = 0.05, group = gCh)
+pierceN = input.int(1, "Не учитывать самых дальних выбросов", minval = 0, maxval = 5, group = gCh,
+     tooltip = "Сколько самых дальних свингов противоположная граница может проколоть. 1 — пропустить первый пролив после вершины, как при ручной разметке. 0 — граница строго по экстремуму.")
+extOld  = input.bool(true, "Продлевать сломанные каналы вправо", group = gCh)
+cUp     = input.color(#4CAF50, "Восходящий", group = gCh, inline = "cc")
+cDn     = input.color(#FF9800, "Нисходящий", group = gCh, inline = "cc")
+fillTr  = input.int(93, "Заливка, прозрачность", minval = 0, maxval = 100, group = gCh)
+
+gSc = "Масштабы каналов: свинг, толщина, сколько прошлых каналов держать"
+s1On  = input.bool(true, "Старший ", group = gSc, inline = "s1")
+s1Len = input.int(60, "", minval = 2, maxval = 500, group = gSc, inline = "s1")
+s1W   = input.int(2, "", minval = 1, maxval = 5, group = gSc, inline = "s1")
+s1Old = input.int(1, "", minval = 0, maxval = 5, group = gSc, inline = "s1")
+s2On  = input.bool(true, "Рабочий ", group = gSc, inline = "s2")
+s2Len = input.int(20, "", minval = 2, maxval = 500, group = gSc, inline = "s2")
+s2W   = input.int(2, "", minval = 1, maxval = 5, group = gSc, inline = "s2")
+s2Old = input.int(0, "", minval = 0, maxval = 5, group = gSc, inline = "s2")
+s3On  = input.bool(false, "Локальный", group = gSc, inline = "s3")
+s3Len = input.int(7, "", minval = 2, maxval = 500, group = gSc, inline = "s3")
+s3W   = input.int(1, "", minval = 1, maxval = 5, group = gSc, inline = "s3",
+     tooltip = "Свинг — сколько баров слева и справа должны быть ниже максимума (выше минимума). Чем больше, тем крупнее каналы. На 1м: 60 ≈ часовые свинги, 20 ≈ двадцатиминутные.")
+s3Old = input.int(0, "", minval = 0, maxval = 5, group = gSc, inline = "s3")
+
+gLv = "Горизонтальные уровни"
+lvOn    = input.bool(true, "Рисовать уровни", group = gLv)
+lvLen   = input.int(30, "Свинг для уровня, баров слева и справа", minval = 2, maxval = 500, group = gLv)
+lvTol   = input.float(1.0, "Сливать свинги ближе, ATR(200)", minval = 0, step = 0.1, group = gLv)
+lvGap   = input.float(4.0, "Минимальный зазор между уровнями, ATR(200)", minval = 0, step = 0.5, group = gLv)
+lvUp    = input.int(6, "Уровней выше цены", minval = 0, maxval = 30, group = gLv)
+lvDn    = input.int(6, "Уровней ниже цены", minval = 0, maxval = 30, group = gLv)
+lvCol   = input.color(color.white, "Цвет", group = gLv, inline = "lv")
+lvW     = input.int(2, "толщина", minval = 1, maxval = 5, group = gLv, inline = "lv")
+lvPrice = input.bool(false, "Подписывать цену и число касаний", group = gLv)
+
+gMa = "Средние: периоды и цвета"
+maType = input.string("EMA", "Тип", options = ["EMA", "SMA"], group = gMa)
+mL1 = input.int(20,  "Период 1", minval = 1, group = gMa, inline = "m1")
+cL1 = input.color(#FF9800, "", group = gMa, inline = "m1")
+mL2 = input.int(50,  "Период 2", minval = 1, group = gMa, inline = "m2")
+cL2 = input.color(#2962FF, "", group = gMa, inline = "m2")
+mL3 = input.int(100, "Период 3", minval = 1, group = gMa, inline = "m3")
+cL3 = input.color(#7E57C2, "", group = gMa, inline = "m3")
+mL4 = input.int(200, "Период 4", minval = 1, group = gMa, inline = "m4")
+cL4 = input.color(#FFEB3B, "", group = gMa, inline = "m4")
+
+gRib = "Лента на рабочем ТФ"
+ribOn = input.bool(true, "Периоды 1–4", group = gRib)
+r0On  = input.bool(true, "Быстрая", group = gRib, inline = "r0")
+r0    = input.int(9, "", minval = 1, group = gRib, inline = "r0")
+c0    = input.color(#F23645, "", group = gRib, inline = "r0")
+ribW  = input.int(2, "Толщина", minval = 1, maxval = 5, group = gRib)
+
+gMtf = "Средние старших ТФ (ТФ не выше рабочего скрываются сами)"
+mtfOn = input.bool(true, "Рисовать", group = gMtf)
+tf1 = input.timeframe("5", "", group = gMtf, inline = "t1")
+t1a = input.bool(false, "п1", group = gMtf, inline = "t1")
+t1b = input.bool(false, "п2", group = gMtf, inline = "t1")
+t1c = input.bool(true,  "п3", group = gMtf, inline = "t1")
+t1d = input.bool(true,  "п4", group = gMtf, inline = "t1")
+tf2 = input.timeframe("15", "", group = gMtf, inline = "t2")
+t2a = input.bool(true, "п1", group = gMtf, inline = "t2")
+t2b = input.bool(true, "п2", group = gMtf, inline = "t2")
+t2c = input.bool(true, "п3", group = gMtf, inline = "t2")
+t2d = input.bool(true, "п4", group = gMtf, inline = "t2")
+tf3 = input.timeframe("60", "", group = gMtf, inline = "t3")
+t3a = input.bool(true, "п1", group = gMtf, inline = "t3")
+t3b = input.bool(true, "п2", group = gMtf, inline = "t3")
+t3c = input.bool(true, "п3", group = gMtf, inline = "t3")
+t3d = input.bool(true, "п4", group = gMtf, inline = "t3",
+     tooltip = "п1…п4 — периоды 1–4 из блока «Средние: периоды и цвета».")
+mtfTr  = input.int(70, "Прозрачность линий", minval = 0, maxval = 100, group = gMtf)
+lbOff  = input.int(15, "Подписи: отступ от последнего бара, баров", minval = 0, maxval = 200, group = gMtf)
+lbStep = input.int(25, "Подписи: шаг между ТФ, баров", minval = 0, maxval = 100, group = gMtf)
+lbTol  = input.float(0.3, "Объединять подписи ближе, ATR(14)", minval = 0, step = 0.05, group = gMtf)
+lbSize = input.string(size.normal, "Размер подписей", options = [size.small, size.normal, size.large], group = gMtf)
+
+// ── константы ─────────────────────────────────────────────────────────────────
+BUF     = 5000   // глубина собственного буфера цен для поиска экстремумов
+PIV_MAX = 300    // свингов одного типа на масштаб
+LV_MAX  = 200    // уровней в памяти
+
+// ── буфер цен ─────────────────────────────────────────────────────────────────
+// Кольцевой буфер вместо high[i]: поиск экстремума идёт только в момент слома,
+// и так не нужно раздувать историю всех рядов через max_bars_back.
+var array<float> hBuf = array.new_float(BUF, na)
+var array<float> lBuf = array.new_float(BUF, na)
+hBuf.set(bar_index % BUF, high)
+lBuf.set(bar_index % BUF, low)
+
+// самый высокий (самый низкий) бар от fromBar до текущего включительно → [бар, цена]
+f_extreme(int fromBar, bool wantHigh) =>
+    int n = math.min(bar_index - fromBar, BUF - 1)
+    int bx = bar_index
+    float best = wantHigh ? high : low
+    if n > 0
+        for i = 1 to n
+            int b = bar_index - i
+            float v = wantHigh ? hBuf.get(b % BUF) : lBuf.get(b % BUF)
+            if wantHigh ? v > best : v < best
+                bx := b
+                best := v
+    [bx, best]
+
+// ── каналы ────────────────────────────────────────────────────────────────────
+type Pt
+    int   x
+    float y
+
+type Chan
+    int      dir = 0     // +1 восходящий, −1 нисходящий, 0 ещё не начат
+    int      ax          // якорь: бар и цена экстремума, с которого начался ход
+    float    ay
+    float    slope       // наклон линии тренда за бар; na, пока нет второго свинга
+    float    off         // сдвиг противоположной границы от линии тренда
+    int      ex          // бегущий экстремум с другой стороны — будущий якорь разворота
+    float    ey
+    line     lb
+    line     lo
+    line     lm
+    linefill lf
+
+type Scale
+    int         len
+    array<Pt>   hs
+    array<Pt>   ls
+    Chan        cur
+    array<Chan> old
+
+method yAt(Chan c, int x) => c.ay + c.slope * (x - c.ax)
+
+method ready(Chan c) => c.dir != 0 and not na(c.slope) and not na(c.off) and c.off * c.dir > 0
+
+method kill(Chan c) =>
+    line.delete(c.lb)
+    line.delete(c.lo)
+    line.delete(c.lm)
+    linefill.delete(c.lf)
+    c.lb := na
+    c.lo := na
+    c.lm := na
+    c.lf := na
+    c
+
+// касательная от якоря: самый пологий наклон, при котором все свинги лежат по одну сторону
+method fitSlope(Scale s) =>
+    Chan c = s.cur
+    array<Pt> tl = c.dir < 0 ? s.hs : s.ls
+    float sl = na
+    for p in tl
+        if p.x > c.ax
+            float k = (p.y - c.ay) / (p.x - c.ax)
+            if na(sl) or (c.dir < 0 ? k > sl : k < sl)
+                sl := k
+    c.slope := sl
+
+// противоположная граница: самый дальний свинг с другой стороны, минус skip выбросов
+method fitOff(Scale s, int skip) =>
+    Chan c = s.cur
+    float res = na
+    if not na(c.slope)
+        array<Pt> op = c.dir < 0 ? s.ls : s.hs
+        array<float> offs = array.new_float()
+        bool exSeen = false
+        for p in op
+            if p.x > c.ax
+                offs.push(p.y - c.yAt(p.x))
+                if p.x == c.ex
+                    exSeen := true
+        if not exSeen and not na(c.ex)
+            offs.push(c.ey - c.yAt(c.ex))
+        int n = offs.size()
+        if n > 0
+            // от линии тренда вглубь: у нисходящего сдвиги отрицательные, у восходящего положительные
+            offs.sort(order.ascending)
+            int k = math.min(skip, n - 1)
+            res := offs.get(c.dir < 0 ? k : n - 1 - k)
+    c.off := res
+
+method restart(Scale s, int dir, int ax, float ay) =>
+    Chan c = Chan.new(dir, ax, ay)
+    [exX, exY] = f_extreme(ax, dir > 0)
+    c.ex := exX
+    c.ey := exY
+    s.cur := c
+    // свинги до якоря новому каналу не нужны
+    while s.hs.size() > 0
+        if s.hs.first().x > ax
+            break
+        s.hs.shift()
+    while s.ls.size() > 0
+        if s.ls.first().x > ax
+            break
+        s.ls.shift()
+    s.fitSlope()
+    s.fitOff(pierceN)
+
+method archive(Scale s, int keep) =>
+    Chan c = s.cur
+    if not na(c.lb)
+        if keep > 0
+            if not extOld
+                c.lb.set_extend(extend.none)
+                c.lo.set_extend(extend.none)
+                c.lm.set_extend(extend.none)
+            s.old.push(c)
+            if s.old.size() > keep
+                s.old.shift().kill()
+        else
+            c.kill()
+    keep
+
+// один закрытый бар: свинги → экстремум → подгонка → слом или ускорение
+// возвращает событие: 1 — слом вверх, −1 — слом вниз, 2 — ускорение, 0 — ничего
+method update(Scale s, float ph, float pl, int keepOld) =>
+    int ev = 0
+    int L = s.len
+    if not na(ph)
+        s.hs.push(Pt.new(bar_index - L, ph))
+        if s.hs.size() > PIV_MAX
+            s.hs.shift()
+    if not na(pl)
+        s.ls.push(Pt.new(bar_index - L, pl))
+        if s.ls.size() > PIV_MAX
+            s.ls.shift()
+    Chan c = s.cur
+    if c.dir == 0
+        if not na(ph)
+            s.restart(-1, bar_index - L, ph)
+        else if not na(pl)
+            s.restart(1, bar_index - L, pl)
+    else
+        bool dn = c.dir < 0
+        bool exMoved = dn ? low < c.ey : high > c.ey
+        if exMoved
+            c.ex := bar_index
+            c.ey := dn ? low : high
+        float tlP = dn ? ph : pl
+        float opP = dn ? pl : ph
+        if not na(tlP)
+            s.fitSlope()
+        if not na(tlP) or not na(opP) or exMoved
+            s.fitOff(pierceN)
+        bool flip = dn ? high > c.ay : low < c.ay
+        bool accel = false
+        if not flip and c.ready()
+            float base = c.yAt(bar_index)
+            float w = math.abs(c.off)
+            float opp = base + c.off
+            flip := dn ? close > base + brkK * w : close < base - brkK * w
+            accel := not flip and (dn ? close < opp - accK * w : close > opp + accK * w)
+        if flip
+            s.archive(keepOld)
+            s.restart(-c.dir, c.ex, c.ey)
+            ev := -c.dir
+        else if accel
+            array<Pt> tl = dn ? s.hs : s.ls
+            if tl.size() > 0
+                [nx, ny] = f_extreme(tl.last().x, dn)
+                s.archive(keepOld)
+                s.restart(c.dir, nx, ny)
+                ev := 2
+    ev
+
+method draw(Scale s, int w, bool hide) =>
+    Chan c = s.cur
+    if c.ready() and not hide
+        color col = c.dir > 0 ? cUp : cDn
+        int x1 = math.max(c.ax, bar_index - BUF + 1)
+        float y1 = c.yAt(x1)
+        float y2 = c.yAt(bar_index)
+        if na(c.lb)
+            c.lb := line.new(x1, y1, bar_index, y2, color = col, width = w, extend = extend.right)
+            c.lo := line.new(x1, y1 + c.off, bar_index, y2 + c.off, color = col, width = w, extend = extend.right)
+            c.lm := line.new(x1, y1 + c.off / 2, bar_index, y2 + c.off / 2, color = col, width = 1,
+                 style = line.style_dashed, extend = extend.right)
+            c.lf := linefill.new(c.lb, c.lo, color.new(col, fillTr))
+        else
+            c.lb.set_xy1(x1, y1)
+            c.lb.set_xy2(bar_index, y2)
+            c.lo.set_xy1(x1, y1 + c.off)
+            c.lo.set_xy2(bar_index, y2 + c.off)
+            c.lm.set_xy1(x1, y1 + c.off / 2)
+            c.lm.set_xy2(bar_index, y2 + c.off / 2)
+    else if not na(c.lb)
+        c.kill()
+    w
+
+// младший масштаб прячется, если повторяет старший: тот же ход от того же якоря
+f_same(Chan a, Chan b) => a.dir != 0 and a.dir == b.dir and a.ax == b.ax and b.ready()
+
+f_newScale(int len) => Scale.new(len, array.new<Pt>(), array.new<Pt>(), Chan.new(), array.new<Chan>())
+
+var Scale sc1 = f_newScale(s1Len)
+var Scale sc2 = f_newScale(s2Len)
+var Scale sc3 = f_newScale(s3Len)
+
+ph1 = ta.pivothigh(high, s1Len, s1Len)
+pl1 = ta.pivotlow(low, s1Len, s1Len)
+ph2 = ta.pivothigh(high, s2Len, s2Len)
+pl2 = ta.pivotlow(low, s2Len, s2Len)
+ph3 = ta.pivothigh(high, s3Len, s3Len)
+pl3 = ta.pivotlow(low, s3Len, s3Len)
+
+int ev1 = 0
+int ev2 = 0
+int ev3 = 0
+if chOn and barstate.isconfirmed
+    if s1On
+        ev1 := sc1.update(ph1, pl1, s1Old)
+    if s2On
+        ev2 := sc2.update(ph2, pl2, s2Old)
+    if s3On
+        ev3 := sc3.update(ph3, pl3, s3Old)
+
+if chOn
+    sc1.draw(s1W, not s1On)
+    sc2.draw(s2W, not s2On or (s1On and f_same(sc2.cur, sc1.cur)))
+    sc3.draw(s3W, not s3On or (s2On and f_same(sc3.cur, sc2.cur)) or (s1On and f_same(sc3.cur, sc1.cur)))
+
+// ── горизонтальные уровни ─────────────────────────────────────────────────────
+type Level
+    float price
+    int   x
+    int   hits
+
+var array<Level> lvAll   = array.new<Level>()
+var array<line>  lvLines = array.new<line>()
+var array<label> lvLbls  = array.new<label>()
+
+phL   = ta.pivothigh(high, lvLen, lvLen)
+plL   = ta.pivotlow(low, lvLen, lvLen)
+atrLv = nz(ta.atr(200), high - low)
+
+// свинг рядом с известным уровнем — ещё одно касание, иначе новый уровень
+f_addLevel(array<Level> lv, float p, int x, float tol) =>
+    int best = -1
+    float bestD = tol
+    for [i, l] in lv
+        float d = math.abs(l.price - p)
+        if d <= bestD
+            best := i
+            bestD := d
+    if best >= 0
+        Level hit = lv.get(best)
+        hit.hits := hit.hits + 1
+    else
+        lv.push(Level.new(p, x, 1))
+        if lv.size() > LV_MAX
+            lv.shift()
+    best
+
+// ближайшие к цене уровни с одной стороны, не ближе gap друг к другу
+f_pick(array<Level> lv, float px, int side, int n, float gap, array<float> taken) =>
+    array<float> dist = array.new_float()
+    array<int>   ids  = array.new_int()
+    for [i, l] in lv
+        float d = (l.price - px) * side
+        if side > 0 ? d >= 0 : d > 0
+            dist.push(d)
+            ids.push(i)
+    array<Level> out = array.new<Level>()
+    if dist.size() > 0
+        array<int> ord = dist.sort_indices(order.ascending)
+        for k in ord
+            if out.size() >= n
+                break
+            Level cand = lv.get(ids.get(k))
+            bool ok = true
+            for t in taken
+                if math.abs(t - cand.price) < gap
+                    ok := false
+                    break
+            if ok
+                out.push(cand)
+                taken.push(cand.price)
+    out
+
+if lvOn and barstate.isconfirmed
+    if not na(phL)
+        f_addLevel(lvAll, phL, bar_index - lvLen, atrLv * lvTol)
+    if not na(plL)
+        f_addLevel(lvAll, plL, bar_index - lvLen, atrLv * lvTol)
+
+if barstate.islast
+    for ln in lvLines
+        ln.delete()
+    lvLines.clear()
+    for lb in lvLbls
+        lb.delete()
+    lvLbls.clear()
+    if lvOn
+        array<float> taken = array.new_float()
+        array<Level> pick = f_pick(lvAll, close, 1, lvUp, atrLv * lvGap, taken)
+        pick.concat(f_pick(lvAll, close, -1, lvDn, atrLv * lvGap, taken))
+        for l in pick
+            int x1 = math.max(l.x, bar_index - BUF + 1)
+            lvLines.push(line.new(x1, l.price, bar_index, l.price, color = lvCol, width = lvW, extend = extend.right))
+            if lvPrice
+                string t = str.tostring(l.price, format.mintick) + (l.hits > 1 ? "  ×" + str.tostring(l.hits) : "")
+                lvLbls.push(label.new(bar_index + 2, l.price, t, color = color(na), style = label.style_label_left,
+                     textcolor = lvCol, size = size.small))
+
+// ── средние: лента рабочего ТФ ────────────────────────────────────────────────
+f_ma(float src, simple int len) =>
+    float e = ta.ema(src, len)
+    float s = ta.sma(src, len)
+    maType == "SMA" ? s : e
+
+rb0 = f_ma(close, r0)
+rb1 = f_ma(close, mL1)
+rb2 = f_ma(close, mL2)
+rb3 = f_ma(close, mL3)
+rb4 = f_ma(close, mL4)
+plot(ribOn and r0On ? rb0 : na, "Лента · быстрая", c0, ribW)
+plot(ribOn ? rb1 : na, "Лента · п1", cL1, ribW)
+plot(ribOn ? rb2 : na, "Лента · п2", cL2, ribW)
+plot(ribOn ? rb3 : na, "Лента · п3", cL3, ribW)
+plot(ribOn ? rb4 : na, "Лента · п4", cL4, ribW)
+
+// ── средние старших ТФ ────────────────────────────────────────────────────────
+f_tfName(simple string tf) =>
+    int sec = timeframe.in_seconds(tf)
+    sec < 60 ? str.tostring(sec) + "с" :
+     sec < 3600 ? str.tostring(math.round(sec / 60)) + "м" :
+     sec < 86400 ? str.tostring(math.round(sec / 3600)) + "ч" :
+     sec < 604800 ? str.tostring(math.round(sec / 86400)) + "Д" :
+     sec < 2419200 ? str.tostring(math.round(sec / 604800)) + "Н" :
+     str.tostring(math.round(sec / 2628003)) + "М"
+
+tfOk1 = mtfOn and timeframe.in_seconds(tf1) > timeframe.in_seconds()
+tfOk2 = mtfOn and timeframe.in_seconds(tf2) > timeframe.in_seconds()
+tfOk3 = mtfOn and timeframe.in_seconds(tf3) > timeframe.in_seconds()
+n1 = f_tfName(tf1)
+n2 = f_tfName(tf2)
+n3 = f_tfName(tf3)
+
+[a1, b1, c1, d1] = request.security(syminfo.tickerid, tf1, [f_ma(close, mL1), f_ma(close, mL2), f_ma(close, mL3), f_ma(close, mL4)])
+[a2, b2, c2, d2] = request.security(syminfo.tickerid, tf2, [f_ma(close, mL1), f_ma(close, mL2), f_ma(close, mL3), f_ma(close, mL4)])
+[a3, b3, c3, d3] = request.security(syminfo.tickerid, tf3, [f_ma(close, mL1), f_ma(close, mL2), f_ma(close, mL3), f_ma(close, mL4)])
+
+plot(tfOk1 and t1a ? a1 : na, "ТФ1 · п1", color.new(cL1, mtfTr), 1, plot.style_stepline)
+plot(tfOk1 and t1b ? b1 : na, "ТФ1 · п2", color.new(cL2, mtfTr), 1, plot.style_stepline)
+plot(tfOk1 and t1c ? c1 : na, "ТФ1 · п3", color.new(cL3, mtfTr), 1, plot.style_stepline)
+plot(tfOk1 and t1d ? d1 : na, "ТФ1 · п4", color.new(cL4, mtfTr), 1, plot.style_stepline)
+plot(tfOk2 and t2a ? a2 : na, "ТФ2 · п1", color.new(cL1, mtfTr), 1, plot.style_stepline)
+plot(tfOk2 and t2b ? b2 : na, "ТФ2 · п2", color.new(cL2, mtfTr), 1, plot.style_stepline)
+plot(tfOk2 and t2c ? c2 : na, "ТФ2 · п3", color.new(cL3, mtfTr), 1, plot.style_stepline)
+plot(tfOk2 and t2d ? d2 : na, "ТФ2 · п4", color.new(cL4, mtfTr), 1, plot.style_stepline)
+plot(tfOk3 and t3a ? a3 : na, "ТФ3 · п1", color.new(cL1, mtfTr), 1, plot.style_stepline)
+plot(tfOk3 and t3b ? b3 : na, "ТФ3 · п2", color.new(cL2, mtfTr), 1, plot.style_stepline)
+plot(tfOk3 and t3c ? c3 : na, "ТФ3 · п3", color.new(cL3, mtfTr), 1, plot.style_stepline)
+plot(tfOk3 and t3d ? d3 : na, "ТФ3 · п4", color.new(cL4, mtfTr), 1, plot.style_stepline)
+
+// подписи справа от цены: каждый ТФ в своей колонке, совпавшие средние — одной строкой через «=»
+var array<label> mtfLbls = array.new<label>()
+atr14 = ta.atr(14)
+
+f_put(array<float> vs, array<string> ts, array<color> cs, array<int> xs, bool on, float v, string t, color c, int x) =>
+    if on and not na(v)
+        vs.push(v)
+        ts.push(t)
+        cs.push(c)
+        xs.push(x)
+    on
+
+if barstate.islast
+    for lb in mtfLbls
+        lb.delete()
+    mtfLbls.clear()
+    if mtfOn
+        array<float>  vs = array.new_float()
+        array<string> ts = array.new_string()
+        array<color>  cs = array.new_color()
+        array<int>    xs = array.new_int()
+        int x1 = bar_index + lbOff
+        int x2 = x1 + lbStep
+        int x3 = x2 + lbStep
+        f_put(vs, ts, cs, xs, tfOk1 and t1a, a1, str.tostring(mL1) + " (" + n1 + ")", cL1, x1)
+        f_put(vs, ts, cs, xs, tfOk1 and t1b, b1, str.tostring(mL2) + " (" + n1 + ")", cL2, x1)
+        f_put(vs, ts, cs, xs, tfOk1 and t1c, c1, str.tostring(mL3) + " (" + n1 + ")", cL3, x1)
+        f_put(vs, ts, cs, xs, tfOk1 and t1d, d1, str.tostring(mL4) + " (" + n1 + ")", cL4, x1)
+        f_put(vs, ts, cs, xs, tfOk2 and t2a, a2, str.tostring(mL1) + " (" + n2 + ")", cL1, x2)
+        f_put(vs, ts, cs, xs, tfOk2 and t2b, b2, str.tostring(mL2) + " (" + n2 + ")", cL2, x2)
+        f_put(vs, ts, cs, xs, tfOk2 and t2c, c2, str.tostring(mL3) + " (" + n2 + ")", cL3, x2)
+        f_put(vs, ts, cs, xs, tfOk2 and t2d, d2, str.tostring(mL4) + " (" + n2 + ")", cL4, x2)
+        f_put(vs, ts, cs, xs, tfOk3 and t3a, a3, str.tostring(mL1) + " (" + n3 + ")", cL1, x3)
+        f_put(vs, ts, cs, xs, tfOk3 and t3b, b3, str.tostring(mL2) + " (" + n3 + ")", cL2, x3)
+        f_put(vs, ts, cs, xs, tfOk3 and t3c, c3, str.tostring(mL3) + " (" + n3 + ")", cL3, x3)
+        f_put(vs, ts, cs, xs, tfOk3 and t3d, d3, str.tostring(mL4) + " (" + n3 + ")", cL4, x3)
+        int n = vs.size()
+        if n > 0
+            array<int> ord = vs.sort_indices(order.ascending)
+            float tol = nz(atr14, high - low) * lbTol
+            int i = 0
+            while i < n
+                int k0 = ord.get(i)
+                float sum = vs.get(k0)
+                string txt = ts.get(k0)
+                int xm = xs.get(k0)
+                int j = i + 1
+                while j < n
+                    int kj = ord.get(j)
+                    if vs.get(kj) - vs.get(ord.get(j - 1)) > tol
+                        break
+                    sum := sum + vs.get(kj)
+                    txt := txt + " = " + ts.get(kj)
+                    xm := math.min(xm, xs.get(kj))
+                    j := j + 1
+                mtfLbls.push(label.new(xm, sum / (j - i), txt, color = color(na), style = label.style_label_left,
+                     textcolor = cs.get(k0), size = lbSize))
+                i := j
+
+// ── алерты ────────────────────────────────────────────────────────────────────
+alertcondition(ev1 == 1,  "Старший канал: слом вверх", "{{ticker}} {{interval}}: старший нисходящий канал сломан вверх")
+alertcondition(ev1 == -1, "Старший канал: слом вниз",  "{{ticker}} {{interval}}: старший восходящий канал сломан вниз")
+alertcondition(ev2 == 1,  "Рабочий канал: слом вверх", "{{ticker}} {{interval}}: рабочий нисходящий канал сломан вверх")
+alertcondition(ev2 == -1, "Рабочий канал: слом вниз",  "{{ticker}} {{interval}}: рабочий восходящий канал сломан вниз")
+alertcondition(ev3 == 1,  "Локальный канал: слом вверх", "{{ticker}} {{interval}}: локальный нисходящий канал сломан вверх")
+alertcondition(ev3 == -1, "Локальный канал: слом вниз",  "{{ticker}} {{interval}}: локальный восходящий канал сломан вниз")
