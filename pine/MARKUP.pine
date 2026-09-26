@@ -12,16 +12,21 @@
 //      с подписями «200 (15м)»; совпавшие средние подписываются через «=»
 //      Цвет — по периоду: 20 оранжевый, 50 синий, 100 фиолетовый, 200 жёлтый.
 //
-//  Жизненный цикл канала:
+//  Наклонки (правила сверены с авторскими линиями на скриншотах):
 //    якорь — экстремум, с которого начался ход (у нисходящего — максимум);
-//    линия тренда — касательная от якоря ко всем свингам того же типа после него:
-//      свинг выше линии делает её положе, свинг ниже канал не трогает;
-//    противоположная граница — параллель через самый дальний свинг с другой стороны,
-//      самые дальние выбросы можно не учитывать — обычно это первый пролив от вершины;
-//    слом — закрытие за линией тренда дальше доли ширины канала или выход за якорь:
-//      разворот, новый канал от экстремума внутри сломанного;
-//    ускорение — закрытие за противоположной границей дальше доли ширины:
-//      канал перестраивается в ту же сторону от последнего свинга.
+//    линия тренда идёт от якоря через один из свингов после него. Из всех таких линий
+//      берётся та, которой касается больше свингов: касание самой линии весит вдвое
+//      больше касания параллели, прокол штрафуется. Тень может проколоть линию
+//      не глубже доли ширины — так автор держит линию, которую уже подтвердили касания;
+//    параллель — по наибольшему числу касаний с другой стороны. Проливы-шпильки
+//      до четверти ширины остаются за каналом (нефть: два пролива, семь касаний);
+//    касания считаются по свингам втрое мельче масштаба канала, каркас — по крупным;
+//    слом — закрытие за линией тренда дальше доли ширины И за последним свингом,
+//      который касался линии, либо выход за якорь. Пробой одной линии без слома
+//      структуры — не разворот: линия подстраивается под новые касания;
+//      после слома — новый канал от экстремума внутри сломанного;
+//    ускорение — закрытие за параллелью дальше доли ширины: канал перестраивается
+//      в ту же сторону от последнего свинга.
 //  Решения принимаются только на закрытых барах: внутри бара канал не перерисовывается.
 // ═══════════════════════════════════════════════════════════════════════════════
 
@@ -33,8 +38,12 @@ gCh = "Каналы"
 chOn    = input.bool(true, "Рисовать каналы", group = gCh)
 brkK    = input.float(0.15, "Слом: закрытие за линией тренда, доля ширины", minval = 0, step = 0.05, group = gCh)
 accK    = input.float(0.35, "Ускорение: закрытие за противоположной границей, доля ширины", minval = 0, step = 0.05, group = gCh)
-pierceN = input.int(1, "Не учитывать самых дальних выбросов", minval = 0, maxval = 5, group = gCh,
-     tooltip = "Сколько самых дальних свингов противоположная граница может проколоть. 1 — пропустить первый пролив после вершины, как при ручной разметке. 0 — граница строго по экстремуму.")
+tolK    = input.float(0.08, "Касание: свинг ближе к линии, доля ширины", minval = 0.01, step = 0.01, group = gCh)
+flushK  = input.float(0.25, "Пролив за параллель, не глубже доли ширины", minval = 0, step = 0.05, group = gCh,
+     tooltip = "Шпильки за противоположную границу, которые не расширяют канал. 0 — параллель строго по самому дальнему свингу.")
+pierceK = input.float(0.35, "Прокол линии тренда, не глубже доли ширины", minval = 0, step = 0.05, group = gCh,
+     tooltip = "Насколько тень может проколоть линию, которую подтвердили касания, прежде чем линию придётся перестроить.")
+fDiv    = input.int(3, "Касания считать по свингам мельче в N раз", minval = 1, maxval = 10, group = gCh)
 extOld  = input.bool(true, "Продлевать сломанные каналы вправо", group = gCh)
 cUp     = input.color(#4CAF50, "Восходящий", group = gCh, inline = "cc")
 cDn     = input.color(#FF9800, "Нисходящий", group = gCh, inline = "cc")
@@ -42,17 +51,17 @@ fillTr  = input.int(93, "Заливка, прозрачность", minval = 0, 
 
 gSc = "Масштабы каналов: свинг, толщина, сколько прошлых каналов держать"
 s1On  = input.bool(true, "Старший ", group = gSc, inline = "s1")
-s1Len = input.int(60, "", minval = 2, maxval = 500, group = gSc, inline = "s1")
+s1Len = input.int(130, "", minval = 2, maxval = 500, group = gSc, inline = "s1")
 s1W   = input.int(2, "", minval = 1, maxval = 5, group = gSc, inline = "s1")
 s1Old = input.int(1, "", minval = 0, maxval = 5, group = gSc, inline = "s1")
 s2On  = input.bool(true, "Рабочий ", group = gSc, inline = "s2")
-s2Len = input.int(20, "", minval = 2, maxval = 500, group = gSc, inline = "s2")
+s2Len = input.int(40, "", minval = 2, maxval = 500, group = gSc, inline = "s2")
 s2W   = input.int(2, "", minval = 1, maxval = 5, group = gSc, inline = "s2")
 s2Old = input.int(0, "", minval = 0, maxval = 5, group = gSc, inline = "s2")
 s3On  = input.bool(false, "Локальный", group = gSc, inline = "s3")
-s3Len = input.int(7, "", minval = 2, maxval = 500, group = gSc, inline = "s3")
+s3Len = input.int(12, "", minval = 2, maxval = 500, group = gSc, inline = "s3")
 s3W   = input.int(1, "", minval = 1, maxval = 5, group = gSc, inline = "s3",
-     tooltip = "Свинг — сколько баров слева и справа должны быть ниже максимума (выше минимума). Чем больше, тем крупнее каналы. На 1м: 60 ≈ часовые свинги, 20 ≈ двадцатиминутные.")
+     tooltip = "Свинг — сколько баров слева и справа должны быть ниже максимума (выше минимума). Чем больше, тем крупнее каналы. Каналы со скриншотов на 1м — это свинг около 130 баров.")
 s3Old = input.int(0, "", minval = 0, maxval = 5, group = gSc, inline = "s3")
 
 gLv = "Горизонтальные уровни"
@@ -109,9 +118,13 @@ lbTol  = input.float(0.3, "Объединять подписи ближе, ATR(1
 lbSize = input.string(size.normal, "Размер подписей", options = [size.small, size.normal, size.large], group = gMtf)
 
 // ── константы ─────────────────────────────────────────────────────────────────
-BUF     = 5000   // глубина собственного буфера цен для поиска экстремумов
-PIV_MAX = 300    // свингов одного типа на масштаб
-LV_MAX  = 200    // уровней в памяти
+BUF       = 5000   // глубина собственного буфера цен для поиска экстремумов
+PIV_MAX   = 300    // свингов одного типа на масштаб
+LV_MAX    = 200    // уровней в памяти
+CAP       = 16     // свингов с каждой стороны, по которым подбирается линия
+W_BASE    = 2.0    // касание линии тренда весит вдвое больше касания параллели
+PEN       = 2.0    // прокол стоит двух касаний
+REF_TOUCH = 0.15   // свинг ближе этой доли ширины к линии тренда — её касание, ориентир для слома
 
 // ── буфер цен ─────────────────────────────────────────────────────────────────
 // Кольцевой буфер вместо high[i]: поиск экстремума идёт только в момент слома,
@@ -145,7 +158,7 @@ type Chan
     int      ax          // якорь: бар и цена экстремума, с которого начался ход
     float    ay
     float    slope       // наклон линии тренда за бар; na, пока нет второго свинга
-    float    off         // сдвиг противоположной границы от линии тренда
+    float    off         // сдвиг параллели от линии тренда (знак — направление канала)
     int      ex          // бегущий экстремум с другой стороны — будущий якорь разворота
     float    ey
     line     lb
@@ -154,9 +167,12 @@ type Chan
     linefill lf
 
 type Scale
-    int         len
+    int         len      // каркас: свинги этого размера задают якоря и слом
+    int         flen     // касания: свинги мельче, по ним подбираются линии
     array<Pt>   hs
     array<Pt>   ls
+    array<Pt>   fh
+    array<Pt>   fl
     Chan        cur
     array<Chan> old
 
@@ -175,7 +191,51 @@ method kill(Chan c) =>
     c.lf := na
     c
 
-// касательная от якоря: самый пологий наклон, при котором все свинги лежат по одну сторону
+f_push(array<Pt> a, int x, float y) =>
+    a.push(Pt.new(x, y))
+    if a.size() > PIV_MAX
+        a.shift()
+    x
+
+// свинги после якоря, не больше CAP последних
+f_recent(array<Pt> a, int ax) =>
+    array<Pt> out = array.new<Pt>()
+    int n = a.size()
+    if n > 0
+        for i = n - 1 to 0
+            Pt p = a.get(i)
+            if p.x <= ax or out.size() >= CAP
+                break
+            out.unshift(p)
+    out
+
+// ширина канала по глубинам свингов с другой стороны: больше касаний, проколы штрафуются,
+// шпильки глубже flushK не допускаются → [ширина, касаний, проколов]
+f_width(array<float> d) =>
+    float bestW = na
+    float bestS = na
+    int bestT = 0
+    int bestP = 0
+    if d.size() > 0
+        float dmax = d.max()
+        for W in d
+            if dmax <= W * (1 + flushK)
+                int t = 0
+                int p = 0
+                for v in d
+                    if math.abs(v - W) <= tolK * W
+                        t := t + 1
+                    else if v > W * (1 + tolK)
+                        p := p + 1
+                float sc = t - PEN * p
+                if na(bestS) or sc > bestS or (sc == bestS and (p < bestP or (p == bestP and W > bestW)))
+                    bestW := W
+                    bestS := sc
+                    bestT := t
+                    bestP := p
+    [bestW, bestT, bestP]
+
+// запасной путь: касательная от якоря по крупным свингам
 method fitSlope(Scale s) =>
     Chan c = s.cur
     array<Pt> tl = c.dir < 0 ? s.hs : s.ls
@@ -187,7 +247,7 @@ method fitSlope(Scale s) =>
                 sl := k
     c.slope := sl
 
-// противоположная граница: самый дальний свинг с другой стороны, минус skip выбросов
+// запасной путь: параллель через самый дальний свинг, минус skip выбросов
 method fitOff(Scale s, int skip) =>
     Chan c = s.cur
     float res = na
@@ -204,11 +264,65 @@ method fitOff(Scale s, int skip) =>
             offs.push(c.ey - c.yAt(c.ex))
         int n = offs.size()
         if n > 0
-            // от линии тренда вглубь: у нисходящего сдвиги отрицательные, у восходящего положительные
             offs.sort(order.ascending)
             int k = math.min(skip, n - 1)
             res := offs.get(c.dir < 0 ? k : n - 1 - k)
     c.off := res
+
+// подбор канала: линия тренда от якоря через каждый мелкий свинг того же типа,
+// для каждой — параллель по касаниям; побеждает канал с лучшим счётом касаний
+method fit(Scale s) =>
+    Chan c = s.cur
+    array<Pt> tl = f_recent(c.dir < 0 ? s.fh : s.fl, c.ax)
+    array<Pt> op = f_recent(c.dir < 0 ? s.fl : s.fh, c.ax)
+    float bestSl = na
+    float bestW = na
+    float bestS = na
+    int bestPen = 0
+    for b in tl
+        float sl = (b.y - c.ay) / (b.x - c.ax)
+        // глубина свингов с другой стороны, считая от линии тренда вглубь канала
+        array<float> d = array.new_float()
+        for p in op
+            float v = (p.y - (c.ay + sl * (p.x - c.ax))) * c.dir
+            if v > 0
+                d.push(v)
+        [W, ot, opn] = f_width(d)
+        if not na(W)
+            int bt = 0
+            int bp = 0
+            bool ok = true
+            for q in tl
+                // выход свинга за линию тренда: > 0 — прокол
+                float e = (q.y - (c.ay + sl * (q.x - c.ax))) * -c.dir
+                if e > pierceK * W
+                    ok := false
+                if math.abs(e) <= tolK * W
+                    bt := bt + 1
+                else if e > tolK * W
+                    bp := bp + 1
+            if ok
+                float sc = W_BASE * bt + ot - PEN * (bp + opn)
+                int pen = bp + opn
+                if na(bestS) or sc > bestS or (sc == bestS and (pen < bestPen or (pen == bestPen and W > bestW)))
+                    bestS := sc
+                    bestSl := sl
+                    bestW := W
+                    bestPen := pen
+    if na(bestSl)
+        s.fitSlope()
+        s.fitOff(1)
+    else
+        c.slope := bestSl
+        c.off := bestW * c.dir
+    c.off
+
+f_prune(array<Pt> a, int ax) =>
+    while a.size() > 0
+        if a.first().x > ax
+            break
+        a.shift()
+    ax
 
 method restart(Scale s, int dir, int ax, float ay) =>
     Chan c = Chan.new(dir, ax, ay)
@@ -217,16 +331,11 @@ method restart(Scale s, int dir, int ax, float ay) =>
     c.ey := exY
     s.cur := c
     // свинги до якоря новому каналу не нужны
-    while s.hs.size() > 0
-        if s.hs.first().x > ax
-            break
-        s.hs.shift()
-    while s.ls.size() > 0
-        if s.ls.first().x > ax
-            break
-        s.ls.shift()
-    s.fitSlope()
-    s.fitOff(pierceN)
+    f_prune(s.hs, ax)
+    f_prune(s.ls, ax)
+    f_prune(s.fh, ax)
+    f_prune(s.fl, ax)
+    s.fit()
 
 method archive(Scale s, int keep) =>
     Chan c = s.cur
@@ -245,42 +354,51 @@ method archive(Scale s, int keep) =>
 
 // один закрытый бар: свинги → экстремум → подгонка → слом или ускорение
 // возвращает событие: 1 — слом вверх, −1 — слом вниз, 2 — ускорение, 0 — ничего
-method update(Scale s, float ph, float pl, int keepOld) =>
+method update(Scale s, float ph, float pl, float fph, float fpl, int keepOld) =>
     int ev = 0
-    int L = s.len
     if not na(ph)
-        s.hs.push(Pt.new(bar_index - L, ph))
-        if s.hs.size() > PIV_MAX
-            s.hs.shift()
+        f_push(s.hs, bar_index - s.len, ph)
     if not na(pl)
-        s.ls.push(Pt.new(bar_index - L, pl))
-        if s.ls.size() > PIV_MAX
-            s.ls.shift()
+        f_push(s.ls, bar_index - s.len, pl)
+    bool newFine = not na(fph) or not na(fpl)
+    if not na(fph)
+        f_push(s.fh, bar_index - s.flen, fph)
+    if not na(fpl)
+        f_push(s.fl, bar_index - s.flen, fpl)
     Chan c = s.cur
     if c.dir == 0
         if not na(ph)
-            s.restart(-1, bar_index - L, ph)
+            s.restart(-1, bar_index - s.len, ph)
         else if not na(pl)
-            s.restart(1, bar_index - L, pl)
+            s.restart(1, bar_index - s.len, pl)
     else
         bool dn = c.dir < 0
-        bool exMoved = dn ? low < c.ey : high > c.ey
-        if exMoved
+        if dn ? low < c.ey : high > c.ey
             c.ex := bar_index
             c.ey := dn ? low : high
-        float tlP = dn ? ph : pl
-        float opP = dn ? pl : ph
-        if not na(tlP)
-            s.fitSlope()
-        if not na(tlP) or not na(opP) or exMoved
-            s.fitOff(pierceN)
+        if newFine
+            s.fit()
         bool flip = dn ? high > c.ay : low < c.ay
         bool accel = false
         if not flip and c.ready()
             float base = c.yAt(bar_index)
             float w = math.abs(c.off)
             float opp = base + c.off
-            flip := dn ? close > base + brkK * w : close < base - brkK * w
+            bool lineBrk = dn ? close > base + brkK * w : close < base - brkK * w
+            // ориентир слома — последний крупный свинг, который касался линии тренда
+            float refY = c.ay
+            array<Pt> tl = dn ? s.hs : s.ls
+            int n = tl.size()
+            if n > 0
+                for i = n - 1 to 0
+                    Pt p = tl.get(i)
+                    if p.x <= c.ax
+                        break
+                    if math.abs(p.y - c.yAt(p.x)) <= REF_TOUCH * w
+                        refY := p.y
+                        break
+            bool structBrk = dn ? close > refY : close < refY
+            flip := lineBrk and structBrk
             accel := not flip and (dn ? close < opp - accK * w : close > opp + accK * w)
         if flip
             s.archive(keepOld)
@@ -319,32 +437,44 @@ method draw(Scale s, int w, bool hide) =>
         c.kill()
     w
 
-// младший масштаб прячется, если повторяет старший: тот же ход от того же якоря
-f_same(Chan a, Chan b) => a.dir != 0 and a.dir == b.dir and a.ax == b.ax and b.ready()
+// младший масштаб прячется, если повторяет старший: тот же ход и почти тот же наклон
+f_same(Chan a, Chan b) =>
+    a.ready() and b.ready() and a.dir == b.dir and (a.ax == b.ax or math.abs(a.slope - b.slope) <= 0.25 * math.abs(b.slope))
 
-f_newScale(int len) => Scale.new(len, array.new<Pt>(), array.new<Pt>(), Chan.new(), array.new<Chan>())
+f_newScale(int len, int flen) =>
+    Scale.new(len, flen, array.new<Pt>(), array.new<Pt>(), array.new<Pt>(), array.new<Pt>(), Chan.new(), array.new<Chan>())
 
-var Scale sc1 = f_newScale(s1Len)
-var Scale sc2 = f_newScale(s2Len)
-var Scale sc3 = f_newScale(s3Len)
+f1 = math.max(2, math.floor(s1Len / fDiv))
+f2 = math.max(2, math.floor(s2Len / fDiv))
+f3 = math.max(2, math.floor(s3Len / fDiv))
 
-ph1 = ta.pivothigh(high, s1Len, s1Len)
-pl1 = ta.pivotlow(low, s1Len, s1Len)
-ph2 = ta.pivothigh(high, s2Len, s2Len)
-pl2 = ta.pivotlow(low, s2Len, s2Len)
-ph3 = ta.pivothigh(high, s3Len, s3Len)
-pl3 = ta.pivotlow(low, s3Len, s3Len)
+var Scale sc1 = f_newScale(s1Len, f1)
+var Scale sc2 = f_newScale(s2Len, f2)
+var Scale sc3 = f_newScale(s3Len, f3)
+
+ph1  = ta.pivothigh(high, s1Len, s1Len)
+pl1  = ta.pivotlow(low, s1Len, s1Len)
+fph1 = ta.pivothigh(high, f1, f1)
+fpl1 = ta.pivotlow(low, f1, f1)
+ph2  = ta.pivothigh(high, s2Len, s2Len)
+pl2  = ta.pivotlow(low, s2Len, s2Len)
+fph2 = ta.pivothigh(high, f2, f2)
+fpl2 = ta.pivotlow(low, f2, f2)
+ph3  = ta.pivothigh(high, s3Len, s3Len)
+pl3  = ta.pivotlow(low, s3Len, s3Len)
+fph3 = ta.pivothigh(high, f3, f3)
+fpl3 = ta.pivotlow(low, f3, f3)
 
 int ev1 = 0
 int ev2 = 0
 int ev3 = 0
 if chOn and barstate.isconfirmed
     if s1On
-        ev1 := sc1.update(ph1, pl1, s1Old)
+        ev1 := sc1.update(ph1, pl1, fph1, fpl1, s1Old)
     if s2On
-        ev2 := sc2.update(ph2, pl2, s2Old)
+        ev2 := sc2.update(ph2, pl2, fph2, fpl2, s2Old)
     if s3On
-        ev3 := sc3.update(ph3, pl3, s3Old)
+        ev3 := sc3.update(ph3, pl3, fph3, fpl3, s3Old)
 
 if chOn
     sc1.draw(s1W, not s1On)
