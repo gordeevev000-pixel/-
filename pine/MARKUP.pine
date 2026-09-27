@@ -12,8 +12,13 @@
 //      с подписями «200 (15м)»; совпавшие средние подписываются через «=»
 //      Цвет — по периоду: 20 оранжевый, 50 синий, 100 фиолетовый, 200 жёлтый.
 //
-//  Без перерисовки — всё решается только на закрытых барах, на истории и в реальном
-//  времени одинаково, нарисованное не двигается:
+//  Два режима:
+//    «Как у автора» (по умолчанию) — канал подбирается заново на каждом новом свинге
+//      по всей истории от якоря, как рисует автор задним числом. Картинка на последнем
+//      баре ближе всего к авторской, но линии текущего канала двигаются: это перерисовка,
+//      по истории в этом режиме нельзя судить, где можно было войти.
+//    «Торговля без перерисовки» — всё решается только на закрытых барах, на истории
+//      и в реальном времени одинаково, нарисованное не двигается:
 //    • канал фиксируется в момент подтверждения (точка) и больше не меняется. Пунктир
 //      от якоря до точки — как канал строился, торговать можно сплошную часть после неё;
 //    • изменение структуры — это новый канал, старый остаётся как был и обрывается
@@ -44,6 +49,12 @@ indicator("MARKUP · каналы, уровни, MTF-средние", "MARKUP", 
      max_lines_count = 500, max_labels_count = 500)
 
 // ── входные параметры ──────────────────────────────────────────────────────────
+M_AUTHOR = "Как у автора"
+M_TRADE  = "Торговля без перерисовки"
+mode = input.string(M_AUTHOR, "Режим", options = [M_AUTHOR, M_TRADE],
+     tooltip = "«Как у автора» — каналы подбираются задним числом по всей истории, как на авторских скриншотах; текущий канал перерисовывается. «Торговля без перерисовки» — канал фиксируется в момент подтверждения и больше не двигается, уровни и средние старших ТФ тоже без перерисовки.")
+live = mode == M_AUTHOR
+
 gCh = "Каналы"
 chOn    = input.bool(true, "Рисовать каналы", group = gCh)
 brkK    = input.float(0.15, "Слом: закрытие за линией тренда, доля ширины", minval = 0, step = 0.05, group = gCh)
@@ -81,8 +92,10 @@ gLv = "Горизонтальные уровни"
 lvOn    = input.bool(true, "Рисовать уровни", group = gLv)
 lvLen   = input.int(30, "Свинг для уровня, баров слева и справа", minval = 2, maxval = 500, group = gLv)
 lvGap   = input.float(4.0, "Свинг ближе к уровню — касание, а не новый уровень, ATR(200)", minval = 0, step = 0.5, group = gLv)
-lvMax   = input.int(16, "Уровней на графике", minval = 1, maxval = 60, group = gLv,
-     tooltip = "Уровень появляется, когда подтвердился свинг, и дальше не исчезает. Сверх лимита убирается тот, которого цена дольше всех не касалась.")
+lvUp    = input.int(6, "Как у автора: уровней выше цены", minval = 0, maxval = 30, group = gLv)
+lvDn    = input.int(6, "Как у автора: уровней ниже цены", minval = 0, maxval = 30, group = gLv)
+lvMax   = input.int(16, "Без перерисовки: уровней на графике", minval = 1, maxval = 60, group = gLv,
+     tooltip = "Без перерисовки уровень появляется, когда подтвердился свинг, и дальше не исчезает. Сверх лимита убирается тот, которого цена дольше всех не касалась.")
 lvCol   = input.color(color.white, "Цвет", group = gLv, inline = "lv")
 lvW     = input.int(2, "толщина", minval = 1, maxval = 5, group = gLv, inline = "lv")
 lvPrice = input.bool(false, "Подписывать цену и число касаний", group = gLv)
@@ -107,8 +120,6 @@ ribW  = input.int(2, "Толщина", minval = 1, maxval = 5, group = gRib)
 
 gMtf = "Средние старших ТФ (ТФ не выше рабочего скрываются сами)"
 mtfOn = input.bool(true, "Рисовать", group = gMtf)
-mtfClosed = input.bool(true, "Только закрытые бары старших ТФ", group = gMtf,
-     tooltip = "Включено — значение старшего ТФ меняется только когда его бар закрылся, на истории и в реальном времени одинаково. Выключено — текущий бар старшего ТФ меняется до закрытия, и после перезагрузки история выглядит иначе, чем в реальном времени.")
 tf1 = input.timeframe("5", "", group = gMtf, inline = "t1")
 t1a = input.bool(false, "п1", group = gMtf, inline = "t1")
 t1b = input.bool(false, "п2", group = gMtf, inline = "t1")
@@ -133,6 +144,7 @@ lbSize = input.string(size.normal, "Размер подписей", options = [s
 
 // ── константы ─────────────────────────────────────────────────────────────────
 BUF       = 5000   // глубина собственного буфера цен для поиска экстремумов
+LV_KEEP   = 200    // «как у автора»: уровней в памяти, из них показываются ближайшие к цене
 PIV_MAX   = 300    // свингов одного типа на масштаб
 CAP       = 16     // свингов с каждой стороны, по которым подбирается линия
 W_BASE    = 2.0    // касание линии тренда весит вдвое больше касания параллели
@@ -326,7 +338,7 @@ method restart(Scale s, int dir, int ax, float ay, int minX, float refY) =>
 // сам канал уходит в историю; геометрия не меняется
 method archive(Scale s, int keep) =>
     Chan c = s.cur
-    if c.fixed and not na(c.lb)
+    if not na(c.lb)
         if not extOld
             c.lb.set_xy2(bar_index, c.yAt(bar_index))
             c.lo.set_xy2(bar_index, c.yAt(bar_index) + c.off)
@@ -348,6 +360,80 @@ method brokenNow(Chan c) =>
     bool acc = dn ? close < base + c.off - accK * w : close > base + c.off + accK * w
     lineBrk or acc
 
+// «Как у автора»: канал подбирается заново на каждом новом мелком свинге по всей истории
+// от якоря, как рисует автор задним числом. Слом и ускорение — те же правила.
+method updateLive(Scale s, bool newFine, int keepOld) =>
+    int ev = 0
+    Chan c = s.cur
+    bool dn = c.dir < 0
+    if dn ? low < c.ey : high > c.ey
+        c.ex := bar_index
+        c.ey := dn ? low : high
+    if newFine
+        s.fit()
+    bool flip = dn ? high > c.ay : low < c.ay
+    bool accel = false
+    array<Pt> sk = dn ? s.hs : s.ls
+    if not flip and c.ready()
+        float base = c.yAt(bar_index)
+        float w = math.abs(c.off)
+        float opp = base + c.off
+        bool lineBrk = dn ? close > base + brkK * w : close < base - brkK * w
+        float refY = c.ay
+        int n = sk.size()
+        if n > 0
+            for i = n - 1 to 0
+                Pt p = sk.get(i)
+                if p.x <= c.ax
+                    break
+                if math.abs(p.y - c.yAt(p.x)) <= REF_TOUCH * w
+                    refY := p.y
+                    break
+        bool structBrk = dn ? close > refY : close < refY
+        flip := lineBrk and structBrk
+        accel := not flip and (dn ? close < opp - accK * w : close > opp + accK * w)
+    if flip
+        s.archive(keepOld)
+        s.restart(-c.dir, c.ex, c.ey, c.ex, na)
+        s.fit()
+        ev := -c.dir
+    else if accel and sk.size() > 0
+        [nx, ny] = f_extreme(sk.last().x, dn)
+        s.archive(keepOld)
+        s.restart(c.dir, nx, ny, nx, na)
+        s.fit()
+        ev := 2 * c.dir
+    ev
+
+// «Как у автора»: линии текущего канала идут от якоря до текущего бара и сдвигаются вместе с подбором
+method drawLive(Scale s, int w, bool hide) =>
+    Chan c = s.cur
+    if c.ready() and not hide
+        color col = c.dir > 0 ? cUp : cDn
+        int x1 = math.max(c.ax, bar_index - BUF + 1)
+        float y1 = c.yAt(x1)
+        float y2 = c.yAt(bar_index)
+        if na(c.lb)
+            c.lb := line.new(x1, y1, bar_index, y2, color = col, width = w, extend = extend.right)
+            c.lo := line.new(x1, y1 + c.off, bar_index, y2 + c.off, color = col, width = w, extend = extend.right)
+            c.lm := line.new(x1, y1 + c.off / 2, bar_index, y2 + c.off / 2, color = col, width = 1,
+                 style = line.style_dashed, extend = extend.right)
+            c.lf := linefill.new(c.lb, c.lo, color.new(col, fillTr))
+        else
+            c.lb.set_xy1(x1, y1)
+            c.lb.set_xy2(bar_index, y2)
+            c.lo.set_xy1(x1, y1 + c.off)
+            c.lo.set_xy2(bar_index, y2 + c.off)
+            c.lm.set_xy1(x1, y1 + c.off / 2)
+            c.lm.set_xy2(bar_index, y2 + c.off / 2)
+    else if not na(c.lb)
+        c.kill()
+        c.lb := na
+        c.lo := na
+        c.lm := na
+        c.lf := na
+    w
+
 // один закрытый бар. Событие: ±1 слом (новое направление), ±2 ускорение, ±3 канал подтверждён,
 // ±4 веер (линия пробита без слома структуры), 0 — ничего
 method update(Scale s, float ph, float pl, float fph, float fpl, int keepOld) =>
@@ -368,6 +454,8 @@ method update(Scale s, float ph, float pl, float fph, float fpl, int keepOld) =>
             s.restart(-1, bar_index - s.len, ph, bar_index - s.len, na)
         else if not na(pl)
             s.restart(1, bar_index - s.len, pl, bar_index - s.len, na)
+    else if live
+        ev := s.updateLive(newFine, keepOld)
     else
         bool dn = c.dir < 0
         if dn ? low < c.ey : high > c.ey
@@ -450,7 +538,7 @@ method paint(Scale s, int w, bool hide) =>
 // младший масштаб не рисует канал, если в момент подтверждения он повторяет старший:
 // тот же ход и почти тот же наклон
 f_same(Chan a, Chan b) =>
-    a.ready() and b.fixed and b.ready() and a.dir == b.dir and (a.ax == b.ax or math.abs(a.slope - b.slope) <= 0.25 * math.abs(b.slope))
+    a.ready() and (b.fixed or live) and b.ready() and a.dir == b.dir and (a.ax == b.ax or math.abs(a.slope - b.slope) <= 0.25 * math.abs(b.slope))
 
 f_newScale(int len, int flen) =>
     Scale.new(len, flen, array.new<Pt>(), array.new<Pt>(), array.new<Pt>(), array.new<Pt>(), Chan.new(), array.new<Chan>())
@@ -476,20 +564,29 @@ pl3  = ta.pivotlow(low, s3Len, s3Len)
 fph3 = ta.pivothigh(high, f3, f3)
 fpl3 = ta.pivotlow(low, f3, f3)
 
-// всё решается и рисуется только на закрытом баре: на истории и в реальном времени одинаково
+// решения — только на закрытом баре
 int ev1 = 0
 int ev2 = 0
 int ev3 = 0
 if chOn and barstate.isconfirmed
     if s1On
         ev1 := sc1.update(ph1, pl1, fph1, fpl1, s1Old)
-        sc1.paint(s1W, false)
+        if not live
+            sc1.paint(s1W, false)
     if s2On
         ev2 := sc2.update(ph2, pl2, fph2, fpl2, s2Old)
-        sc2.paint(s2W, s1On and f_same(sc2.cur, sc1.cur))
+        if not live
+            sc2.paint(s2W, s1On and f_same(sc2.cur, sc1.cur))
     if s3On
         ev3 := sc3.update(ph3, pl3, fph3, fpl3, s3Old)
-        sc3.paint(s3W, (s2On and f_same(sc3.cur, sc2.cur)) or (s1On and f_same(sc3.cur, sc1.cur)))
+        if not live
+            sc3.paint(s3W, (s2On and f_same(sc3.cur, sc2.cur)) or (s1On and f_same(sc3.cur, sc1.cur)))
+
+// «как у автора»: текущие каналы дотягиваются до последнего бара на каждом баре
+if chOn and live
+    sc1.drawLive(s1W, not s1On)
+    sc2.drawLive(s2W, not s2On or (s1On and f_same(sc2.cur, sc1.cur)))
+    sc3.drawLive(s3W, not s3On or (s2On and f_same(sc3.cur, sc2.cur)) or (s1On and f_same(sc3.cur, sc1.cur)))
 
 // ── горизонтальные уровни ─────────────────────────────────────────────────────
 // Уровень рисуется в момент подтверждения свинга и дальше не двигается. Какие уровни
@@ -527,12 +624,13 @@ f_level(array<Level> lv, float p, int x, float gap) =>
             hit.lb.set_text(f_lvText(hit))
     else
         Level nl = Level.new(p, x, 1, bar_index)
-        nl.ln := line.new(math.max(x, bar_index - BUF + 1), p, bar_index, p, color = lvCol, width = lvW, extend = extend.right)
-        if lvPrice
-            nl.lb := label.new(x, p, f_lvText(nl), color = color(na), style = label.style_label_lower_left,
-                 textcolor = lvCol, size = size.small)
+        if not live
+            nl.ln := line.new(math.max(x, bar_index - BUF + 1), p, bar_index, p, color = lvCol, width = lvW, extend = extend.right)
+            if lvPrice
+                nl.lb := label.new(x, p, f_lvText(nl), color = color(na), style = label.style_label_lower_left,
+                     textcolor = lvCol, size = size.small)
         lv.push(nl)
-        if lv.size() > lvMax
+        if lv.size() > (live ? LV_KEEP : lvMax)
             int oi = 0
             for [i, l] in lv
                 if l.lastT < lv.get(oi).lastT
@@ -547,6 +645,51 @@ if lvOn and barstate.isconfirmed
         f_level(lvAll, phL, bar_index - lvLen, atrLv * lvGap)
     if not na(plL)
         f_level(lvAll, plL, bar_index - lvLen, atrLv * lvGap)
+
+// «как у автора»: ближайшие к цене уровни с одной стороны, не ближе gap друг к другу
+f_pick(array<Level> lv, float px, int side, int n, float gap, array<float> taken) =>
+    array<float> dist = array.new_float()
+    array<int>   ids  = array.new_int()
+    for [i, l] in lv
+        float d = (l.price - px) * side
+        if side > 0 ? d >= 0 : d > 0
+            dist.push(d)
+            ids.push(i)
+    array<Level> out = array.new<Level>()
+    if dist.size() > 0
+        array<int> ord = dist.sort_indices(order.ascending)
+        for k in ord
+            if out.size() >= n
+                break
+            Level cand = lv.get(ids.get(k))
+            bool ok = true
+            for t in taken
+                if math.abs(t - cand.price) < gap
+                    ok := false
+                    break
+            if ok
+                out.push(cand)
+                taken.push(cand.price)
+    out
+
+var array<line>  lvShow  = array.new<line>()
+var array<label> lvShowL = array.new<label>()
+if lvOn and live and barstate.islast
+    for ln in lvShow
+        ln.delete()
+    lvShow.clear()
+    for lb in lvShowL
+        lb.delete()
+    lvShowL.clear()
+    array<float> taken = array.new_float()
+    array<Level> pick = f_pick(lvAll, close, 1, lvUp, atrLv * lvGap, taken)
+    pick.concat(f_pick(lvAll, close, -1, lvDn, atrLv * lvGap, taken))
+    for l in pick
+        lvShow.push(line.new(math.max(l.x, bar_index - BUF + 1), l.price, bar_index, l.price, color = lvCol, width = lvW,
+             extend = extend.right))
+        if lvPrice
+            lvShowL.push(label.new(l.x, l.price, f_lvText(l), color = color(na), style = label.style_label_lower_left,
+                 textcolor = lvCol, size = size.small))
 
 // ── средние: лента рабочего ТФ ────────────────────────────────────────────────
 f_ma(float src, simple int len) =>
@@ -588,8 +731,9 @@ f_maB(float src, simple int len, simple int back) =>
     float s = ta.sma(src, len)
     maType == "SMA" ? s[back] : e[back]
 
-bk = mtfClosed ? 1 : 0
-la = mtfClosed ? barmerge.lookahead_on : barmerge.lookahead_off
+// «как у автора» — текущий бар старшего ТФ, как на скриншотах; в торговом режиме — только закрытые
+bk = live ? 0 : 1
+la = live ? barmerge.lookahead_off : barmerge.lookahead_on
 [a1, b1, c1, d1] = request.security(syminfo.tickerid, tf1, [f_maB(close, mL1, bk), f_maB(close, mL2, bk), f_maB(close, mL3, bk), f_maB(close, mL4, bk)], lookahead = la)
 [a2, b2, c2, d2] = request.security(syminfo.tickerid, tf2, [f_maB(close, mL1, bk), f_maB(close, mL2, bk), f_maB(close, mL3, bk), f_maB(close, mL4, bk)], lookahead = la)
 [a3, b3, c3, d3] = request.security(syminfo.tickerid, tf3, [f_maB(close, mL1, bk), f_maB(close, mL2, bk), f_maB(close, mL3, bk), f_maB(close, mL4, bk)], lookahead = la)
