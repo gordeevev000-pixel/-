@@ -1,0 +1,756 @@
+//@version=6
+// ============================================================================
+//  Уровни объёма дня: POC, HVN и Value Area как магниты и точки разворота
+//  Рассчитан на 1-минутный график, работает на любом тарифе TradingView.
+// ----------------------------------------------------------------------------
+//  Профиль дня собирается из свечей графика: объём каждой свечи делится
+//  поровну между ценами её диапазона. Минутная свеча узкая, поэтому профиль
+//  дня получается точным без footprint. У инструментов без объёма (индексы)
+//  вместо объёма считается время у цены (TPO).
+//
+//  Уровни
+//    POC  — цена с максимальным объёмом дня
+//    HVN  — другие пики объёма: локальные максимумы сглаженного профиля
+//    VAH / VAL — границы зоны, где прошло 70 % объёма (Value Area)
+//    nPOC — POC прошлых дней, к которым цена так и не вернулась
+//  Уровни прошлого дня тянутся через весь текущий день, nPOC — до касания.
+//  Уровни текущего дня рисуются справа вместе с гистограммой, а линия
+//  развивающегося POC показывает, где он был в каждый момент дня.
+//
+//  Отбой или пробой
+//    Уровень «взводится», когда цена отходит от него. Касание — подход
+//    к взведённому уровню ближе допуска. Дальше ждём, куда цена раньше
+//    пройдёт K·ATR дня: обратно (отбой) или сквозь уровень (пробой).
+//    Сигнал отбоя — закрытие обратно за уровнем в течение N баров после
+//    касания. Таблица считает отбои и пробои по каждому типу уровня на
+//    вашей истории и сравнивает с контролем: зеркалом тех же уровней
+//    относительно вчерашнего закрытия. Зеркало стоит так же далеко от цены,
+//    но объёма за ним нет. Уровень работает, если отбоев заметно больше,
+//    чем у контроля, а POC — магнит, если его трогают чаще зеркала.
+// ============================================================================
+indicator("Уровни объёма дня", shorttitle = "VP·Уровни", overlay = true, max_boxes_count = 500, max_lines_count = 500, max_labels_count = 500)
+
+// ───────────────────────────── Константы ─────────────────────────────
+const int K_POC = 0    // POC прошлого дня
+const int K_VA  = 1    // VAH / VAL прошлого дня
+const int K_HVN = 2    // HVN прошлого дня
+const int K_NP  = 3    // nPOC
+const int K_DP  = 4    // POC текущего дня (развивающийся)
+const int K_CT  = 5    // контроль: зеркало уровней прошлого дня
+const int K_N   = 6
+
+const string T_TR = "Справа сверху"
+const string T_BR = "Справа снизу"
+const string T_BL = "Слева снизу"
+const string T_TL = "Слева сверху"
+
+const string G_PR  = "Профиль"
+const string G_LV  = "Уровни"
+const string G_HI  = "Гистограмма"
+const string G_SG  = "Касание, отбой, сигналы"
+const string G_VIS = "Оформление"
+
+// ───────────────────────────── Настройки ─────────────────────────────
+bool   sessOnIn  = input.bool(false, "Только торговая сессия", inline = "s", group = G_PR)
+string sessIn    = input.session("0930-1600", "", inline = "s", group = G_PR, tooltip = "Профиль, касания и сигналы — только внутри сессии. Акции США: 0930-1600, America/New_York. MOEX: 1000-1850, Europe/Moscow. Новый день всё равно начинается по дневной свече инструмента.")
+string tzIn      = input.string("America/New_York", "Часовой пояс сессии", group = G_PR)
+float  vaPctIn   = input.float(70.0, "Value Area, %", minval = 10.0, maxval = 99.0, group = G_PR)
+int    resIn     = input.int(100, "Точность: ячеек на дневной ATR", minval = 20, maxval = 1000, group = G_PR, tooltip = "Шаг профиля = дневной ATR / это число, округлённый до шага цены. Больше — точнее уровни, но пики профиля дробятся на шум, тогда увеличьте сглаживание.")
+int    smoothIn  = input.int(3, "Сглаживание для HVN, ячеек в каждую сторону", minval = 0, maxval = 50, group = G_PR)
+
+bool   showCur   = input.bool(true, "Уровни текущего дня: POC, VAH, VAL, HVN", group = G_LV, tooltip = "Рисуются от последней свечи вправо. Протягивать их назад через утро нельзя: утром этих уровней ещё не было, и «отбои» от них на истории — самообман.")
+bool   showDevP  = input.bool(true, "Линия развивающегося POC", group = G_LV)
+bool   showPrev  = input.bool(true, "Уровни прошлого дня: POC, VAH, VAL, HVN", group = G_LV)
+bool   showNaked = input.bool(true, "nPOC прошлых дней до касания", group = G_LV)
+int    maxNaked  = input.int(8, "Макс. nPOC одновременно", minval = 1, maxval = 30, group = G_LV)
+int    hvnNIn    = input.int(3, "HVN: сколько, кроме POC", minval = 0, maxval = 10, group = G_LV)
+float  hvnMinIn  = input.float(40.0, "HVN: высота пика, % от максимума", minval = 5.0, maxval = 100.0, group = G_LV)
+float  hvnSepIn  = input.float(0.15, "HVN: мин. расстояние между пиками, доля ATR дня", minval = 0.01, step = 0.01, group = G_LV)
+int    keepHist  = input.int(60, "Хранить отработанных линий", minval = 0, maxval = 300, group = G_LV)
+bool   showLbl   = input.bool(true, "Подписи уровней справа", group = G_LV)
+
+bool   showHist  = input.bool(true, "Профиль текущего дня справа от цены", group = G_HI)
+int    rowsIn    = input.int(50, "Строк в гистограмме", minval = 10, maxval = 120, group = G_HI)
+int    widthIn   = input.int(40, "Ширина, баров", minval = 5, maxval = 300, group = G_HI)
+int    offIn     = input.int(5, "Отступ от последней свечи, баров", minval = 0, maxval = 100, group = G_HI)
+int    histDays  = input.int(3, "Профили прошлых дней, штук", minval = 0, maxval = 10, group = G_HI, tooltip = "Рисуются от начала каждого дня. Лимит — 500 прямоугольников на скрипт, поэтому при большом числе строк дней будет меньше.")
+int    histPct   = input.int(30, "Ширина профиля прошлого дня, % от длины дня", minval = 5, maxval = 100, group = G_HI)
+
+float  tolIn     = input.float(0.02, "Допуск касания, доля ATR дня", minval = 0.0, step = 0.005, group = G_SG, tooltip = "Касание засчитывается, если цена подошла к уровню ближе допуска: крупный объём часто встаёт чуть раньше уровня.")
+float  kIn       = input.float(0.10, "Ход для отбоя / пробоя, доля ATR дня", minval = 0.01, step = 0.01, group = G_SG, tooltip = "После касания: прошла цена K обратно раньше, чем K сквозь уровень, — отбой, наоборот — пробой. Отсчёт идёт от точки касания. База для сравнения — строка «Контроль» в таблице, а не 50 %: на барах цена проскакивает уровень, и у случайной линии выходит 45–50 %.")
+int    waitIn    = input.int(60, "Ждать развязки, баров", minval = 5, maxval = 1000, group = G_SG)
+int    confIn    = input.int(3, "Сигнал: закрытие обратно за уровнем в течение, баров", minval = 1, maxval = 20, group = G_SG, tooltip = "1 — только свеча касания (хвост-отказ). Больше — допускается прокол уровня с возвратом за несколько свечей.")
+int    dpDelay   = input.int(30, "POC текущего дня участвует через, баров от начала дня", minval = 0, maxval = 600, group = G_SG, tooltip = "В первые минуты дня POC скачет, и касания с ним ничего не значат.")
+bool   sigPocIn  = input.bool(true, "Сигналы от: POC пред.", inline = "g1", group = G_SG)
+bool   sigVaIn   = input.bool(true, "VAH / VAL", inline = "g1", group = G_SG)
+bool   sigHvnIn  = input.bool(true, "HVN", inline = "g1", group = G_SG)
+bool   sigNpIn   = input.bool(true, "nPOC", inline = "g2", group = G_SG)
+bool   sigDpIn   = input.bool(false, "POC текущего дня", inline = "g2", group = G_SG)
+bool   confOnly  = input.bool(true, "Сигналы только по закрытым барам", group = G_SG)
+
+color  pocCol    = input.color(#ffb300, "POC", inline = "c1", group = G_VIS)
+color  vaCol     = input.color(#7e57c2, "VAH / VAL", inline = "c1", group = G_VIS)
+color  hvnCol    = input.color(#29b6f6, "HVN", inline = "c1", group = G_VIS)
+color  histCol   = input.color(#78909c, "Гистограмма", inline = "c2", group = G_VIS)
+color  upCol     = input.color(#26a69a, "Отбой вверх", inline = "c3", group = G_VIS)
+color  dnCol     = input.color(#ef5350, "Отбой вниз", inline = "c3", group = G_VIS)
+bool   showTL    = input.bool(true, "Таблица: уровни", group = G_VIS)
+bool   showTS    = input.bool(true, "Таблица: статистика касаний", group = G_VIS)
+string tblPos    = input.string(T_BR, "Где таблица", options = [T_TR, T_BR, T_BL, T_TL], group = G_VIS)
+
+// ───────────────────────────── Типы ─────────────────────────────
+// Профиль дня: объём по ценовым ячейкам (ключ = floor(цена / шаг))
+type Day
+    map<int, float> vol
+    float step
+    int   startBar
+    int   pocKey
+    float pocVol
+    float totVol
+    bool  partial
+
+// Уровни, посчитанные по профилю
+type Lv
+    float        poc
+    float        vah
+    float        val
+    array<float> hvn
+
+// Уровень прошлого дня или nPOC, который тянется по графику
+type Lvl
+    float  price
+    int    kind
+    string tag
+    string abbr
+    line   ln
+    bool   armed
+    bool   touched
+    int    born
+
+// Касание уровня: ждём, куда цена уйдёт на K раньше
+type Test
+    float  anchor
+    float  lvl
+    int    dir        // +1 — пришли сверху, отбой = вверх; −1 — пришли снизу
+    int    kind
+    string tag
+    string abbr
+    int    start
+    float  k
+    bool   sigDone
+    bool   sigNow
+    int    res        // 0 — ждём, 1 — отбой, 2 — пробой, 3 — без развязки
+
+// Прямоугольники профиля одного прошлого дня
+type Drawn
+    array<box> boxes
+
+// ───────────────────────────── Состояние ─────────────────────────────
+var Day           cur       = na
+var int           dayNo     = 0
+var array<Lvl>    lvls      = array.new<Lvl>()
+var array<Test>   tests     = array.new<Test>()
+var array<line>   histLines = array.new<line>()
+var array<Drawn>  histQ     = array.new<Drawn>()
+var array<box>    curBoxes  = array.new<box>()
+var array<line>   curLines  = array.new<line>()
+var array<label>  curLbls   = array.new<label>()
+var array<int>    stR       = array.new<int>(K_N, 0)
+var array<int>    stB       = array.new<int>(K_N, 0)
+var array<int>    stT       = array.new<int>(K_N, 0)
+var array<string> kNames    = array.from("POC прошлого дня", "VAH / VAL прошлого дня", "HVN прошлого дня", "nPOC", "POC текущего дня", "Контроль: зеркало уровней")
+var int           magDays   = 0
+var int           magHit    = 0
+var int           ctDays    = 0
+var int           ctHit     = 0
+var int           npMade    = 0
+var int           npFilled  = 0
+var int           npDaysSum = 0
+var bool          dpArmed   = false
+var float         dpLast    = na
+var bool          hasVol    = false
+var table         tbl       = table.new(tblPos == T_TR ? position.top_right : tblPos == T_BL ? position.bottom_left : tblPos == T_TL ? position.top_left : position.bottom_right, 4, 20, bgcolor = color.new(chart.bg_color, 10), frame_color = color.new(chart.fg_color, 80), frame_width = 1)
+
+// ───────────────────────────── Профиль ─────────────────────────────
+makeDay(float step, bool partial) =>
+    Day.new(vol = map.new<int, float>(), step = step, startBar = bar_index, pocKey = na, pocVol = 0.0, totVol = 0.0, partial = partial)
+
+// Шаг профиля: ~resIn ячеек на дневной ATR, кратно шагу цены
+calcStep(float atrD) =>
+    float st = na
+    if not na(atrD) and atrD > 0
+        st := syminfo.mintick * math.max(1, math.round(atrD / resIn / syminfo.mintick))
+    st
+
+method addCell(Day d, int k, float v) =>
+    float nv = nz(d.vol.get(k)) + v
+    d.vol.put(k, nv)
+    if nv > d.pocVol
+        d.pocVol := nv
+        d.pocKey := k
+    nv
+
+// Объём свечи делится поровну между ячейками её диапазона
+method addBar(Day d, float lo, float hi, float v) =>
+    if v > 0 and d.step > 0
+        int kL = int(math.floor(lo / d.step))
+        int kH = int(math.floor(hi / d.step))
+        if kH <= kL
+            d.addCell(kL, v)
+        else if kH - kL > 2000
+            d.addCell(int(math.floor((lo + hi) / 2 / d.step)), v)
+        else
+            float rng = hi - lo
+            for k = kL to kH
+                float ov = math.min(hi, (k + 1) * d.step) - math.max(lo, k * d.step)
+                if ov > 0
+                    d.addCell(k, v * ov / rng)
+        d.totVol := d.totVol + v
+    v
+
+// POC, Value Area и HVN профиля
+method analyze(Day d, float vaPct, int smooth, float minPct, float sepPx, int maxH) =>
+    Lv res = Lv.new(poc = na, vah = na, val = na, hvn = array.new<float>())
+    if d.vol.size() > 0 and not na(d.pocKey)
+        array<int> keys = d.vol.keys()
+        int minK = int(keys.min())
+        int maxK = int(keys.max())
+        int n    = maxK - minK + 1
+        res.poc := (d.pocKey + 0.5) * d.step
+        if n <= 20000
+            array<float> v = array.new<float>(n, 0.0)
+            float total = 0.0
+            for [k, vk] in d.vol
+                v.set(k - minK, vk)
+                total += vk
+            // Value Area: от POC расширяемся в сторону большего объёма
+            int   lo     = d.pocKey - minK
+            int   hi     = lo
+            float acc    = v.get(lo)
+            float target = total * vaPct / 100.0
+            while acc < target and (lo > 0 or hi < n - 1)
+                float up = -1.0
+                if hi < n - 1
+                    up := v.get(hi + 1)
+                float dn = -1.0
+                if lo > 0
+                    dn := v.get(lo - 1)
+                if up >= dn
+                    hi  += 1
+                    acc += up
+                else
+                    lo  -= 1
+                    acc += dn
+            res.vah := (minK + hi + 1) * d.step
+            res.val := (minK + lo) * d.step
+            // HVN: локальные максимумы сглаженного профиля
+            int w = math.max(0, smooth)
+            array<float> cs = array.new<float>(n + 1, 0.0)
+            for i = 0 to n - 1
+                cs.set(i + 1, cs.get(i) + v.get(i))
+            array<float> s = array.new<float>(n, 0.0)
+            for i = 0 to n - 1
+                int a = math.max(0, i - w)
+                int b = math.min(n - 1, i + w)
+                s.set(i, (cs.get(b + 1) - cs.get(a)) / (b - a + 1))
+            float        sMax = s.max()
+            array<int>   pk   = array.new<int>()
+            array<float> pkV  = array.new<float>()
+            for i = 0 to n - 1
+                float si = s.get(i)
+                float sl = -1.0
+                if i > 0
+                    sl := s.get(i - 1)
+                float sr = -1.0
+                if i < n - 1
+                    sr := s.get(i + 1)
+                if si > sl and si >= sr and si >= minPct / 100.0 * sMax
+                    pk.push(i)
+                    pkV.push(si)
+            if pk.size() > 0 and maxH > 0
+                int        sepB  = math.max(1, int(math.round(nz(sepPx) / d.step)))
+                array<int> taken = array.from(d.pocKey - minK)
+                array<int> ord   = pkV.sort_indices(order.descending)
+                for j in ord
+                    if res.hvn.size() >= maxH
+                        break
+                    int  c  = pk.get(j)
+                    bool ok = true
+                    for q in taken
+                        if math.abs(c - q) < sepB
+                            ok := false
+                    if ok
+                        // уточняем пик по несглаженному профилю
+                        int best = c
+                        for t = math.max(0, c - w) to math.min(n - 1, c + w)
+                            if v.get(t) > v.get(best)
+                                best := t
+                        taken.push(best)
+                        res.hvn.push((minK + best + 0.5) * d.step)
+    res
+
+// Гистограмма профиля: строки от x0 вправо, POC и Value Area ярче
+drawProfile(Day d, Lv L, int x0, int wMax, int rows) =>
+    array<box> bx = array.new<box>()
+    if d.vol.size() > 0 and wMax > 0 and not na(d.pocKey)
+        array<int> ks   = d.vol.keys()
+        int        minK = int(ks.min())
+        int        maxK = int(ks.max())
+        int        grp  = math.max(1, int(math.ceil(float(maxK - minK + 1) / rows)))
+        int        nR   = int(math.floor(float(maxK - minK) / grp)) + 1
+        array<float> rv = array.new<float>(nR, 0.0)
+        for [k, vk] in d.vol
+            int ri = math.min(nR - 1, int(math.floor(float(k - minK) / grp)))
+            rv.set(ri, rv.get(ri) + vk)
+        float maxRv = rv.max()
+        int   pocR  = math.min(nR - 1, int(math.floor(float(d.pocKey - minK) / grp)))
+        if maxRv > 0
+            for r = 0 to nR - 1
+                float vr = rv.get(r)
+                if vr > 0
+                    float yB   = (minK + r * grp) * d.step
+                    float yT   = (minK + (r + 1) * grp) * d.step
+                    float yM   = (yB + yT) / 2
+                    bool  inVA = yM <= L.vah and yM >= L.val
+                    color c    = r == pocR ? color.new(pocCol, 30) : color.new(histCol, inVA ? 55 : 80)
+                    int   w    = math.max(1, int(math.round(vr / maxRv * wMax)))
+                    bx.push(box.new(x0, yT, x0 + w, yB, border_color = color(na), bgcolor = c))
+    bx
+
+// ───────────────────────────── Уровни ─────────────────────────────
+kindCol(int kind) =>
+    kind == K_VA ? vaCol : kind == K_HVN ? hvnCol : pocCol
+
+// Сигналы только от включённых и видимых уровней
+sigOn(int kind) =>
+    switch kind
+        K_POC => sigPocIn and showPrev
+        K_VA  => sigVaIn and showPrev
+        K_HVN => sigHvnIn and showPrev
+        K_NP  => sigNpIn and showNaked
+        K_DP  => sigDpIn
+        => false
+
+mkLine(float p, int kind) =>
+    string st = kind == K_POC ? line.style_solid : kind == K_HVN ? line.style_dotted : line.style_dashed
+    int    w  = kind == K_POC or kind == K_HVN ? 2 : 1
+    line.new(bar_index, p, bar_index, p, color = kindCol(kind), width = w, style = st)
+
+addLvl(float p, int kind, string tag, string abbr) =>
+    if not na(p)
+        line ln = na
+        if showPrev
+            ln := mkLine(p, kind)
+        lvls.push(Lvl.new(price = p, kind = kind, tag = tag, abbr = abbr, ln = ln, armed = false, touched = false, born = dayNo))
+    p
+
+// Контроль: зеркало уровня относительно закрытия дня. Без линии и без сигналов,
+// только в статистике
+addCtl(float p, float pivot, string abbr) =>
+    if not na(p) and not na(pivot)
+        lvls.push(Lvl.new(price = 2 * pivot - p, kind = K_CT, tag = "контроль", abbr = abbr, ln = na, armed = false, touched = false, born = dayNo))
+    p
+
+// Касание на этом баре. Отсчёт от точки касания a = уровень ± допуск.
+// На баре касания хай/лоу могли быть до касания, поэтому отбой здесь
+// засчитывается только по закрытию, а пробой — по экстремуму за уровнем.
+touchTest(float p, int dir, int kind, string tag, string abbr, float tolP, float kP, bool canS) =>
+    float a    = p + dir * tolP
+    bool  hitB = dir > 0 ? low <= a - kP : high >= a + kP
+    bool  hitR = dir > 0 ? close >= a + kP : close <= a - kP
+    bool  back = dir > 0 ? close > a : close < a
+    bool  sg   = back and not hitB and canS and sigOn(kind)
+    Test.new(anchor = a, lvl = p, dir = dir, kind = kind, tag = tag, abbr = abbr, start = bar_index, k = kP, sigDone = sg, sigNow = sg, res = hitB ? 2 : hitR ? 1 : 0)
+
+// Следующие бары после касания. Если на одном баре достигнуты обе цели,
+// считается пробой: порядок внутри бара неизвестен, берём худшее для уровня.
+method advance(Test t, bool canS) =>
+    float revPx = t.anchor + t.dir * t.k
+    float brkPx = t.anchor - t.dir * t.k
+    bool  hitB  = t.dir > 0 ? low <= brkPx : high >= brkPx
+    bool  hitR  = t.dir > 0 ? high >= revPx : low <= revPx
+    bool  back  = t.dir > 0 ? close > t.anchor : close < t.anchor
+    t.sigNow := false
+    if back and not hitB and not t.sigDone and canS and bar_index - t.start <= confIn - 1 and sigOn(t.kind)
+        t.sigDone := true
+        t.sigNow  := true
+    t.res := hitB ? 2 : hitR ? 1 : bar_index - t.start >= waitIn ? 3 : 0
+    t
+
+tally(Test t) =>
+    if t.res == 1
+        stR.set(t.kind, stR.get(t.kind) + 1)
+    else if t.res == 2
+        stB.set(t.kind, stB.get(t.kind) + 1)
+    else
+        stT.set(t.kind, stT.get(t.kind) + 1)
+    t.res
+
+// Все известные сейчас уровни: для целей в алертах и ближайших уровней в таблице
+fillCands(array<float> ps, array<string> ts, Lv cl, float dp) =>
+    for lv in lvls
+        if not na(lv.ln)
+            ps.push(lv.price)
+            ts.push(lv.tag)
+    if not na(dp)
+        ps.push(dp)
+        ts.push("POC дня")
+    if not na(cl)
+        if not na(cl.vah)
+            ps.push(cl.vah)
+            ts.push("VAH дня")
+        if not na(cl.val)
+            ps.push(cl.val)
+            ts.push("VAL дня")
+        for h in cl.hvn
+            ps.push(h)
+            ts.push("HVN дня")
+    ps.size()
+
+nearestIdx(array<float> ps, float from, int dir, float minDist) =>
+    int   idx  = -1
+    float best = na
+    if ps.size() > 0
+        for i = 0 to ps.size() - 1
+            float d = (ps.get(i) - from) * dir
+            if d > minDist and (na(best) or d < best)
+                best := d
+                idx  := i
+    idx
+
+fmtTicks(float d) =>
+    int t = int(math.round(d / syminfo.mintick))
+    (t > 0 ? "+" : "") + str.tostring(t) + " т"
+
+curLevel(float p, string tag, color c, string st, int w, int xR) =>
+    if not na(p)
+        curLines.push(line.new(bar_index, p, xR, p, color = c, width = w, style = st))
+        if showLbl
+            curLbls.push(label.new(xR, p, tag + " " + str.tostring(p, format.mintick), style = label.style_label_left, color = color(na), textcolor = c, size = size.small))
+    p
+
+cellT(int c, int r, string s, color col) =>
+    table.cell(tbl, c, r, s, text_color = col, text_size = size.small, text_halign = c == 0 ? text.align_left : text.align_right)
+
+lvlRow(int r, string name, float p, color col) =>
+    cellT(0, r, name, col)
+    cellT(1, r, na(p) ? "—" : str.tostring(p, format.mintick), chart.fg_color)
+    cellT(2, r, na(p) ? "" : fmtTicks(p - close), chart.fg_color)
+
+// Зелёный — отбоев заметно больше, чем у контроля, красный — заметно меньше
+statRow(int r, string name, int rv, int bk, int tm, float base) =>
+    int   n   = rv + bk
+    float pct = n > 0 ? 100.0 * rv / n : na
+    color c   = n >= 30 and pct >= base + 5 ? upCol : n >= 30 and pct <= base - 5 ? dnCol : chart.fg_color
+    cellT(0, r, name, chart.fg_color)
+    cellT(1, r, str.tostring(n), chart.fg_color)
+    cellT(2, r, n > 0 ? str.tostring(pct, "#") + " %" : "—", c)
+    cellT(3, r, str.tostring(tm), chart.fg_color)
+
+// ───────────────────────────── Данные бара ─────────────────────────────
+if not timeframe.isintraday
+    runtime.error("VP·Уровни рассчитан на внутридневной график, лучше всего 1 минута.")
+
+float atrD        = request.security(syminfo.tickerid, "D", ta.atr(14)[1], lookahead = barmerge.lookahead_on)
+float atrDay      = nz(atrD, ta.atr(14) * 20)
+float tolPx       = tolIn * atrDay
+float kPx         = kIn * atrDay
+float armPx       = math.max(0.5 * kPx, 2.0 * tolPx)
+bool  inSess      = not na(time(timeframe.period, sessIn, tzIn))
+bool  sessOk      = not sessOnIn or inSess
+bool  canSig      = barstate.isconfirmed or not confOnly
+float prevC       = close[1]
+int   histDaysEff = math.min(histDays, int(math.floor(float(480 - (showHist ? rowsIn : 0)) / rowsIn)))
+if nz(volume) > 0
+    hasVol := true
+
+// ───────────────────────────── Новый день ─────────────────────────────
+bool newDay = timeframe.change("D")
+if na(cur) or newDay
+    if not na(cur)
+        dayNo += 1
+        // Уровни позавчерашнего дня: нетронутый POC становится nPOC, остальное — в историю
+        if lvls.size() > 0
+            for i = lvls.size() - 1 to 0
+                Lvl lv = lvls.get(i)
+                if lv.kind == K_POC
+                    magDays += 1
+                    magHit  += lv.touched ? 1 : 0
+                if lv.kind == K_CT and lv.abbr == "ctPOC"
+                    ctDays += 1
+                    ctHit  += lv.touched ? 1 : 0
+                if lv.kind == K_POC and not lv.touched
+                    npMade   += 1
+                    lv.kind  := K_NP
+                    lv.tag   := "nPOC"
+                    lv.abbr  := "nPOC"
+                    lv.armed := true
+                    if not na(lv.ln) and not showNaked
+                        lv.ln.set_x2(bar_index - 1)
+                        histLines.push(lv.ln)
+                        lv.ln := na
+                    else if na(lv.ln) and showNaked
+                        lv.ln := mkLine(lv.price, K_NP)
+                    if not na(lv.ln)
+                        lv.ln.set_style(line.style_dashed)
+                        lv.ln.set_width(1)
+                else if lv.kind != K_NP
+                    if not na(lv.ln)
+                        lv.ln.set_x2(bar_index - 1)
+                        histLines.push(lv.ln)
+                    lvls.remove(i)
+        // Уровни только что закончившегося дня
+        if not cur.partial and cur.vol.size() > 0
+            Lv L = cur.analyze(vaPctIn, smoothIn, hvnMinIn, hvnSepIn * atrDay, hvnNIn)
+            addLvl(L.poc, K_POC, "POC пред.", "POC")
+            addLvl(L.vah, K_VA, "VAH пред.", "VAH")
+            addLvl(L.val, K_VA, "VAL пред.", "VAL")
+            for h in L.hvn
+                addLvl(h, K_HVN, "HVN пред.", "HVN")
+            addCtl(L.poc, prevC, "ctPOC")
+            addCtl(L.vah, prevC, "ct")
+            addCtl(L.val, prevC, "ct")
+            for h in L.hvn
+                addCtl(h, prevC, "ct")
+            if histDaysEff > 0
+                int dayBars = bar_index - cur.startBar
+                int wDay    = math.max(2, int(math.round(dayBars * histPct / 100.0)))
+                histQ.push(Drawn.new(boxes = drawProfile(cur, L, cur.startBar, wDay, rowsIn)))
+        while histQ.size() > histDaysEff
+            Drawn old = histQ.shift()
+            for b in old.boxes
+                b.delete()
+        // Лишние nPOC: убираем самые старые
+        int npCnt = 0
+        for lv in lvls
+            if lv.kind == K_NP
+                npCnt += 1
+        while npCnt > maxNaked
+            int idx = -1
+            for j = 0 to lvls.size() - 1
+                if lvls.get(j).kind == K_NP
+                    idx := j
+                    break
+            if idx < 0
+                break
+            Lvl od = lvls.remove(idx)
+            if not na(od.ln)
+                od.ln.set_x2(bar_index)
+                histLines.push(od.ln)
+            npCnt -= 1
+    // Первый день истории неполный: уровни из него не строим
+    cur     := makeDay(calcStep(atrDay), na(cur))
+    dpArmed := false
+    dpLast  := na
+if na(cur.step)
+    cur.step := calcStep(atrDay)
+
+// POC текущего дня до объёма этого бара, иначе бар «касается» сам себя
+float dPocPrev = na(cur.pocKey) ? na : (cur.pocKey + 0.5) * cur.step
+
+// ───────────────────────────── Касания ─────────────────────────────
+array<Test> fired    = array.new<Test>()
+bool        touchNow = false
+bool        npHit    = false
+
+// Развязка касаний с прошлых баров
+if tests.size() > 0
+    for i = tests.size() - 1 to 0
+        Test t = tests.get(i)
+        t.advance(canSig)
+        if t.sigNow
+            fired.push(t)
+        if t.res > 0
+            tally(t)
+            tests.remove(i)
+
+// Новые касания уровней прошлых дней
+if lvls.size() > 0
+    for i = lvls.size() - 1 to 0
+        Lvl   lv   = lvls.get(i)
+        float p    = lv.price
+        bool  near = low <= p + tolPx and high >= p - tolPx
+        if near and lv.armed and sessOk
+            Test t = touchTest(p, prevC > p ? 1 : -1, lv.kind, lv.tag, lv.abbr, tolPx, kPx, canSig)
+            touchNow := touchNow or sigOn(lv.kind)
+            if t.sigNow
+                fired.push(t)
+            if t.res > 0
+                tally(t)
+            else
+                tests.push(t)
+            lv.armed := false
+        if near
+            lv.touched := true
+        else if not lv.armed and (low > p + armPx or high < p - armPx)
+            lv.armed := true
+        if lv.kind == K_NP and near
+            npHit     := true
+            npFilled  += 1
+            npDaysSum += dayNo - lv.born + 1
+            if not na(lv.ln)
+                lv.ln.set_x2(bar_index)
+                histLines.push(lv.ln)
+            lvls.remove(i)
+while histLines.size() > keepHist
+    histLines.shift().delete()
+
+// Касания POC текущего дня. Если POC сдвинулся, уровень заново ждёт отхода цены.
+if not na(dPocPrev) and (na(dpLast) or dPocPrev != dpLast)
+    dpArmed := false
+    dpLast  := dPocPrev
+if not na(dPocPrev) and bar_index - cur.startBar >= dpDelay
+    bool nearD = low <= dPocPrev + tolPx and high >= dPocPrev - tolPx
+    if nearD and dpArmed and sessOk
+        Test t = touchTest(dPocPrev, prevC > dPocPrev ? 1 : -1, K_DP, "POC дня", "dPOC", tolPx, kPx, canSig)
+        touchNow := touchNow or sigOn(K_DP)
+        if t.sigNow
+            fired.push(t)
+        if t.res > 0
+            tally(t)
+        else
+            tests.push(t)
+        dpArmed := false
+    else if not nearD and not dpArmed and (low > dPocPrev + armPx or high < dPocPrev - armPx)
+        dpArmed := true
+
+// ───────────────────────────── Объём бара в профиль ─────────────────────────────
+if sessOk and not na(cur.step)
+    cur.addBar(low, high, hasVol ? nz(volume) : 1.0)
+float dPoc = na(cur.pocKey) ? na : (cur.pocKey + 0.5) * cur.step
+plot(showDevP and not newDay ? dPoc : na, "POC дня (развивающийся)", color = color.new(pocCol, 25), linewidth = 1, style = plot.style_steplinebr)
+
+// ───────────────────────────── Сигналы ─────────────────────────────
+Lv cl = na
+if barstate.islast
+    cl := cur.analyze(vaPctIn, smoothIn, hvnMinIn, hvnSepIn * atrDay, hvnNIn)
+
+string sigL = ""
+string sigS = ""
+string lstL = ""
+string lstS = ""
+for t in fired
+    string s = t.tag + " " + str.tostring(t.lvl, format.mintick)
+    if t.dir > 0
+        sigL := sigL == "" ? t.abbr : sigL + "·" + t.abbr
+        lstL := lstL == "" ? s : lstL + "; " + s
+    else
+        sigS := sigS == "" ? t.abbr : sigS + "·" + t.abbr
+        lstS := lstS == "" ? s : lstS + "; " + s
+bool longSig  = sigL != ""
+bool shortSig = sigS != ""
+
+array<float>  cP = array.new<float>()
+array<string> cT = array.new<string>()
+if longSig or shortSig or barstate.islast
+    fillCands(cP, cT, cl, dPoc)
+
+if longSig
+    int    ti  = nearestIdx(cP, close, 1, tolPx)
+    string tgt = ti >= 0 ? "следующий уровень выше: " + cT.get(ti) + " " + str.tostring(cP.get(ti), format.mintick) + " (" + fmtTicks(cP.get(ti) - close) + ")" : "выше уровней нет"
+    label.new(bar_index, low, sigL, yloc = yloc.belowbar, style = label.style_label_up, color = color.new(upCol, 15), textcolor = color.white, size = size.tiny, tooltip = "Отбой вверх от: " + lstL + "\n" + tgt)
+    alert(syminfo.ticker + " " + timeframe.period + " · отбой ВВЕРХ от " + lstL + " · закрытие " + str.tostring(close, format.mintick) + " · " + tgt, alert.freq_once_per_bar_close)
+if shortSig
+    int    ti  = nearestIdx(cP, close, -1, tolPx)
+    string tgt = ti >= 0 ? "следующий уровень ниже: " + cT.get(ti) + " " + str.tostring(cP.get(ti), format.mintick) + " (" + fmtTicks(cP.get(ti) - close) + ")" : "ниже уровней нет"
+    label.new(bar_index, high, sigS, yloc = yloc.abovebar, style = label.style_label_down, color = color.new(dnCol, 15), textcolor = color.white, size = size.tiny, tooltip = "Отбой вниз от: " + lstS + "\n" + tgt)
+    alert(syminfo.ticker + " " + timeframe.period + " · отбой ВНИЗ от " + lstS + " · закрытие " + str.tostring(close, format.mintick) + " · " + tgt, alert.freq_once_per_bar_close)
+
+alertcondition(longSig, "Отбой вверх от уровня", "{{ticker}} {{interval}}: отбой вверх от уровня объёма, цена {{close}}")
+alertcondition(shortSig, "Отбой вниз от уровня", "{{ticker}} {{interval}}: отбой вниз от уровня объёма, цена {{close}}")
+alertcondition(touchNow, "Касание уровня", "{{ticker}} {{interval}}: цена у уровня объёма, {{close}}")
+alertcondition(npHit, "Касание nPOC", "{{ticker}} {{interval}}: цена дошла до непротестированного POC, {{close}}")
+
+// ───────────────────────────── Последний бар: профиль, уровни, таблица ─────────────────────────────
+if barstate.islast
+    for b in curBoxes
+        b.delete()
+    curBoxes.clear()
+    for l in curLines
+        l.delete()
+    curLines.clear()
+    for lb in curLbls
+        lb.delete()
+    curLbls.clear()
+
+    int xR = showHist ? bar_index + offIn + widthIn + 2 : bar_index + 3
+    if not na(cl)
+        if showHist
+            curBoxes := drawProfile(cur, cl, bar_index + offIn, widthIn, rowsIn)
+        if showCur
+            curLevel(cl.poc, "POC дня", pocCol, line.style_solid, 1, xR)
+            curLevel(cl.vah, "VAH дня", vaCol, line.style_dotted, 1, xR)
+            curLevel(cl.val, "VAL дня", vaCol, line.style_dotted, 1, xR)
+            for h in cl.hvn
+                curLevel(h, "HVN дня", hvnCol, line.style_dotted, 1, xR)
+    for lv in lvls
+        if not na(lv.ln)
+            lv.ln.set_x2(xR)
+            if showLbl
+                string tg = lv.kind == K_NP ? "nPOC · " + str.tostring(dayNo - lv.born + 1) + " дн." : lv.tag
+                curLbls.push(label.new(xR, lv.price, tg + " " + str.tostring(lv.price, format.mintick), style = label.style_label_left, color = color(na), textcolor = kindCol(lv.kind), size = size.small))
+
+    if showTL or showTS
+        tbl.clear(0, 0, 3, 19)
+        color fg  = chart.fg_color
+        color dim = color.new(chart.fg_color, 45)
+        int   r   = 0
+        if showTL
+            cellT(0, r, "Уровень", dim)
+            cellT(1, r, "цена", dim)
+            cellT(2, r, "до цены", dim)
+            cellT(3, r, "", dim)
+            r += 1
+            if not na(cl)
+                lvlRow(r, "POC дня", cl.poc, pocCol)
+                r += 1
+                lvlRow(r, "VAH дня", cl.vah, vaCol)
+                r += 1
+                lvlRow(r, "VAL дня", cl.val, vaCol)
+                r += 1
+            int ia = nearestIdx(cP, close, 1, 0.0)
+            int ib = nearestIdx(cP, close, -1, 0.0)
+            cellT(0, r, "▲ " + (ia >= 0 ? cT.get(ia) : "выше уровней нет"), upCol)
+            cellT(1, r, ia >= 0 ? str.tostring(cP.get(ia), format.mintick) : "", fg)
+            cellT(2, r, ia >= 0 ? fmtTicks(cP.get(ia) - close) : "", fg)
+            r += 1
+            cellT(0, r, "▼ " + (ib >= 0 ? cT.get(ib) : "ниже уровней нет"), dnCol)
+            cellT(1, r, ib >= 0 ? str.tostring(cP.get(ib), format.mintick) : "", fg)
+            cellT(2, r, ib >= 0 ? fmtTicks(cP.get(ib) - close) : "", fg)
+            r += 1
+        if showTS
+            cellT(0, r, "Касания на истории", dim)
+            cellT(1, r, "касаний", dim)
+            cellT(2, r, "отбой", dim)
+            cellT(3, r, "без развязки", dim)
+            r += 1
+            int   cN   = stR.get(K_CT) + stB.get(K_CT)
+            float base = cN >= 30 ? 100.0 * stR.get(K_CT) / cN : 50.0
+            int   sR   = 0
+            int   sB   = 0
+            int   sT   = 0
+            for k = 0 to K_CT - 1
+                statRow(r, kNames.get(k), stR.get(k), stB.get(k), stT.get(k), base)
+                sR += stR.get(k)
+                sB += stB.get(k)
+                sT += stT.get(k)
+                r  += 1
+            statRow(r, "Все уровни", sR, sB, sT, base)
+            r += 1
+            statRow(r, kNames.get(K_CT), stR.get(K_CT), stB.get(K_CT), stT.get(K_CT), base)
+            r += 1
+            cellT(0, r, "POC пред. дня тронут за день", fg)
+            cellT(1, r, str.tostring(magHit) + " из " + str.tostring(magDays), fg)
+            cellT(2, r, magDays > 0 ? str.tostring(100.0 * magHit / magDays, "#") + " %" : "—", fg)
+            cellT(3, r, ctDays > 0 ? "зеркало " + str.tostring(100.0 * ctHit / ctDays, "#") + " %" : "", dim)
+            r += 1
+            cellT(0, r, "nPOC закрыты", fg)
+            cellT(1, r, str.tostring(npFilled) + " из " + str.tostring(npMade), fg)
+            cellT(2, r, npFilled > 0 ? "≈ " + str.tostring(float(npDaysSum) / npFilled, "#.#") + " дн." : "—", fg)
+            cellT(3, r, "", fg)
+            r += 1
+            cellT(0, r, "Ход K " + str.tostring(kPx, format.mintick) + " · допуск " + str.tostring(tolPx, format.mintick), dim)
+            r += 1
+            cellT(0, r, cN >= 30 ? "Сравнивайте с контролем: " + str.tostring(base, "#") + " %" : "Контроль копится, пока база 50 %", dim)
+            r += 1
+            cellT(0, r, (hasVol ? "Профиль по объёму" : "Объёма нет: профиль по времени (TPO)") + " · шаг " + str.tostring(cur.step, format.mintick), dim)
