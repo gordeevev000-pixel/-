@@ -1,6 +1,6 @@
 //@version=6
 // ═══════════════════════════════════════════════════════════════════════════════
-//  SPRING · движок отскоков для фьючерсов и индексов
+//  SPRING · движок отскоков — всё в одном индикаторе, исполнение под 1 минуту
 //
 //  Score = 100 · gain · G · ( 0.20·S + 0.22·P + 0.28·R + 0.13·I + 0.17·N )
 //
@@ -18,13 +18,21 @@
 //  Состояния: FLAT → WATCH → ARMED → TRIGGER.
 //  ARMED означает «контекст готов, идеальный возврат прямо сейчас дал бы вход».
 //
-//  Порог входа 70 — не из головы: см. таблицу калибровки внизу панели. Прогоните
-//  её на своём инструменте. Если винрейт и средний R не растут вместе со скором —
-//  на этом инструменте модель не работает, какой бы стройной она ни была.
+//  Бывшая стратегия SPRING S встроена сюда: лонги/шорты по отдельности, вход по рынку
+//  или лимиткой на ретесте, размер от депозита и риска, стоп, T1, T2, тайм-стоп.
+//  Для 1 минуты добавлены фильтр сессии, пропуск открытия, выход в конце сессии
+//  и фильтр издержек — на коротком стопе комиссия и проскальзывание съедают R.
+//
+//  Сделки ведут два независимых симулятора. Боевой берёт только сигналы от порога
+//  входа — из него стрелки, план, алерты и отчёт. Калибровочный берёт всё от нижнего
+//  порога и нужен только для таблицы калибровки, поэтому боевые сигналы не глушит.
+//
+//  Порог входа 70 — не из головы: см. таблицу калибровки. Прогоните её на своём
+//  инструменте. Если винрейт и средний R не растут вместе со скором — на этом
+//  инструменте модель не работает, какой бы стройной она ни была.
 // ═══════════════════════════════════════════════════════════════════════════════
 
-indicator("SPRING · движок отскоков", "SPRING", overlay = false,
-     max_lines_count = 500, max_labels_count = 500, max_boxes_count = 500)
+indicator("SPRING · движок отскоков", "SPRING", overlay = false, max_labels_count = 50)
 
 // ── входные параметры ──────────────────────────────────────────────────────────
 gCore = "Ядро"
@@ -36,7 +44,46 @@ gain      = input.float(1.22, "gain — нормировка скора", minval
 thrEntry  = input.float(70.0, "Порог входа", minval = 1, maxval = 100, step = 0.5, group = gCore)
 thrWatch  = input.float(55.0, "Порог наблюдения", minval = 1, maxval = 100, step = 0.5, group = gCore)
 confirmed = input.bool(true, "Сигналы только по закрытым барам", group = gCore,
-     tooltip = "Выключить — сигнал появится внутри формирующегося бара и может исчезнуть.")
+     tooltip = "Выключить — сигнал появится внутри формирующегося бара и может исчезнуть. На 1 минуте лучше не выключать.")
+
+gExe = "Исполнение"
+useLong     = input.bool(true, "Лонги", group = gExe, inline = "side")
+useShort    = input.bool(true, "Шорты", group = gExe, inline = "side")
+useRetest   = input.bool(false, "Входить лимиткой на ретесте, а не по рынку", group = gExe,
+     tooltip = "Лимитка ставится на уровень «стоп ∓ 0.3 ATR» и живёт заданное число баров. На 1 минуте риск такой сделки — пара тиков, её часто отсекает фильтр издержек.")
+retestLife  = input.int(3, "Время жизни лимитки, баров", minval = 1, group = gExe)
+deposit     = input.float(100000, "Депозит, в валюте инструмента", minval = 1, group = gExe)
+riskPct     = input.float(0.5, "Риск на сделку, % депозита", minval = 0.01, step = 0.05, group = gExe,
+     tooltip = "Размер позиции считается от расстояния до стопа, а не фиксированным лотом.")
+scaleBySize = input.bool(true, "Масштабировать размер скором (скор / риск в ATR)", group = gExe)
+lotStep     = input.float(1.0, "Шаг лота (он же минимум)", minval = 0.00000001, step = 0.001, group = gExe,
+     tooltip = "Фьючерсы — 1 контракт. Крипта — шаг биржи, например 0.001. Если расчётный размер меньше шага, берётся один шаг, и реальный риск в плане будет больше заданного.")
+
+gCost = "Издержки"
+costTicks = input.float(2.0, "Комиссия и проскальзывание, тиков на сделку", minval = 0, step = 0.5, group = gCost)
+commPct   = input.float(0.0, "Комиссия, % от цены за круг", minval = 0, step = 0.01, group = gCost,
+     tooltip = "Для крипты и акций с процентной комиссией: вход + выход. Тейкер 0.04% за сторону — это 0.08.")
+maxCost   = input.float(0.25, "Не входить, если издержки больше доли риска", minval = 0, maxval = 1, step = 0.05, group = gCost,
+     tooltip = "На 1 минуте стоп — несколько тиков, и издержки съедают заметную часть R. 0.25 — сделка пропускается, если комиссия и проскальзывание больше четверти риска. 0 — фильтр выключен.")
+
+gSess = "Сессия"
+useSess  = input.bool(false, "Входить только в торговую сессию", group = gSess)
+sessStr  = input.session("0930-1600", "Сессия", group = gSess)
+sessTz   = input.string("America/New_York", "Часовой пояс сессии", group = gSess,
+     tooltip = "Индексы и акции США — 0930-1600, America/New_York. MOEX — 1000-1850, Europe/Moscow. Крипте фильтр обычно не нужен.")
+skipOpen = input.int(0, "Пропустить первые N баров сессии", minval = 0, group = gSess,
+     tooltip = "Первые минуты после открытия — разгон объёма и волатильности, P и G там врут. На 1 минуте разумно 3–5. Без фильтра сессии отсчёт идёт от начала торгового дня.")
+flatEnd  = input.bool(true, "Закрывать позицию при выходе из сессии", group = gSess)
+
+gPlan = "План сделки"
+stopLen    = input.int(5, "Окно свинга для стопа", minval = 1, group = gPlan)
+stopATR    = input.float(0.50, "Запас за свинг, ATR", minval = 0, step = 0.05, group = gPlan)
+t2R        = input.float(2.60, "Цель T2, в R", minval = 0.2, step = 0.1, group = gPlan)
+retestATR  = input.float(0.30, "Лимитка на ретесте: от стопа, ATR", minval = 0, step = 0.05, group = gPlan)
+minRR      = input.float(0.50, "Минимальный R:R до T1", minval = 0, step = 0.05, group = gPlan)
+maxBars    = input.int(12, "Тайм-стоп, баров", minval = 1, group = gPlan)
+cooldown   = input.int(3, "Пауза после сделки, баров", minval = 0, group = gPlan)
+useT2      = input.bool(false, "Половина на T1, остаток на T2 (стоп в безубыток)", group = gPlan)
 
 gW = "Веса компонентов"
 wS = input.float(0.20, "S · растяжение", minval = 0, maxval = 1, step = 0.01, group = gW)
@@ -94,29 +141,20 @@ volCalm   = input.float(1.5, "Спокойная вола, ATR/норма", minv
 volWild   = input.float(3.0, "Разгон волы, ATR/норма",    minval = 0.6, step = 0.1, group = gG)
 gMin      = input.float(0.35, "Минимум множителя", minval = 0.0, maxval = 1, step = 0.05, group = gG)
 
-gPlan = "План сделки"
-stopLen    = input.int(5, "Окно свинга для стопа", minval = 1, group = gPlan)
-stopATR    = input.float(0.50, "Запас за свинг, ATR", minval = 0, step = 0.05, group = gPlan)
-t2R        = input.float(2.60, "Цель T2, в R", minval = 0.2, step = 0.1, group = gPlan)
-retestATR  = input.float(0.30, "Лимитка на ретесте: от стопа, ATR", minval = 0, step = 0.05, group = gPlan)
-minRR      = input.float(0.50, "Минимальный R:R до T1", minval = 0, step = 0.05, group = gPlan)
-maxBars    = input.int(12, "Тайм-стоп, баров", minval = 1, group = gPlan)
-cooldown   = input.int(3, "Пауза после сделки, баров", minval = 0, group = gPlan)
-useT2      = input.bool(false, "Половина на T1, остаток на T2 (стоп в безубыток)", group = gPlan)
-
 gCal = "Калибровка"
 calibOn   = input.bool(true, "Считать таблицу калибровки", group = gCal)
 calThr    = input.float(50.0, "Нижний порог для калибровки", minval = 1, maxval = 100, step = 1, group = gCal,
-     tooltip = "Симулятор берёт все сделки от этого скора, чтобы было видно, с какого диапазона начинается эдж. В сигналы и алерты попадают только сделки от порога входа.")
-costTicks = input.float(2.0, "Комиссия и проскальзывание, тиков на сделку", minval = 0, step = 0.5, group = gCal)
+     tooltip = "Отдельный симулятор берёт все сделки от этого скора, чтобы было видно, с какого диапазона начинается эдж. На боевые сигналы, алерты и отчёт он не влияет.")
 
-gV = "Вид"
-showPlan  = input.bool(true, "План сделки на графике", group = gV)
-showComps = input.bool(true, "Таблица компонентов", group = gV)
-showCal   = input.bool(true, "Таблица калибровки", group = gV)
-cLong     = input.color(#0B7A69, "Лонг",  group = gV, inline = "c")
-cShort    = input.color(#B8412F, "Шорт",  group = gV, inline = "c")
-cBrass    = input.color(#A9701C, "Акцент", group = gV, inline = "c")
+gView = "Вид"
+showPlan  = input.bool(true, "Сделки и план на графике", group = gView)
+showBg    = input.bool(true, "Подсветка ARMED / TRIGGER на графике", group = gView)
+showComps = input.bool(true, "Таблица компонентов", group = gView)
+showRep   = input.bool(true, "Отчёт по сигналам", group = gView)
+showCal   = input.bool(true, "Таблица калибровки", group = gView)
+cLong     = input.color(#0B7A69, "Лонг",  group = gView, inline = "c")
+cShort    = input.color(#B8412F, "Шорт",  group = gView, inline = "c")
+cBrass    = input.color(#A9701C, "Акцент", group = gView, inline = "c")
 
 // ── утилиты ────────────────────────────────────────────────────────────────────
 f_clamp(float x, float lo, float hi) => math.max(lo, math.min(hi, x))
@@ -164,7 +202,9 @@ emaLvl = ta.ema(close, levEmaLen)
 // VWAP сессии считаем руками — ta.vwap падает на инструментах без объёма
 var float cumPV = 0.0
 var float cumV  = 0.0
-if timeframe.change("D")
+dayNew = timeframe.change("D")
+
+if dayNew
     cumPV := 0.0
     cumV  := 0.0
 cumPV += hlc3 * vol
@@ -187,6 +227,18 @@ volRat   = atr / math.max(ta.sma(atr, volRegLen), 1e-9)
 // свинги для стопа
 swStopLo = ta.lowest(low, stopLen)
 swStopHi = ta.highest(high, stopLen)
+
+// сессия: вне её новых входов нет; первые skipOpen баров после открытия тоже пропускаем
+tSess   = time(timeframe.period, sessStr, sessTz)
+inSess  = not useSess or not na(tSess)
+sessNew = useSess ? (inSess and not inSess[1]) : dayNew
+var int sessBar = 0
+sessBar := sessNew ? 0 : sessBar + 1
+sessOk  = inSess and sessBar >= skipOpen
+
+var int nDays = 1
+if dayNew and bar_index > 0
+    nDays += 1
 
 // ── компоненты для одной стороны ───────────────────────────────────────────────
 f_dir(int d) =>
@@ -237,9 +289,9 @@ f_dir(int d) =>
 
     // G · режим: против сильного тренда и в разгоне волы скор душится
     against = (d == 1 and trendDir < 0) or (d == -1 and trendDir > 0)
-    gT = against ? f_clamp(1.0 - (er - erLo) / math.max(erHi - erLo, 1e-9), gMin, 1.0) : 1.0
-    gV = f_clamp(1.0 - (volRat - volCalm) / math.max(volWild - volCalm, 1e-9), gMin, 1.0)
-    G  = f_clamp(math.min(gT, gV), gMin, 1.0)
+    gTr = against ? f_clamp(1.0 - (er - erLo) / math.max(erHi - erLo, 1e-9), gMin, 1.0) : 1.0
+    gVo = f_clamp(1.0 - (volRat - volCalm) / math.max(volWild - volCalm, 1e-9), gMin, 1.0)
+    G   = f_clamp(math.min(gTr, gVo), gMin, 1.0)
 
     [S, P, R, I, N, G]
 
@@ -280,125 +332,217 @@ withTrend = (side == 1 and trendDir > 0) or (side == -1 and trendDir < 0)
 playbook  = withTrend ? "TREND_DIP" : er < erLo ? "RANGE_FADE" : "COUNTER_CLIMAX"
 
 // ── план сделки по текущему бару ───────────────────────────────────────────────
-planEntry  = close
 planStop   = side == 1 ? swStopLo - stopATR * atr : swStopHi + stopATR * atr
+planRetest = side == 1 ? planStop + retestATR * atr : planStop - retestATR * atr
+planEntry  = useRetest ? planRetest : close
 planRisk   = math.max(math.abs(planEntry - planStop), syminfo.mintick)
 planT1     = basis
 planT2     = side == 1 ? planEntry + t2R * planRisk : planEntry - t2R * planRisk
 planRR     = (side == 1 ? planT1 - planEntry : planEntry - planT1) / planRisk
-planRetest = side == 1 ? planStop + retestATR * atr : planStop - retestATR * atr
-planSize   = math.round(math.min(100.0, score / math.max(planRisk / atr, 0.1)))
+planCost   = (costTicks * syminfo.mintick + commPct / 100.0 * planEntry) / planRisk
 
-// ── симулятор сделок: он же источник калибровки ────────────────────────────────
-var int   tSide   = 0
-var float tEntry  = na
-var float tStop   = na
-var float tT1     = na
-var float tT2     = na
-var float tRisk   = na
-var float tScore  = na
-var int   tBar    = na
-var bool  tLive   = false
-var bool  tT1done = false
-var int   lastExit = -100000
+// размер: риск в деньгах / риск в пунктах, при желании взвешенный скором
+sizeMult   = scaleBySize ? f_clamp(score / math.max(planRisk / atr, 0.1) / 100.0, 0.1, 1.0) : 1.0
+qtyRaw     = deposit * riskPct / 100.0 * sizeMult / math.max(planRisk * syminfo.pointvalue, 1e-9)
+planQty    = math.max(math.floor(qtyRaw / lotStep + 1e-9) * lotStep, lotStep)
+planRiskM  = planQty * planRisk * syminfo.pointvalue
 
-var array<int>   calN    = array.new_int(6, 0)
-var array<int>   calWin  = array.new_int(6, 0)
-var array<float> calR    = array.new_float(6, 0.0)
-var array<float> calPos  = array.new_float(6, 0.0)
-var array<float> calNeg  = array.new_float(6, 0.0)
-var array<int>   calBars = array.new_int(6, 0)
+// фильтры входа — общие для боевого и калибровочного симулятора
+sideOk  = side == 1 ? useLong : useShort
+barsOk  = not confirmed or barstate.isconfirmed
+costOk  = maxCost <= 0 or planCost <= maxCost
+gateOk  = sideOk and sessOk and barsOk and planRR >= minRR and costOk and not na(atr)
+gateTxt = not sideOk ? "сторона выкл." : not sessOk ? "вне сессии" : planRR < minRR ? "мал R:R" : not costOk ? "издержки" : "ок"
 
-var float cumR  = 0.0
-var float peakR = 0.0
-var float ddR   = 0.0
-var int   liveN = 0
-var int   liveW = 0
-var float liveR = 0.0
-var int   subN  = 0
-var float subRt = 0.0
+// ── симулятор сделок ───────────────────────────────────────────────────────────
+// Считает по барам: при касании стопа и цели на одном баре засчитывает стоп,
+// гэп через стоп исполняет по открытию, частичных исполнений не знает.
+type Trade
+    int   side     = 0
+    float entry
+    float stop
+    float t1
+    float t2
+    float risk
+    float cost     = 0.0
+    float qty
+    float score
+    int   bar
+    bool  t1done   = false
+    bool  filled   = false
+    int   pSide    = 0
+    float pPrice
+    float pStop
+    float pT1
+    float pT2
+    float pQty
+    float pScore
+    int   pBar
+    int   lastExit = -100000
+    int   xSide    = 0
+    int   xBars    = 0
+    float xPx
+
+type Stats
+    int   n     = 0
+    int   win   = 0
+    int   nL    = 0
+    int   nS    = 0
+    int   bars  = 0
+    float sumR  = 0.0
+    float pos   = 0.0
+    float neg   = 0.0
+    float cumR  = 0.0
+    float peakR = 0.0
+    float ddR   = 0.0
+    float cumM  = 0.0
+    float peakM = 0.0
+    float ddM   = 0.0
+
+method enter(Trade t, int dir, float px, float stp, float tp1, float tp2, float q, float sc) =>
+    t.side   := dir
+    t.entry  := px
+    t.stop   := stp
+    t.t1     := tp1
+    t.t2     := tp2
+    t.risk   := math.max(math.abs(px - stp), syminfo.mintick)
+    t.cost   := (costTicks * syminfo.mintick + commPct / 100.0 * px) / t.risk
+    t.qty    := q
+    t.score  := sc
+    t.bar    := bar_index
+    t.t1done := false
+    t
+
+method place(Trade t, int dir, float px, float stp, float tp1, float tp2, float q, float sc) =>
+    t.pSide  := dir
+    t.pPrice := px
+    t.pStop  := stp
+    t.pT1    := tp1
+    t.pT2    := tp2
+    t.pQty   := q
+    t.pScore := sc
+    t.pBar   := bar_index
+    t
+
+// один бар жизни сделки: лимитка, стоп, цели, тайм-стоп, конец сессии.
+// Возвращает результат закрытой на этом баре сделки в R за вычетом издержек, иначе na.
+method advance(Trade t, bool flat) =>
+    float res = na
+    t.filled := false
+    // отложенная лимитка на ретесте
+    if t.pSide != 0 and bar_index > t.pBar
+        bool broken = t.pSide == 1 ? open <= t.pStop  : open >= t.pStop
+        bool touch  = t.pSide == 1 ? low  <= t.pPrice : high >= t.pPrice
+        if flat or broken
+            t.pSide := 0
+        else if touch
+            t.enter(t.pSide, t.pSide == 1 ? math.min(open, t.pPrice) : math.max(open, t.pPrice),
+                 t.pStop, t.pT1, t.pT2, t.pQty, t.pScore)
+            t.pSide  := 0
+            t.filled := true
+        else if bar_index - t.pBar >= retestLife
+            t.pSide := 0
+    // открытая позиция; на баре исполнения лимитки проверяется только стоп
+    if t.side != 0 and (bar_index > t.bar or t.filled)
+        float rr1    = math.abs(t.t1 - t.entry) / t.risk
+        float rr2    = math.abs(t.t2 - t.entry) / t.risk
+        float stopPx = t.side == 1 ? math.min(open, t.stop) : math.max(open, t.stop)
+        float stopR  = (stopPx - t.entry) * t.side / t.risk
+        bool stopHit = t.side == 1 ? low <= t.stop : high >= t.stop
+        bool t1Hit   = not t.filled and (t.side == 1 ? high >= t.t1 : low <= t.t1)
+        bool t2Hit   = not t.filled and (t.side == 1 ? high >= t.t2 : low <= t.t2)
+        float px     = na
+        if flat
+            float mkt = (open - t.entry) * t.side / t.risk
+            res := t.t1done ? 0.5 * rr1 + 0.5 * mkt : mkt
+            px  := open
+        else if stopHit
+            res := t.t1done ? 0.5 * rr1 + 0.5 * stopR : stopR
+            px  := stopPx
+        else if not useT2 and t1Hit
+            res := rr1
+            px  := t.t1
+        else if useT2 and t1Hit and not t.t1done
+            t.t1done := true
+            t.stop   := t.entry
+            if t2Hit
+                res := 0.5 * rr1 + 0.5 * rr2
+                px  := t.t2
+        else if useT2 and t.t1done and t2Hit
+            res := 0.5 * rr1 + 0.5 * rr2
+            px  := t.t2
+        else if bar_index - t.bar >= maxBars
+            float mkt = (close - t.entry) * t.side / t.risk
+            res := t.t1done ? 0.5 * rr1 + 0.5 * mkt : mkt
+            px  := close
+        if not na(res)
+            res        -= t.cost
+            t.xSide    := t.side
+            t.xBars    := bar_index - t.bar
+            t.xPx      := px
+            t.side     := 0
+            t.t1done   := false
+            t.lastExit := bar_index
+    res
+
+method record(Stats s, float r, int bars, int dir, float money) =>
+    s.n     := s.n + 1
+    s.bars  := s.bars + bars
+    s.sumR  := s.sumR + r
+    s.win   := s.win + (r > 0 ? 1 : 0)
+    s.pos   := s.pos + math.max(r, 0.0)
+    s.neg   := s.neg + math.max(-r, 0.0)
+    s.nL    := s.nL + (dir == 1 ? 1 : 0)
+    s.nS    := s.nS + (dir == -1 ? 1 : 0)
+    s.cumR  := s.cumR + r
+    s.peakR := math.max(s.peakR, s.cumR)
+    s.ddR   := math.min(s.ddR, s.cumR - s.peakR)
+    s.cumM  := s.cumM + money
+    s.peakM := math.max(s.peakM, s.cumM)
+    s.ddM   := math.min(s.ddM, s.cumM - s.peakM)
+    s
 
 f_bucket(float sc) => sc < 50 ? 0 : sc < 58 ? 1 : sc < 66 ? 2 : sc < 74 ? 3 : sc < 82 ? 4 : 5
 
-f_rec(float r, int bars, float sc) =>
-    b = f_bucket(sc)
-    array.set(calN,    b, array.get(calN, b) + 1)
-    array.set(calR,    b, array.get(calR, b) + r)
-    array.set(calBars, b, array.get(calBars, b) + bars)
-    if r > 0
-        array.set(calWin, b, array.get(calWin, b) + 1)
-        array.set(calPos, b, array.get(calPos, b) + r)
+var Trade live = Trade.new()   // боевой: только от порога входа
+var Trade cal  = Trade.new()   // калибровочный: всё от нижнего порога
+var Stats rep  = Stats.new()
+var array<Stats> calB = array.new<Stats>()
+if barstate.isfirst
+    for i = 0 to 5
+        calB.push(Stats.new())
+
+forceOut = useSess and flatEnd and not inSess
+
+float liveRes = live.advance(forceOut)
+if not na(liveRes)
+    rep.record(liveRes, live.xBars, live.xSide, liveRes * live.risk * syminfo.pointvalue * live.qty)
+
+float calRes = na
+if calibOn
+    calRes := cal.advance(forceOut)
+if not na(calRes)
+    Stats sb = array.get(calB, f_bucket(cal.score))
+    sb.record(calRes, cal.xBars, cal.xSide, 0.0)
+
+liveCan = live.side == 0 and live.pSide == 0 and na(liveRes) and bar_index - live.lastExit >= cooldown and gateOk and score >= thrEntry
+calCan  = calibOn and cal.side == 0 and cal.pSide == 0 and na(calRes) and bar_index - cal.lastExit >= cooldown and gateOk and score >= calThr
+
+if liveCan
+    if useRetest
+        live.place(side, planEntry, planStop, planT1, planT2, planQty, score)
     else
-        array.set(calNeg, b, array.get(calNeg, b) - r)
-    b
+        live.enter(side, planEntry, planStop, planT1, planT2, planQty, score)
+if calCan
+    if useRetest
+        cal.place(side, planEntry, planStop, planT1, planT2, planQty, score)
+    else
+        cal.enter(side, planEntry, planStop, planT1, planT2, planQty, score)
 
-inTrade = tSide != 0
-barsOk  = not confirmed or barstate.isconfirmed
-effThr  = calibOn ? math.min(calThr, thrEntry) : thrEntry
-
-float exitR    = na
-bool  justOut  = false
-
-if inTrade and bar_index > tBar
-    float rr1  = math.abs(tT1 - tEntry) / tRisk
-    float cst  = costTicks * syminfo.mintick / tRisk
-    bool stopHit = tSide == 1 ? low  <= tStop : high >= tStop
-    bool t1Hit   = tSide == 1 ? high >= tT1   : low  <= tT1
-    bool t2Hit   = tSide == 1 ? high >= tT2   : low  <= tT2
-    bool tmo     = bar_index - tBar >= maxBars
-    float stopR  = (tStop - tEntry) * tSide / tRisk
-    if stopHit
-        exitR := (tT1done ? 0.5 * rr1 + 0.5 * stopR : stopR) - cst
-    else if not useT2 and t1Hit
-        exitR := rr1 - cst
-    else if useT2 and t1Hit and not tT1done
-        tT1done := true
-        tStop   := tEntry
-        if t2Hit
-            exitR := 0.5 * rr1 + 0.5 * t2R - cst
-    else if useT2 and tT1done and t2Hit
-        exitR := 0.5 * rr1 + 0.5 * t2R - cst
-    else if tmo
-        float mkt = (close - tEntry) * tSide / tRisk
-        exitR := (tT1done ? 0.5 * rr1 + 0.5 * mkt : mkt) - cst
-    if not na(exitR)
-        f_rec(exitR, bar_index - tBar, tScore)
-        cumR  += exitR
-        peakR := math.max(peakR, cumR)
-        ddR   := math.min(ddR, cumR - peakR)
-        if tLive
-            liveN += 1
-            liveR += exitR
-            liveW += exitR > 0 ? 1 : 0
-        else
-            subN  += 1
-            subRt += exitR
-        tSide    := 0
-        tT1done  := false
-        lastExit := bar_index
-        justOut  := true
-
-cdOk    = bar_index - lastExit >= cooldown
-canFire = not inTrade and not justOut and cdOk and barsOk and score >= effThr and planRR >= minRR and not na(atr)
-fired   = false
-live    = false
-
-if canFire
-    tSide   := side
-    tEntry  := planEntry
-    tStop   := planStop
-    tT1     := planT1
-    tT2     := planT2
-    tRisk   := planRisk
-    tScore  := score
-    tBar    := bar_index
-    tLive   := score >= thrEntry
-    tT1done := false
-    fired   := true
-    live    := tLive
-
-liveLong  = fired and live and tSide == 1
-liveShort = fired and live and tSide == -1
+fired     = liveCan
+liveLong  = fired and side == 1
+liveShort = fired and side == -1
+armedNow  = state == "ARMED" and state[1] != "ARMED" and sideOk and sessOk
 
 // ── панель скора ───────────────────────────────────────────────────────────────
 scCol = state == "TRIGGER" ? (side == 1 ? cLong : cShort) : state == "ARMED" ? cBrass : color.new(cBrass, 45)
@@ -408,10 +552,10 @@ plot(pot, "Потенциал", color = color.new(cBrass, 60), linewidth = 1, di
 hline(thrEntry, "Порог входа", color = #B8412F, linestyle = hline.style_dashed)
 hline(thrWatch, "Порог наблюдения", color = color.new(color.gray, 40), linestyle = hline.style_dotted)
 hline(0, "0", color = color.new(color.gray, 70))
-plotshape(fired and live ? score : na, "Триггер", shape.circle, location.absolute,
+plotshape(fired ? score : na, "Триггер", shape.circle, location.absolute,
      color = side == 1 ? cLong : cShort, size = size.tiny)
 
-// ── отметки и план на графике ──────────────────────────────────────────────────
+// ── сигналы, сделки и план на графике ──────────────────────────────────────────
 plotshape(liveLong, "Сигнал LONG", shape.triangleup, location.belowbar,
      color = cLong, size = size.small, force_overlay = true)
 plotshape(liveShort, "Сигнал SHORT", shape.triangledown, location.abovebar,
@@ -419,55 +563,39 @@ plotshape(liveShort, "Сигнал SHORT", shape.triangledown, location.abovebar
 plot(basis, "Средняя", color = color.new(color.gray, 25), linewidth = 1,
      style = plot.style_line, force_overlay = true)
 
-var line  lnE  = na
-var line  lnS  = na
-var line  lnT1 = na
-var line  lnT2 = na
-var line  lnRT = na
-var label lbl  = na
-var box   bxR  = na
-var box   bxT  = na
+// уровни каждой сделки остаются на истории — видно, как отработал каждый сигнал
+lvOn = showPlan and (live.side != 0 or not na(liveRes))
+plot(lvOn ? live.entry : na, "Вход", color = color.new(chart.fg_color, 35),
+     style = plot.style_linebr, force_overlay = true)
+plot(lvOn ? live.stop : na, "Стоп", color = cShort, style = plot.style_linebr, force_overlay = true)
+plot(lvOn ? live.t1 : na, "T1", color = cLong, style = plot.style_linebr, force_overlay = true)
+plot(lvOn and useT2 ? live.t2 : na, "T2", color = color.new(cLong, 45),
+     style = plot.style_linebr, force_overlay = true)
+plot(showPlan and live.pSide != 0 ? live.pPrice : na, "Лимитка на ретесте", color = cBrass,
+     style = plot.style_circles, linewidth = 2, force_overlay = true)
+plotshape(showPlan and live.filled ? live.entry : na, "Лимитка исполнена", shape.diamond,
+     location.absolute, color = cBrass, size = size.tiny, force_overlay = true)
+plotshape(showPlan and not na(liveRes) ? live.xPx : na, "Выход", shape.xcross,
+     location.absolute, color = liveRes > 0 ? cLong : cShort, size = size.tiny, force_overlay = true)
 
-if showPlan and fired and live
-    line.delete(lnE)
-    line.delete(lnS)
-    line.delete(lnT1)
-    line.delete(lnT2)
-    line.delete(lnRT)
+bgcolor(showBg and state == "TRIGGER" ? color.new(side == 1 ? cLong : cShort, 88) :
+     showBg and state == "ARMED" ? color.new(cBrass, 93) : na, title = "Состояние", force_overlay = true)
+
+var label lbl = na
+if showPlan and fired
     label.delete(lbl)
-    box.delete(bxR)
-    box.delete(bxT)
-    cSide = tSide == 1 ? cLong : cShort
-    lnE  := line.new(bar_index, tEntry, bar_index + 1, tEntry, color = color.new(cSide, 0), width = 2, force_overlay = true)
-    lnS  := line.new(bar_index, tStop,  bar_index + 1, tStop,  color = cShort, style = line.style_dashed, force_overlay = true)
-    lnT1 := line.new(bar_index, tT1,    bar_index + 1, tT1,    color = cLong,  style = line.style_dashed, force_overlay = true)
-    lnT2 := line.new(bar_index, tT2,    bar_index + 1, tT2,    color = cLong,  style = line.style_dotted, force_overlay = true)
-    lnRT := line.new(bar_index, planRetest, bar_index + 1, planRetest, color = cBrass, style = line.style_dotted, force_overlay = true)
-    bxR  := box.new(bar_index, math.max(tEntry, tStop), bar_index + 1, math.min(tEntry, tStop),
-             border_color = color.new(cShort, 70), bgcolor = color.new(cShort, 88), force_overlay = true)
-    bxT  := box.new(bar_index, math.max(tEntry, tT2), bar_index + 1, math.min(tEntry, tT2),
-             border_color = color.new(cLong, 70), bgcolor = color.new(cLong, 90), force_overlay = true)
-    lbl  := label.new(bar_index, tSide == 1 ? low : high,
-             text = str.format("{0} · {1}\nскор {2,number,#.#}  ·  R:R {3,number,#.##}  ·  размер {4,number,#}%\nвход {5}   стоп {6}\nT1 {7}   T2 {8}\nлимитка на ретесте {9}   ATR {10}",
-                 tSide == 1 ? "LONG" : "SHORT", playbook, tScore, planRR, planSize,
-                 str.tostring(tEntry, format.mintick), str.tostring(tStop, format.mintick),
-                 str.tostring(tT1, format.mintick), str.tostring(tT2, format.mintick),
-                 str.tostring(planRetest, format.mintick), str.tostring(atr, format.mintick)),
-             style = tSide == 1 ? label.style_label_up : label.style_label_down,
-             color = color.new(cSide, 88), textcolor = chart.fg_color, size = size.small,
-             textalign = text.align_left, force_overlay = true)
-
-if showPlan and inTrade and not na(lnE)
-    line.set_x2(lnE,  bar_index + 1)
-    line.set_x2(lnS,  bar_index + 1)
-    line.set_x2(lnT1, bar_index + 1)
-    line.set_x2(lnT2, bar_index + 1)
-    line.set_x2(lnRT, bar_index + 1)
-    box.set_right(bxR, bar_index + 1)
-    box.set_right(bxT, bar_index + 1)
+    lbl := label.new(bar_index, side == 1 ? low : high,
+         text = str.format("{0} · {1} · скор {2,number,#.#}\n{3} {4}   стоп {5}\nT1 {6}   T2 {7}   R:R {8,number,#.##}\nразмер {9} · риск {10,number,#} {11} · издержки {12,number,#}% R",
+             side == 1 ? "LONG" : "SHORT", playbook, score,
+             useRetest ? "лимитка" : "вход", str.tostring(planEntry, format.mintick), str.tostring(planStop, format.mintick),
+             str.tostring(planT1, format.mintick), str.tostring(planT2, format.mintick), planRR,
+             str.tostring(planQty, "#.########"), planRiskM, syminfo.currency, planCost * 100),
+         style = side == 1 ? label.style_label_up : label.style_label_down,
+         color = color.new(side == 1 ? cLong : cShort, 88), textcolor = chart.fg_color, size = size.small,
+         textalign = text.align_left, force_overlay = true)
 
 // ── таблица компонентов ────────────────────────────────────────────────────────
-var table tC = table.new(position.top_right, 4, 13, border_width = 1)
+var table tC = table.new(position.top_right, 4, 14, border_width = 1)
 
 f_row(table t, int r, string k, string v, string w, string c, color bg) =>
     table.cell(t, 0, r, k, text_color = chart.fg_color, text_size = size.tiny, text_halign = text.align_left,  bgcolor = bg)
@@ -491,11 +619,37 @@ if showComps and barstate.islast
     f_row(tC, 9, "СКОР", str.tostring(score, "#.0"), "", state, color.new(state == "TRIGGER" ? (side == 1 ? cLong : cShort) : cBrass, 80))
     f_row(tC, 10, "Сторона / плейбук", side == 1 ? "LONG" : "SHORT", "", playbook, na)
     f_row(tC, 11, "Потенциал", str.tostring(pot, "#.0"), "", pot >= thrEntry ? "готов" : "—", na)
-    f_row(tC, 12, "Позиция", inTrade ? (tSide == 1 ? "LONG" : "SHORT") : "—", "",
-         inTrade ? str.tostring(bar_index - tBar) + " бар" : "", na)
+    f_row(tC, 12, "R:R · издержки", str.tostring(planRR, "#.00"), str.tostring(planCost * 100, "#") + "% R", gateTxt,
+         gateTxt != "ок" ? color.new(cShort, 85) : na)
+    f_row(tC, 13, "Позиция",
+         live.side != 0 ? (live.side == 1 ? "LONG" : "SHORT") : live.pSide != 0 ? "лимитка" : "—",
+         live.side != 0 ? str.tostring(live.qty, "#.########") : "",
+         live.side != 0 ? str.tostring(bar_index - live.bar) + " бар" : live.pSide != 0 ? str.tostring(live.pPrice, format.mintick) : "", na)
+
+// ── отчёт по боевым сигналам ───────────────────────────────────────────────────
+var table tR = table.new(position.bottom_left, 2, 10, border_width = 1)
+
+f_rrow(table t, int r, string k, string v, color bg) =>
+    table.cell(t, 0, r, k, text_color = chart.fg_color, text_size = size.tiny, text_halign = text.align_left,  bgcolor = bg)
+    table.cell(t, 1, r, v, text_color = chart.fg_color, text_size = size.tiny, text_halign = text.align_right, bgcolor = bg)
+    r
+
+if showRep and barstate.islast
+    bgH = color.new(color.gray, 85)
+    float pf = rep.neg > 0 ? rep.pos / rep.neg : na
+    f_rrow(tR, 0, "ОТЧЁТ · скор ≥ " + str.tostring(thrEntry, "#.#"), useRetest ? "лимитка" : "по рынку", bgH)
+    f_rrow(tR, 1, "Сделок · лонг / шорт", str.tostring(rep.n) + " · " + str.tostring(rep.nL) + " / " + str.tostring(rep.nS), na)
+    f_rrow(tR, 2, "Винрейт", rep.n > 0 ? str.tostring(100.0 * rep.win / rep.n, "#.0") + "%" : "—", na)
+    f_rrow(tR, 3, "Профит-фактор", na(pf) ? "—" : str.tostring(pf, "#.00"), na)
+    f_rrow(tR, 4, "Средний R", rep.n > 0 ? str.tostring(rep.sumR / rep.n, "#.000") : "—", na)
+    f_rrow(tR, 5, "Итого R", str.tostring(rep.cumR, "#.0"), na)
+    f_rrow(tR, 6, "Итого, " + syminfo.currency, str.tostring(rep.cumM, "#"), na)
+    f_rrow(tR, 7, "Макс. просадка", str.tostring(rep.ddR, "#.0") + "R · " + str.tostring(rep.ddM, "#"), na)
+    f_rrow(tR, 8, "Сделок в день", str.tostring(rep.n * 1.0 / nDays, "#.0"), na)
+    f_rrow(tR, 9, "Баров в сделке", rep.n > 0 ? str.tostring(rep.bars * 1.0 / rep.n, "#.0") : "—", na)
 
 // ── таблица калибровки ─────────────────────────────────────────────────────────
-var table tK = table.new(position.bottom_right, 6, 9, border_width = 1)
+var table tK = table.new(position.bottom_right, 6, 8, border_width = 1)
 
 f_krow(table t, int r, string a, string b, string c, string d, string e, string f, color bg) =>
     table.cell(t, 0, r, a, text_color = chart.fg_color, text_size = size.tiny, text_halign = text.align_left,  bgcolor = bg)
@@ -510,40 +664,51 @@ if calibOn and showCal and barstate.islast
     bgH = color.new(color.gray, 85)
     f_krow(tK, 0, "ДИАПАЗОН", "СДЕЛОК", "ВИНРЕЙТ", "ПФ", "СРЕДНИЙ R", "БАРОВ", bgH)
     names = array.from("< 50", "50-57", "58-65", "66-73", "74-81", "82-100")
-    bestR = -1e9
+    float bestR = -1e9
     for i = 0 to 5
-        if array.get(calN, i) > 0
-            bestR := math.max(bestR, array.get(calR, i) / array.get(calN, i))
+        Stats b = array.get(calB, i)
+        if b.n > 0
+            bestR := math.max(bestR, b.sumR / b.n)
+    int   totN    = 0
+    int   totW    = 0
+    int   totBars = 0
+    float totR    = 0.0
+    float totPos  = 0.0
+    float totNeg  = 0.0
     for i = 0 to 5
-        int n = array.get(calN, i)
-        float r = n > 0 ? array.get(calR, i) / n : na
-        float wr = n > 0 ? 100.0 * array.get(calWin, i) / n : na
-        float pf = array.get(calNeg, i) > 0 ? array.get(calPos, i) / array.get(calNeg, i) : na
-        float bs = n > 0 ? array.get(calBars, i) * 1.0 / n : na
-        bool hot = n > 0 and not na(r) and math.abs(r - bestR) < 1e-9
+        Stats b = array.get(calB, i)
+        int n = b.n
+        float r  = n > 0 ? b.sumR / n : na
+        float pf = b.neg > 0 ? b.pos / b.neg : na
+        bool hot = n > 0 and math.abs(r - bestR) < 1e-9
         f_krow(tK, i + 1, array.get(names, i), str.tostring(n),
-             n > 0 ? str.tostring(wr, "#.0") + "%" : "—",
+             n > 0 ? str.tostring(100.0 * b.win / n, "#.0") + "%" : "—",
              na(pf) ? "—" : str.tostring(pf, "#.00"),
              n > 0 ? str.tostring(r, "#.000") : "—",
-             n > 0 ? str.tostring(bs, "#.0") : "—",
+             n > 0 ? str.tostring(b.bars * 1.0 / n, "#.0") : "—",
              hot ? color.new(cBrass, 82) : na)
-    f_krow(tK, 7, "≥ порога " + str.tostring(thrEntry, "#"), str.tostring(liveN),
-         liveN > 0 ? str.tostring(100.0 * liveW / liveN, "#.0") + "%" : "—", "",
-         liveN > 0 ? str.tostring(liveR / liveN, "#.000") : "—", "", bgH)
-    f_krow(tK, 8, "всего R " + str.tostring(cumR, "#.0"), "просадка",
-         str.tostring(ddR, "#.00") + "R", "ниже порога",
-         str.tostring(subN) + " сд.",
-         subN > 0 ? str.tostring(subRt / subN, "#.000") : "—", bgH)
+        totN    += n
+        totW    += b.win
+        totBars += b.bars
+        totR    += b.sumR
+        totPos  += b.pos
+        totNeg  += b.neg
+    f_krow(tK, 7, "всего от " + str.tostring(calThr, "#"), str.tostring(totN),
+         totN > 0 ? str.tostring(100.0 * totW / totN, "#.0") + "%" : "—",
+         totNeg > 0 ? str.tostring(totPos / totNeg, "#.00") : "—",
+         totN > 0 ? str.tostring(totR / totN, "#.000") : "—",
+         totN > 0 ? str.tostring(totBars * 1.0 / totN, "#.0") : "—", bgH)
 
 // ── алерты ─────────────────────────────────────────────────────────────────────
 alertcondition(liveLong,  "SPRING · LONG",  "SPRING: сигнал LONG")
 alertcondition(liveShort, "SPRING · SHORT", "SPRING: сигнал SHORT")
-alertcondition(fired and live, "SPRING · любой сигнал", "SPRING: сигнал на вход")
+alertcondition(fired, "SPRING · любой сигнал", "SPRING: сигнал на вход")
+alertcondition(armedNow, "SPRING · ARMED", "SPRING: контекст готов, идеальный возврат дал бы вход")
 
-if fired and live
-    alert(str.format("SPRING {0} {1} · {2} · скор {3,number,#.#} | вход {4} стоп {5} T1 {6} T2 {7} | R:R {8,number,#.##} размер {9,number,#}% | лимитка на ретесте {10}",
-         syminfo.ticker, timeframe.period, tSide == 1 ? "LONG" : "SHORT", tScore,
-         str.tostring(tEntry, format.mintick), str.tostring(tStop, format.mintick),
-         str.tostring(tT1, format.mintick), str.tostring(tT2, format.mintick),
-         planRR, planSize, str.tostring(planRetest, format.mintick)),
-         alert.freq_once_per_bar_close)
+if fired
+    alert(str.format("SPRING {0} {1} · {2} · скор {3,number,#.#} | {4} {5} стоп {6} T1 {7} T2 {8} | R:R {9,number,#.##} | размер {10}, риск {11,number,#} {12}",
+         syminfo.ticker, timeframe.period, side == 1 ? "LONG" : "SHORT", score,
+         useRetest ? "лимитка" : "вход", str.tostring(planEntry, format.mintick), str.tostring(planStop, format.mintick),
+         str.tostring(planT1, format.mintick), str.tostring(planT2, format.mintick),
+         planRR, str.tostring(planQty, "#.########"), planRiskM, syminfo.currency),
+         confirmed ? alert.freq_once_per_bar_close : alert.freq_once_per_bar)
