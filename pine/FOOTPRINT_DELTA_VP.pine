@@ -1,0 +1,506 @@
+//@version=6
+// ============================================================================
+//  Кластеры (footprint) + Дельта + Профиль объёма в одном индикаторе
+// ----------------------------------------------------------------------------
+//  1. Кластеры: на каждом ценовом уровне свечи показан объём продаж × покупок.
+//     Цвет ячейки = дельта уровня, рамка = перевес (дисбаланс),
+//     жёлтая рамка = уровень максимального объёма внутри свечи.
+//  2. Дельта (покупки − продажи) под каждой свечой и отметка «A» там, где
+//     большой объём с сильной дельтой НЕ сдвинул цену (поглощение):
+//       ▲ зелёная: продавцы давили, цена устояла, значит покупатель поглощает
+//       ▼ красная: покупатели давили, цена не пошла, значит продавец поглощает
+//  3. Профиль объёма периода (день / неделя / месяц): POC, VAH, VAL,
+//     уровни прошлого периода и непротестированные POC (nPOC) до касания.
+//
+//  Данные: TradingView не отдаёт скриптам ленту сделок с bid/ask, поэтому
+//  покупки и продажи оцениваются по младшему таймфрейму
+//  (request.security_lower_tf). Чем мельче ТФ данных, тем точнее картина.
+// ============================================================================
+indicator("Кластеры + Дельта + Профиль объёма", shorttitle = "FP·Δ·VP", overlay = true, max_boxes_count = 500, max_labels_count = 500, max_lines_count = 500)
+
+// ───────────────────────────── Константы ─────────────────────────────
+const string M_BAR   = "Направление бара"
+const string M_RANGE = "Положение закрытия"
+const string FP_BA   = "Продажи × Покупки"
+const string FP_D    = "Дельта"
+const string FP_V    = "Объём"
+const string P_AUTO  = "Авто"
+const string P_D     = "День"
+const string P_W     = "Неделя"
+const string P_M     = "Месяц"
+const string POS_R   = "Справа от цены"
+const string POS_S   = "От начала периода"
+
+const string G_DATA = "Данные"
+const string G_FP   = "Кластеры (footprint)"
+const string G_D    = "Дельта и поглощение"
+const string G_VP   = "Профиль объёма"
+const string G_LV   = "Уровни прошлых периодов"
+const string G_VIS  = "Оформление"
+
+// ───────────────────────────── Настройки ─────────────────────────────
+bool   ltfAutoIn = input.bool(true, "Авто-выбор ТФ данных", group = G_DATA, tooltip = "Секундный график → 1S, внутридневной → 1 мин, дневной → 5 мин, старше → 1 час.")
+string ltfIn     = input.timeframe("1", "ТФ данных (если не авто)", group = G_DATA, tooltip = "Должен быть меньше или равен ТФ графика. Чем мельче, тем точнее кластеры, но меньше истории.")
+string modeIn    = input.string(M_BAR, "Как делить объём на покупки/продажи", options = [M_BAR, M_RANGE], group = G_DATA, tooltip = "Направление бара: весь объём внутрибарового бара идёт в покупки, если он закрылся выше открытия, иначе в продажи (для доджи сравнение с прошлым закрытием).\nПоложение закрытия: доля покупок = (close − low) / (high − low).")
+
+bool   showFP    = input.bool(true, "Показывать кластеры", group = G_FP)
+int    fpBarsIn  = input.int(12, "Сколько последних свечей", minval = 1, maxval = 60, group = G_FP, tooltip = "Ограничено лимитом 500 прямоугольников на скрипт: при большом числе строк количество свечей автоматически уменьшится.")
+int    fpRowsIn  = input.int(10, "Строк (уровней) в свече", minval = 2, maxval = 30, group = G_FP)
+string fpModeIn  = input.string(FP_BA, "Текст в ячейке", options = [FP_BA, FP_D, FP_V], group = G_FP)
+float  imbIn     = input.float(3.0, "Перевес: покупки/продажи ≥, раз", minval = 1.1, step = 0.1, group = G_FP)
+bool   showCPoc  = input.bool(true, "Выделять уровень макс. объёма свечи", group = G_FP)
+
+bool   showDLbl  = input.bool(true, "Дельта под свечами", group = G_D)
+int    dBarsIn   = input.int(60, "На скольких последних свечах", minval = 1, maxval = 400, group = G_D)
+bool   showAbs   = input.bool(true, "Отмечать поглощение", group = G_D)
+float  absVolIn  = input.float(2.0, "Объём ≥ среднего ×", minval = 1.0, step = 0.1, group = G_D)
+int    absLenIn  = input.int(20, "Период среднего объёма", minval = 2, group = G_D)
+float  absBodyIn = input.float(0.35, "Тело свечи ≤ ATR ×", minval = 0.05, step = 0.05, group = G_D)
+float  absDPctIn = input.float(15.0, "|Дельта| ≥ % от объёма свечи", minval = 0.0, maxval = 100.0, group = G_D)
+bool   absBgIn   = input.bool(true, "Подсвечивать фон свечи поглощения", group = G_D)
+
+bool   showVP    = input.bool(true, "Профиль текущего периода", group = G_VP)
+string vpPerIn   = input.string(P_AUTO, "Период профиля", options = [P_AUTO, P_D, P_W, P_M], group = G_VP, tooltip = "Авто: до 1 часа → день, 2–4 часа → неделя, дневной → месяц, старше → год.")
+float  vaPctIn   = input.float(70.0, "Value Area, %", minval = 10.0, maxval = 99.0, group = G_VP)
+int    vpRowsIn  = input.int(50, "Строк в профиле", minval = 10, maxval = 100, group = G_VP)
+int    vpWidthIn = input.int(40, "Ширина профиля, баров", minval = 5, maxval = 200, group = G_VP)
+string vpPosIn   = input.string(POS_R, "Где рисовать профиль", options = [POS_R, POS_S], group = G_VP)
+int    vpOffIn   = input.int(3, "Отступ от последней свечи, баров", minval = 0, maxval = 100, group = G_VP)
+int    vpResIn   = input.int(100, "Точность: ячеек на дневной ATR", minval = 20, maxval = 1000, group = G_VP, tooltip = "Больше = точнее POC/VA, но медленнее расчёт.")
+bool   showDevP  = input.bool(false, "Линия развивающегося POC", group = G_VP)
+
+bool   showPrevL = input.bool(true, "POC / VAH / VAL прошлого периода", group = G_LV, tooltip = "Рисуются на весь следующий период.")
+bool   showNaked = input.bool(true, "Непротестированные POC (nPOC) до касания", group = G_LV, tooltip = "POC старых периодов, до которых цена ещё не доходила, тянутся вправо до первого касания.")
+int    maxNaked  = input.int(10, "Макс. nPOC одновременно", minval = 1, maxval = 50, group = G_LV)
+int    keepHist  = input.int(30, "Хранить отработанных линий", minval = 0, maxval = 200, group = G_LV)
+bool   showLbl   = input.bool(true, "Подписи уровней", group = G_LV)
+
+color  buyCol    = input.color(#26a69a, "Покупки", group = G_VIS, inline = "c1")
+color  sellCol   = input.color(#ef5350, "Продажи", group = G_VIS, inline = "c1")
+color  pocCol    = input.color(#ffb300, "POC", group = G_VIS, inline = "c2")
+color  vaCol     = input.color(#7e57c2, "VAH / VAL", group = G_VIS, inline = "c2")
+bool   showTbl   = input.bool(true, "Таблица-сводка", group = G_VIS)
+
+// ───────────────────────────── Типы ─────────────────────────────
+// Профиль периода: объём по ценовым ячейкам (ключ = floor(цена / шаг))
+type Profile
+    map<int, float> vol
+    map<int, float> buy
+    float step
+    int   pocKey
+    float pocVol
+    int   startBar
+    float totVol
+    float totDelta
+
+// POC прошлого периода (становится nPOC, если его не коснулись)
+type Lvl
+    float price
+    line  ln
+    int   born
+    bool  touched
+
+// Прямоугольники кластеров одной свечи
+type FPBar
+    array<box> boxes
+
+// ───────────────────────────── Функции ─────────────────────────────
+fmtVol(float x) =>
+    float a = math.abs(x)
+    string s = a >= 1e9 ? str.tostring(a / 1e9, "#.##") + "B" : a >= 1e6 ? str.tostring(a / 1e6, "#.##") + "M" : a >= 1e3 ? str.tostring(a / 1e3, "#.#") + "K" : a >= 10 ? str.tostring(a, "#") : str.tostring(a, "#.###")
+    (x < 0 ? "-" : "") + s
+
+fmtSigned(float x) =>
+    (x > 0 ? "+" : "") + fmtVol(x)
+
+ceilTick(float x) =>
+    math.ceil(x / syminfo.mintick - 1e-9) * syminfo.mintick
+
+// Делит объём внутрибарового бара на покупки и продажи → [покупки, продажи]
+splitVol(float o, float h, float l, float c, float v, float prevC, string mode) =>
+    float bv = 0.0
+    if mode == M_RANGE and h > l
+        bv := v * (c - l) / (h - l)
+    else if c > o
+        bv := v
+    else if c < o
+        bv := 0.0
+    else if not na(prevC) and c > prevC
+        bv := v
+    else if not na(prevC) and c < prevC
+        bv := 0.0
+    else
+        bv := v * 0.5
+    [bv, v - bv]
+
+// Раскладывает объём диапазона [lo, hi] по строкам кластера свечи
+addRows(array<float> rb, array<float> rs, float base, float step, int rows, float lo, float hi, float bv, float sv) =>
+    float top = base + rows * step
+    float l   = math.max(base, math.min(lo, hi))
+    float h   = math.min(top, math.max(lo, hi))
+    int   rL  = math.max(0, math.min(rows - 1, int(math.floor((l - base) / step + 1e-9))))
+    int   rH  = math.max(0, math.min(rows - 1, int(math.floor((h - base) / step - 1e-9))))
+    if h - l <= 0 or rH <= rL
+        rb.set(rL, rb.get(rL) + bv)
+        rs.set(rL, rs.get(rL) + sv)
+    else
+        float rng = h - l
+        for r = rL to rH
+            float ov = math.min(h, base + (r + 1) * step) - math.max(l, base + r * step)
+            if ov > 0
+                rb.set(r, rb.get(r) + bv * ov / rng)
+                rs.set(r, rs.get(r) + sv * ov / rng)
+
+newProfile(float step) =>
+    Profile.new(vol = map.new<int, float>(), buy = map.new<int, float>(), step = step, pocKey = na, pocVol = 0.0, startBar = bar_index, totVol = 0.0, totDelta = 0.0)
+
+method addCell(Profile p, int k, float v, float bv) =>
+    float nv = nz(p.vol.get(k)) + v
+    p.vol.put(k, nv)
+    p.buy.put(k, nz(p.buy.get(k)) + bv)
+    if nv > p.pocVol
+        p.pocVol := nv
+        p.pocKey := k
+
+// Раскладывает объём диапазона [lo, hi] по ячейкам профиля
+method addRange(Profile p, float lo, float hi, float bv, float sv) =>
+    float v = bv + sv
+    if v > 0 and p.step > 0
+        float l  = math.min(lo, hi)
+        float h  = math.max(lo, hi)
+        int   kL = int(math.floor(l / p.step))
+        int   kH = int(math.floor(h / p.step))
+        if h - l <= 0 or kH <= kL
+            p.addCell(kL, v, bv)
+        else if kH - kL > 3000
+            p.addCell(int(math.floor((l + h) / 2 / p.step)), v, bv)
+        else
+            float rng = h - l
+            for k = kL to kH
+                float ov = math.min(h, (k + 1) * p.step) - math.max(l, k * p.step)
+                if ov > 0
+                    p.addCell(k, v * ov / rng, bv * ov / rng)
+        p.totVol   := p.totVol + v
+        p.totDelta := p.totDelta + bv - sv
+
+// POC и Value Area профиля → [poc, vah, val]
+method valueArea(Profile p, float pct) =>
+    float poc = na
+    float vah = na
+    float val = na
+    if p.vol.size() > 0 and not na(p.pocKey)
+        array<int> keys = p.vol.keys()
+        int minK = int(keys.min())
+        int maxK = int(keys.max())
+        int n    = maxK - minK + 1
+        poc := (p.pocKey + 0.5) * p.step
+        if n <= 20000
+            array<float> vols = array.new<float>(n, 0.0)
+            float total = 0.0
+            for k in keys
+                float vk = p.vol.get(k)
+                vols.set(k - minK, vk)
+                total += vk
+            int   lo     = p.pocKey - minK
+            int   hi     = lo
+            float acc    = vols.get(lo)
+            float target = total * pct / 100.0
+            while acc < target and (lo > 0 or hi < n - 1)
+                float up = -1.0
+                if hi < n - 1
+                    up := vols.get(hi + 1)
+                float dn = -1.0
+                if lo > 0
+                    dn := vols.get(lo - 1)
+                if up >= dn
+                    hi  += 1
+                    acc += up
+                else
+                    lo  -= 1
+                    acc += dn
+            vah := (minK + hi + 1) * p.step
+            val := (minK + lo) * p.step
+    [poc, vah, val]
+
+calcStep(float atrDay, float atrBar, int res) =>
+    float base = not na(atrDay) and atrDay > 0 ? atrDay : not na(atrBar) and atrBar > 0 ? atrBar * 20 : close * 0.02
+    math.max(syminfo.mintick, math.round(base / res / syminfo.mintick) * syminfo.mintick)
+
+setRow(table t, int r, string k, string v, color c) =>
+    table.cell(t, 0, r, k, text_color = chart.fg_color, text_size = size.small, text_halign = text.align_left)
+    table.cell(t, 1, r, v, text_color = c, text_size = size.small, text_halign = text.align_right)
+
+// ───────────────────────────── Таймфреймы ─────────────────────────────
+string ltf = ltfAutoIn ? (timeframe.isseconds ? "1S" : timeframe.isintraday ? "1" : timeframe.isdaily ? "5" : "60") : ltfIn
+
+string vpTf = switch vpPerIn
+    P_D => "D"
+    P_W => "W"
+    P_M => "M"
+    => timeframe.isintraday and timeframe.in_seconds() <= 3600 ? "D" : timeframe.isintraday ? "W" : timeframe.isdaily ? "M" : "12M"
+
+if barstate.isfirst and timeframe.in_seconds(ltf) > timeframe.in_seconds()
+    runtime.error("ТФ данных (" + ltf + ") должен быть меньше или равен ТФ графика.")
+
+// Бюджет прямоугольников: профиль (2 на строку) + кластеры
+int vpBoxBudget = showVP ? 2 * vpRowsIn : 0
+int fpBarsEff   = math.max(1, math.min(fpBarsIn, int(math.floor(float(490 - vpBoxBudget) / fpRowsIn))))
+
+// ───────────────────────────── Данные ─────────────────────────────
+[iO, iH, iL, iC, iV] = request.security_lower_tf(syminfo.tickerid, ltf, [open, high, low, close, volume])
+float atrD = request.security(syminfo.tickerid, "D", ta.atr(14)[1], lookahead = barmerge.lookahead_on)
+float atrC = ta.atr(14)
+
+// ───────────────────────────── Состояние ─────────────────────────────
+var Profile      prof      = na
+var int          periodNo  = 0
+var float        lastIC    = na
+var array<Lvl>   pocLvls   = array.new<Lvl>()
+var line         vahLn     = na
+var line         valLn     = na
+var array<line>  histLines = array.new<line>()
+var array<FPBar> fpQ       = array.new<FPBar>()
+var array<label> dLbls     = array.new<label>()
+var array<box>   vpBoxes   = array.new<box>()
+var array<line>  vpLines   = array.new<line>()
+var array<label> vpLbls    = array.new<label>()
+var table        tbl       = table.new(position.top_right, 2, 8, bgcolor = color.new(chart.bg_color, 10), frame_color = color.new(chart.fg_color, 80), frame_width = 1)
+
+// ───────────────────────────── Смена периода ─────────────────────────────
+bool newPeriod = timeframe.change(vpTf)
+if na(prof) or newPeriod
+    if not na(prof) and prof.vol.size() > 0
+        [pPoc, pVah, pVal] = prof.valueArea(vaPctIn)
+        periodNo += 1
+        if not na(vahLn)
+            vahLn.set_x2(bar_index - 1)
+            valLn.set_x2(bar_index - 1)
+            histLines.push(vahLn)
+            histLines.push(valLn)
+            vahLn := na
+            valLn := na
+        if showPrevL
+            vahLn := line.new(bar_index, pVah, bar_index, pVah, color = vaCol, style = line.style_dashed)
+            valLn := line.new(bar_index, pVal, bar_index, pVal, color = vaCol, style = line.style_dashed)
+        if showPrevL or showNaked
+            line pl = line.new(bar_index, pPoc, bar_index, pPoc, color = pocCol, width = showPrevL ? 2 : 1, style = showPrevL ? line.style_solid : line.style_dashed)
+            pocLvls.push(Lvl.new(pPoc, pl, periodNo, false))
+    prof := newProfile(calcStep(atrD, atrC, vpResIn))
+
+// ───────────────────────────── Разбор внутрибаровых данных ─────────────────────────────
+int  nI       = iC.size()
+bool fpActive = showFP and bar_index > last_bar_index - fpBarsEff
+
+float        fpStep = na
+float        fpBase = na
+int          fpRows = 0
+array<float> rowB   = na
+array<float> rowS   = na
+if fpActive
+    fpStep := math.max(syminfo.mintick, ceilTick((high - low) / math.max(1, fpRowsIn - 1)))
+    fpBase := math.floor(low / fpStep + 1e-9) * fpStep
+    fpRows := math.max(1, math.min(fpRowsIn, int(math.floor(high / fpStep + 1e-9)) - int(math.floor(low / fpStep + 1e-9)) + 1))
+    rowB   := array.new<float>(fpRows, 0.0)
+    rowS   := array.new<float>(fpRows, 0.0)
+
+float barBuy  = 0.0
+float barSell = 0.0
+int   cnt     = nI > 0 ? nI : 1
+for i = 0 to cnt - 1
+    // Нет внутрибаров (старая история) → берём саму свечу
+    float o = open
+    float h = high
+    float l = low
+    float c = close
+    float v = nz(volume)
+    if nI > 0
+        o := iO.get(i)
+        h := iH.get(i)
+        l := iL.get(i)
+        c := iC.get(i)
+        v := nz(iV.get(i))
+    [bv, sv] = splitVol(o, h, l, c, v, lastIC, modeIn)
+    lastIC  := c
+    barBuy  += bv
+    barSell += sv
+    prof.addRange(l, h, bv, sv)
+    if fpActive
+        addRows(rowB, rowS, fpBase, fpStep, fpRows, l, h, bv, sv)
+
+float barVol   = barBuy + barSell
+float barDelta = barBuy - barSell
+
+// ───────────────────────────── Кластеры ─────────────────────────────
+if fpActive and fpRows > 0
+    int   dt      = timeframe.in_seconds() * 1000
+    int   xL      = time - int(dt * 0.45)
+    int   xR      = time + int(dt * 0.45)
+    float maxAbsD = 0.0
+    float maxTv   = 0.0
+    int   pocRow  = -1
+    for r = 0 to fpRows - 1
+        float tvr = rowB.get(r) + rowS.get(r)
+        maxAbsD := math.max(maxAbsD, math.abs(rowB.get(r) - rowS.get(r)))
+        if tvr > maxTv
+            maxTv  := tvr
+            pocRow := r
+    FPBar fb = FPBar.new(array.new<box>())
+    for r = 0 to fpRows - 1
+        float bR = rowB.get(r)
+        float sR = rowS.get(r)
+        float tR = bR + sR
+        if tR > 0
+            float  dR    = bR - sR
+            float  inten = maxAbsD > 0 ? math.abs(dR) / maxAbsD : 0.0
+            color  bg    = color.new(dR >= 0 ? buyCol : sellCol, 85 - 55 * inten)
+            bool   big   = tR >= 0.1 * maxTv
+            bool   imbB  = big and bR > 0 and bR >= imbIn * sR
+            bool   imbS  = big and sR > 0 and sR >= imbIn * bR
+            bool   isP   = showCPoc and r == pocRow
+            color  bc    = isP ? pocCol : imbB ? buyCol : imbS ? sellCol : color(na)
+            string txt   = fpModeIn == FP_D ? fmtSigned(dR) : fpModeIn == FP_V ? fmtVol(tR) : fmtVol(sR) + " × " + fmtVol(bR)
+            fb.boxes.push(box.new(xL, fpBase + (r + 1) * fpStep, xR, fpBase + r * fpStep, border_color = bc, border_width = isP ? 2 : 1, xloc = xloc.bar_time, bgcolor = bg, text = txt, text_size = size.auto, text_color = chart.fg_color))
+    fpQ.push(fb)
+    while fpQ.size() > fpBarsEff
+        FPBar oldFb = fpQ.shift()
+        for ob in oldFb.boxes
+            ob.delete()
+
+// ───────────────────────────── Дельта ─────────────────────────────
+if showDLbl and barVol > 0 and bar_index > last_bar_index - dBarsIn
+    dLbls.push(label.new(bar_index, low, fmtSigned(barDelta), yloc = yloc.belowbar, style = label.style_none, textcolor = barDelta >= 0 ? buyCol : sellCol, size = size.small))
+    while dLbls.size() > dBarsIn
+        dLbls.shift().delete()
+
+// ───────────────────────────── Поглощение ─────────────────────────────
+float volAvg    = ta.sma(barVol, absLenIn)
+bool  volSpike  = not na(volAvg) and barVol > 0 and barVol >= absVolIn * volAvg
+bool  stall     = not na(atrC) and math.abs(close - open) <= absBodyIn * atrC
+bool  dStrong   = barVol > 0 and math.abs(barDelta) >= absDPctIn / 100.0 * barVol
+bool  bullAbs   = showAbs and volSpike and dStrong and barDelta < 0 and (stall or close > open)
+bool  bearAbs   = showAbs and volSpike and dStrong and barDelta > 0 and (stall or close < open)
+
+plotshape(bullAbs, "Поглощение продаж (бычье)", shape.triangleup, location.abovebar, buyCol, size = size.small, text = "A", textcolor = buyCol)
+plotshape(bearAbs, "Поглощение покупок (медвежье)", shape.triangledown, location.abovebar, sellCol, size = size.small, text = "A", textcolor = sellCol)
+bgcolor(absBgIn and bullAbs ? color.new(buyCol, 88) : absBgIn and bearAbs ? color.new(sellCol, 88) : na, title = "Фон поглощения")
+
+// ───────────────────────────── Уровни прошлых периодов ─────────────────────────────
+bool nakedHit = false
+if not na(vahLn)
+    vahLn.set_x2(bar_index)
+    valLn.set_x2(bar_index)
+if pocLvls.size() > 0
+    int nakedCnt = 0
+    for i = pocLvls.size() - 1 to 0
+        Lvl  lv   = pocLvls.get(i)
+        bool hit  = high >= lv.price and low <= lv.price
+        bool done = false
+        if lv.born == periodNo
+            // POC прошлого периода: ведём весь текущий период
+            lv.ln.set_x2(bar_index)
+            if hit
+                lv.touched := true
+                done := not showPrevL
+        else if not showNaked or lv.touched
+            lv.ln.set_x2(bar_index - 1)
+            done := true
+        else
+            // nPOC: тянем вправо до первого касания
+            nakedCnt += 1
+            lv.ln.set_style(line.style_dashed)
+            lv.ln.set_width(1)
+            lv.ln.set_x2(bar_index)
+            if hit
+                lv.touched := true
+                nakedHit   := true
+                done       := true
+            else if nakedCnt > maxNaked
+                done := true
+        if done
+            histLines.push(lv.ln)
+            pocLvls.remove(i)
+while histLines.size() > keepHist
+    histLines.shift().delete()
+
+// ───────────────────────────── Развивающийся POC ─────────────────────────────
+float devPoc = na(prof.pocKey) ? na : (prof.pocKey + 0.5) * prof.step
+plot(showDevP ? devPoc : na, "Развивающийся POC", color = color.new(pocCol, 30), style = plot.style_stepline)
+
+// ───────────────────────────── Алерты ─────────────────────────────
+alertcondition(bullAbs, "Поглощение продаж", "Большие продажи не сдвинули цену вниз (покупатель поглощает) — {{ticker}} {{interval}}")
+alertcondition(bearAbs, "Поглощение покупок", "Большие покупки не сдвинули цену вверх (продавец поглощает) — {{ticker}} {{interval}}")
+alertcondition(nakedHit, "Касание nPOC", "Цена дошла до непротестированного POC — {{ticker}} {{interval}}")
+
+// ───────────────────────────── Профиль, подписи, таблица (последний бар) ─────────────────────────────
+if barstate.islast
+    for b0 in vpBoxes
+        b0.delete()
+    vpBoxes.clear()
+    for l0 in vpLines
+        l0.delete()
+    vpLines.clear()
+    for t0 in vpLbls
+        t0.delete()
+    vpLbls.clear()
+
+    [cPoc, cVah, cVal] = prof.valueArea(vaPctIn)
+    int xRight = showVP and vpPosIn == POS_R ? bar_index + vpOffIn + vpWidthIn + 1 : bar_index + 3
+    int xStart = math.max(prof.startBar, bar_index - 4900)
+
+    if showVP and prof.vol.size() > 0
+        array<int> ks   = prof.vol.keys()
+        int        minK = int(ks.min())
+        int        maxK = int(ks.max())
+        int        grp  = math.max(1, int(math.ceil(float(maxK - minK + 1) / vpRowsIn)))
+        int        nR   = int(math.floor(float(maxK - minK) / grp)) + 1
+        array<float> rv  = array.new<float>(nR, 0.0)
+        array<float> rbv = array.new<float>(nR, 0.0)
+        for [k, vk] in prof.vol
+            int ri = math.min(nR - 1, int(math.floor(float(k - minK) / grp)))
+            rv.set(ri, rv.get(ri) + vk)
+            rbv.set(ri, rbv.get(ri) + nz(prof.buy.get(k)))
+        float maxRv = rv.max()
+        int   x0    = vpPosIn == POS_R ? bar_index + vpOffIn : xStart
+        for r = 0 to nR - 1
+            float vr = rv.get(r)
+            if vr > 0 and maxRv > 0
+                float yB = (minK + r * grp) * prof.step
+                float yT = (minK + (r + 1) * grp) * prof.step
+                float yM = (yB + yT) / 2
+                int   tr = yM <= cVah and yM >= cVal ? 30 : 70
+                int   w  = math.max(1, int(math.round(vr / maxRv * vpWidthIn)))
+                int   wB = math.max(0, math.min(w, int(math.round(w * rbv.get(r) / vr))))
+                int   wS = w - wB
+                if wS > 0
+                    vpBoxes.push(box.new(x0, yT, x0 + wS, yB, border_color = color(na), bgcolor = color.new(sellCol, tr)))
+                if wB > 0
+                    vpBoxes.push(box.new(x0 + wS, yT, x0 + w, yB, border_color = color(na), bgcolor = color.new(buyCol, tr)))
+        vpLines.push(line.new(xStart, cPoc, xRight, cPoc, color = pocCol, width = 2))
+        vpLines.push(line.new(xStart, cVah, xRight, cVah, color = vaCol, style = line.style_dotted))
+        vpLines.push(line.new(xStart, cVal, xRight, cVal, color = vaCol, style = line.style_dotted))
+        if showLbl
+            vpLbls.push(label.new(xRight, cPoc, "POC " + str.tostring(cPoc, format.mintick), style = label.style_label_left, color = color(na), textcolor = pocCol, size = size.small))
+            vpLbls.push(label.new(xRight, cVah, "VAH " + str.tostring(cVah, format.mintick), style = label.style_label_left, color = color(na), textcolor = vaCol, size = size.small))
+            vpLbls.push(label.new(xRight, cVal, "VAL " + str.tostring(cVal, format.mintick), style = label.style_label_left, color = color(na), textcolor = vaCol, size = size.small))
+
+    for lv in pocLvls
+        lv.ln.set_x2(xRight)
+        if showLbl
+            string tag = lv.born == periodNo ? "POC пред. " : "nPOC "
+            vpLbls.push(label.new(xRight, lv.price, tag + str.tostring(lv.price, format.mintick), style = label.style_label_left, color = color(na), textcolor = pocCol, size = size.small))
+    if not na(vahLn)
+        vahLn.set_x2(xRight)
+        valLn.set_x2(xRight)
+        if showLbl
+            vpLbls.push(label.new(xRight, vahLn.get_y1(), "VAH пред.", style = label.style_label_left, color = color(na), textcolor = vaCol, size = size.small))
+            vpLbls.push(label.new(xRight, valLn.get_y1(), "VAL пред.", style = label.style_label_left, color = color(na), textcolor = vaCol, size = size.small))
+
+    if showTbl
+        setRow(tbl, 0, "Данные", prof.totVol > 0 ? "ТФ " + ltf + (nI > 0 ? "" : " (нет внутрибаров)") : "нет объёма", chart.fg_color)
+        setRow(tbl, 1, "Δ свечи", fmtSigned(barDelta), barDelta >= 0 ? buyCol : sellCol)
+        setRow(tbl, 2, "Объём свечи", fmtVol(barVol), chart.fg_color)
+        setRow(tbl, 3, "Δ периода", fmtSigned(prof.totDelta), prof.totDelta >= 0 ? buyCol : sellCol)
+        setRow(tbl, 4, "Объём периода", fmtVol(prof.totVol), chart.fg_color)
+        setRow(tbl, 5, "POC", str.tostring(cPoc, format.mintick), pocCol)
+        setRow(tbl, 6, "VAH", str.tostring(cVah, format.mintick), vaCol)
+        setRow(tbl, 7, "VAL", str.tostring(cVal, format.mintick), vaCol)
