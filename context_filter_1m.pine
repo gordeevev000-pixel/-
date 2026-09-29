@@ -1,0 +1,596 @@
+//@version=6
+// ═════════════════════════════════════════════════════════════════════════════
+//  КОНТЕКСТ-ФИЛЬТР 1m · мультиинструментальный фильтр контекста для скальпинга
+//  Отвечает только на вопрос «что сейчас искать»:
+//      зелёный фон — ищу лонги · красный — ищу шорты · серый — не торговать.
+//  Стрелок и сигналов входа нет намеренно.
+//  Без перерисовки: HTF берётся только с закрытых баров HTF, состояние
+//  фиксируется только на закрытии бара графика.
+// ═════════════════════════════════════════════════════════════════════════════
+indicator("Контекст-фильтр 1m", shorttitle = "CTX-1m", overlay = true)
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 0. КОНСТАНТЫ: группы инструментов, типы объёма, режимы, названия блоков
+// ─────────────────────────────────────────────────────────────────────────────
+const string G_AUTO   = "Авто"
+const string G_METALS = "Металлы"
+const string G_OIL    = "Нефть"
+const string G_GAS    = "Природный газ"
+const string G_COCOA  = "Какао"
+const string G_FX     = "Валюты"
+const string G_IDX_US = "Индексы США"
+const string G_IDX_EU = "Индексы Европы"
+const string G_IDX_UK = "Индексы Великобритании"
+const string G_IDX_JP = "Индексы Японии"
+const string G_OTHER  = "Прочее"
+
+const string I_GOLD     = "Золото"
+const string I_SILVER   = "Серебро"
+const string I_OTHERMET = "Прочие металлы"
+
+const string V_AUTO = "Авто"
+const string V_REAL = "Реальный"
+const string V_TICK = "Тиковый"
+const string V_NONE = "Нет объёма"
+
+const string M_TREND  = "По тренду"
+const string M_BOUNCE = "Отбои от уровней"
+const string M_BOTH   = "Оба"
+
+const string U_TICKS = "Тики"
+const string U_PCT   = "Проценты"
+
+const string FX_LIST = "|USD|EUR|GBP|JPY|CHF|AUD|NZD|CAD|SEK|NOK|DKK|MXN|ZAR|TRY|PLN|HUF|CZK|SGD|HKD|CNH|"
+
+const string GR_PRESET = "1. Инструмент и пресет"
+const string GR_OV     = "2. Переопределение пресета (галочка = своё значение)"
+const string GR_COST   = "3. Издержки"
+const string GR_HTF    = "4. Тренд старшего ТФ"
+const string GR_VWAP   = "5. Сессионный VWAP"
+const string GR_RVOL   = "6. Относительный объём (RVOL)"
+const string GR_DELTA  = "7. Дельта объёма"
+const string GR_LOGIC  = "8. Логика состояния"
+const string GR_VIS    = "9. Отображение"
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 1. НАСТРОЙКИ: инструмент и пресет
+// ─────────────────────────────────────────────────────────────────────────────
+string grpIn     = input.string(G_AUTO, "Группа инструмента", options = [G_AUTO, G_METALS, G_OIL, G_GAS, G_COCOA, G_FX, G_IDX_US, G_IDX_EU, G_IDX_UK, G_IDX_JP, G_OTHER], group = GR_PRESET, tooltip = "Авто — определяется по syminfo (корень фьючерса, тикер CFD, тип инструмента). Если определилось неверно — выберите группу вручную.")
+string volTypeIn = input.string(V_AUTO, "Тип объёма", options = [V_AUTO, V_REAL, V_TICK, V_NONE], group = GR_PRESET, tooltip = "Авто: фьючерсы/акции = реальный биржевой объём; CFD, форекс, индексы = тиковый; нет данных = без объёма (VWAP превращается в TWAP, RVOL и дельта отключаются).")
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 2. НАСТРОЙКИ: ручное переопределение любого параметра пресета
+// ─────────────────────────────────────────────────────────────────────────────
+bool   ovSess   = input.bool(false, "Активные часы", inline = "ses", group = GR_OV)
+string sessIn   = input.string("0930-1600", "", inline = "ses", group = GR_OV, tooltip = "Формат ЧЧММ-ЧЧММ, несколько окон через запятую: 0300-0530,0820-1130. 0000-0000 = круглосуточно.")
+bool   ovTz     = input.bool(false, "Часовой пояс", inline = "tz", group = GR_OV)
+string tzIn     = input.string("America/New_York", "", options = ["America/New_York", "America/Chicago", "Europe/London", "Europe/Berlin", "Europe/Moscow", "Asia/Tokyo", "Asia/Hong_Kong", "UTC"], inline = "tz", group = GR_OV, tooltip = "Часовой пояс для активных часов и сброса VWAP.")
+bool   ovReset  = input.bool(false, "Сброс VWAP, ЧЧММ", inline = "rst", group = GR_OV)
+string resetIn  = input.string("1800", "", inline = "rst", group = GR_OV, tooltip = "Начало торгового дня для VWAP в выбранном часовом поясе: 1800, 0930, 0000 и т.п.")
+bool   ovAtr    = input.bool(false, "Мин. ATR / издержки", inline = "atr", group = GR_OV)
+float  atrThrIn = input.float(4.0, "", minval = 0.0, step = 0.5, inline = "atr", group = GR_OV)
+bool   ovRvol   = input.bool(false, "Мин. RVOL", inline = "rv", group = GR_OV)
+float  rvThrIn  = input.float(1.0, "", minval = 0.0, step = 0.1, inline = "rv", group = GR_OV)
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 3. НАСТРОЙКИ: издержки (тики или проценты)
+// ─────────────────────────────────────────────────────────────────────────────
+bool   useCost  = input.bool(true, "Включить фильтр издержек", group = GR_COST)
+bool   ovCost   = input.bool(false, "Задать издержки вручную", group = GR_COST, tooltip = "Выключено — используются издержки пресета в % от цены (грубая оценка). Для точной работы включите и введите цифры своего брокера.")
+string costUnit = input.string(U_TICKS, "Единицы издержек", options = [U_TICKS, U_PCT], group = GR_COST, tooltip = "Тики: 1 тик = минимальный шаг цены инструмента (syminfo.mintick). Проценты: % от текущей цены.")
+float  spreadIn = input.float(1.0, "Спред", minval = 0.0, step = 0.1, group = GR_COST, tooltip = "Типичный спред в выбранных единицах. Спред платится один раз за полный круг.")
+float  commIn   = input.float(0.0, "Комиссия + проскальзывание (круг)", minval = 0.0, step = 0.1, group = GR_COST, tooltip = "Комиссия за вход и выход вместе, плюс ожидаемое проскальзывание. Перевод $ в тики: сумма $ / стоимость тика $.")
+int    atrLen   = input.int(14, "Период ATR", minval = 1, group = GR_COST)
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 4. НАСТРОЙКИ: тренд старшего таймфрейма
+// ─────────────────────────────────────────────────────────────────────────────
+string htfTf    = input.timeframe("15", "Старший таймфрейм", group = GR_HTF)
+int    emaLen   = input.int(50, "Период EMA", minval = 2, group = GR_HTF)
+int    slopeLen = input.int(3, "Наклон: за сколько баров HTF", minval = 1, group = GR_HTF)
+float  slopeThr = input.float(0.04, "Порог наклона (ATR HTF за бар)", minval = 0.0, step = 0.01, group = GR_HTF, tooltip = "Наклон = изменение EMA за бар HTF, делённое на ATR(14) HTF. Выше порога — тренд вверх, ниже минус порога — вниз, между — флэт.")
+bool   needSide = input.bool(false, "Цена должна быть по ту же сторону EMA HTF", group = GR_HTF)
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 5. НАСТРОЙКИ: сессионный VWAP
+// ─────────────────────────────────────────────────────────────────────────────
+float vwSrc    = input.source(hlc3, "Источник цены", group = GR_VWAP)
+bool  showVwap = input.bool(true, "Показывать VWAP", group = GR_VWAP)
+bool  showB1   = input.bool(true, "Показывать полосы ±1σ", group = GR_VWAP)
+bool  showB2   = input.bool(true, "Показывать полосы ±2σ", group = GR_VWAP)
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 6. НАСТРОЙКИ: RVOL по времени суток
+// ─────────────────────────────────────────────────────────────────────────────
+bool useRvol   = input.bool(true, "Включить фильтр RVOL", group = GR_RVOL)
+int  rvDays    = input.int(10, "Дней в среднем", minval = 1, maxval = 60, group = GR_RVOL)
+int  rvMinDays = input.int(3, "Минимум дней истории для расчёта", minval = 1, maxval = 60, group = GR_RVOL, tooltip = "Пока в этой минуте суток накоплено меньше дней, RVOL = «прогрев» и фильтр не применяется.")
+int  rvSmooth  = input.int(5, "Сглаживание, баров", minval = 1, group = GR_RVOL, tooltip = "RVOL = сумма объёма за N баров / сумма средних объёмов этих же минут. 1 = только текущий бар.")
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 7. НАСТРОЙКИ: дельта объёма (только при реальном объёме)
+// ─────────────────────────────────────────────────────────────────────────────
+bool useDelta = input.bool(false, "Дельта как подтверждение направления", group = GR_DELTA, tooltip = "Работает только при реальном биржевом объёме. Это оценка по OHLCV (положение закрытия в диапазоне свечи), а не настоящая дельта bid/ask.")
+int  deltaLen = input.int(10, "Окно дельты, баров", minval = 1, group = GR_DELTA)
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 8. НАСТРОЙКИ: логика состояния
+// ─────────────────────────────────────────────────────────────────────────────
+string modeIn      = input.string(M_BOTH, "Стиль торговли", options = [M_TREND, M_BOUNCE, M_BOTH], group = GR_LOGIC)
+bool   useSess     = input.bool(true, "Включить фильтр сессии", group = GR_LOGIC)
+bool   noChase     = input.bool(true, "Не искать лонги выше +2σ и шорты ниже −2σ", group = GR_LOGIC)
+bool   flatMR      = input.bool(true, "Во флэте HTF: отбои от крайних полос к VWAP", group = GR_LOGIC, tooltip = "Только для режимов «Отбои» и «Оба».")
+float  mrK         = input.float(2.0, "Крайняя полоса во флэте, σ", minval = 0.5, step = 0.25, group = GR_LOGIC)
+int    confirmBars = input.int(2, "Баров подтверждения лонг/шорт", minval = 1, group = GR_LOGIC, tooltip = "Новое направленное состояние должно продержаться N закрытых баров. Переход в серый происходит сразу.")
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 9. НАСТРОЙКИ: отображение
+// ─────────────────────────────────────────────────────────────────────────────
+int    bgTransp  = input.int(85, "Прозрачность фона", minval = 0, maxval = 100, group = GR_VIS)
+color  colLong   = input.color(color.green, "Цвет: лонги", group = GR_VIS)
+color  colShort  = input.color(color.red, "Цвет: шорты", group = GR_VIS)
+color  colFlat   = input.color(color.gray, "Цвет: не торговать", group = GR_VIS)
+color  colVwap   = input.color(#ff9800, "Цвет VWAP", group = GR_VIS)
+bool   showTbl   = input.bool(true, "Показывать таблицу", group = GR_VIS)
+string tblPosIn  = input.string("Сверху справа", "Положение таблицы", options = ["Сверху справа", "Сверху слева", "Снизу справа", "Снизу слева"], group = GR_VIS)
+string tblSizeIn = input.string("Мелкий", "Размер текста", options = ["Крошечный", "Мелкий", "Обычный"], group = GR_VIS)
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 10. ПРОВЕРКА ТАЙМФРЕЙМОВ
+// ─────────────────────────────────────────────────────────────────────────────
+if timeframe.isseconds or not timeframe.isintraday
+    runtime.error("Контекст-фильтр рассчитан на внутридневные ТФ от 1 минуты.")
+if timeframe.in_seconds(htfTf) < timeframe.in_seconds()
+    runtime.error("Старший ТФ должен быть не меньше ТФ графика.")
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 11. ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
+// ─────────────────────────────────────────────────────────────────────────────
+// Точное совпадение значения со списком вида "|A|B|C|"
+f_inList(string list, string v) =>
+    str.contains(list, "|" + v + "|")
+
+// Содержит ли строка хотя бы один ключ из списка "A,B,C"
+f_hasAny(string s, string csv) =>
+    bool found = false
+    for k in str.split(csv, ",")
+        if str.length(k) > 0 and str.contains(s, k)
+            found := true
+            break
+    found
+
+// "ЧЧММ" -> минуты от полуночи
+f_hhmm(string s) =>
+    float v  = str.tonumber(s)
+    float vv = na(v) ? 0.0 : v
+    int   hh = math.floor(vv / 100)
+    int   mm = math.floor(vv - hh * 100)
+    math.max(0, math.min(1439, hh * 60 + mm))
+
+// Число -> текст, na -> "н/д"
+f_fmt(float x, string f) =>
+    na(x) ? "н/д" : str.tostring(x, f)
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 12. АВТООПРЕДЕЛЕНИЕ ИНСТРУМЕНТА ПО syminfo
+//     Фьючерсы — по корню (syminfo.root), CFD/спот — по подстроке тикера.
+//     Порядок важен: сырьё проверяется раньше валют (XAUUSD похож на пару).
+// ─────────────────────────────────────────────────────────────────────────────
+f_detect() =>
+    string tk    = str.upper(syminfo.ticker)
+    string rt    = str.upper(syminfo.root)
+    string ex    = str.upper(syminfo.prefix)
+    string ty    = syminfo.type
+    bool   fut   = ty == "futures"
+    bool   nonEq = ty != "stock" and ty != "fund" and ty != "dr"
+    string g     = G_OTHER
+    string ins   = syminfo.ticker
+    if (fut and f_inList("|GC|MGC|QO|1OZ|", rt)) or (nonEq and f_hasAny(tk, "XAU,GOLD"))
+        g   := G_METALS
+        ins := I_GOLD
+    else if (fut and f_inList("|SI|SIL|QI|SIC|", rt)) or (nonEq and f_hasAny(tk, "XAG,SILVER"))
+        g   := G_METALS
+        ins := I_SILVER
+    else if (fut and f_inList("|HG|MHG|PL|PA|", rt)) or (nonEq and f_hasAny(tk, "XPT,XPD,COPPER,PLATINUM,PALLADIUM"))
+        g   := G_METALS
+        ins := I_OTHERMET
+    else if (fut and f_inList("|NG|QG|MNG|NN|", rt)) or (nonEq and f_hasAny(tk, "NATGAS,NGAS,XNG,NATURALGAS"))
+        g   := G_GAS
+        ins := "Природный газ"
+    else if (fut and f_inList("|CL|MCL|QM|BZ|BRN|WBS|", rt)) or (nonEq and f_hasAny(tk, "OIL,WTI,BRENT,XTI,XBR,CRUDE"))
+        g   := G_OIL
+        ins := "Нефть"
+    else if (fut and (rt == "CC" or (rt == "C" and str.contains(ex, "ICE")))) or (nonEq and str.contains(tk, "COCOA"))
+        g   := G_COCOA
+        ins := "Какао"
+    else if (fut and f_inList("|ES|MES|NQ|MNQ|YM|MYM|RTY|M2K|EMD|", rt)) or (nonEq and f_hasAny(tk, "US500,SPX,SP500,USA500,NAS100,NDX,US100,USTEC,NASDAQ,US30,USA30,DJI,DJ30,WS30,US2000,RUT,RUSSELL"))
+        g := G_IDX_US
+    else if (fut and f_inList("|FDAX|FDXM|FDXS|FESX|FCE|", rt)) or (nonEq and f_hasAny(tk, "GER40,GER30,DE40,DE30,DAX,DEU40,EU50,EUSTX,STOXX,SX5E,ESTX,FRA40,CAC"))
+        g := G_IDX_EU
+    else if (fut and rt == "Z" and str.contains(ex, "ICE")) or (nonEq and f_hasAny(tk, "UK100,FTSE,GB100,UKX"))
+        g := G_IDX_UK
+    else if (fut and f_inList("|NKD|NIY|NK|MNK|", rt)) or (nonEq and f_hasAny(tk, "JP225,JPN225,NIKKEI,N225,NI225,NK225"))
+        g := G_IDX_JP
+    else if ty == "forex" or (fut and f_inList("|6E|6B|6J|6A|6C|6S|6N|6M|M6E|M6B|M6A|E7|J7|", rt)) or (str.length(tk) == 6 and f_inList(FX_LIST, str.upper(syminfo.basecurrency)) and f_inList(FX_LIST, str.upper(syminfo.currency)))
+        g := G_FX
+    else if ty == "index"
+        string z = syminfo.timezone
+        g := str.startswith(z, "America") ? G_IDX_US : z == "Europe/London" ? G_IDX_UK : str.startswith(z, "Europe") ? G_IDX_EU : z == "Asia/Tokyo" ? G_IDX_JP : G_OTHER
+    [g, ins]
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 13. ПРЕСЕТЫ ГРУПП
+//     [активные часы, часовой пояс, сброс VWAP, издержки %, мин. ATR/изд., мин. RVOL]
+// ─────────────────────────────────────────────────────────────────────────────
+f_preset(string g, string inst) =>
+    string sess = "0000-0000"
+    string tz   = syminfo.timezone
+    string rst  = "0000"
+    float  cost = 0.02
+    float  atrT = 3.0
+    float  rvT  = 0.8
+    if g == G_METALS
+        sess := "0300-0530,0820-1130"
+        tz   := "America/New_York"
+        rst  := "1800"
+        cost := inst == I_SILVER ? 0.035 : inst == I_OTHERMET ? 0.04 : 0.012
+        atrT := 3.5
+        rvT  := 0.9
+    else if g == G_OIL
+        sess := "0830-1430"
+        tz   := "America/New_York"
+        rst  := "1800"
+        cost := 0.04
+        atrT := 4.0
+        rvT  := 0.9
+    else if g == G_GAS
+        sess := "0900-1430"
+        tz   := "America/New_York"
+        rst  := "1800"
+        cost := 0.10
+        atrT := 3.0
+        rvT  := 1.0
+    else if g == G_COCOA
+        sess := "0800-1330"
+        tz   := "America/New_York"
+        rst  := "0445"
+        cost := 0.10
+        atrT := 3.0
+        rvT  := 1.2
+    else if g == G_FX
+        sess := "0300-1200"
+        tz   := "America/New_York"
+        rst  := "1700"
+        cost := 0.008
+        atrT := 2.5
+        rvT  := 0.8
+    else if g == G_IDX_US
+        sess := "0930-1600"
+        tz   := "America/New_York"
+        rst  := "0930"
+        cost := 0.01
+        atrT := 5.0
+        rvT  := 0.8
+    else if g == G_IDX_EU
+        sess := "0900-1730"
+        tz   := "Europe/Berlin"
+        rst  := "0900"
+        cost := 0.012
+        atrT := 4.0
+        rvT  := 0.8
+    else if g == G_IDX_UK
+        sess := "0800-1630"
+        tz   := "Europe/London"
+        rst  := "0800"
+        cost := 0.015
+        atrT := 4.0
+        rvT  := 0.8
+    else if g == G_IDX_JP
+        sess := "0900-1130,1230-1530"
+        tz   := "Asia/Tokyo"
+        rst  := "0900"
+        cost := 0.015
+        atrT := 4.0
+        rvT  := 0.8
+    [sess, tz, rst, cost, atrT, rvT]
+
+// Определяем инструмент один раз, на первом баре
+var string grpAuto  = G_OTHER
+var string instAuto = ""
+if barstate.isfirst
+    [g0, i0] = f_detect()
+    grpAuto  := g0
+    instAuto := i0
+
+string grp  = grpIn == G_AUTO ? grpAuto : grpIn
+string inst = grpIn == G_AUTO or grpIn == grpAuto ? instAuto : syminfo.ticker
+
+// Итоговые параметры: пресет, если нет ручного переопределения
+[pSess, pTz, pRst, pCost, pAtrT, pRvT] = f_preset(grp, inst)
+string sessUse   = ovSess ? sessIn : pSess
+string tzUse     = ovTz ? tzIn : pTz
+int    resetMin  = f_hhmm(ovReset ? resetIn : pRst)
+float  atrThrUse = ovAtr ? atrThrIn : pAtrT
+float  rvThrUse  = ovRvol ? rvThrIn : pRvT
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 14. ФИЛЬТР СЕССИИ: активные часы инструмента
+// ─────────────────────────────────────────────────────────────────────────────
+bool inSess = not na(time(timeframe.period, sessUse, tzUse))
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 15. ТИП ОБЪЁМА: реальный биржевой / тиковый / нет
+// ─────────────────────────────────────────────────────────────────────────────
+var int volBarsSeen = 0
+if nz(volume) > 0
+    volBarsSeen += 1
+bool   exchType = syminfo.type == "futures" or syminfo.type == "stock" or syminfo.type == "fund" or syminfo.type == "dr"
+string vtAuto   = volBarsSeen == 0 ? V_NONE : exchType and syminfo.volumetype != "tick" ? V_REAL : V_TICK
+string volType  = volTypeIn == V_AUTO ? vtAuto : volTypeIn
+bool   realVol  = volType == V_REAL
+bool   anyVol   = volType != V_NONE
+float  volNow   = nz(volume)
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 16. СЕССИОННЫЙ VWAP С ПОЛОСАМИ ±1σ / ±2σ
+//     Новый торговый день = пересечение времени сброса в часовом поясе пресета
+//     (минуты, сдвинутые на точку сброса, «перескакивают» через ноль)
+//     или разрыв данных больше суток (выходные).
+// ─────────────────────────────────────────────────────────────────────────────
+int  tMin    = hour(time, tzUse) * 60 + minute(time, tzUse)
+int  shifted = (tMin - resetMin + 1440) % 1440
+bool newDay  = na(shifted[1]) or shifted < shifted[1] or (time - time[1]) >= 86400000
+
+float w = anyVol ? volNow : 1.0
+var float sW   = 0.0
+var float sPW  = 0.0
+var float sP2W = 0.0
+if newDay
+    sW   := 0.0
+    sPW  := 0.0
+    sP2W := 0.0
+sW   += w
+sPW  += vwSrc * w
+sP2W += vwSrc * vwSrc * w
+
+float vw      = sW > 0 ? sPW / sW : na
+float vwSd    = sW > 0 ? math.sqrt(math.max(sP2W / sW - vw * vw, 0.0)) : na
+bool  bandsOk = not na(vw) and not na(vwSd) and vwSd > 0
+float up1     = bandsOk ? vw + vwSd : na
+float up2     = bandsOk ? vw + 2 * vwSd : na
+float dn1     = bandsOk ? vw - vwSd : na
+float dn2     = bandsOk ? vw - 2 * vwSd : na
+float zPos    = bandsOk ? (close - vw) / vwSd : na
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 17. RVOL: объём против среднего объёма в эту же минуту суток за N дней
+//     Кольцевой буфер: 1440 минут × N дней. Среднее берётся ДО записи
+//     текущего бара, поэтому текущий бар в своё среднее не попадает.
+// ─────────────────────────────────────────────────────────────────────────────
+var array<float> rvBuf = array.new_float(1440 * rvDays, na)
+var array<int>   rvCnt = array.new_int(1440, 0)
+int   slot    = hour(time, syminfo.timezone) * 60 + minute(time, syminfo.timezone)
+int   cSlot   = array.get(rvCnt, slot)
+int   nSlot   = math.min(cSlot, rvDays)
+float sumSlot = 0.0
+if nSlot > 0
+    for i = 0 to nSlot - 1
+        sumSlot += array.get(rvBuf, slot * rvDays + i)
+float avgVol = anyVol and nSlot >= math.min(rvMinDays, rvDays) ? sumSlot / nSlot : na
+if anyVol
+    array.set(rvBuf, slot * rvDays + cSlot % rvDays, volNow)
+    array.set(rvCnt, slot, cSlot + 1)
+float sumAvg = math.sum(avgVol, rvSmooth)
+float rvol   = sumAvg > 0 ? math.sum(volNow, rvSmooth) / sumAvg : na
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 18. ФИЛЬТР ИЗДЕРЖЕК: ATR / (спред + комиссия за круг)
+// ─────────────────────────────────────────────────────────────────────────────
+float atrV      = ta.atr(atrLen)
+float costManual = costUnit == U_TICKS ? (spreadIn + commIn) * syminfo.mintick : close * (spreadIn + commIn) / 100.0
+float costPrice = ovCost ? costManual : close * pCost / 100.0
+float atrCost   = costPrice > 0 ? atrV / costPrice : na
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 19. ДЕЛЬТА ОБЪЁМА (только при реальном объёме)
+//     Оценка: объём × (2·close − high − low) / (high − low).
+//     +объём при закрытии на хае, −объём при закрытии на лое.
+// ─────────────────────────────────────────────────────────────────────────────
+float rng  = high - low
+float dBar = realVol and rng > 0 ? volNow * (2 * close - high - low) / rng : 0.0
+var float dCum = 0.0
+if newDay
+    dCum := 0.0
+dCum += dBar
+float dSum = math.sum(dBar, deltaLen)
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 20. ТРЕНД СТАРШЕГО ТФ БЕЗ ПЕРЕРИСОВКИ
+//     request.security с lookahead_off. Значение HTF фиксируется только
+//     на первом баре нового периода HTF, и берётся значение с последнего
+//     бара предыдущего периода ([1]), то есть с полностью закрытого бара HTF.
+//     История и реалтайм ведут себя одинаково.
+// ─────────────────────────────────────────────────────────────────────────────
+f_htf() =>
+    float e = ta.ema(close, emaLen)
+    float a = ta.atr(14)
+    float s = a > 0 ? (e - e[slopeLen]) / (slopeLen * a) : na
+    [e, s]
+
+[htfEmaLive, htfSlopeLive] = request.security(syminfo.tickerid, htfTf, f_htf(), lookahead = barmerge.lookahead_off)
+
+bool htfNewBar = timeframe.change(htfTf)
+var float htfEma   = na
+var float htfSlope = na
+if htfNewBar
+    htfEma   := htfEmaLive[1]
+    htfSlope := htfSlopeLive[1]
+
+int trendRaw = na(htfSlope) ? 0 : htfSlope > slopeThr ? 1 : htfSlope < -slopeThr ? -1 : 0
+int trendDir = needSide and not na(htfEma) and ((trendRaw == 1 and close < htfEma) or (trendRaw == -1 and close > htfEma)) ? 0 : trendRaw
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 21. НАПРАВЛЕННЫЙ КОНТЕКСТ ОТНОСИТЕЛЬНО VWAP
+//     По тренду: тренд HTF + цена по нужную сторону VWAP.
+//     Отбои: откат в зону [−2σ; +1σ] по тренду, во флэте — крайние полосы.
+//     Оба: объединение двух режимов.
+// ─────────────────────────────────────────────────────────────────────────────
+bool trendL  = bandsOk and trendDir == 1 and close > vw and (not noChase or close <= up2)
+bool trendS  = bandsOk and trendDir == -1 and close < vw and (not noChase or close >= dn2)
+bool bounceL = bandsOk and ((trendDir == 1 and close >= dn2 and close <= up1) or (flatMR and trendDir == 0 and close <= vw - mrK * vwSd))
+bool bounceS = bandsOk and ((trendDir == -1 and close <= up2 and close >= dn1) or (flatMR and trendDir == 0 and close >= vw + mrK * vwSd))
+bool wantL   = modeIn == M_TREND ? trendL : modeIn == M_BOUNCE ? bounceL : (trendL or bounceL)
+bool wantS   = modeIn == M_TREND ? trendS : modeIn == M_BOUNCE ? bounceS : (trendS or bounceS)
+
+bool deltaActive = useDelta and realVol
+bool dOkL        = not deltaActive or dSum > 0
+bool dOkS        = not deltaActive or dSum < 0
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 22. ФИЛЬТРЫ ЗАПРЕТА И СЫРОЕ СОСТОЯНИЕ (1 лонги / −1 шорты / 0 не торговать)
+// ─────────────────────────────────────────────────────────────────────────────
+bool fSess = not useSess or inSess
+bool fCost = not useCost or na(atrCost) or atrCost >= atrThrUse
+bool fRvol = not useRvol or not anyVol or na(rvol) or rvol >= rvThrUse
+bool fData = not na(htfSlope) and bandsOk
+bool allOk = fSess and fCost and fRvol and fData
+
+int rawState = not allOk ? 0 : wantL and dOkL ? 1 : wantS and dOkS ? -1 : 0
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 23. ФИКСАЦИЯ СОСТОЯНИЯ ТОЛЬКО НА ЗАКРЫТОМ БАРЕ
+//     Внутри формирующегося бара фон не меняется. Лонг/шорт включается после
+//     confirmBars закрытых баров подряд, серый — сразу.
+// ─────────────────────────────────────────────────────────────────────────────
+var int state = 0
+var int cand  = 0
+var int candN = 0
+if barstate.isconfirmed
+    if rawState == 0
+        state := 0
+        cand  := 0
+        candN := 0
+    else if rawState == state
+        cand  := rawState
+        candN := 0
+    else
+        candN := rawState == cand ? candN + 1 : 1
+        cand  := rawState
+        if candN >= confirmBars
+            state := rawState
+            candN := 0
+
+bool changed = state != state[1]
+
+// Причина текущего состояния (для таблицы и алертов)
+string why = ""
+if not fData
+    why += "прогрев HTF/VWAP; "
+if not fSess
+    why += "вне активных часов; "
+if not fCost
+    why += "ATR/издержки ниже порога; "
+if not fRvol
+    why += "RVOL ниже порога; "
+if allOk and rawState == 0
+    if (wantL and not dOkL) or (wantS and not dOkS)
+        why := "дельта против направления"
+    else if trendDir == 0
+        why := modeIn != M_TREND and flatMR ? "HTF флэт, цена не у крайней полосы" : "HTF во флэте"
+    else
+        why := "цена вне рабочей зоны VWAP"
+if allOk and rawState != 0 and rawState != state
+    why := "ждём подтверждения: " + str.tostring(candN) + " из " + str.tostring(confirmBars)
+if why == ""
+    why := "все фильтры пройдены"
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 24. АЛЕРТЫ НА СМЕНУ СОСТОЯНИЯ
+//     alertcondition — для отдельных алертов по каждому состоянию;
+//     alert() — одно общее сообщение с причиной («Любой вызов alert()»).
+// ─────────────────────────────────────────────────────────────────────────────
+alertcondition(state == 1 and state[1] != 1, "CTX: ищу лонги", "{{ticker}}: контекст — ИЩУ ЛОНГИ")
+alertcondition(state == -1 and state[1] != -1, "CTX: ищу шорты", "{{ticker}}: контекст — ИЩУ ШОРТЫ")
+alertcondition(state == 0 and state[1] != 0, "CTX: не торговать", "{{ticker}}: контекст — НЕ ТОРГОВАТЬ")
+alertcondition(changed, "CTX: любая смена состояния", "{{ticker}}: смена контекста")
+
+string stName = state == 1 ? "ИЩУ ЛОНГИ" : state == -1 ? "ИЩУ ШОРТЫ" : "НЕ ТОРГОВАТЬ"
+if changed and barstate.isconfirmed
+    alert(syminfo.ticker + " [" + grp + "]: " + stName + " | " + why, alert.freq_once_per_bar_close)
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 25. ВИЗУАЛИЗАЦИЯ: фон, VWAP, полосы, скрытые ряды для экспорта данных
+// ─────────────────────────────────────────────────────────────────────────────
+color bgCol = state == 1 ? colLong : state == -1 ? colShort : colFlat
+bgcolor(color.new(bgCol, bgTransp), title = "Фон состояния")
+
+plot(showVwap and not newDay ? vw : na, "VWAP", color = colVwap, linewidth = 2, style = plot.style_linebr)
+plot(showB1 and not newDay ? up1 : na, "VWAP +1σ", color = color.new(colVwap, 45), style = plot.style_linebr)
+plot(showB1 and not newDay ? dn1 : na, "VWAP −1σ", color = color.new(colVwap, 45), style = plot.style_linebr)
+plot(showB2 and not newDay ? up2 : na, "VWAP +2σ", color = color.new(colVwap, 65), style = plot.style_linebr)
+plot(showB2 and not newDay ? dn2 : na, "VWAP −2σ", color = color.new(colVwap, 65), style = plot.style_linebr)
+
+// Не рисуются на графике, но попадают в окно данных и в «Экспорт данных графика»
+plot(state, "Экспорт: состояние", display = display.data_window, editable = false)
+plot(rvol, "Экспорт: RVOL", display = display.data_window, editable = false)
+plot(atrCost, "Экспорт: ATR/издержки", display = display.data_window, editable = false)
+plot(htfSlope, "Экспорт: наклон EMA HTF", display = display.data_window, editable = false)
+plot(zPos, "Экспорт: z от VWAP", display = display.data_window, editable = false)
+plot(inSess ? 1 : 0, "Экспорт: сессия", display = display.data_window, editable = false)
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 26. ТАБЛИЦА СОСТОЯНИЯ
+// ─────────────────────────────────────────────────────────────────────────────
+string tblPos = switch tblPosIn
+    "Сверху слева" => position.top_left
+    "Снизу справа" => position.bottom_right
+    "Снизу слева"  => position.bottom_left
+    => position.top_right
+
+string tblSize = switch tblSizeIn
+    "Крошечный" => size.tiny
+    "Обычный"   => size.normal
+    => size.small
+
+var table tbl = table.new(tblPos, 2, 10, bgcolor = color.new(color.black, 15), border_color = color.new(color.gray, 70), border_width = 1)
+
+f_row(table t, int r, string k, string v, color c, string sz) =>
+    table.cell(t, 0, r, k, text_color = color.new(color.white, 25), text_halign = text.align_left, text_size = sz)
+    table.cell(t, 1, r, v, text_color = c, text_halign = text.align_left, text_size = sz)
+
+if showTbl and barstate.islast
+    color cOk  = #4caf50
+    color cBad = #ef5350
+    color cNeu = color.white
+
+    color stCol = state == 1 ? cOk : state == -1 ? cBad : color.gray
+    f_row(tbl, 0, "Состояние", stName, stCol, tblSize)
+
+    string presetTxt = grp + " · " + inst + (grpIn == G_AUTO ? " (авто)" : " (вручную)")
+    f_row(tbl, 1, "Пресет", presetTxt, cNeu, tblSize)
+
+    string sessTxt = (inSess ? "активна" : "вне часов") + " · " + sessUse + " " + tzUse
+    f_row(tbl, 2, "Сессия", sessTxt, inSess ? cOk : color.gray, tblSize)
+
+    string trTxt = (trendDir == 1 ? "▲ вверх" : trendDir == -1 ? "▼ вниз" : "◆ флэт") + " · наклон " + f_fmt(htfSlope, "#.###")
+    f_row(tbl, 3, "Тренд HTF " + htfTf, trTxt, trendDir == 1 ? cOk : trendDir == -1 ? cBad : color.gray, tblSize)
+
+    string vwTag = volType == V_REAL ? "" : volType == V_TICK ? " [по тик. объёму]" : " [без объёма = TWAP]"
+    f_row(tbl, 4, "VWAP", "цена " + f_fmt(zPos, "#.##") + "σ от VWAP" + vwTag, cNeu, tblSize)
+
+    string rvTxt = not anyVol ? "н/д (нет объёма)" : na(rvol) ? "прогрев (мало дней истории)" : f_fmt(rvol, "#.##") + " / порог " + f_fmt(rvThrUse, "#.##") + (volType == V_TICK ? " [тик]" : "")
+    color  rvCol = not anyVol or na(rvol) ? color.gray : rvol >= rvThrUse ? cOk : cBad
+    f_row(tbl, 5, "RVOL", rvTxt, rvCol, tblSize)
+
+    string acTxt = f_fmt(atrCost, "#.#") + " / порог " + f_fmt(atrThrUse, "#.#") + " · изд. " + f_fmt(costPrice, format.mintick) + (ovCost ? "" : " (пресет " + str.tostring(pCost) + "%)")
+    color  acCol = na(atrCost) ? color.gray : atrCost >= atrThrUse ? cOk : cBad
+    f_row(tbl, 6, "ATR / издержки", acTxt, acCol, tblSize)
+
+    string vtTxt = volType + (volTypeIn == V_AUTO ? " (авто: " + syminfo.type + ", " + syminfo.volumetype + ")" : " (вручную)")
+    f_row(tbl, 7, "Тип объёма", vtTxt, realVol ? cOk : color.orange, tblSize)
+
+    string dTxt = realVol ? str.tostring(dSum, format.volume) + " за " + str.tostring(deltaLen) + " б. · сессия " + str.tostring(dCum, format.volume) + (useDelta ? "" : " (инфо)") : "отключена: нет реального объёма"
+    color  dCol = not realVol ? color.gray : dSum > 0 ? cOk : dSum < 0 ? cBad : cNeu
+    f_row(tbl, 8, "Дельта (оценка)", dTxt, dCol, tblSize)
+
+    f_row(tbl, 9, "Почему", why, cNeu, tblSize)
