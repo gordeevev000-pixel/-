@@ -1,0 +1,550 @@
+<title>Веер аналогов</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Макет: терминал в одну страницу — график с веером слева, колонка метрик справа,
+   транспорт перемотки под графиком; на телефоне колонка метрик уходит вниз. */
+:root {
+  color-scheme: dark;
+  --bg: #0e131d;          /* сине-сланцевая «ночь» */
+  --panel: #151c2a;
+  --panel-2: #1b2436;
+  --line: #26314a;
+  --fg: #dde4f0;
+  --muted: #8995ab;
+  --faint: #56627a;
+  --accent: #f0b35e;      /* янтарь веера */
+  --accent-ink: #1a1307;
+  --up: #3fbf9f;
+  --down: #e8697b;
+  --warn: #e7c35a;
+  --font-display: "IBM Plex Sans Condensed", "Arial Narrow", system-ui, sans-serif;
+  --font-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --r: 10px;
+}
+html, body { height: 100%; }
+body { background: var(--bg); color: var(--fg); font: 14px/1.45 var(--font-body); }
+* { box-sizing: border-box; }
+button, select, input { font: inherit; color: inherit; }
+.app { display: flex; flex-direction: column; gap: 12px; padding-inline: 16px; padding-block: 12px 20px;
+       min-height: 100%; max-width: 1480px; margin: 0 auto; }
+
+/* --- шапка */
+.top { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.brand { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; min-width: 0; }
+h1 { font: 600 22px/1.1 var(--font-display); letter-spacing: .01em; margin: 0; text-wrap: balance; }
+.sub { color: var(--muted); font-size: 13px; }
+.clock { font: 500 15px var(--font-mono); font-variant-numeric: tabular-nums; }
+.clock small { color: var(--muted); font-size: 11px; letter-spacing: .08em; margin-left: 4px; }
+
+/* --- основная сетка */
+.grid { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 12px; align-items: start; }
+.chartcol { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.chartbox { position: relative; background: var(--panel); border: 1px solid var(--line); border-radius: var(--r);
+            height: min(64vh, 620px); min-height: 320px; overflow: hidden; }
+#chart { position: absolute; inset: 0; }
+.legend { position: absolute; left: 12px; top: 10px; z-index: 3; display: flex; gap: 12px; flex-wrap: wrap;
+          font-size: 11.5px; color: var(--muted); pointer-events: none; }
+.legend i { display: inline-block; width: 14px; height: 8px; border-radius: 2px; margin-right: 5px; vertical-align: 0; }
+.fanhint { position: absolute; right: 12px; bottom: 34px; z-index: 3; font-size: 11.5px; color: var(--muted);
+           background: color-mix(in srgb, var(--panel) 85%, transparent); padding: 3px 8px; border-radius: 6px;
+           pointer-events: none; }
+
+/* --- транспорт перемотки */
+.transport { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; }
+.btn { background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px; padding: 6px 11px;
+       cursor: pointer; font-variant-numeric: tabular-nums; min-height: 34px; white-space: nowrap; }
+.btn:hover { border-color: var(--faint); }
+.btn:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 600; min-width: 44px; }
+.btn[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); }
+.group { display: flex; gap: 6px; align-items: center; }
+#scrub { flex: 1 1 220px; min-width: 160px; accent-color: var(--accent); }
+.transport label { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); font-size: 13px; cursor: pointer; }
+.transport select { background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px; min-height: 34px; }
+.transport input[type=checkbox] { accent-color: var(--accent); width: 16px; height: 16px; }
+.keys { color: var(--faint); font-size: 12px; }
+
+/* --- панель метрик */
+.panel { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); padding: 12px 14px;
+        display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.label { font: 600 11px var(--font-display); text-transform: uppercase; letter-spacing: .09em; color: var(--muted); }
+.big { font: 500 30px/1.05 var(--font-mono); font-variant-numeric: tabular-nums; }
+.row { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+.note { color: var(--muted); font-size: 12.5px; }
+.num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.split { display: flex; height: 8px; border-radius: 4px; overflow: hidden; background: var(--panel-2); }
+.split .u { background: var(--up); } .split .d { background: var(--down); margin-left: auto; }
+.meter { height: 6px; border-radius: 3px; background: var(--panel-2); overflow: hidden; }
+.meter b { display: block; height: 100%; background: var(--accent); width: 0; transition: width .2s; }
+.chip { display: inline-flex; align-items: center; gap: 6px; padding: 3px 9px; border-radius: 999px; font-size: 12.5px;
+        border: 1px solid var(--line); background: var(--panel-2); white-space: nowrap; }
+.chip.up { color: var(--up); border-color: color-mix(in srgb, var(--up) 45%, var(--line)); }
+.chip.down { color: var(--down); border-color: color-mix(in srgb, var(--down) 45%, var(--line)); }
+.chip.flat { color: var(--muted); }
+.pos { color: var(--up); } .neg { color: var(--down); }
+.duo { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.truth { border-color: color-mix(in srgb, var(--warn) 35%, var(--line)); }
+.truth ul { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 4px; font-size: 12.5px; }
+.truth .verdict { font-size: 13px; }
+.truth b { font-weight: 600; }
+
+/* --- лист аналогов */
+.sheet-back { position: fixed; inset: 0; z-index: 20; background: rgba(5, 8, 14, .6); display: flex;
+              align-items: center; justify-content: center; padding: 16px; }
+.sheet { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; width: min(760px, 100%);
+         max-height: calc(100% - 32px); overflow: auto; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+.sheet h2 { font: 600 18px var(--font-display); margin: 0; }
+.sheet svg { width: 100%; height: auto; display: block; }
+.anlist { width: 100%; border-collapse: collapse; font-size: 13px; }
+.anlist td, .anlist th { padding: 6px 8px; border-bottom: 1px solid var(--line); text-align: right; white-space: nowrap; }
+.anlist th { color: var(--muted); font-weight: 500; font-size: 12px; }
+.anlist td:first-child, .anlist th:first-child { text-align: left; }
+.sw { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 8px; vertical-align: -1px; }
+.tablewrap { overflow-x: auto; }
+
+@media (max-width: 900px) {
+  .grid { grid-template-columns: minmax(0, 1fr); }
+  .panel { display: grid; grid-template-columns: 1fr 1fr; }
+  .panel .wide { grid-column: 1 / -1; }
+  .chartbox { height: 56vh; }
+}
+@media (max-width: 520px) {
+  .panel { grid-template-columns: minmax(0, 1fr); }
+  .big { font-size: 26px; }
+  .keys { display: none; }
+  h1 { font-size: 20px; }
+  .sheet-back { align-items: flex-end; padding: 0; }
+  .sheet { border-radius: 14px 14px 0 0; max-height: 88%; }
+}
+@media (prefers-reduced-motion: reduce) { .meter b { transition: none; } }
+</style>
+
+<div class="app">
+  <header class="top">
+    <div class="brand">
+      <h1>Веер аналогов</h1>
+      <span class="sub" id="instr">загрузка…</span>
+    </div>
+    <div class="clock"><span id="clock">—</span><small>UTC</small></div>
+  </header>
+
+  <main class="grid">
+    <section class="chartcol">
+      <div class="chartbox">
+        <div id="chart"></div>
+        <div class="legend" aria-hidden="true">
+          <span><i style="background:color-mix(in srgb,var(--accent) 55%,transparent)"></i>50%</span>
+          <span><i style="background:color-mix(in srgb,var(--accent) 22%,transparent)"></i>80%</span>
+          <span><i style="background:var(--accent);height:2px"></i>медиана</span>
+          <span id="lg-ghost" hidden><i style="border-top:1px dashed var(--muted);height:0"></i>веер при якоре</span>
+          <span id="lg-future" hidden><i style="background:var(--fg);height:2px"></i>что было дальше</span>
+        </div>
+        <div class="fanhint">Нажмите на веер — 5 ближайших аналогов</div>
+      </div>
+
+      <nav class="transport" aria-label="Перемотка истории">
+        <div class="group">
+          <button class="btn" id="b-60" title="Назад на 60 минут">−60</button>
+          <button class="btn" id="b-1" title="Назад на минуту">−1</button>
+          <button class="btn primary" id="b-play" title="Воспроизвести / пауза">▶</button>
+          <button class="btn" id="b+1" title="Вперёд на минуту">+1</button>
+          <button class="btn" id="b+60" title="Вперёд на 60 минут">+60</button>
+        </div>
+        <input type="range" id="scrub" min="0" max="0" value="0" aria-label="Минута истории">
+        <div class="group">
+          <select id="speed" aria-label="Скорость воспроизведения">
+            <option value="1">1 мин/с</option>
+            <option value="3" selected>3 мин/с</option>
+            <option value="10">10 мин/с</option>
+          </select>
+          <button class="btn" id="b-anchor" title="Поставить якорь на текущую минуту (A)">Якорь сюда</button>
+          <button class="btn" id="b-analogs" title="Показать 5 ближайших аналогов">Аналоги</button>
+        </div>
+        <div class="group">
+          <label><input type="checkbox" id="c-fresh"> новый веер каждую минуту</label>
+          <label><input type="checkbox" id="c-future"> показать, что было дальше</label>
+        </div>
+        <span class="keys">← → шаг · Shift ±60 · пробел · A якорь</span>
+      </nav>
+    </section>
+
+    <aside class="panel" aria-live="polite">
+      <div class="card">
+        <div class="row"><span class="label">+1 ATR раньше −1 ATR, калибр.</span><span class="chip flat" id="skew">—</span></div>
+        <div class="row"><span class="big" id="p-up">—</span><span class="num note" id="p-dn">—</span></div>
+        <div class="split"><span class="u" id="bar-up"></span><span class="d" id="bar-dn"></span></div>
+        <div class="note" id="p-base">—</div>
+      </div>
+      <div class="card">
+        <span class="label">Ожидаемый ход к +15 мин, калибр.</span>
+        <div class="row"><span class="big" id="exp">—</span><span class="num note" id="exp-px">—</span></div>
+        <div class="note" id="med">—</div>
+      </div>
+      <div class="card">
+        <span class="label">Уверенность · разброс веера</span>
+        <div class="row"><span class="big" id="conf">—</span><span class="chip flat" id="conf-chip">—</span></div>
+        <div class="note">ширина 80% полосы на +15 мин относительно обычной для этого часа</div>
+      </div>
+      <div class="card">
+        <div class="row"><span class="label">Живые аналоги</span><span class="num note" id="ess">—</span></div>
+        <div class="row"><span class="big" id="alive">—</span><span class="note" id="alive-k">—</span></div>
+        <div class="meter"><b id="alive-bar"></b></div>
+      </div>
+      <div class="card">
+        <span class="label">Режим рынка</span>
+        <span class="chip" id="regime">—</span>
+      </div>
+      <div class="card truth wide">
+        <span class="label">Что показала проверка на истории</span>
+        <div class="verdict" id="verdict">—</div>
+        <ul id="truth"></ul>
+      </div>
+    </aside>
+  </main>
+</div>
+
+<div class="sheet-back" id="sheet" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title">
+    <div class="row">
+      <h2 id="sheet-title">5 ближайших аналогов</h2>
+      <button class="btn" id="sheet-close">Закрыть</button>
+    </div>
+    <div class="note" id="sheet-sub"></div>
+    <svg id="an-svg" viewBox="0 0 640 260" role="img" aria-label="Пути аналогов в ATR"></svg>
+    <div class="tablewrap"><table class="anlist" id="an-table"></table></div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/lightweight-charts@4.2.3/dist/lightweight-charts.standalone.production.js"></script>
+<script src="data.js"></script>
+<script>
+(() => {
+"use strict";
+const D = window.AF_DATA;
+if (!D || !window.LightweightCharts) {
+  document.getElementById("instr").textContent = !D ? "нет данных: рядом со страницей должен лежать data.js" : "не загрузилась библиотека графиков";
+  return;
+}
+const css = getComputedStyle(document.documentElement);
+const tok = n => css.getPropertyValue(n).trim();
+const C = { bg: tok("--panel"), fg: tok("--fg"), muted: tok("--muted"), faint: tok("--faint"), line: tok("--line"),
+            accent: tok("--accent"), up: tok("--up"), down: tok("--down") };
+
+// ---------- декодирование компактных массивов
+function dec(s, T) {
+  const bin = atob(s), u8 = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
+  return new T(u8.buffer);
+}
+const H = D.meta.horizon, K = D.meta.k, N = D.n;
+const FAN = dec(D.fan, Int16Array);        // N*H*5, 0.01 ATR
+const NAR = dec(D.narrow, Int8Array);      // N*(H(H-1)/2)*5, 0.1 ATR от реальной цены в k
+const ALIVE = dec(D.alive, Uint16Array);   // N*(H-1)
+const MET = dec(D.metrics, Float32Array);  // N*MW
+const MW = 10;
+const AN_T = dec(D.an_time, Float64Array); // N*5
+const AN_D = dec(D.an_dist, Float32Array);
+const AN_P = dec(D.an_path, Int16Array);   // N*5*NOFF, 0.01 ATR
+const OFFS = D.meta.an_offsets, NOFF = OFFS.length;
+const NARW = H * (H - 1) / 2;
+const narPos = [0, 0]; for (let k = 2; k < H; k++) narPos[k] = narPos[k - 1] + (H - (k - 1));
+
+const CT = D.candles.t, CO = D.candles.o, CH = D.candles.h, CL = D.candles.l, CC = D.candles.c;
+const bars = CT.map((t, i) => ({ time: t, open: CO[i], high: CH[i], low: CL[i], close: CC[i] }));
+const tIdx = new Map(CT.map((t, i) => [t, i]));
+const winCi = D.t.map(t => tIdx.get(t));
+const ATR = D.atr, DP = D.meta.decimals;
+
+// ---------- форматирование
+const nf = (d) => new Intl.NumberFormat("ru-RU", { minimumFractionDigits: d, maximumFractionDigits: d });
+const f2 = nf(2), f0 = nf(0), fpx = nf(Math.min(DP, 4));
+const sgn = (x, f = f2) => (x > 0 ? "+" : x < 0 ? "−" : "") + f.format(Math.abs(x));
+const pct = x => f0.format(x * 100) + "%";
+const pct1 = x => nf(1).format(x * 100) + "%";
+const two = n => String(n).padStart(2, "0");
+const utc = (s) => { const d = new Date(s * 1000);
+  return `${d.getUTCFullYear()}-${two(d.getUTCMonth() + 1)}-${two(d.getUTCDate())} ${two(d.getUTCHours())}:${two(d.getUTCMinutes())}`; };
+
+// ---------- график
+const el = document.getElementById("chart");
+const chart = LightweightCharts.createChart(el, {
+  autoSize: true,
+  layout: { background: { type: "solid", color: C.bg }, textColor: C.muted, fontFamily: tok("--font-mono"), fontSize: 11 },
+  grid: { vertLines: { color: "rgba(38,49,74,.45)" }, horzLines: { color: "rgba(38,49,74,.45)" } },
+  rightPriceScale: { borderColor: C.line, scaleMargins: { top: .08, bottom: .08 } },
+  timeScale: { borderColor: C.line, timeVisible: true, secondsVisible: false, rightOffset: H + 4, barSpacing: 7,
+               shiftVisibleRangeOnNewBar: false },
+  crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
+  localization: { priceFormatter: p => fpx.format(p), locale: "ru-RU" },
+});
+const series = chart.addCandlestickSeries({
+  upColor: C.up, downColor: C.down, borderVisible: false, wickUpColor: C.up, wickDownColor: C.down,
+  priceFormat: { type: "price", precision: Math.min(DP, 4), minMove: Math.pow(10, -Math.min(DP, 4)) },
+});
+
+// ---------- состояние
+const S = { cur: 0, anchor: 0, fresh: false, future: false, playing: false, timer: null, shown: -1, geom: null };
+
+// Геометрия веера для текущего состояния: точки {lg, p:[5 цен]} (lg — логический индекс бара)
+function fanGeometry() {
+  const a = S.anchor, k = S.cur - a, ciA = winCi[a], atr = ATR[a];
+  const pts = [], ghost = [];
+  const c0 = CC[ciA];
+  ghost.push({ lg: ciA, p: [c0, c0, c0, c0, c0] });
+  for (let h = 1; h <= H; h++) {
+    const o = (a * H + h - 1) * 5, p = [];
+    for (let l = 0; l < 5; l++) p.push(c0 + FAN[o + l] / 100 * atr);
+    ghost.push({ lg: ciA + h, p });
+  }
+  if (k === 0) return { pts: ghost, ghost: null, k };
+  const ciC = winCi[S.cur], base = CC[ciC];
+  pts.push({ lg: ciC, p: [base, base, base, base, base] });
+  for (let m = 0; m < H - k; m++) {
+    const o = ((a * NARW) + narPos[k] + m) * 5, p = [];
+    for (let l = 0; l < 5; l++) p.push(base + NAR[o + l] / 10 * atr);
+    pts.push({ lg: ciC + 1 + m, p });
+  }
+  return { pts, ghost, k };
+}
+
+// Примитив серии: рисует полосы веера градиентом, медиану, «призрак» исходного веера, будущее
+const fanPrimitive = {
+  _chart: null, _series: null, _req: null,
+  attached(p) { this._chart = p.chart; this._series = p.series; this._req = p.requestUpdate; },
+  detached() {},
+  updateAllViews() {},
+  autoscaleInfo() {
+    const g = S.geom; if (!g) return null;
+    let lo = Infinity, hi = -Infinity;
+    for (const q of g.pts) { lo = Math.min(lo, q.p[0]); hi = Math.max(hi, q.p[4]); }
+    return { priceRange: { minValue: lo, maxValue: hi } };
+  },
+  paneViews() { return [this._view]; },
+  _view: {
+    zOrder: () => "top",
+    renderer: () => ({
+      draw(target) {
+        const g = S.geom; if (!g) return;
+        const ts = chart.timeScale();
+        target.useBitmapCoordinateSpace(({ context: ctx, horizontalPixelRatio: hr, verticalPixelRatio: vr }) => {
+          const X = lg => ts.logicalToCoordinate(lg) * hr;
+          const Y = p => series.priceToCoordinate(p) * vr;
+          const pts = g.pts; if (pts.length < 2) return;
+          const x0 = X(pts[0].lg), x1 = X(pts[pts.length - 1].lg);
+          const band = (lo, hi, a0, a1) => {
+            const grad = ctx.createLinearGradient(x0, 0, x1, 0);
+            grad.addColorStop(0, hexA(C.accent, a0)); grad.addColorStop(1, hexA(C.accent, a1));
+            ctx.beginPath();
+            pts.forEach((q, i) => (i ? ctx.lineTo : ctx.moveTo).call(ctx, X(q.lg), Y(q.p[hi])));
+            for (let i = pts.length - 1; i >= 0; i--) ctx.lineTo(X(pts[i].lg), Y(pts[i].p[lo]));
+            ctx.closePath(); ctx.fillStyle = grad; ctx.fill();
+          };
+          const line = (arr, idx, color, w, dash) => {
+            ctx.beginPath(); ctx.setLineDash(dash ? dash.map(d => d * hr) : []);
+            arr.forEach((q, i) => (i ? ctx.lineTo : ctx.moveTo).call(ctx, X(q.lg), Y(q.p[idx])));
+            ctx.strokeStyle = color; ctx.lineWidth = w * hr; ctx.stroke(); ctx.setLineDash([]);
+          };
+          // якорь
+          if (g.ghost) {
+            const xa = X(g.ghost[0].lg);
+            ctx.fillStyle = hexA(C.accent, .07);
+            ctx.fillRect(xa, 0, X(pts[0].lg) - xa, ctx.canvas.height);
+            ctx.beginPath(); ctx.setLineDash([3 * hr, 3 * hr]);
+            ctx.moveTo(xa, 0); ctx.lineTo(xa, ctx.canvas.height);
+            ctx.strokeStyle = hexA(C.accent, .5); ctx.lineWidth = hr; ctx.stroke(); ctx.setLineDash([]);
+            ctx.fillStyle = C.accent; ctx.font = `${11 * hr}px ${tok("--font-body")}`;
+            ctx.fillText(`якорь · ${g.k} мин назад`, xa + 5 * hr, 16 * vr);
+            line(g.ghost, 0, hexA(C.muted, .8), 1, [4, 3]);
+            line(g.ghost, 4, hexA(C.muted, .8), 1, [4, 3]);
+            line(g.ghost, 2, hexA(C.muted, .6), 1, [1, 3]);
+          }
+          band(0, 4, .30, .08);
+          band(1, 3, .55, .16);
+          line(pts, 2, C.accent, 2);
+          // что было дальше (только по явной просьбе, иначе это подглядывание)
+          if (S.future) {
+            const ciC = winCi[S.cur], fut = [];
+            for (let h = 0; h <= H && ciC + h < CC.length; h++) fut.push({ lg: ciC + h, p: [0, 0, CC[ciC + h]] });
+            line(fut, 2, C.fg, 1.6);
+          }
+        });
+      },
+    }),
+  },
+};
+function hexA(hex, a) {
+  const h = hex.replace("#", ""); const n = parseInt(h.length === 3 ? h.replace(/(.)/g, "$1$1") : h, 16);
+  return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${a})`;
+}
+series.attachPrimitive(fanPrimitive);
+
+// ---------- отрисовка состояния
+const $ = id => document.getElementById(id);
+function render(jump) {
+  if (S.fresh || S.cur < S.anchor || S.cur - S.anchor >= H) S.anchor = S.cur;
+  const ciC = winCi[S.cur];
+  if (jump || ciC !== S.shown + 1) series.setData(bars.slice(0, ciC + 1));
+  else series.update(bars[ciC]);
+  S.shown = ciC;
+  S.geom = fanGeometry();
+  // держим текущую свечу в кадре, сохраняя масштаб
+  const r = chart.timeScale().getVisibleLogicalRange();
+  const w = r ? Math.max(40, r.to - r.from) : 140;
+  chart.timeScale().setVisibleLogicalRange({ from: ciC + H + 4 - w, to: ciC + H + 4 });
+  fanPrimitive._req && fanPrimitive._req();
+
+  $("clock").textContent = utc(D.t[S.cur]);
+  $("scrub").value = S.cur;
+  $("lg-ghost").hidden = !S.geom.ghost;
+  $("lg-future").hidden = !S.future;
+
+  // метрики момента: свежий поиск на текущей минуте
+  // главное число — откалиброванное по прошлым месяцам; сырое показываем мелко
+  const m = MET.subarray(S.cur * MW, S.cur * MW + MW);
+  const [pRaw, pdRaw, exRaw, wr, ess, bpu, found, reg, pu, ex] = m;
+  const pd = 1 - pu;
+  $("p-up").textContent = pct1(pu);
+  $("p-dn").textContent = "вниз первым " + pct1(pd);
+  $("bar-up").style.width = (pu * 100) + "%";
+  $("bar-dn").style.width = (pd * 100) + "%";
+  $("p-base").textContent = `сырая оценка аналогов ${pct(pRaw)} · обычно в этот час ${pct1(bpu)} · 1 ATR = ${fpx.format(ATR[S.cur] * D.meta.barrier)}`;
+  const sk = $("skew");
+  sk.className = "chip " + (pu >= .55 ? "up" : pd >= .55 ? "down" : "flat");
+  sk.textContent = pu >= .55 ? "перекос вверх" : pd >= .55 ? "перекос вниз" : "без перекоса";
+  $("exp").textContent = sgn(ex) + " ATR";
+  $("exp").className = "big " + (ex > .05 ? "pos" : ex < -.05 ? "neg" : "");
+  $("exp-px").textContent = "≈ " + sgn(ex * ATR[S.cur], fpx);
+  const med = FAN[(S.cur * H + H - 1) * 5 + 2] / 100;
+  const q10 = FAN[(S.cur * H + H - 1) * 5] / 100, q90 = FAN[(S.cur * H + H - 1) * 5 + 4] / 100;
+  $("med").textContent = `сырое среднее аналогов ${sgn(exRaw)} · медиана веера ${sgn(med)} · 80%: от ${sgn(q10)} до ${sgn(q90)} ATR`;
+  $("conf").textContent = f2.format(wr) + "×";
+  const cc = $("conf-chip");
+  cc.textContent = wr < .85 ? "уже обычного" : wr > 1.15 ? "шире обычного" : "как обычно";
+  cc.className = "chip " + (wr < .85 ? "up" : wr > 1.15 ? "down" : "flat");
+  // живые аналоги — у якоря
+  const k = S.cur - S.anchor;
+  const alive = k === 0 ? MET[S.anchor * MW + 6] : ALIVE[S.anchor * (H - 1) + k - 1];
+  $("alive").textContent = `${f0.format(alive)} / ${K}`;
+  $("alive-k").textContent = k === 0 ? "якорь на этой минуте" : `${k} мин после якоря`;
+  $("alive-bar").style.width = (100 * alive / K) + "%";
+  $("ess").textContent = "эфф. выборка при якоре " + f0.format(MET[S.anchor * MW + 4]);
+  $("regime").textContent = D.meta.regimes[reg] || "—";
+  if (!$("sheet").hidden) openAnalogs();
+}
+
+// ---------- лист аналогов
+const AN_COL = ["#7fb0ff", "#c89bff", "#6fd3c0", "#ff9f80", "#b8c4d8"];
+function openAnalogs() {
+  const a = S.anchor, ciA = winCi[a], atr = ATR[a], k = S.cur - a;
+  const paths = [];
+  for (let j = 0; j < 5; j++) {
+    const o = (a * 5 + j) * NOFF, p = [];
+    for (let i = 0; i < NOFF; i++) p.push([OFFS[i], AN_P[o + i] / 100]);
+    paths.push(p);
+  }
+  // свой путь: прошлое + то, что уже известно (или всё, если включено «что было дальше»)
+  const own = [];
+  const lastKnown = S.future ? H : k;
+  for (const off of OFFS) {
+    if (off > lastKnown || ciA + off < 0 || ciA + off >= CC.length) continue;
+    own.push([off, (CC[ciA + off] - CC[ciA]) / atr]);
+  }
+  const all = paths.flat().concat(own).map(p => p[1]);
+  let lo = Math.min(...all), hi = Math.max(...all); const pad = (hi - lo) * .08 + .2; lo -= pad; hi += pad;
+  const W = 640, Hh = 260, L = 40, R = 12, T = 12, B = 26;
+  const sx = x => L + (x - OFFS[0]) / (OFFS[NOFF - 1] - OFFS[0]) * (W - L - R);
+  const sy = y => T + (hi - y) / (hi - lo) * (Hh - T - B);
+  let s = "";
+  const step = (hi - lo) > 12 ? 4 : (hi - lo) > 6 ? 2 : 1;
+  for (let y = Math.ceil(lo / step) * step; y <= hi; y += step) {
+    s += `<line x1="${L}" x2="${W - R}" y1="${sy(y)}" y2="${sy(y)}" stroke="${C.line}" stroke-width="${y === 0 ? 1.2 : .6}"/>`;
+    s += `<text x="${L - 6}" y="${sy(y) + 4}" fill="${C.muted}" font-size="11" text-anchor="end" font-family="${tok("--font-mono")}">${sgn(y, f0)}</text>`;
+  }
+  for (const x of [-60, -45, -30, -15, 0, 15]) {
+    s += `<text x="${sx(x)}" y="${Hh - 8}" fill="${C.muted}" font-size="11" text-anchor="middle" font-family="${tok("--font-mono")}">${x > 0 ? "+" + x : x === 0 ? "якорь" : "−" + (-x)}</text>`;
+  }
+  s += `<line x1="${sx(0)}" x2="${sx(0)}" y1="${T}" y2="${Hh - B}" stroke="${C.accent}" stroke-dasharray="3 3" stroke-width="1"/>`;
+  const poly = (p, col, w, op) => `<polyline fill="none" stroke="${col}" stroke-width="${w}" stroke-opacity="${op}" stroke-linejoin="round" points="${p.map(q => sx(q[0]) + "," + sy(q[1])).join(" ")}"/>`;
+  paths.forEach((p, j) => { s += poly(p, AN_COL[j], 1.4, .9); });
+  s += poly(own, C.accent, 2.6, 1);
+  $("an-svg").innerHTML = s;
+  $("sheet-sub").textContent = `Якорь ${utc(D.t[a])} UTC. Путь в ATR от цены якоря: 60 минут до и 15 после. ` +
+    `Янтарная линия — текущая ситуация${lastKnown > 0 ? (S.future ? " вместе с тем, что было дальше" : `, известно ${k} мин после якоря`) : ""}.`;
+  let t = `<tr><th>аналог (UTC)</th><th>расстояние</th><th>ход к +5</th><th>ход к +15</th></tr>`;
+  const i5 = OFFS.indexOf(5), i15 = OFFS.indexOf(15);
+  for (let j = 0; j < 5; j++) {
+    const y5 = AN_P[(a * 5 + j) * NOFF + i5] / 100, y15 = AN_P[(a * 5 + j) * NOFF + i15] / 100;
+    t += `<tr><td><span class="sw" style="background:${AN_COL[j]}"></span><span class="num">${utc(AN_T[a * 5 + j])}</span></td>` +
+         `<td class="num">${f2.format(AN_D[a * 5 + j])}</td><td class="num ${y5 > 0 ? "pos" : "neg"}">${sgn(y5)}</td>` +
+         `<td class="num ${y15 > 0 ? "pos" : "neg"}">${sgn(y15)}</td></tr>`;
+  }
+  $("an-table").innerHTML = t;
+  $("sheet").hidden = false;
+}
+function closeAnalogs() { $("sheet").hidden = true; }
+
+// ---------- итоги проверки (из отчёта этапа 3)
+function renderTruth() {
+  const v = D.meta.validation || {};
+  if (!v.pinball_skill_15) { $("verdict").textContent = "Отчёт проверки не приложен к данным."; return; }
+  const ci = a => `${sgn(a[0] * 100, nf(1))}% [${sgn(a[1] * 100, nf(1))}; ${sgn(a[2] * 100, nf(1))}]`;
+  const verdictOf = a => a[1] > 0 ? "лучше базы" : a[2] < 0 ? "хуже базы" : "не отличим от базы";
+  const ps = v.pinball_skill_15, bs = v.brier_skill_vs_hour;
+  const small = a => Math.max(Math.abs(a[1]), Math.abs(a[2])) < .01;
+  $("verdict").innerHTML = `Распределение на 15 мин: <b>${verdictOf(ps)}${ps[1] > 0 && small(ps) ? ", но выигрыш меньше 1%" : ""}</b>. ` +
+    `Сырая вероятность барьера: <b>${verdictOf(bs)}</b>. ` +
+    (v.nested && v.nested.net_atr > 0 && v.nested.t > 2 ? "Есть кандидат в перекос после издержек, см. отчёт." : "Перекоса, который переживает издержки, не найдено.");
+  const li = [
+    `Период проверки ${v.period}, ${f0.format(v.n_queries)} минут, только прошлое.`,
+    `Точность веера против «того же часа»: ${ci(ps)}; лучше в ${v.months_better} из ${v.months} месяцев.`,
+    `Попадание в полосы на +15: 50% → ${pct(v.cover50_15[0])} (база ${pct(v.cover50_15[1])}), 80% → ${pct(v.cover80_15[0])} (база ${pct(v.cover80_15[1])}).`,
+    `Точность P(+1 раньше −1) против базы: ${ci(bs)}. Верхний дециль: ждали ${pct(v.top_decile[0])}, было ${pct(v.top_decile[1])}.`,
+  ];
+  if (v.calib_lambda !== undefined) li.push(`После калибровки в вероятности остаётся ${pct(v.calib_lambda)} сырого сигнала, в ожидаемом ходе ${pct(v.calib_beta)}. Поэтому главные числа на панели откалиброваны.`);
+  if (v.nested) li.push(`Правило с порогом, выбранным на первой половине, на второй половине: ${sgn(v.nested.net_atr, nf(3))} ATR на сделку после издержек 0,1 ATR (t = ${f2.format(v.nested.t)}).`);
+  $("truth").innerHTML = li.map(x => `<li>${x}</li>`).join("");
+}
+
+// ---------- управление
+function go(to, jump) { S.cur = Math.max(0, Math.min(N - 1, to)); render(jump); }
+function play(on) {
+  S.playing = on; $("b-play").textContent = on ? "❚❚" : "▶";
+  clearInterval(S.timer);
+  if (on) S.timer = setInterval(() => { if (S.cur >= N - 1) return play(false); go(S.cur + 1); }, 1000 / +$("speed").value);
+}
+$("b-60").onclick = () => go(S.cur - 60, true);
+$("b-1").onclick = () => go(S.cur - 1, true);
+$("b+1").onclick = () => go(S.cur + 1);
+$("b+60").onclick = () => go(S.cur + 60, true);
+$("b-play").onclick = () => play(!S.playing);
+$("speed").onchange = () => S.playing && play(true);
+$("scrub").max = N - 1;
+$("scrub").oninput = e => go(+e.target.value, true);
+$("b-anchor").onclick = () => { S.anchor = S.cur; render(true); };
+$("b-analogs").onclick = openAnalogs;
+$("c-fresh").onchange = e => { S.fresh = e.target.checked; render(true); };
+$("c-future").onchange = e => { S.future = e.target.checked; render(true); };
+$("sheet-close").onclick = closeAnalogs;
+$("sheet").onclick = e => { if (e.target.id === "sheet") closeAnalogs(); };
+chart.subscribeClick(p => {
+  if (p.logical !== undefined && S.geom && p.logical >= S.geom.pts[0].lg) openAnalogs();
+});
+document.addEventListener("keydown", e => {
+  if (e.target.tagName === "INPUT" && e.target.type === "range") return;
+  if (e.key === "Escape") return closeAnalogs();
+  if (e.key === "ArrowRight") { go(S.cur + (e.shiftKey ? 60 : 1), e.shiftKey); e.preventDefault(); }
+  else if (e.key === "ArrowLeft") { go(S.cur - (e.shiftKey ? 60 : 1), true); e.preventDefault(); }
+  else if (e.key === " ") { play(!S.playing); e.preventDefault(); }
+  else if (e.key === "a" || e.key === "A" || e.key === "ф" || e.key === "Ф") { S.anchor = S.cur; render(true); }
+});
+
+$("instr").textContent = `${D.meta.instrument} · 1 мин · K = ${K} · горизонт ${H} мин`;
+renderTruth();
+S.anchor = S.cur = Math.min(N - 1, 180);
+render(true);
+})();
+</script>

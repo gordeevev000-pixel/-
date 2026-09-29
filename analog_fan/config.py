@@ -26,5 +26,6 @@ class Config:
     block_weights: dict = field(default_factory=lambda: {
         "path": 1.0, "vol": 0.6, "tod": 0.5, "dayhl": 0.5, "eff": 0.5})
     # --- живое сужение
-    live_sigma: float = 0.5         # масштаб ошибки пути (в ATR) при перевзвешивании
-    alive_rmse: float = 0.5         # аналог «жив», если RMSE его первых k минут <= этого порога
+    # ошибка пути меряется в долях разброса веера в каждую минуту (не в ATR)
+    live_sigma: float = 0.5         # ширина ядра при перевзвешивании
+    alive_rmse: float = 0.5         # аналог «жив», если нормированная RMSE первых k минут <= порога
