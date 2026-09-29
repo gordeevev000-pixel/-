@@ -381,7 +381,8 @@ if anyVol
     array.set(rvBuf, slot * rvDays + cSlot % rvDays, volNow)
     array.set(rvCnt, slot, cSlot + 1)
 float sumAvg = math.sum(avgVol, rvSmooth)
-float rvol   = sumAvg > 0 ? math.sum(volNow, rvSmooth) / sumAvg : na
+float sumVol = math.sum(volNow, rvSmooth)
+float rvol   = sumAvg > 0 ? sumVol / sumAvg : na
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 18. ФИЛЬТР ИЗДЕРЖЕК: ATR / (спред + комиссия за круг)
@@ -414,7 +415,8 @@ float dSum = math.sum(dBar, deltaLen)
 f_htf() =>
     float e = ta.ema(close, emaLen)
     float a = ta.atr(14)
-    float s = a > 0 ? (e - e[slopeLen]) / (slopeLen * a) : na
+    float d = e - e[slopeLen]
+    float s = a > 0 ? d / (slopeLen * a) : na
     [e, s]
 
 [htfEmaLive, htfSlopeLive] = request.security(syminfo.tickerid, htfTf, f_htf(), lookahead = barmerge.lookahead_off)
