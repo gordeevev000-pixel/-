@@ -7,75 +7,80 @@
 <meta name="description" content="Доклад-презентация группы 2: кризис Европейской валютной системы 1992–1993 гг.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Prata&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Spectral:ital,wght@0,300;0,400;1,300;1,400&display=swap">
 <style>
-/* Layout: вертикальная колода слайдов высотой в экран; у каждого слайда служебная строка «номер · раздел · докладчик», как шапка бланка центрального банка; внизу закреплён пульт навигации */
+/* Layout: спокойная колода слайдов на туманно-сером фоне; много воздуха, тонкие линии вместо рамок, лёгкий серифный заголовок и мягкий гротеск для текста */
 :root {
-  --paper: #F1F3F7;
+  --bg: #F5F6F4;
   --surface: #FFFFFF;
-  --ink: #0F1A2F;
-  --ink-2: #3A4660;
-  --muted: #667188;
-  --line: #D3D9E3;
-  --grid: #E4E8EF;
-  --accent: #1D3E9E;
-  --accent-soft: #E2E8F7;
-  --brass: #7C5810;
-  --brass-soft: #F4ECD9;
-  --breach: #B8322A;
-  --breach-soft: #F9E5E3;
-  --c-blue: #2E57CC;
-  --c-brass: #A87A16;
+  --soft: #ECEFEC;
+  --ink: #1C272C;
+  --ink-2: #47545A;
+  --muted: #7A8589;
+  --line: #DADFDC;
+  --grid: #E5E9E6;
+  --accent: #1D5E7C;
+  --accent-soft: #DFEAEE;
+  --sand: #85611B;
+  --sand-soft: #F2EADB;
+  --alert: #A5463A;
+  --alert-soft: #F5E5E1;
+  --c1: #0F6B94;
+  --c2: #AD7F24;
+  --shadow: 0 10px 30px rgba(28, 39, 44, .08);
 
-  --f-display: "Prata", Georgia, "Times New Roman", serif;
-  --f-body: "Golos Text", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  --f-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --f-display: "Spectral", Georgia, "Times New Roman", serif;
+  --f-body: "Manrope", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 
-  --fs-xs: 12px;
-  --fs-s: 14px;
-  --fs-m: 16px;
-  --fs-l: 18px;
-  --fs-xl: 22px;
-  --fs-2xl: clamp(26px, 3.1vw, 40px);
-  --fs-3xl: clamp(34px, 5.2vw, 66px);
-  --fs-fig: clamp(28px, 3vw, 38px);
+  --fs-xs: 12.5px;
+  --fs-s: 14.5px;
+  --fs-m: 16.5px;
+  --fs-l: 18.5px;
+  --fs-xl: clamp(20px, 1.9vw, 25px);
+  --fs-2xl: clamp(28px, 3.3vw, 44px);
+  --fs-3xl: clamp(38px, 5.6vw, 72px);
+  --fs-fig: clamp(26px, 2.6vw, 36px);
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --paper: #0B1120;
-    --surface: #131C31;
-    --ink: #E8ECF4;
-    --ink-2: #BCC5D6;
-    --muted: #8E99B0;
-    --line: #293553;
-    --grid: #1F2944;
-    --accent: #8FA8FF;
-    --accent-soft: #1B2749;
-    --brass: #E0B75A;
-    --brass-soft: #2E2716;
-    --breach: #FF7A6E;
-    --breach-soft: #3A1E24;
-    --c-blue: #6B8CF0;
-    --c-brass: #B8861E;
+    --bg: #131B1E;
+    --surface: #1A2428;
+    --soft: #1B262A;
+    --ink: #E3E9E8;
+    --ink-2: #B7C2C3;
+    --muted: #869296;
+    --line: #2B383D;
+    --grid: #222E32;
+    --accent: #8CC3DA;
+    --accent-soft: #1C2F37;
+    --sand: #D9B26A;
+    --sand-soft: #2C261A;
+    --alert: #E48E81;
+    --alert-soft: #382422;
+    --c1: #3C95BE;
+    --c2: #B8872E;
+    --shadow: 0 10px 30px rgba(0, 0, 0, .35);
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
-  --paper: #0B1120;
-  --surface: #131C31;
-  --ink: #E8ECF4;
-  --ink-2: #BCC5D6;
-  --muted: #8E99B0;
-  --line: #293553;
-  --grid: #1F2944;
-  --accent: #8FA8FF;
-  --accent-soft: #1B2749;
-  --brass: #E0B75A;
-  --brass-soft: #2E2716;
-  --breach: #FF7A6E;
-  --breach-soft: #3A1E24;
-  --c-blue: #6B8CF0;
-  --c-brass: #B8861E;
+  --bg: #131B1E;
+  --surface: #1A2428;
+  --soft: #1B262A;
+  --ink: #E3E9E8;
+  --ink-2: #B7C2C3;
+  --muted: #869296;
+  --line: #2B383D;
+  --grid: #222E32;
+  --accent: #8CC3DA;
+  --accent-soft: #1C2F37;
+  --sand: #D9B26A;
+  --sand-soft: #2C261A;
+  --alert: #E48E81;
+  --alert-soft: #382422;
+  --c1: #3C95BE;
+  --c2: #B8872E;
+  --shadow: 0 10px 30px rgba(0, 0, 0, .35);
   color-scheme: dark;
 }
 
@@ -86,214 +91,224 @@ html { scroll-behavior: smooth; }
   html { scroll-snap-type: y proximity; }
 }
 body {
-  background: var(--paper);
+  background: var(--bg);
   color: var(--ink);
   font-family: var(--f-body);
   font-size: var(--fs-m);
-  line-height: 1.55;
+  line-height: 1.62;
   -webkit-font-smoothing: antialiased;
+  font-feature-settings: "kern", "liga";
 }
-a { color: var(--accent); text-underline-offset: 3px; }
-:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 3px; }
+a { color: var(--accent); text-decoration-color: color-mix(in srgb, var(--accent) 40%, transparent); text-underline-offset: 3px; }
+a:hover { text-decoration-color: currentColor; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 4px; }
 h1, h2, h3 { margin: 0; text-wrap: balance; font-weight: 400; }
 p { margin: 0; }
 ul, ol { margin: 0; padding: 0; }
+b, strong { font-weight: 600; color: var(--ink); }
+::selection { background: var(--accent-soft); }
 
 /* ---------- deck ---------- */
-.deck { padding-inline: clamp(16px, 4vw, 56px); }
+.deck { padding-inline: clamp(16px, 5vw, 72px); }
 .slide {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 28px;
-  padding-block: 72px 96px;
+  gap: 32px;
+  padding-block: 84px 112px;
   border-bottom: 1px solid var(--line);
-  max-width: 1180px;
+  max-width: 1120px;
   margin-inline: auto;
   scroll-snap-align: start;
 }
 .slide:last-child { border-bottom: 0; }
 @media (max-width: 48rem) {
-  .slide { min-height: 0; padding-block: 48px 56px; gap: 22px; }
-  .slide:last-child { padding-bottom: 120px; }
+  .slide { min-height: 0; padding-block: 56px 64px; gap: 24px; }
+  .slide:last-child { padding-bottom: 128px; }
 }
 
 .meta {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px 18px;
-  font-family: var(--f-mono);
+  align-items: center;
+  row-gap: 4px;
   font-size: var(--fs-xs);
-  letter-spacing: .06em;
-  text-transform: uppercase;
   color: var(--muted);
+  letter-spacing: .01em;
 }
-.meta .n { color: var(--accent); font-weight: 500; }
-.meta .who::before { content: "Докладчик — "; }
+.meta > span + span { margin-left: 12px; padding-left: 12px; border-left: 1px solid var(--line); }
+.meta .n { color: var(--accent); font-weight: 600; font-variant-numeric: tabular-nums; }
+.meta .who::before { content: "Докладчик: "; }
 
-.head { display: flex; flex-direction: column; gap: 12px; }
-.title { font-family: var(--f-display); font-size: var(--fs-2xl); line-height: 1.15; max-width: 26ch; }
-.lead { font-size: var(--fs-l); color: var(--ink-2); max-width: 64ch; }
+.head { display: flex; flex-direction: column; gap: 14px; }
+.title { font-family: var(--f-display); font-weight: 300; font-size: var(--fs-2xl); line-height: 1.14; letter-spacing: -.005em; max-width: 24ch; }
+.lead { font-size: var(--fs-l); color: var(--ink-2); max-width: 62ch; line-height: 1.6; }
 
-.cols { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr); gap: 40px; align-items: start; }
+.cols { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr); gap: 56px; align-items: start; }
 .cols.even { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
 .cols.wide-left { grid-template-columns: minmax(0, 1.3fr) minmax(0, .7fr); }
-@media (max-width: 56rem) { .cols, .cols.even, .cols.wide-left { grid-template-columns: minmax(0, 1fr); gap: 28px; } }
-.stack { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
-.stack > p { max-width: 64ch; }
+@media (max-width: 56rem) { .cols, .cols.even, .cols.wide-left { grid-template-columns: minmax(0, 1fr); gap: 32px; } }
+.stack { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.stack > p { max-width: 62ch; color: var(--ink-2); }
 
-.points { list-style: none; display: flex; flex-direction: column; gap: 10px; }
-.points li { position: relative; padding-left: 20px; max-width: 62ch; }
+.points { list-style: none; display: flex; flex-direction: column; gap: 11px; }
+.points li { position: relative; padding-left: 24px; max-width: 60ch; color: var(--ink-2); }
 .points li::before {
   content: "";
-  position: absolute; left: 2px; top: .62em;
-  width: 7px; height: 7px;
-  background: var(--accent);
-  transform: rotate(45deg);
+  position: absolute; left: 0; top: .82em;
+  width: 12px; height: 1.5px;
+  background: var(--c1);
+  border-radius: 1px;
 }
-.points.brass li::before { background: var(--c-brass); }
-b, strong { font-weight: 600; }
-.mono { font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
-.note { font-size: var(--fs-s); color: var(--muted); max-width: 70ch; }
+.points.brass li::before { background: var(--c2); }
+.mono { font-variant-numeric: tabular-nums; }
+.note { font-size: var(--fs-s); color: var(--muted); max-width: 68ch; line-height: 1.55; }
 .label {
-  font-family: var(--f-mono);
   font-size: var(--fs-xs);
-  letter-spacing: .08em;
-  text-transform: uppercase;
+  font-weight: 600;
+  letter-spacing: .02em;
   color: var(--muted);
 }
 
 .panel {
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  padding: 22px;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
   min-width: 0;
 }
-.panel h3 { font-family: var(--f-body); font-weight: 600; font-size: var(--fs-l); }
+.panel.tint {
+  background: var(--soft);
+  border-top: 0;
+  border-radius: 16px;
+  padding: 26px 26px 24px;
+}
+.panel h3 { font-family: var(--f-body); font-weight: 600; font-size: var(--fs-l); line-height: 1.35; }
 
 /* ---------- title slide ---------- */
-.hero { gap: 34px; }
-.hero .eyebrow { font-family: var(--f-mono); font-size: var(--fs-s); letter-spacing: .08em; text-transform: uppercase; color: var(--brass); }
-.hero h1 { font-family: var(--f-display); font-size: var(--fs-3xl); line-height: 1.06; max-width: 18ch; }
-.hero h1 .yr { color: var(--accent); white-space: nowrap; }
-.hero-top { display: flex; flex-direction: column; gap: 18px; }
+.hero { gap: 40px; }
+.hero .eyebrow { font-size: var(--fs-s); font-weight: 500; letter-spacing: .02em; color: var(--accent); }
+.hero h1 { font-family: var(--f-display); font-weight: 300; font-size: var(--fs-3xl); line-height: 1.04; letter-spacing: -.01em; max-width: 20ch; }
+.hero h1 .yr { font-style: italic; color: var(--accent); white-space: nowrap; }
+.hero-top { display: flex; flex-direction: column; gap: 20px; }
 .motif { width: 100%; }
 .motif svg { display: block; width: 100%; height: auto; overflow: visible; }
-.motif figcaption { font-size: var(--fs-xs); color: var(--muted); margin-top: 6px; font-family: var(--f-mono); }
+.motif figcaption { font-size: var(--fs-xs); color: var(--muted); margin-top: 8px; }
 
-.team { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
-@media (max-width: 60rem) { .team { grid-template-columns: minmax(0, 1fr); } }
-.member { display: flex; flex-direction: column; gap: 12px; }
-.member .role { font-family: var(--f-mono); font-size: var(--fs-xs); letter-spacing: .06em; text-transform: uppercase; color: var(--accent); }
-.member .name { font-weight: 600; font-size: var(--fs-l); line-height: 1.3; }
-.member ul { font-size: var(--fs-s); color: var(--ink-2); gap: 7px; }
-.member .range { margin-top: auto; padding-top: 10px; border-top: 1px solid var(--grid); font-family: var(--f-mono); font-size: var(--fs-xs); color: var(--muted); }
+.team { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 36px; }
+@media (max-width: 60rem) { .team { grid-template-columns: minmax(0, 1fr); gap: 28px; } }
+.member { display: flex; flex-direction: column; gap: 12px; padding-top: 20px; border-top: 1px solid var(--line); min-width: 0; }
+.member .role { font-size: var(--fs-xs); font-weight: 600; letter-spacing: .02em; color: var(--accent); }
+.member .name { font-family: var(--f-display); font-weight: 400; font-size: clamp(21px, 1.8vw, 24px); line-height: 1.2; }
+.member ul { font-size: var(--fs-s); gap: 8px; }
+.member .range { margin-top: auto; padding-top: 6px; font-size: var(--fs-xs); color: var(--muted); font-variant-numeric: tabular-nums; }
 
 /* ---------- plan ---------- */
-.plan { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
-@media (max-width: 60rem) { .plan { grid-template-columns: minmax(0, 1fr); } }
-.plan .part { font-family: var(--f-display); font-size: var(--fs-xl); color: var(--brass); }
-.plan ol { list-style: none; display: flex; flex-direction: column; gap: 6px; font-size: var(--fs-s); }
-.plan ol a { display: grid; grid-template-columns: 30px 1fr; gap: 6px; text-decoration: none; color: var(--ink); padding: 3px 0; }
-.plan ol a:hover span:last-child { text-decoration: underline; }
-.plan ol a span:first-child { font-family: var(--f-mono); color: var(--muted); font-variant-numeric: tabular-nums; }
-.question { font-family: var(--f-display); font-size: var(--fs-xl); line-height: 1.35; max-width: 50ch; padding-left: 18px; border-left: 2px solid var(--c-brass); }
+.plan { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 36px; }
+@media (max-width: 60rem) { .plan { grid-template-columns: minmax(0, 1fr); gap: 24px; } }
+.plan .part { font-family: var(--f-display); font-style: italic; font-weight: 300; font-size: var(--fs-xl); color: var(--accent); }
+.plan ol { list-style: none; display: flex; flex-direction: column; gap: 2px; font-size: var(--fs-s); }
+.plan ol a { display: grid; grid-template-columns: 30px 1fr; gap: 8px; text-decoration: none; color: var(--ink-2); padding: 5px 0; }
+.plan ol a:hover span:last-child { color: var(--accent); }
+.plan ol a span:first-child { color: var(--muted); font-variant-numeric: tabular-nums; }
+.question { display: flex; flex-direction: column; gap: 10px; }
+.question p { font-family: var(--f-display); font-style: italic; font-weight: 300; font-size: var(--fs-xl); line-height: 1.4; max-width: 50ch; color: var(--ink); }
 
 /* ---------- components grid ---------- */
-.trio { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
-@media (max-width: 56rem) { .trio { grid-template-columns: minmax(0, 1fr); } }
+.trio { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 36px; }
+@media (max-width: 56rem) { .trio { grid-template-columns: minmax(0, 1fr); gap: 24px; } }
 .trio .panel { display: flex; flex-direction: column; gap: 8px; }
 .trio .panel p { font-size: var(--fs-s); color: var(--ink-2); }
-.code-tag { font-family: var(--f-mono); font-size: var(--fs-xs); color: var(--brass); letter-spacing: .06em; }
+.code-tag { font-size: var(--fs-xs); font-weight: 600; color: var(--sand); letter-spacing: .03em; }
 
 /* ---------- figures ---------- */
-.figs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.figs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px 32px; }
 @media (max-width: 30rem) { .figs { grid-template-columns: minmax(0, 1fr); } }
-.fig { display: flex; flex-direction: column; gap: 4px; padding: 16px 18px; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; }
-.fig .v { font-family: var(--f-body); font-weight: 600; font-size: var(--fs-fig); line-height: 1.1; letter-spacing: -.01em; }
-.fig .v.red { color: var(--breach); }
-.fig .k { font-size: var(--fs-s); color: var(--ink-2); }
+.fig { display: flex; flex-direction: column; gap: 6px; padding-top: 16px; border-top: 1px solid var(--line); min-width: 0; }
+.fig .v { font-family: var(--f-display); font-weight: 300; font-size: var(--fs-fig); line-height: 1.05; color: var(--ink); }
+.fig .v.red { color: var(--alert); }
+.fig .k { font-size: var(--fs-s); color: var(--muted); line-height: 1.5; }
 
 /* ---------- tables ---------- */
-.table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); }
+.table-wrap { overflow-x: auto; }
 table { border-collapse: collapse; width: 100%; font-size: var(--fs-s); }
-th, td { text-align: left; padding: 11px 14px; border-bottom: 1px solid var(--grid); vertical-align: top; }
-th { font-family: var(--f-mono); font-size: var(--fs-xs); font-weight: 500; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); background: var(--paper); }
+th, td { text-align: left; padding: 13px 16px 13px 0; border-bottom: 1px solid var(--grid); vertical-align: top; }
+th { font-size: var(--fs-xs); font-weight: 600; letter-spacing: .02em; color: var(--muted); border-bottom-color: var(--line); }
+td { color: var(--ink-2); }
+td:first-child { color: var(--ink); }
 tr:last-child td { border-bottom: 0; }
-td.num, td .mono { font-family: var(--f-mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
-.ccy { font-family: var(--f-mono); font-size: var(--fs-xs); color: var(--muted); margin-left: 6px; }
+td.num, td .mono { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.ccy { font-size: var(--fs-xs); color: var(--muted); margin-left: 8px; letter-spacing: .04em; }
 
 /* ---------- tags ---------- */
-.tag { display: inline-flex; align-items: center; gap: 6px; font-family: var(--f-mono); font-size: 11px; letter-spacing: .05em; text-transform: uppercase; padding: 2px 8px; border-radius: 999px; white-space: nowrap; }
-.tag::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
-.tag.exit { color: var(--breach); background: var(--breach-soft); }
-.tag.deval { color: var(--brass); background: var(--brass-soft); }
-.tag.policy { color: var(--accent); background: var(--accent-soft); }
-.legend { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; }
+.tag { display: inline-flex; align-items: center; gap: 7px; font-size: var(--fs-xs); font-weight: 600; letter-spacing: .01em; white-space: nowrap; }
+.tag::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+.tag.exit { color: var(--alert); }
+.tag.deval { color: var(--sand); }
+.tag.policy { color: var(--accent); }
+.legend { display: flex; flex-wrap: wrap; gap: 8px 20px; align-items: center; }
 
 /* ---------- timeline ---------- */
-.tl { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px 40px; }
+.tl { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px 56px; }
 @media (max-width: 56rem) { .tl { grid-template-columns: minmax(0, 1fr); } }
-.tl h3 { font-family: var(--f-display); font-size: var(--fs-xl); color: var(--brass); margin-bottom: 6px; }
+.tl h3 { font-family: var(--f-display); font-style: italic; font-weight: 300; font-size: var(--fs-xl); color: var(--accent); margin-bottom: 8px; }
 .tl ol { list-style: none; display: flex; flex-direction: column; }
-.tl li { display: grid; grid-template-columns: 64px minmax(0, 1fr) auto; gap: 12px; align-items: baseline; padding: 8px 0; border-top: 1px solid var(--grid); font-size: var(--fs-s); }
-.tl li .d { font-family: var(--f-mono); font-variant-numeric: tabular-nums; color: var(--muted); font-size: var(--fs-xs); }
+.tl li { display: grid; grid-template-columns: 58px minmax(0, 1fr) auto; gap: 14px; align-items: baseline; padding: 9px 0; border-top: 1px solid var(--grid); font-size: var(--fs-s); color: var(--ink-2); }
+.tl li .d { font-variant-numeric: tabular-nums; color: var(--muted); font-size: var(--fs-xs); }
 @media (max-width: 30rem) {
-  .tl li { grid-template-columns: 56px minmax(0, 1fr); }
+  .tl li { grid-template-columns: 52px minmax(0, 1fr); row-gap: 4px; }
   .tl li .tag { grid-column: 2; justify-self: start; }
 }
 
 /* ---------- day timeline ---------- */
 .day { list-style: none; display: flex; flex-direction: column; }
-.day li { display: grid; grid-template-columns: 84px minmax(0, 1fr); gap: 16px; padding: 12px 0; border-top: 1px solid var(--grid); }
+.day li { display: grid; grid-template-columns: 76px minmax(0, 1fr); gap: 18px; padding: 14px 0; border-top: 1px solid var(--grid); color: var(--ink-2); }
 .day li:first-child { border-top: 0; padding-top: 0; }
-.day .t { font-family: var(--f-mono); font-variant-numeric: tabular-nums; font-size: var(--fs-l); color: var(--accent); }
-.day li.key .t { color: var(--breach); }
-.day li.key .e { font-weight: 600; }
+.day .t { font-family: var(--f-display); font-size: var(--fs-l); font-variant-numeric: tabular-nums; color: var(--accent); line-height: 1.4; }
+.day li.key .t { color: var(--alert); }
+.day li.key .e { color: var(--ink); font-weight: 500; }
 
 /* ---------- bars (html) ---------- */
-.bars { display: flex; flex-direction: column; gap: 16px; }
-.bar-row { display: flex; flex-direction: column; gap: 6px; }
-.bar-row .cap { display: flex; justify-content: space-between; gap: 12px; font-size: var(--fs-s); flex-wrap: wrap; }
-.bar-row .cap .val { font-family: var(--f-mono); font-variant-numeric: tabular-nums; color: var(--ink-2); }
-.track { position: relative; height: 22px; }
-.stackbar { display: flex; gap: 2px; height: 22px; }
+.bars { display: flex; flex-direction: column; gap: 20px; }
+.bar-row { display: flex; flex-direction: column; gap: 8px; }
+.bar-row .cap { display: flex; justify-content: space-between; gap: 12px; font-size: var(--fs-s); flex-wrap: wrap; color: var(--ink-2); }
+.bar-row .cap .val { font-variant-numeric: tabular-nums; color: var(--muted); }
+.track { position: relative; height: 16px; }
+.stackbar { display: flex; gap: 2px; height: 16px; }
 .stackbar > span { display: block; height: 100%; }
-.stackbar > span:first-child { border-radius: 4px 0 0 4px; }
-.stackbar > span:last-child { border-radius: 0 4px 4px 0; }
-.seg-yes { background: var(--c-blue); }
-.seg-no { background: var(--c-brass); }
-.half { position: absolute; top: -4px; bottom: -4px; left: 50%; width: 1px; background: var(--ink); }
-.key-row { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: var(--fs-s); color: var(--ink-2); }
-.key-row i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; vertical-align: -1px; margin-right: 6px; }
+.stackbar > span:first-child { border-radius: 8px 0 0 8px; }
+.stackbar > span:last-child { border-radius: 0 8px 8px 0; }
+.seg-yes { background: var(--c1); }
+.seg-no { background: var(--c2); }
+.half { position: absolute; top: -5px; bottom: -5px; left: 50%; width: 1px; background: var(--ink); opacity: .55; }
+.key-row { display: flex; flex-wrap: wrap; gap: 6px 20px; font-size: var(--fs-s); color: var(--ink-2); }
+.key-row i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; vertical-align: -1px; margin-right: 7px; }
 
-.band-chart { display: flex; flex-direction: column; gap: 14px; }
-.band-track { position: relative; height: 22px; background: var(--grid); border-radius: 4px; }
-.band-track .fill { position: absolute; top: 0; bottom: 0; border-radius: 4px; background: var(--c-blue); }
-.band-track .fill.wide { background: var(--c-brass); }
-.band-track .mid { position: absolute; top: -4px; bottom: -4px; left: 50%; width: 1px; background: var(--ink); }
-.band-axis { position: relative; height: 18px; font-family: var(--f-mono); font-size: var(--fs-xs); color: var(--muted); font-variant-numeric: tabular-nums; }
+.band-chart { display: flex; flex-direction: column; gap: 16px; }
+.band-track { position: relative; height: 14px; background: var(--grid); border-radius: 7px; }
+.band-track .fill { position: absolute; top: 0; bottom: 0; border-radius: 7px; background: var(--c1); }
+.band-track .fill.wide { background: var(--c2); }
+.band-track .mid { position: absolute; top: -5px; bottom: -5px; left: 50%; width: 1px; background: var(--ink); opacity: .55; }
+.band-axis { position: relative; height: 18px; font-size: var(--fs-xs); color: var(--muted); font-variant-numeric: tabular-nums; }
 .band-axis span { position: absolute; transform: translateX(-50%); white-space: nowrap; }
 .band-axis span:first-child { transform: none; }
 .band-axis span:last-child { transform: translateX(-100%); }
 
-.bet { display: flex; flex-direction: column; gap: 14px; }
-.bet .row { display: grid; grid-template-columns: minmax(0, 1fr); gap: 6px; }
-.bet .track { background: var(--grid); border-radius: 4px; height: 18px; }
-.bet .track span { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 0 4px 4px 0; }
-.calc { display: flex; flex-direction: column; gap: 10px; font-size: var(--fs-s); }
-.calc .line { display: flex; justify-content: space-between; gap: 14px; flex-wrap: wrap; padding-bottom: 8px; border-bottom: 1px dashed var(--line); }
+.bet { display: flex; flex-direction: column; gap: 16px; }
+.bet .row { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; }
+.bet .track { background: color-mix(in srgb, var(--line) 70%, transparent); border-radius: 5px; height: 10px; }
+.bet .track span { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 5px; }
+.calc { display: flex; flex-direction: column; gap: 10px; font-size: var(--fs-s); color: var(--ink-2); }
+.calc .line { display: flex; justify-content: space-between; gap: 14px; flex-wrap: wrap; padding-bottom: 10px; border-bottom: 1px solid var(--line); }
 .calc .line:last-child { border-bottom: 0; padding-bottom: 0; }
+.calc .line:last-child .mono { font-weight: 600; }
 .calc .line .mono { color: var(--ink); }
 
 /* ---------- charts ---------- */
 .chart { position: relative; width: 100%; min-width: 0; }
 .chart svg { display: block; width: 100%; overflow: visible; }
-.chart text { font-family: var(--f-mono); font-size: 12px; fill: var(--muted); }
-.chart text.ink { fill: var(--ink); }
-.chart text.red { fill: var(--breach); }
+.chart text { font-family: var(--f-body); font-size: 12px; fill: var(--muted); font-variant-numeric: tabular-nums; }
+.chart text.ink { fill: var(--ink-2); font-weight: 500; }
+.chart text.red { fill: var(--alert); font-weight: 500; }
 details.data { font-size: var(--fs-s); }
 details.data summary { cursor: pointer; color: var(--accent); font-size: var(--fs-s); width: fit-content; }
 details.data .table-wrap { margin-top: 10px; }
@@ -301,97 +316,104 @@ details.data .table-wrap { margin-top: 10px; }
 .trinity svg { display: block; width: 100%; max-width: 440px; height: auto; margin-inline: auto; }
 .trinity text { font-family: var(--f-body); font-size: 15px; fill: var(--ink); }
 .trinity text.lab { font-weight: 600; }
-.trinity text.edge { font-family: var(--f-mono); font-size: 13px; fill: var(--muted); }
-.trinity text.edge.on { fill: var(--accent); font-weight: 500; }
-.trinity text.lost { font-family: var(--f-mono); font-size: 12px; fill: var(--breach); }
+.trinity text.edge { font-size: 13px; fill: var(--muted); }
+.trinity text.edge.on { fill: var(--accent); font-weight: 600; }
+.trinity text.lost { font-size: 12.5px; fill: var(--alert); }
 
 /* ---------- theory ---------- */
 .gen { display: flex; flex-direction: column; gap: 12px; }
-.gen .who-cite { font-family: var(--f-mono); font-size: var(--fs-xs); color: var(--muted); }
-.gen .apply { font-size: var(--fs-s); padding: 10px 12px; background: var(--paper); border-radius: 4px; color: var(--ink-2); }
+.gen p { color: var(--ink-2); }
+.gen .who-cite { font-size: var(--fs-xs); color: var(--muted); }
+.gen .apply { font-size: var(--fs-s); padding: 12px 14px; background: var(--bg); border-radius: 10px; color: var(--ink-2); }
 
 /* ---------- path to euro ---------- */
-.path { list-style: none; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0; border-top: 2px solid var(--c-blue); }
+.path { list-style: none; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0; border-top: 1px solid var(--c1); }
 @media (max-width: 60rem) { .path { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 30rem) { .path { grid-template-columns: minmax(0, 1fr); } }
-.path li { position: relative; padding: 18px 16px 16px 0; display: flex; flex-direction: column; gap: 4px; font-size: var(--fs-s); }
-.path li::before { content: ""; position: absolute; top: -7px; left: 0; width: 12px; height: 12px; border-radius: 50%; background: var(--c-blue); box-shadow: 0 0 0 2px var(--paper); }
-.path li .d { font-family: var(--f-mono); font-size: var(--fs-xs); color: var(--brass); letter-spacing: .04em; }
-.path li b { font-size: var(--fs-m); }
+.path li { position: relative; padding: 20px 20px 18px 0; display: flex; flex-direction: column; gap: 4px; font-size: var(--fs-s); color: var(--ink-2); }
+.path li::before { content: ""; position: absolute; top: -5px; left: 0; width: 9px; height: 9px; border-radius: 50%; background: var(--c1); box-shadow: 0 0 0 3px var(--bg); }
+.path li .d { font-size: var(--fs-xs); font-weight: 600; color: var(--sand); letter-spacing: .02em; font-variant-numeric: tabular-nums; }
+.path li b { font-size: var(--fs-m); font-weight: 600; }
 
 /* ---------- lessons ---------- */
-.lessons { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+.lessons { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 28px 40px; }
 @media (max-width: 60rem) { .lessons { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-@media (max-width: 36rem) { .lessons { grid-template-columns: minmax(0, 1fr); } }
-.lessons > div { background: var(--surface); padding: 20px; display: flex; flex-direction: column; gap: 8px; }
-.lessons h3 { font-family: var(--f-body); font-weight: 600; font-size: var(--fs-m); line-height: 1.35; }
+@media (max-width: 36rem) { .lessons { grid-template-columns: minmax(0, 1fr); gap: 20px; } }
+.lessons > div { padding-top: 16px; border-top: 1px solid var(--line); display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.lessons h3 { font-family: var(--f-display); font-weight: 400; font-size: var(--fs-l); line-height: 1.3; }
 .lessons p { font-size: var(--fs-s); color: var(--ink-2); }
-.verdict { font-family: var(--f-display); font-size: var(--fs-xl); line-height: 1.35; max-width: 56ch; }
+.verdict { font-family: var(--f-display); font-style: italic; font-weight: 300; font-size: var(--fs-xl); line-height: 1.42; max-width: 54ch; }
 
 /* ---------- sources ---------- */
-.sources { counter-reset: s; list-style: none; display: flex; flex-direction: column; gap: 8px; font-size: var(--fs-s); color: var(--ink-2); }
+.sources { counter-reset: s; list-style: none; display: flex; flex-direction: column; gap: 10px; font-size: var(--fs-s); color: var(--ink-2); }
 .sources li { counter-increment: s; display: grid; grid-template-columns: 26px minmax(0, 1fr); gap: 6px; }
-.sources li::before { content: counter(s) "."; font-family: var(--f-mono); color: var(--muted); }
-.thanks { font-family: var(--f-display); font-size: var(--fs-3xl); line-height: 1.05; }
+.sources li::before { content: counter(s) "."; color: var(--muted); font-variant-numeric: tabular-nums; }
+.thanks { font-family: var(--f-display); font-style: italic; font-weight: 300; font-size: var(--fs-3xl); line-height: 1.02; color: var(--accent); }
 .thanks-sub { font-size: var(--fs-l); color: var(--ink-2); }
 
 /* ---------- fixed UI ---------- */
-.progress { position: fixed; top: env(safe-area-inset-top, 0px); left: 0; right: 0; height: 3px; background: var(--grid); z-index: 20; }
-.progress i { display: block; height: 100%; background: var(--accent); transform-origin: 0 50%; transform: scaleX(0); transition: transform .25s ease; }
+.progress { position: fixed; top: env(safe-area-inset-top, 0px); left: 0; right: 0; height: 2px; z-index: 20; }
+.progress i { display: block; height: 100%; background: var(--accent); transform-origin: 0 50%; transform: scaleX(0); transition: transform .35s ease; }
 @media (prefers-reduced-motion: reduce) { .progress i { transition: none; } }
 
 .deck-nav {
   position: fixed;
-  right: 16px;
-  bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  right: 20px;
+  bottom: calc(20px + env(safe-area-inset-bottom, 0px));
   z-index: 30;
   display: flex;
   align-items: center;
-  gap: 4px;
-  padding: 4px;
-  background: var(--surface);
+  gap: 2px;
+  padding: 5px;
+  background: color-mix(in srgb, var(--surface) 88%, transparent);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
   border: 1px solid var(--line);
   border-radius: 999px;
-  box-shadow: 0 6px 20px rgba(15, 26, 47, .12);
+  box-shadow: var(--shadow);
 }
+@media (max-width: 30rem) { .deck-nav { right: 16px; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); } }
 .deck-nav button {
-  appearance: none; border: 0; background: transparent; color: var(--ink);
-  height: 38px; min-width: 38px; padding: 0 10px; border-radius: 999px;
+  appearance: none; border: 0; background: transparent; color: var(--ink-2);
+  height: 38px; min-width: 38px; padding: 0 11px; border-radius: 999px;
   font: 500 var(--fs-s) var(--f-body); cursor: pointer;
-  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+  transition: background-color .15s ease, color .15s ease;
 }
 .deck-nav button:hover:not(:disabled) { background: var(--accent-soft); color: var(--accent); }
-.deck-nav button:disabled { opacity: .35; cursor: default; }
-.deck-nav svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-.deck-nav .count { font-family: var(--f-mono); font-size: var(--fs-s); font-variant-numeric: tabular-nums; color: var(--ink-2); padding: 0 6px; min-width: 64px; text-align: center; }
+.deck-nav button:disabled { opacity: .3; cursor: default; }
+.deck-nav svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.deck-nav .count { font-size: var(--fs-s); font-variant-numeric: tabular-nums; color: var(--muted); padding: 0 6px; min-width: 64px; text-align: center; }
 @media (max-width: 30rem) { .deck-nav .txt { display: none; } }
 
 .menu {
   position: fixed;
-  right: 16px;
-  bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+  right: 20px;
+  bottom: calc(76px + env(safe-area-inset-bottom, 0px));
   z-index: 30;
   width: min(380px, calc(100vw - 32px));
   max-height: min(70vh, 620px);
   overflow-y: auto;
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: 10px;
-  box-shadow: 0 14px 40px rgba(15, 26, 47, .18);
+  border-radius: 16px;
+  box-shadow: var(--shadow);
   padding: 8px;
 }
+@media (max-width: 30rem) { .menu { right: 16px; } }
 .menu ol { list-style: none; display: flex; flex-direction: column; }
-.menu a { display: grid; grid-template-columns: 30px minmax(0, 1fr); gap: 8px; padding: 8px 10px; border-radius: 6px; text-decoration: none; color: var(--ink); font-size: var(--fs-s); line-height: 1.35; }
-.menu a:hover { background: var(--paper); }
+.menu a { display: grid; grid-template-columns: 30px minmax(0, 1fr); gap: 8px; padding: 8px 12px; border-radius: 10px; text-decoration: none; color: var(--ink-2); font-size: var(--fs-s); line-height: 1.4; }
+.menu a:hover { background: var(--bg); color: var(--ink); }
 .menu a[aria-current="true"] { background: var(--accent-soft); color: var(--accent); }
-.menu a span:first-child { font-family: var(--f-mono); color: var(--muted); font-variant-numeric: tabular-nums; }
-.menu .hint { font-size: var(--fs-xs); color: var(--muted); padding: 8px 10px 4px; border-top: 1px solid var(--grid); margin-top: 6px; }
+.menu a span:first-child { color: var(--muted); font-variant-numeric: tabular-nums; }
+.menu .hint { font-size: var(--fs-xs); color: var(--muted); padding: 10px 12px 6px; border-top: 1px solid var(--grid); margin-top: 6px; }
 
 .tip {
   position: fixed; z-index: 40; pointer-events: none;
-  background: var(--ink); color: var(--paper);
-  font-family: var(--f-mono); font-size: var(--fs-xs); line-height: 1.4;
-  padding: 6px 9px; border-radius: 4px; max-width: 260px;
+  background: var(--ink); color: var(--bg);
+  font-family: var(--f-body); font-size: var(--fs-xs); line-height: 1.45;
+  padding: 7px 10px; border-radius: 8px; max-width: 260px;
+  font-variant-numeric: tabular-nums;
 }
 </style>
 </head>
@@ -416,7 +438,7 @@ details.data .table-wrap { margin-top: 10px; }
   <div class="stack">
     <h2 class="label">Состав группы и распределение задач</h2>
     <div class="team">
-      <article class="panel member">
+      <article class="member">
         <span class="role">Раздел I · Предпосылки кризиса</span>
         <h3 class="name">Аверьянов Никита Романович</h3>
         <ul class="points">
@@ -427,7 +449,7 @@ details.data .table-wrap { margin-top: 10px; }
         </ul>
         <span class="range">Слайды 02–08</span>
       </article>
-      <article class="panel member">
+      <article class="member">
         <span class="role">Раздел II · Ход кризиса</span>
         <h3 class="name">Гордеев Егор Александрович</h3>
         <ul class="points">
@@ -438,7 +460,7 @@ details.data .table-wrap { margin-top: 10px; }
         </ul>
         <span class="range">Слайды 09–14</span>
       </article>
-      <article class="panel member">
+      <article class="member">
         <span class="role">Раздел III · Анализ и последствия</span>
         <h3 class="name">Татьянченко Иван Сергеевич</h3>
         <ul class="points">
@@ -459,7 +481,7 @@ details.data .table-wrap { margin-top: 10px; }
   <div class="head">
     <h2 class="title">План доклада</h2>
   </div>
-  <p class="question">Почему система, в которой курсы европейских валют почти шесть лет не пересматривались, за одиннадцать месяцев 1992–1993&nbsp;гг. лишилась двух крупных участников и фактически стала плавающей?</p>
+  <div class="question"><span class="label">Главный вопрос доклада</span><p>Почему система, в которой курсы европейских валют почти шесть лет не пересматривались, за одиннадцать месяцев 1992–1993&nbsp;гг. лишилась двух крупных участников и фактически стала плавающей?</p></div>
   <div class="plan">
     <div class="panel stack">
       <span class="part">I. Предпосылки</span>
@@ -547,9 +569,9 @@ details.data .table-wrap { margin-top: 10px; }
       <div id="ermChart" class="chart" role="img" aria-label="Схема коридоров ERM: центральный курс, узкий коридор плюс-минус 2,25 процента и широкий плюс-минус 6 процентов; курс валюты касается границ, и в этих точках проводятся интервенции"></div>
       <div class="key-row">
         <span><i style="background:var(--accent-soft);border:1px solid var(--line)"></i>широкий коридор ±6%</span>
-        <span><i style="background:var(--c-blue);opacity:.25"></i>узкий коридор ±2,25%</span>
+        <span><i style="background:var(--c1);opacity:.25"></i>узкий коридор ±2,25%</span>
         <span><i style="background:var(--ink-2);height:2px;vertical-align:4px"></i>центральный курс (0)</span>
-        <span><i style="background:var(--c-brass);border-radius:50%"></i>обязательная интервенция</span>
+        <span><i style="background:var(--c2);border-radius:50%"></i>обязательная интервенция</span>
       </div>
       <figcaption class="note">Схема: отклонение рыночного курса от центрального, %</figcaption>
     </figure>
@@ -608,7 +630,7 @@ details.data .table-wrap { margin-top: 10px; }
     </div>
     <div class="figs">
       <div class="fig"><span class="v">1 : 1</span><span class="k">курс обмена восточной марки на западную для зарплат и цен, июль 1990</span></div>
-      <div class="fig"><span class="v">&gt; 100 млрд DM</span><span class="k">ежегодные трансферты в новые земли</span></div>
+      <div class="fig"><span class="v">&gt;&nbsp;100&nbsp;млрд&nbsp;DM</span><span class="k">ежегодные трансферты в новые земли</span></div>
       <div class="fig"><span class="v">8,75%</span><span class="k">учётная ставка Бундесбанка с 16 июля 1992; ломбардная — 9,75%</span></div>
       <div class="fig"><span class="v">3%</span><span class="k">ставка ФРС США с сентября 1992: доллар слабеет, марка дорожает</span></div>
     </div>
@@ -633,8 +655,8 @@ details.data .table-wrap { margin-top: 10px; }
     <figure class="stack" style="margin:0">
       <span class="label">Итоги референдумов по Маастрихтскому договору, % голосов</span>
       <div class="key-row">
-        <span><i style="background:var(--c-blue)"></i>за</span>
-        <span><i style="background:var(--c-brass)"></i>против</span>
+        <span><i style="background:var(--c1)"></i>за</span>
+        <span><i style="background:var(--c2)"></i>против</span>
       </div>
       <div class="bars">
         <div class="bar-row">
@@ -672,12 +694,12 @@ details.data .table-wrap { margin-top: 10px; }
   <div class="cols">
     <figure class="trinity" style="margin:0">
       <svg viewBox="0 0 440 350" role="img" aria-label="Треугольник невозможной троицы: фиксированный курс, свободное движение капитала, независимая денежная политика. ERM 1990–1992 выбрал первые две вершины и отказался от независимой денежной политики.">
-        <line x1="220" y1="62" x2="360" y2="268" stroke="var(--line)" stroke-width="2"/>
-        <line x1="80" y1="268" x2="360" y2="268" stroke="var(--line)" stroke-width="2"/>
-        <line x1="220" y1="62" x2="80" y2="268" stroke="var(--c-blue)" stroke-width="4" stroke-linecap="round"/>
-        <circle cx="220" cy="62" r="8" fill="var(--c-blue)" stroke="var(--paper)" stroke-width="2"/>
-        <circle cx="80" cy="268" r="8" fill="var(--c-blue)" stroke="var(--paper)" stroke-width="2"/>
-        <circle cx="360" cy="268" r="7" fill="var(--paper)" stroke="var(--breach)" stroke-width="2"/>
+        <line x1="220" y1="62" x2="360" y2="268" stroke="var(--line)" stroke-width="1.5"/>
+        <line x1="80" y1="268" x2="360" y2="268" stroke="var(--line)" stroke-width="1.5"/>
+        <line x1="220" y1="62" x2="80" y2="268" stroke="var(--c1)" stroke-width="3" stroke-linecap="round"/>
+        <circle cx="220" cy="62" r="8" fill="var(--c1)" stroke="var(--bg)" stroke-width="2"/>
+        <circle cx="80" cy="268" r="8" fill="var(--c1)" stroke="var(--bg)" stroke-width="2"/>
+        <circle cx="360" cy="268" r="7" fill="var(--bg)" stroke="var(--alert)" stroke-width="2"/>
         <text class="lab" x="220" y="24" text-anchor="middle">Фиксированный</text>
         <text class="lab" x="220" y="43" text-anchor="middle">курс</text>
         <text class="lab" x="80" y="298" text-anchor="middle">Свободное</text>
@@ -776,7 +798,7 @@ details.data .table-wrap { margin-top: 10px; }
 <section class="slide" id="s11" data-short="«Чёрная среда»">
   <div class="meta"><span class="n">11 / 19</span><span>II. Ход кризиса</span><span class="who">Е. А. Гордеев</span></div>
   <div class="head">
-    <h2 class="title">«Чёрная среда», 16 сентября 1992&nbsp;г.</h2>
+    <h2 class="title">«Чёрная среда», 16&nbsp;сентября 1992&nbsp;г.</h2>
   </div>
   <div class="cols">
     <ol class="day">
@@ -788,7 +810,7 @@ details.data .table-wrap { margin-top: 10px; }
     </ol>
     <div class="figs">
       <div class="fig"><span class="v">2,7780 DM</span><span class="k">нижняя граница коридора фунта</span></div>
-      <div class="fig"><span class="v">10 → 12 → 15%</span><span class="k">ставка за один день (15% — только объявлено)</span></div>
+      <div class="fig"><span class="v">10&thinsp;→&thinsp;12&thinsp;→&thinsp;15%</span><span class="k">ставка за один день (15% — только объявлено)</span></div>
       <div class="fig"><span class="v">£3,3 млрд</span><span class="k">потери казначейства по оценке, опубликованной в 2005 г.</span></div>
       <div class="fig"><span class="v red">16.09.1992</span><span class="k">фунт покидает ERM и больше в него не возвращается</span></div>
     </div>
@@ -812,7 +834,7 @@ details.data .table-wrap { margin-top: 10px; }
         <li>Если фунт девальвируют — выкупает фунты дешевле и получает прибыль.</li>
       </ul>
     </div>
-    <div class="panel bet">
+    <div class="panel tint bet">
       <span class="label">Условный пример: продажа £1 млрд по 2,78 DM</span>
       <div class="calc">
         <div class="line"><span>Получено от продажи</span><span class="mono">2,78 млрд DM</span></div>
@@ -822,11 +844,11 @@ details.data .table-wrap { margin-top: 10px; }
       </div>
       <div class="row">
         <div class="cap" style="display:flex;justify-content:space-between;font-size:var(--fs-s)"><span>Риск, если курс удержат</span><span class="mono">≈ 0,05%</span></div>
-        <div class="track"><span style="width:0.5%;min-width:3px;background:var(--c-brass)" data-tip="Возможная потеря ≈ 0,05%"></span></div>
+        <div class="track"><span style="width:0.5%;min-width:3px;background:var(--c2)" data-tip="Возможная потеря ≈ 0,05%"></span></div>
       </div>
       <div class="row">
         <div class="cap" style="display:flex;justify-content:space-between;font-size:var(--fs-s)"><span>Выигрыш при девальвации</span><span class="mono">≈ 10%</span></div>
-        <div class="track"><span style="width:100%;background:var(--c-blue);border-radius:4px" data-tip="Возможный выигрыш ≈ 10%"></span></div>
+        <div class="track"><span style="width:100%;background:var(--c1);border-radius:4px" data-tip="Возможный выигрыш ≈ 10%"></span></div>
       </div>
       <p class="note">Шкала: 0–10% от суммы сделки. Цифры условные, для иллюстрации асимметрии.</p>
     </div>
@@ -912,14 +934,14 @@ details.data .table-wrap { margin-top: 10px; }
     <p class="lead">Кризис ЕВС стал главным примером, на котором проверяли две группы моделей валютных кризисов.</p>
   </div>
   <div class="cols even">
-    <div class="panel gen">
+    <div class="panel tint gen">
       <span class="label">Модели первого поколения</span>
       <h3>Кризис неизбежен при плохих фундаментальных показателях</h3>
       <span class="who-cite">П. Кругман, 1979</span>
       <p>Если бюджетная и денежная политика несовместима с фиксированным курсом, резервы постепенно тают. Спекулятивная атака лишь ускоряет неизбежную девальвацию.</p>
       <p class="apply"><b>Подходит для:</b> Италии с госдолгом выше 100% ВВП и высокой инфляцией, отчасти для Испании и завышенного курса фунта.</p>
     </div>
-    <div class="panel gen">
+    <div class="panel tint gen">
       <span class="label">Модели второго поколения</span>
       <h3>Ожидания рынка сбываются сами</h3>
       <span class="who-cite">М. Обстфельд, 1994–1996</span>
@@ -1091,14 +1113,14 @@ details.data .table-wrap { margin-top: 10px; }
     svgEl("rect", { x: m.l, y: y(6.17), width: iw, height: y(-5.83) - y(6.17), fill: "var(--accent-soft)" }, svg);
     svgEl("line", { x1: m.l, x2: m.l + iw, y1: y(6.17), y2: y(6.17), stroke: "var(--line)", "stroke-width": 1 }, svg);
     svgEl("line", { x1: m.l, x2: m.l + iw, y1: y(0), y2: y(0), stroke: "var(--line)", "stroke-width": 1 }, svg);
-    svgEl("line", { x1: m.l, x2: m.l + iw, y1: y(-5.83), y2: y(-5.83), stroke: "var(--breach)", "stroke-width": 1 }, svg);
+    svgEl("line", { x1: m.l, x2: m.l + iw, y1: y(-5.83), y2: y(-5.83), stroke: "var(--alert)", "stroke-width": 1 }, svg);
     var brk = 17;
     var d1 = "", d2 = "";
     for (var i = 0; i <= brk; i++) d1 += (i ? "L" : "M") + x(i).toFixed(1) + "," + y(vals[i]).toFixed(1);
     for (var j = brk; j <= n; j++) d2 += (j === brk ? "M" : "L") + x(j).toFixed(1) + "," + y(vals[j]).toFixed(1);
-    svgEl("path", { d: d1, fill: "none", stroke: "var(--c-blue)", "stroke-width": 2, "stroke-linejoin": "round", "stroke-linecap": "round" }, svg);
-    svgEl("path", { d: d2, fill: "none", stroke: "var(--breach)", "stroke-width": 2.5, "stroke-linejoin": "round", "stroke-linecap": "round" }, svg);
-    svgEl("circle", { cx: x(brk), cy: y(vals[brk]), r: 5, fill: "var(--breach)", stroke: "var(--paper)", "stroke-width": 2 }, svg);
+    svgEl("path", { d: d1, fill: "none", stroke: "var(--c1)", "stroke-width": 2, "stroke-linejoin": "round", "stroke-linecap": "round" }, svg);
+    svgEl("path", { d: d2, fill: "none", stroke: "var(--alert)", "stroke-width": 2, "stroke-linejoin": "round", "stroke-linecap": "round" }, svg);
+    svgEl("circle", { cx: x(brk), cy: y(vals[brk]), r: 5, fill: "var(--alert)", stroke: "var(--bg)", "stroke-width": 2 }, svg);
     if (W >= 520) {
       txt(svg, m.l - 10, y(6.17) + 4, "3,1320", { "text-anchor": "end" });
       txt(svg, m.l - 10, y(0) + 4, "2,95", { "text-anchor": "end", "class": "ink" });
@@ -1124,7 +1146,7 @@ details.data .table-wrap { margin-top: 10px; }
     var x = function (i) { return m.l + i / n * iw; };
     var svg = svgEl("svg", { width: W, height: H, viewBox: "0 0 " + W + " " + H, "aria-hidden": "true" });
     svgEl("rect", { x: m.l, y: y(6), width: iw, height: y(-6) - y(6), fill: "var(--accent-soft)" }, svg);
-    svgEl("rect", { x: m.l, y: y(2.25), width: iw, height: y(-2.25) - y(2.25), fill: "var(--c-blue)", "fill-opacity": 0.14 }, svg);
+    svgEl("rect", { x: m.l, y: y(2.25), width: iw, height: y(-2.25) - y(2.25), fill: "var(--c1)", "fill-opacity": 0.12 }, svg);
     [6, 2.25, -2.25, -6].forEach(function (v) {
       svgEl("line", { x1: m.l, x2: m.l + iw, y1: y(v), y2: y(v), stroke: "var(--line)", "stroke-width": 1 }, svg);
     });
@@ -1134,9 +1156,9 @@ details.data .table-wrap { margin-top: 10px; }
     });
     var d = "";
     for (var i = 0; i <= n; i++) d += (i ? "L" : "M") + x(i).toFixed(1) + "," + y(vals[i]).toFixed(1);
-    svgEl("path", { d: d, fill: "none", stroke: "var(--c-blue)", "stroke-width": 2, "stroke-linejoin": "round", "stroke-linecap": "round" }, svg);
+    svgEl("path", { d: d, fill: "none", stroke: "var(--c1)", "stroke-width": 2, "stroke-linejoin": "round", "stroke-linecap": "round" }, svg);
     [9, 17].forEach(function (i) {
-      svgEl("circle", { cx: x(i), cy: y(vals[i]), r: 5, fill: "var(--c-brass)", stroke: "var(--paper)", "stroke-width": 2, "data-tip": vals[i] > 0 ? "Верхняя граница: центральные банки продают сильную валюту" : "Нижняя граница: центральные банки покупают слабую валюту" }, svg);
+      svgEl("circle", { cx: x(i), cy: y(vals[i]), r: 5, fill: "var(--c2)", stroke: "var(--bg)", "stroke-width": 2, "data-tip": vals[i] > 0 ? "Верхняя граница: центральные банки продают сильную валюту" : "Нижняя граница: центральные банки покупают слабую валюту" }, svg);
     });
     txt(svg, x(9), y(-2.25) + 22, "интервенция", { "text-anchor": "middle", "class": "ink" });
     txt(svg, x(17), y(2.25) - 12, "интервенция", { "text-anchor": "middle", "class": "ink" });
@@ -1169,7 +1191,7 @@ details.data .table-wrap { margin-top: 10px; }
       txt(svg, x(tk[0]), H - 8, tk[1], { "text-anchor": i === 0 ? "start" : "middle" });
     });
     var xs = x("1992-09-16");
-    svgEl("line", { x1: xs, x2: xs, y1: m.t - 14, y2: m.t + ih, stroke: "var(--breach)", "stroke-width": 1 }, svg);
+    svgEl("line", { x1: xs, x2: xs, y1: m.t - 14, y2: m.t + ih, stroke: "var(--alert)", "stroke-width": 1 }, svg);
     txt(svg, xs + 6, m.t - 20, "16.09.1992 — выход из ERM", { "class": "red" });
     var d = "M" + x(steps[0][0]).toFixed(1) + "," + y(steps[0][1]).toFixed(1);
     for (var i = 1; i < steps.length; i++) {
@@ -1177,14 +1199,14 @@ details.data .table-wrap { margin-top: 10px; }
     }
     d += "H" + x(end).toFixed(1);
     var area = d + "V" + y(0).toFixed(1) + "H" + x(steps[0][0]).toFixed(1) + "Z";
-    svgEl("path", { d: area, fill: "var(--c-blue)", "fill-opacity": 0.1, stroke: "none" }, svg);
-    svgEl("path", { d: d, fill: "none", stroke: "var(--c-blue)", "stroke-width": 2, "stroke-linejoin": "round", "stroke-linecap": "round" }, svg);
-    svgEl("line", { x1: xs, x2: xs, y1: y(12), y2: y(15), stroke: "var(--c-blue)", "stroke-width": 1.5, "stroke-dasharray": "3 3" }, svg);
-    svgEl("circle", { cx: xs, cy: y(15), r: 4.5, fill: "var(--surface)", stroke: "var(--c-blue)", "stroke-width": 2 }, svg);
+    svgEl("path", { d: area, fill: "var(--c1)", "fill-opacity": 0.1, stroke: "none" }, svg);
+    svgEl("path", { d: d, fill: "none", stroke: "var(--c1)", "stroke-width": 2, "stroke-linejoin": "round", "stroke-linecap": "round" }, svg);
+    svgEl("line", { x1: xs, x2: xs, y1: y(12), y2: y(15), stroke: "var(--c1)", "stroke-width": 1.5, "stroke-dasharray": "3 3" }, svg);
+    svgEl("circle", { cx: xs, cy: y(15), r: 4.5, fill: "var(--surface)", stroke: "var(--c1)", "stroke-width": 2 }, svg);
     txt(svg, xs + 10, y(15) + 4, "15% — объявлено, не введено", { "class": "ink" });
     txt(svg, xs + 10, y(12) + 4, "12%", { "class": "ink" });
     var xe = x(end), ye = y(5.5);
-    svgEl("circle", { cx: xe, cy: ye, r: 4.5, fill: "var(--c-blue)", stroke: "var(--paper)", "stroke-width": 2 }, svg);
+    svgEl("circle", { cx: xe, cy: ye, r: 4.5, fill: "var(--c1)", stroke: "var(--bg)", "stroke-width": 2 }, svg);
     txt(svg, xe + 8, ye + 4, "5,5%", { "class": "ink" });
     txt(svg, x("1992-07-01") + 4, y(10) - 8, "10%", { "class": "ink" });
     // hover targets
