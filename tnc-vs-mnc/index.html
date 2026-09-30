@@ -250,7 +250,6 @@ figure.chart .lbl { color: var(--ink-2); }
 
 /* подвал */
 .ft { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 18px; font-size: var(--t-label); color: var(--ink-2); border-top: 1px solid var(--line); }
-.ft .who { color: var(--ink-3); letter-spacing: .04em; }
 .ft .src { flex: 1; min-width: 0; }
 .ft .src a { color: var(--ink-2); }
 .ft .pg { display: none; }
@@ -860,7 +859,7 @@ html.present, html.present body { height: 100%; overflow: hidden; background: va
       </div>
     </div>
   </div>
-  <footer class="ft"><span class="src">25 источников: 10 учебников и монографий, 15 статей, докладов и документов</span></footer>
+  <footer class="ft"><span class="src"></span></footer>
 </section>
 
 <div class="hud" id="hud" role="toolbar" aria-label="Управление презентацией">
@@ -917,10 +916,6 @@ html.present, html.present body { height: 100%; overflow: hidden; background: va
     }
     var ft = s.querySelector(".ft");
     if (ft && sec) {
-      var who = document.createElement("span");
-      who.className = "who";
-      who.textContent = "Гордеев Е.А. · МЭиМБ24-1";
-      ft.insertBefore(who, ft.firstChild);
       var pg = document.createElement("span");
       pg.className = "pg";
       pg.setAttribute("aria-hidden", "true");
