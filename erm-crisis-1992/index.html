@@ -7,1074 +7,1094 @@
 <meta name="description" content="Доклад-презентация группы 2: кризис Европейской валютной системы 1992–1993 гг.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Spectral:ital,wght@0,300;0,400;1,300;1,400&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geologica:wght@300;400;500;600&family=Literata:ital,wght@1,300;1,400&family=Unbounded:wght@300;400;500&display=swap">
+<script>
+  try {
+    if (window.matchMedia("(min-width: 900px) and (min-height: 500px) and (min-aspect-ratio: 5/4)").matches) {
+      document.documentElement.classList.add("present");
+    }
+  } catch (e) {}
+</script>
 <style>
-/* Layout: спокойная колода слайдов на туманно-сером фоне; много воздуха, тонкие линии вместо рамок, лёгкий серифный заголовок и мягкий гротеск для текста */
+/* Layout: настоящая колода 1600×900, масштабируемая под экран; у каждого раздела свой глубокий цвет в гамме банкнот немецкой марки (синий, винный, зелёный), золотой гильош — единственный орнамент. На узких экранах слайды идут лентой. */
 :root {
-  --bg: #F5F6F4;
-  --surface: #FFFFFF;
-  --soft: #ECEFEC;
-  --ink: #1C272C;
-  --ink-2: #47545A;
-  --muted: #7A8589;
-  --line: #DADFDC;
-  --grid: #E5E9E6;
-  --accent: #1D5E7C;
-  --accent-soft: #DFEAEE;
-  --sand: #85611B;
-  --sand-soft: #F2EADB;
-  --alert: #A5463A;
-  --alert-soft: #F5E5E1;
-  --c1: #0F6B94;
-  --c2: #AD7F24;
-  --shadow: 0 10px 30px rgba(28, 39, 44, .08);
+  --ink: #131A2A;
+  --sec1: #1B2D4F;
+  --sec2: #44203A;
+  --sec3: #1B3F37;
+  --cream: #F2EBDD;
+  --cream-2: rgba(242, 235, 221, .80);
+  --cream-3: rgba(242, 235, 221, .56);
+  --hair: rgba(242, 235, 221, .20);
+  --hair-2: rgba(242, 235, 221, .10);
+  --tile: rgba(242, 235, 221, .06);
+  --gold: #DDB560;
+  --sky: #A9CCF0;
+  --coral: #FF9C85;
+  --c1: #4F98DC;
+  --c2: #BD8828;
 
-  --f-display: "Spectral", Georgia, "Times New Roman", serif;
-  --f-body: "Manrope", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --f-display: "Unbounded", "Arial Black", system-ui, sans-serif;
+  --f-body: "Geologica", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --f-quote: "Literata", Georgia, "Times New Roman", serif;
 
-  --fs-xs: 12.5px;
-  --fs-s: 14.5px;
-  --fs-m: 16.5px;
-  --fs-l: 18.5px;
-  --fs-xl: clamp(20px, 1.9vw, 25px);
-  --fs-2xl: clamp(28px, 3.3vw, 44px);
-  --fs-3xl: clamp(38px, 5.6vw, 72px);
-  --fs-fig: clamp(26px, 2.6vw, 36px);
-}
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --bg: #131B1E;
-    --surface: #1A2428;
-    --soft: #1B262A;
-    --ink: #E3E9E8;
-    --ink-2: #B7C2C3;
-    --muted: #869296;
-    --line: #2B383D;
-    --grid: #222E32;
-    --accent: #8CC3DA;
-    --accent-soft: #1C2F37;
-    --sand: #D9B26A;
-    --sand-soft: #2C261A;
-    --alert: #E48E81;
-    --alert-soft: #382422;
-    --c1: #3C95BE;
-    --c2: #B8872E;
-    --shadow: 0 10px 30px rgba(0, 0, 0, .35);
-    color-scheme: dark;
-  }
-}
-:root[data-theme="dark"] {
-  --bg: #131B1E;
-  --surface: #1A2428;
-  --soft: #1B262A;
-  --ink: #E3E9E8;
-  --ink-2: #B7C2C3;
-  --muted: #869296;
-  --line: #2B383D;
-  --grid: #222E32;
-  --accent: #8CC3DA;
-  --accent-soft: #1C2F37;
-  --sand: #D9B26A;
-  --sand-soft: #2C261A;
-  --alert: #E48E81;
-  --alert-soft: #382422;
-  --c1: #3C95BE;
-  --c2: #B8872E;
-  --shadow: 0 10px 30px rgba(0, 0, 0, .35);
+  /* лента (узкие экраны) */
+  --t-h1: clamp(30px, 8vw, 46px);
+  --t-title: clamp(24px, 6.2vw, 34px);
+  --t-lead: 17px;
+  --t-body: 16px;
+  --t-small: 14.5px;
+  --t-label: 12px;
+  --t-fig: 30px;
+  --t-quote: 21px;
+  --pad-x: 20px;
+  --pad-top: 34px;
+  --pad-bot: 34px;
+  --gap: 22px;
   color-scheme: dark;
+}
+/* режим презентации: размеры в пикселях сцены 1600×900 */
+html.present {
+  --t-h1: 64px;
+  --t-title: 50px;
+  --t-lead: 24px;
+  --t-body: 20px;
+  --t-small: 17px;
+  --t-label: 14px;
+  --t-fig: 50px;
+  --t-quote: 34px;
+  --pad-x: 100px;
+  --pad-top: 54px;
+  --pad-bot: 46px;
+  --gap: 34px;
 }
 
 * { box-sizing: border-box; }
-html { scroll-behavior: smooth; }
-@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
-@media (min-width: 64rem) and (min-height: 40rem) {
-  html { scroll-snap-type: y proximity; }
-}
 body {
-  background: var(--bg);
-  color: var(--ink);
+  background: var(--ink);
+  color: var(--cream);
   font-family: var(--f-body);
-  font-size: var(--fs-m);
-  line-height: 1.62;
+  font-weight: 300;
+  font-size: var(--t-body);
+  line-height: 1.5;
   -webkit-font-smoothing: antialiased;
-  font-feature-settings: "kern", "liga";
+  transition: background-color .5s ease;
 }
-a { color: var(--accent); text-decoration-color: color-mix(in srgb, var(--accent) 40%, transparent); text-underline-offset: 3px; }
-a:hover { text-decoration-color: currentColor; }
-:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 4px; }
-h1, h2, h3 { margin: 0; text-wrap: balance; font-weight: 400; }
+html[data-sec="1"] body { background: var(--sec1); }
+html[data-sec="2"] body { background: var(--sec2); }
+html[data-sec="3"] body { background: var(--sec3); }
+h1, h2, h3 { margin: 0; font-weight: 500; text-wrap: balance; }
 p { margin: 0; }
 ul, ol { margin: 0; padding: 0; }
-b, strong { font-weight: 600; color: var(--ink); }
-::selection { background: var(--accent-soft); }
+b, strong { font-weight: 500; color: var(--cream); }
+a { color: var(--gold); text-underline-offset: 3px; }
+:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; border-radius: 4px; }
+::selection { background: rgba(221, 181, 96, .35); }
 
-/* ---------- deck ---------- */
-.deck { padding-inline: clamp(16px, 5vw, 72px); }
+/* ---------- слайды ---------- */
 .slide {
-  min-height: 100vh;
+  position: relative;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  gap: 32px;
-  padding-block: 84px 112px;
-  border-bottom: 1px solid var(--line);
-  max-width: 1120px;
-  margin-inline: auto;
-  scroll-snap-align: start;
+  gap: var(--gap);
+  padding: var(--pad-top) var(--pad-x) var(--pad-bot);
+  background: var(--bg);
 }
-.slide:last-child { border-bottom: 0; }
-@media (max-width: 48rem) {
-  .slide { min-height: 0; padding-block: 56px 64px; gap: 24px; }
-  .slide:last-child { padding-bottom: 128px; }
+.sec-0 { --bg: var(--ink); }
+.sec-1 { --bg: var(--sec1); }
+.sec-2 { --bg: var(--sec2); }
+.sec-3 { --bg: var(--sec3); }
+.slide > * { position: relative; z-index: 1; }
+.slide > .rosette { position: absolute; z-index: 0; }
+.body { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: var(--gap); min-height: 0; }
+
+html.present, html.present body { height: 100%; overflow: hidden; }
+html.present .deck { position: fixed; inset: 0; }
+html.present .stage {
+  position: absolute; left: 50%; top: 50%;
+  width: 1600px; height: 900px;
+  transform: translate(-50%, -50%) scale(var(--k, 1));
+}
+html.present .slide {
+  position: absolute; inset: 0;
+  opacity: 0; visibility: hidden;
+  transform: translateX(28px);
+  transition: opacity .45s ease, transform .45s ease, visibility 0s linear .45s;
+}
+html.present .slide.past { transform: translateX(-28px); }
+html.present .slide.on {
+  opacity: 1; visibility: visible; transform: none;
+  transition: opacity .45s ease, transform .45s ease, visibility 0s;
+}
+@media (prefers-reduced-motion: reduce) {
+  html.present .slide, html.present .slide.on { transition: none; transform: none; }
+  body { transition: none; }
 }
 
-.meta {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  row-gap: 4px;
-  font-size: var(--fs-xs);
-  color: var(--muted);
-  letter-spacing: .01em;
+/* хром слайда */
+.top, .bot { display: flex; align-items: baseline; gap: 16px; font-size: var(--t-label); color: var(--cream-3); }
+.top { justify-content: space-between; letter-spacing: .08em; text-transform: uppercase; font-weight: 400; flex-wrap: wrap; }
+.top .sec { color: var(--gold); }
+.bot .num { font-family: var(--f-display); font-weight: 300; font-size: calc(var(--t-label) * 2.3); line-height: 1; color: var(--cream); letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+.bot .name { margin-left: auto; letter-spacing: .08em; text-transform: uppercase; }
+html.present .bot .name { visibility: hidden; }
+
+.title { font-family: var(--f-body); font-weight: 500; font-size: var(--t-title); line-height: 1.08; letter-spacing: -.02em; max-width: 30ch; }
+.lead { font-size: var(--t-lead); color: var(--cream-2); max-width: 56ch; line-height: 1.45; }
+.head { display: flex; flex-direction: column; gap: 16px; }
+.label { font-size: var(--t-label); letter-spacing: .08em; text-transform: uppercase; color: var(--cream-3); font-weight: 400; }
+.note { font-size: var(--t-small); color: var(--cream-3); max-width: 80ch; }
+
+.cols { display: grid; grid-template-columns: minmax(0, 1fr); gap: calc(var(--gap) * 1.3); align-items: start; }
+@media (min-width: 760px) {
+  .cols { grid-template-columns: minmax(0, 1.08fr) minmax(0, .92fr); }
+  .cols.even { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .cols.wide-left { grid-template-columns: minmax(0, 1.25fr) minmax(0, .75fr); }
+  .cols.wide-right { grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); }
 }
-.meta > span + span { margin-left: 12px; padding-left: 12px; border-left: 1px solid var(--line); }
-.meta .n { color: var(--accent); font-weight: 600; font-variant-numeric: tabular-nums; }
-.meta .who::before { content: "Докладчик: "; }
-
-.head { display: flex; flex-direction: column; gap: 14px; }
-.title { font-family: var(--f-display); font-weight: 300; font-size: var(--fs-2xl); line-height: 1.14; letter-spacing: -.005em; max-width: 24ch; }
-.lead { font-size: var(--fs-l); color: var(--ink-2); max-width: 62ch; line-height: 1.6; }
-
-.cols { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr); gap: 56px; align-items: start; }
-.cols.even { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
-.cols.wide-left { grid-template-columns: minmax(0, 1.3fr) minmax(0, .7fr); }
-@media (max-width: 56rem) { .cols, .cols.even, .cols.wide-left { grid-template-columns: minmax(0, 1fr); gap: 32px; } }
 .stack { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
-.stack > p { max-width: 62ch; color: var(--ink-2); }
+.stack > p { color: var(--cream-2); max-width: 60ch; }
 
-.points { list-style: none; display: flex; flex-direction: column; gap: 11px; }
-.points li { position: relative; padding-left: 24px; max-width: 60ch; color: var(--ink-2); }
-.points li::before {
-  content: "";
-  position: absolute; left: 0; top: .82em;
-  width: 12px; height: 1.5px;
-  background: var(--c1);
-  border-radius: 1px;
+.points { list-style: none; display: flex; flex-direction: column; gap: 12px; }
+.points li { position: relative; padding-left: 28px; color: var(--cream-2); max-width: 60ch; }
+.points li::before { content: ""; position: absolute; left: 0; top: .72em; width: 14px; height: 2px; border-radius: 1px; background: var(--gold); }
+
+.tile { background: var(--tile); border: 1px solid var(--hair-2); border-radius: 18px; padding: 26px 28px; min-width: 0; }
+.tile h3, .h3 { font-weight: 500; font-size: calc(var(--t-body) * 1.12); line-height: 1.3; color: var(--cream); }
+.rule { border-top: 1px solid var(--hair); padding-top: 18px; min-width: 0; }
+
+/* ---------- титул ---------- */
+.hero-rosette { right: -140px; top: -200px; width: 700px; height: 700px; opacity: .95; }
+.rosette-mark { position: absolute; z-index: 1; right: 210px; top: 150px; transform: translate(50%, -50%); font-family: var(--f-display); font-weight: 300; font-size: 30px; letter-spacing: .3em; color: var(--gold); padding-left: .3em; }
+@media (max-width: 899px) {
+  .hero-rosette { right: -120px; top: -110px; width: 300px; height: 300px; opacity: .45; }
+  .rosette-mark { display: none; }
 }
-.points.brass li::before { background: var(--c2); }
-.mono { font-variant-numeric: tabular-nums; }
-.note { font-size: var(--fs-s); color: var(--muted); max-width: 68ch; line-height: 1.55; }
-.label {
-  font-size: var(--fs-xs);
-  font-weight: 600;
-  letter-spacing: .02em;
-  color: var(--muted);
-}
+html:not(.present) .hero-rosette { right: -120px; top: -110px; width: 300px; height: 300px; opacity: .45; }
+html:not(.present) .rosette-mark { display: none; }
+.hero-text { display: flex; flex-direction: column; gap: 22px; max-width: 900px; }
+.hero h1 { font-family: var(--f-display); font-weight: 400; font-size: var(--t-h1); line-height: 1.1; letter-spacing: -.02em; }
+.hero h1 .yr { display: block; font-weight: 300; color: var(--gold); }
+.hero .lead { max-width: 44ch; }
+.team { display: grid; grid-template-columns: minmax(0, 1fr); gap: 22px; }
+@media (min-width: 760px) { .team { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 40px; } }
+.member { display: flex; flex-direction: column; gap: 10px; border-top: 1px solid var(--hair); padding-top: 18px; min-width: 0; }
+.member .role { font-size: var(--t-label); letter-spacing: .08em; text-transform: uppercase; color: var(--gold); }
+.member .name { font-weight: 500; font-size: calc(var(--t-body) * 1.15); line-height: 1.25; }
+.member .tasks-h { font-size: var(--t-label); color: var(--cream-3); }
+.member ul { list-style: none; display: flex; flex-direction: column; gap: 5px; font-size: var(--t-small); color: var(--cream-2); }
+.member li { position: relative; padding-left: 18px; }
+.member li::before { content: ""; position: absolute; left: 0; top: .7em; width: 8px; height: 1.5px; background: var(--gold); }
+.member .range { font-size: var(--t-label); color: var(--cream-3); font-variant-numeric: tabular-nums; }
 
-.panel {
-  padding-top: 18px;
-  border-top: 1px solid var(--line);
-  min-width: 0;
-}
-.panel.tint {
-  background: var(--soft);
-  border-top: 0;
-  border-radius: 16px;
-  padding: 26px 26px 24px;
-}
-.panel h3 { font-family: var(--f-body); font-weight: 600; font-size: var(--fs-l); line-height: 1.35; }
+/* ---------- план ---------- */
+.question p { font-family: var(--f-quote); font-style: italic; font-weight: 300; font-size: var(--t-quote); line-height: 1.3; max-width: 44ch; }
+.question { display: flex; flex-direction: column; gap: 12px; }
+.plan { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; }
+@media (min-width: 760px) { .plan { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 40px; } }
+.plan .ph { display: flex; align-items: center; gap: 12px; }
+.chip { width: 16px; height: 16px; border-radius: 4px; box-shadow: inset 0 0 0 1px var(--hair); flex: none; }
+.plan .part { font-weight: 500; font-size: calc(var(--t-body) * 1.1); }
+.plan .by { font-size: var(--t-small); color: var(--cream-3); margin: 4px 0 8px 28px; }
+.plan ol { list-style: none; display: flex; flex-direction: column; font-size: var(--t-small); }
+.plan ol a { display: grid; grid-template-columns: 36px 1fr; gap: 8px; padding: 5px 0; color: var(--cream-2); text-decoration: none; border-top: 1px solid var(--hair-2); }
+.plan ol a:hover { color: var(--cream); }
+.plan ol a span:first-child { color: var(--gold); font-variant-numeric: tabular-nums; }
 
-/* ---------- title slide ---------- */
-.hero { gap: 40px; }
-.hero .eyebrow { font-size: var(--fs-s); font-weight: 500; letter-spacing: .02em; color: var(--accent); }
-.hero h1 { font-family: var(--f-display); font-weight: 300; font-size: var(--fs-3xl); line-height: 1.04; letter-spacing: -.01em; max-width: 20ch; }
-.hero h1 .yr { font-style: italic; color: var(--accent); white-space: nowrap; }
-.hero-top { display: flex; flex-direction: column; gap: 20px; }
-.motif { width: 100%; }
-.motif svg { display: block; width: 100%; height: auto; overflow: visible; }
-.motif figcaption { font-size: var(--fs-xs); color: var(--muted); margin-top: 8px; }
+/* ---------- компоненты ---------- */
+.trio { display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; }
+@media (min-width: 760px) { .trio { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 28px; } }
+.trio .tile { display: flex; flex-direction: column; gap: 10px; }
+.trio .tile p { font-size: var(--t-small); color: var(--cream-2); }
+.code { font-family: var(--f-display); font-weight: 300; font-size: calc(var(--t-fig) * .72); line-height: 1; color: var(--gold); letter-spacing: .02em; }
+.kicker { font-size: var(--t-label); letter-spacing: .08em; text-transform: uppercase; color: var(--gold); }
 
-.team { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 36px; }
-@media (max-width: 60rem) { .team { grid-template-columns: minmax(0, 1fr); gap: 28px; } }
-.member { display: flex; flex-direction: column; gap: 12px; padding-top: 20px; border-top: 1px solid var(--line); min-width: 0; }
-.member .role { font-size: var(--fs-xs); font-weight: 600; letter-spacing: .02em; color: var(--accent); }
-.member .name { font-family: var(--f-display); font-weight: 400; font-size: clamp(21px, 1.8vw, 24px); line-height: 1.2; }
-.member ul { font-size: var(--fs-s); gap: 8px; }
-.member .range { margin-top: auto; padding-top: 6px; font-size: var(--fs-xs); color: var(--muted); font-variant-numeric: tabular-nums; }
+.figs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 26px 32px; }
+.fig { display: flex; flex-direction: column; gap: 8px; border-top: 1px solid var(--hair); padding-top: 16px; min-width: 0; }
+.fig .v { font-family: var(--f-display); font-weight: 300; font-size: var(--t-fig); line-height: 1.05; color: var(--gold); letter-spacing: -.02em; }
+.fig .v.red { color: var(--coral); }
+.fig .k { font-size: var(--t-small); color: var(--cream-3); line-height: 1.4; }
+@media (max-width: 380px) { .figs { grid-template-columns: minmax(0, 1fr); } }
 
-/* ---------- plan ---------- */
-.plan { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 36px; }
-@media (max-width: 60rem) { .plan { grid-template-columns: minmax(0, 1fr); gap: 24px; } }
-.plan .part { font-family: var(--f-display); font-style: italic; font-weight: 300; font-size: var(--fs-xl); color: var(--accent); }
-.plan ol { list-style: none; display: flex; flex-direction: column; gap: 2px; font-size: var(--fs-s); }
-.plan ol a { display: grid; grid-template-columns: 30px 1fr; gap: 8px; text-decoration: none; color: var(--ink-2); padding: 5px 0; }
-.plan ol a:hover span:last-child { color: var(--accent); }
-.plan ol a span:first-child { color: var(--muted); font-variant-numeric: tabular-nums; }
-.question { display: flex; flex-direction: column; gap: 10px; }
-.question p { font-family: var(--f-display); font-style: italic; font-weight: 300; font-size: var(--fs-xl); line-height: 1.4; max-width: 50ch; color: var(--ink); }
-
-/* ---------- components grid ---------- */
-.trio { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 36px; }
-@media (max-width: 56rem) { .trio { grid-template-columns: minmax(0, 1fr); gap: 24px; } }
-.trio .panel { display: flex; flex-direction: column; gap: 8px; }
-.trio .panel p { font-size: var(--fs-s); color: var(--ink-2); }
-.code-tag { font-size: var(--fs-xs); font-weight: 600; color: var(--sand); letter-spacing: .03em; }
-
-/* ---------- figures ---------- */
-.figs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px 32px; }
-@media (max-width: 30rem) { .figs { grid-template-columns: minmax(0, 1fr); } }
-.fig { display: flex; flex-direction: column; gap: 6px; padding-top: 16px; border-top: 1px solid var(--line); min-width: 0; }
-.fig .v { font-family: var(--f-display); font-weight: 300; font-size: var(--fs-fig); line-height: 1.05; color: var(--ink); }
-.fig .v.red { color: var(--alert); }
-.fig .k { font-size: var(--fs-s); color: var(--muted); line-height: 1.5; }
-
-/* ---------- tables ---------- */
 .table-wrap { overflow-x: auto; }
-table { border-collapse: collapse; width: 100%; font-size: var(--fs-s); }
-th, td { text-align: left; padding: 13px 16px 13px 0; border-bottom: 1px solid var(--grid); vertical-align: top; }
-th { font-size: var(--fs-xs); font-weight: 600; letter-spacing: .02em; color: var(--muted); border-bottom-color: var(--line); }
-td { color: var(--ink-2); }
-td:first-child { color: var(--ink); }
+table { border-collapse: collapse; width: 100%; font-size: var(--t-small); }
+th, td { text-align: left; padding: 12px 18px 12px 0; border-bottom: 1px solid var(--hair-2); vertical-align: top; }
+th { font-size: var(--t-label); font-weight: 400; letter-spacing: .08em; text-transform: uppercase; color: var(--cream-3); border-bottom-color: var(--hair); }
+td { color: var(--cream-2); }
+td:first-child { color: var(--cream); font-weight: 400; }
 tr:last-child td { border-bottom: 0; }
-td.num, td .mono { font-variant-numeric: tabular-nums; white-space: nowrap; }
-.ccy { font-size: var(--fs-xs); color: var(--muted); margin-left: 8px; letter-spacing: .04em; }
+td.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.ccy { font-size: var(--t-label); color: var(--cream-3); margin-left: 8px; letter-spacing: .06em; }
 
-/* ---------- tags ---------- */
-.tag { display: inline-flex; align-items: center; gap: 7px; font-size: var(--fs-xs); font-weight: 600; letter-spacing: .01em; white-space: nowrap; }
+.tag { display: inline-flex; align-items: center; gap: 7px; font-size: var(--t-label); font-weight: 400; letter-spacing: .04em; white-space: nowrap; }
 .tag::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
-.tag.exit { color: var(--alert); }
-.tag.deval { color: var(--sand); }
-.tag.policy { color: var(--accent); }
-.legend { display: flex; flex-wrap: wrap; gap: 8px 20px; align-items: center; }
+.tag.exit { color: var(--coral); }
+.tag.deval { color: var(--gold); }
+.tag.policy { color: var(--sky); }
+.legend { display: flex; flex-wrap: wrap; gap: 8px 22px; }
 
-/* ---------- timeline ---------- */
-.tl { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px 56px; }
-@media (max-width: 56rem) { .tl { grid-template-columns: minmax(0, 1fr); } }
-.tl h3 { font-family: var(--f-display); font-style: italic; font-weight: 300; font-size: var(--fs-xl); color: var(--accent); margin-bottom: 8px; }
+.tl { display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; }
+@media (min-width: 760px) { .tl { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 56px; } }
+.tl .yr { font-family: var(--f-display); font-weight: 300; font-size: calc(var(--t-fig) * .62); color: var(--gold); margin-bottom: 6px; }
 .tl ol { list-style: none; display: flex; flex-direction: column; }
-.tl li { display: grid; grid-template-columns: 58px minmax(0, 1fr) auto; gap: 14px; align-items: baseline; padding: 9px 0; border-top: 1px solid var(--grid); font-size: var(--fs-s); color: var(--ink-2); }
-.tl li .d { font-variant-numeric: tabular-nums; color: var(--muted); font-size: var(--fs-xs); }
-@media (max-width: 30rem) {
-  .tl li { grid-template-columns: 52px minmax(0, 1fr); row-gap: 4px; }
+.tl li { display: grid; grid-template-columns: 58px minmax(0, 1fr) auto; gap: 14px; align-items: baseline; padding: 7px 0; border-top: 1px solid var(--hair-2); font-size: var(--t-small); color: var(--cream-2); }
+.tl .d { font-variant-numeric: tabular-nums; color: var(--cream-3); font-size: calc(var(--t-small) * .92); }
+@media (max-width: 480px) {
+  .tl li { grid-template-columns: 52px minmax(0, 1fr); row-gap: 3px; }
   .tl li .tag { grid-column: 2; justify-self: start; }
 }
 
-/* ---------- day timeline ---------- */
 .day { list-style: none; display: flex; flex-direction: column; }
-.day li { display: grid; grid-template-columns: 76px minmax(0, 1fr); gap: 18px; padding: 14px 0; border-top: 1px solid var(--grid); color: var(--ink-2); }
+.day li { display: grid; grid-template-columns: 90px minmax(0, 1fr); gap: 18px; padding: 13px 0; border-top: 1px solid var(--hair-2); color: var(--cream-2); font-size: var(--t-small); }
 .day li:first-child { border-top: 0; padding-top: 0; }
-.day .t { font-family: var(--f-display); font-size: var(--fs-l); font-variant-numeric: tabular-nums; color: var(--accent); line-height: 1.4; }
-.day li.key .t { color: var(--alert); }
-.day li.key .e { color: var(--ink); font-weight: 500; }
+.day .t { font-family: var(--f-display); font-weight: 300; font-size: calc(var(--t-small) * 1.2); color: var(--gold); font-variant-numeric: tabular-nums; }
+.day li.key .t { color: var(--coral); }
+.day li.key .e { color: var(--cream); font-weight: 400; }
+@media (max-width: 480px) { .day li { grid-template-columns: 64px minmax(0, 1fr); gap: 12px; } }
 
-/* ---------- bars (html) ---------- */
-.bars { display: flex; flex-direction: column; gap: 20px; }
+/* ---------- графики ---------- */
+.chart { position: relative; width: 100%; min-width: 0; }
+.chart svg { display: block; width: 100%; overflow: visible; }
+.chart text { font-family: var(--f-body); font-size: 13px; fill: var(--cream-3); font-variant-numeric: tabular-nums; }
+html.present .chart text { font-size: 15px; }
+.chart text.ink { fill: var(--cream); font-weight: 400; }
+.chart text.red { fill: var(--coral); font-weight: 400; }
+.key-row { display: flex; flex-wrap: wrap; gap: 6px 22px; font-size: var(--t-small); color: var(--cream-2); }
+.key-row i { display: inline-block; width: 13px; height: 13px; border-radius: 3px; vertical-align: -1px; margin-right: 8px; }
+
+.bars { display: flex; flex-direction: column; gap: 22px; }
 .bar-row { display: flex; flex-direction: column; gap: 8px; }
-.bar-row .cap { display: flex; justify-content: space-between; gap: 12px; font-size: var(--fs-s); flex-wrap: wrap; color: var(--ink-2); }
-.bar-row .cap .val { font-variant-numeric: tabular-nums; color: var(--muted); }
-.track { position: relative; height: 16px; }
-.stackbar { display: flex; gap: 2px; height: 16px; }
+.bar-row .cap { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; font-size: var(--t-small); color: var(--cream-2); }
+.bar-row .cap .val { color: var(--cream-3); font-variant-numeric: tabular-nums; }
+.track { position: relative; height: 18px; }
+.stackbar { display: flex; gap: 2px; height: 18px; }
 .stackbar > span { display: block; height: 100%; }
-.stackbar > span:first-child { border-radius: 8px 0 0 8px; }
-.stackbar > span:last-child { border-radius: 0 8px 8px 0; }
+.stackbar > span:first-child { border-radius: 9px 0 0 9px; }
+.stackbar > span:last-child { border-radius: 0 9px 9px 0; }
 .seg-yes { background: var(--c1); }
 .seg-no { background: var(--c2); }
-.half { position: absolute; top: -5px; bottom: -5px; left: 50%; width: 1px; background: var(--ink); opacity: .55; }
-.key-row { display: flex; flex-wrap: wrap; gap: 6px 20px; font-size: var(--fs-s); color: var(--ink-2); }
-.key-row i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; vertical-align: -1px; margin-right: 7px; }
+.half { position: absolute; top: -6px; bottom: -6px; left: 50%; width: 1.5px; background: var(--cream); }
 
-.band-chart { display: flex; flex-direction: column; gap: 16px; }
-.band-track { position: relative; height: 14px; background: var(--grid); border-radius: 7px; }
-.band-track .fill { position: absolute; top: 0; bottom: 0; border-radius: 7px; background: var(--c1); }
+.band-chart { display: flex; flex-direction: column; gap: 18px; }
+.band-track { position: relative; height: 16px; background: var(--hair-2); border-radius: 8px; }
+.band-track .fill { position: absolute; top: 0; bottom: 0; border-radius: 8px; background: var(--c1); }
 .band-track .fill.wide { background: var(--c2); }
-.band-track .mid { position: absolute; top: -5px; bottom: -5px; left: 50%; width: 1px; background: var(--ink); opacity: .55; }
-.band-axis { position: relative; height: 18px; font-size: var(--fs-xs); color: var(--muted); font-variant-numeric: tabular-nums; }
+.band-track .mid { position: absolute; top: -6px; bottom: -6px; left: 50%; width: 1.5px; background: var(--cream); }
+.band-axis { position: relative; height: 20px; font-size: var(--t-label); color: var(--cream-3); font-variant-numeric: tabular-nums; }
 .band-axis span { position: absolute; transform: translateX(-50%); white-space: nowrap; }
 .band-axis span:first-child { transform: none; }
 .band-axis span:last-child { transform: translateX(-100%); }
 
 .bet { display: flex; flex-direction: column; gap: 16px; }
-.bet .row { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; }
-.bet .track { background: color-mix(in srgb, var(--line) 70%, transparent); border-radius: 5px; height: 10px; }
-.bet .track span { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 5px; }
-.calc { display: flex; flex-direction: column; gap: 10px; font-size: var(--fs-s); color: var(--ink-2); }
-.calc .line { display: flex; justify-content: space-between; gap: 14px; flex-wrap: wrap; padding-bottom: 10px; border-bottom: 1px solid var(--line); }
+.calc { display: flex; flex-direction: column; gap: 10px; font-size: var(--t-small); color: var(--cream-2); }
+.calc .line { display: flex; justify-content: space-between; gap: 14px; flex-wrap: wrap; padding-bottom: 10px; border-bottom: 1px solid var(--hair-2); }
 .calc .line:last-child { border-bottom: 0; padding-bottom: 0; }
-.calc .line:last-child .mono { font-weight: 600; }
-.calc .line .mono { color: var(--ink); }
+.calc .v { color: var(--cream); font-variant-numeric: tabular-nums; }
+.calc .line.total .v { color: var(--gold); font-weight: 500; }
+.bet .row { display: flex; flex-direction: column; gap: 8px; }
+.bet .cap { display: flex; justify-content: space-between; gap: 12px; font-size: var(--t-small); color: var(--cream-2); }
+.bet .cap span:last-child { font-variant-numeric: tabular-nums; }
+.bet .track { height: 12px; background: var(--hair-2); border-radius: 6px; }
+.bet .track span { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 6px; }
 
-/* ---------- charts ---------- */
-.chart { position: relative; width: 100%; min-width: 0; }
-.chart svg { display: block; width: 100%; overflow: visible; }
-.chart text { font-family: var(--f-body); font-size: 12px; fill: var(--muted); font-variant-numeric: tabular-nums; }
-.chart text.ink { fill: var(--ink-2); font-weight: 500; }
-.chart text.red { fill: var(--alert); font-weight: 500; }
-details.data { font-size: var(--fs-s); }
-details.data summary { cursor: pointer; color: var(--accent); font-size: var(--fs-s); width: fit-content; }
-details.data .table-wrap { margin-top: 10px; }
+.trinity svg { display: block; width: 100%; max-width: 480px; height: auto; margin-inline: auto; }
+.trinity text { font-family: var(--f-body); font-size: 15px; fill: var(--cream); }
+.trinity text.lab { font-weight: 500; }
+.trinity text.edge { font-size: 13.5px; fill: var(--cream-3); }
+.trinity text.edge.on { fill: var(--sky); font-weight: 500; }
+.trinity text.lost { font-size: 12.5px; fill: var(--coral); }
 
-.trinity svg { display: block; width: 100%; max-width: 440px; height: auto; margin-inline: auto; }
-.trinity text { font-family: var(--f-body); font-size: 15px; fill: var(--ink); }
-.trinity text.lab { font-weight: 600; }
-.trinity text.edge { font-size: 13px; fill: var(--muted); }
-.trinity text.edge.on { fill: var(--accent); font-weight: 600; }
-.trinity text.lost { font-size: 12.5px; fill: var(--alert); }
+.chart-fig { position: relative; margin: 0; display: flex; flex-direction: column; gap: 12px; }
+details.data summary { cursor: pointer; color: var(--gold); font-size: var(--t-small); width: fit-content; }
+details.data[open] .table-wrap {
+  position: absolute; z-index: 5; right: 0; top: 0;
+  width: min(360px, 100%);
+  background: var(--bg); border: 1px solid var(--hair); border-radius: 14px;
+  padding: 6px 18px; box-shadow: 0 18px 40px rgba(0, 0, 0, .35);
+}
+details.data table { font-size: calc(var(--t-small) * .92); }
+details.data th, details.data td { padding: 7px 12px 7px 0; }
 
-/* ---------- theory ---------- */
+/* ---------- теория, путь, уроки ---------- */
 .gen { display: flex; flex-direction: column; gap: 12px; }
-.gen p { color: var(--ink-2); }
-.gen .who-cite { font-size: var(--fs-xs); color: var(--muted); }
-.gen .apply { font-size: var(--fs-s); padding: 12px 14px; background: var(--bg); border-radius: 10px; color: var(--ink-2); }
+.gen p { font-size: var(--t-small); color: var(--cream-2); }
+.gen .cite { font-size: var(--t-label); color: var(--cream-3); letter-spacing: .04em; }
+.gen .apply { font-size: var(--t-small); color: var(--cream-2); padding: 12px 16px; border-radius: 12px; background: rgba(0, 0, 0, .18); }
 
-/* ---------- path to euro ---------- */
-.path { list-style: none; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0; border-top: 1px solid var(--c1); }
-@media (max-width: 60rem) { .path { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-@media (max-width: 30rem) { .path { grid-template-columns: minmax(0, 1fr); } }
-.path li { position: relative; padding: 20px 20px 18px 0; display: flex; flex-direction: column; gap: 4px; font-size: var(--fs-s); color: var(--ink-2); }
-.path li::before { content: ""; position: absolute; top: -5px; left: 0; width: 9px; height: 9px; border-radius: 50%; background: var(--c1); box-shadow: 0 0 0 3px var(--bg); }
-.path li .d { font-size: var(--fs-xs); font-weight: 600; color: var(--sand); letter-spacing: .02em; font-variant-numeric: tabular-nums; }
-.path li b { font-size: var(--fs-m); font-weight: 600; }
+.path { list-style: none; display: grid; grid-template-columns: minmax(0, 1fr); border-top: 1px solid var(--hair); }
+@media (min-width: 600px) { .path { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 760px) { .path { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.path li { position: relative; padding: 22px 24px 14px 0; display: flex; flex-direction: column; gap: 4px; font-size: var(--t-small); color: var(--cream-2); }
+.path li::before { content: ""; position: absolute; top: -6px; left: 0; width: 11px; height: 11px; border-radius: 50%; background: var(--gold); box-shadow: 0 0 0 4px var(--bg); }
+.path .d { font-size: var(--t-label); letter-spacing: .06em; color: var(--gold); font-variant-numeric: tabular-nums; }
+.path b { font-weight: 500; font-size: var(--t-body); }
 
-/* ---------- lessons ---------- */
-.lessons { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 28px 40px; }
-@media (max-width: 60rem) { .lessons { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-@media (max-width: 36rem) { .lessons { grid-template-columns: minmax(0, 1fr); gap: 20px; } }
-.lessons > div { padding-top: 16px; border-top: 1px solid var(--line); display: flex; flex-direction: column; gap: 8px; min-width: 0; }
-.lessons h3 { font-family: var(--f-display); font-weight: 400; font-size: var(--fs-l); line-height: 1.3; }
-.lessons p { font-size: var(--fs-s); color: var(--ink-2); }
-.verdict { font-family: var(--f-display); font-style: italic; font-weight: 300; font-size: var(--fs-xl); line-height: 1.42; max-width: 54ch; }
+.lessons { display: grid; grid-template-columns: minmax(0, 1fr); gap: 22px; }
+@media (min-width: 600px) { .lessons { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 760px) { .lessons { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 26px 40px; } }
+.lessons > div { border-top: 1px solid var(--hair); padding-top: 16px; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.lessons h3 { font-weight: 500; font-size: var(--t-body); }
+.lessons p { font-size: var(--t-small); color: var(--cream-2); }
+.verdict { font-family: var(--f-quote); font-style: italic; font-weight: 300; font-size: calc(var(--t-quote) * .82); line-height: 1.35; max-width: 52ch; }
 
-/* ---------- sources ---------- */
-.sources { counter-reset: s; list-style: none; display: flex; flex-direction: column; gap: 10px; font-size: var(--fs-s); color: var(--ink-2); }
-.sources li { counter-increment: s; display: grid; grid-template-columns: 26px minmax(0, 1fr); gap: 6px; }
-.sources li::before { content: counter(s) "."; color: var(--muted); font-variant-numeric: tabular-nums; }
-.thanks { font-family: var(--f-display); font-style: italic; font-weight: 300; font-size: var(--fs-3xl); line-height: 1.02; color: var(--accent); }
-.thanks-sub { font-size: var(--fs-l); color: var(--ink-2); }
+.sources { counter-reset: s; list-style: none; display: flex; flex-direction: column; gap: 9px; font-size: calc(var(--t-small) * .95); color: var(--cream-2); }
+.sources li { counter-increment: s; display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 6px; }
+.sources li::before { content: counter(s); color: var(--gold); font-variant-numeric: tabular-nums; }
+.end-rosette { right: -260px; bottom: -360px; width: 720px; height: 720px; opacity: .75; }
+html:not(.present) .end-rosette { right: -110px; bottom: -120px; width: 280px; height: 280px; opacity: .35; }
+.thanks { font-family: var(--f-display); font-weight: 300; font-size: var(--t-h1); line-height: 1.05; letter-spacing: -.02em; }
+.thanks span { color: var(--gold); }
 
-/* ---------- fixed UI ---------- */
-.progress { position: fixed; top: env(safe-area-inset-top, 0px); left: 0; right: 0; height: 2px; z-index: 20; }
-.progress i { display: block; height: 100%; background: var(--accent); transform-origin: 0 50%; transform: scaleX(0); transition: transform .35s ease; }
-@media (prefers-reduced-motion: reduce) { .progress i { transition: none; } }
+/* ---------- управление ---------- */
+.progress { position: fixed; left: 0; right: 0; bottom: 0; height: 3px; z-index: 20; background: rgba(242, 235, 221, .08); display: none; }
+.progress i { display: block; height: 100%; background: var(--gold); transform-origin: 0 50%; transform: scaleX(0); transition: transform .45s ease; }
+html.present .progress { display: block; }
 
-.deck-nav {
-  position: fixed;
-  right: 20px;
-  bottom: calc(20px + env(safe-area-inset-bottom, 0px));
-  z-index: 30;
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  padding: 5px;
-  background: color-mix(in srgb, var(--surface) 88%, transparent);
-  -webkit-backdrop-filter: blur(10px);
-  backdrop-filter: blur(10px);
-  border: 1px solid var(--line);
+.ctrl {
+  position: fixed; z-index: 30;
+  right: 18px; bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  display: flex; gap: 6px; padding: 5px;
   border-radius: 999px;
-  box-shadow: var(--shadow);
+  background: rgba(10, 14, 24, .45);
+  -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+  border: 1px solid var(--hair-2);
 }
-@media (max-width: 30rem) { .deck-nav { right: 16px; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); } }
-.deck-nav button {
-  appearance: none; border: 0; background: transparent; color: var(--ink-2);
-  height: 38px; min-width: 38px; padding: 0 11px; border-radius: 999px;
-  font: 500 var(--fs-s) var(--f-body); cursor: pointer;
+.ctrl button {
+  appearance: none; border: 0; cursor: pointer;
+  height: 38px; min-width: 38px; padding: 0 12px; border-radius: 999px;
+  background: transparent; color: var(--cream);
+  font: 400 13.5px var(--f-body);
   display: inline-flex; align-items: center; justify-content: center; gap: 7px;
-  transition: background-color .15s ease, color .15s ease;
+  transition: background-color .15s ease;
 }
-.deck-nav button:hover:not(:disabled) { background: var(--accent-soft); color: var(--accent); }
-.deck-nav button:disabled { opacity: .3; cursor: default; }
-.deck-nav svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
-.deck-nav .count { font-size: var(--fs-s); font-variant-numeric: tabular-nums; color: var(--muted); padding: 0 6px; min-width: 64px; text-align: center; }
-@media (max-width: 30rem) { .deck-nav .txt { display: none; } }
+.ctrl button:hover:not(:disabled) { background: rgba(242, 235, 221, .12); }
+.ctrl button:disabled { opacity: .3; cursor: default; }
+.ctrl svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.ctrl .pn { display: none; }
+html.present .ctrl .pn { display: inline-flex; }
+@media (max-width: 480px) { .ctrl .txt { display: none; } }
 
-.menu {
-  position: fixed;
-  right: 20px;
-  bottom: calc(76px + env(safe-area-inset-bottom, 0px));
-  z-index: 30;
-  width: min(380px, calc(100vw - 32px));
-  max-height: min(70vh, 620px);
+.overview {
+  position: fixed; inset: 0; z-index: 50;
+  background: rgba(9, 12, 20, .9);
+  -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
   overflow-y: auto;
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: 16px;
-  box-shadow: var(--shadow);
-  padding: 8px;
+  padding: calc(28px + env(safe-area-inset-top, 0px)) 20px calc(28px + env(safe-area-inset-bottom, 0px));
 }
-@media (max-width: 30rem) { .menu { right: 16px; } }
-.menu ol { list-style: none; display: flex; flex-direction: column; }
-.menu a { display: grid; grid-template-columns: 30px minmax(0, 1fr); gap: 8px; padding: 8px 12px; border-radius: 10px; text-decoration: none; color: var(--ink-2); font-size: var(--fs-s); line-height: 1.4; }
-.menu a:hover { background: var(--bg); color: var(--ink); }
-.menu a[aria-current="true"] { background: var(--accent-soft); color: var(--accent); }
-.menu a span:first-child { color: var(--muted); font-variant-numeric: tabular-nums; }
-.menu .hint { font-size: var(--fs-xs); color: var(--muted); padding: 10px 12px 6px; border-top: 1px solid var(--grid); margin-top: 6px; }
+.overview .ov-head { max-width: 1200px; margin: 0 auto 20px; display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+.overview .ov-head h2 { font-family: var(--f-display); font-weight: 300; font-size: 22px; }
+.overview .ov-close { appearance: none; border: 1px solid var(--hair); background: transparent; color: var(--cream); border-radius: 999px; padding: 8px 16px; font: 400 14px var(--f-body); cursor: pointer; }
+.overview ol { list-style: none; max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 14px; }
+.overview button.card {
+  appearance: none; width: 100%; text-align: left; cursor: pointer;
+  aspect-ratio: 16 / 9; max-width: 100%;
+  border: 1px solid var(--hair-2); border-radius: 12px; padding: 14px 16px;
+  color: var(--cream); font: 400 14px/1.35 var(--f-body);
+  display: flex; flex-direction: column; justify-content: space-between;
+  transition: transform .15s ease, border-color .15s ease;
+}
+.overview button.card:hover { transform: translateY(-2px); border-color: var(--gold); }
+.overview button.card[aria-current="true"] { border-color: var(--gold); box-shadow: 0 0 0 1px var(--gold); }
+.overview .card .n { font-family: var(--f-display); font-weight: 300; font-size: 22px; color: var(--gold); }
+.overview .hint { max-width: 1200px; margin: 18px auto 0; font-size: 13px; color: var(--cream-3); }
 
 .tip {
-  position: fixed; z-index: 40; pointer-events: none;
-  background: var(--ink); color: var(--bg);
-  font-family: var(--f-body); font-size: var(--fs-xs); line-height: 1.45;
+  position: fixed; z-index: 60; pointer-events: none;
+  background: var(--cream); color: var(--ink);
+  font: 400 13px/1.4 var(--f-body); font-variant-numeric: tabular-nums;
   padding: 7px 10px; border-radius: 8px; max-width: 260px;
-  font-variant-numeric: tabular-nums;
 }
 </style>
 </head>
 <body>
 
-<div class="progress" aria-hidden="true"><i id="bar"></i></div>
-
-<main class="deck" id="deck">
+<div class="deck" id="deck">
+<div class="stage" id="stage">
 
 <!-- 01 · Титульный лист -->
-<section class="slide hero" id="s1" data-short="Титульный лист">
-  <div class="meta"><span class="n">01 / 19</span><span>Титульный лист</span><span>Группа 2</span></div>
-  <div class="hero-top">
-    <p class="eyebrow">Доклад-презентация · Группа 2</p>
-    <h1>Кризис Европейской валютной системы <span class="yr">1992–1993&nbsp;гг.</span></h1>
-    <p class="lead">Как система фиксированных курсов, больше пяти лет обходившаяся без пересмотров, за одиннадцать месяцев потеряла фунт стерлингов и лиру и расширила коридор колебаний с ±2,25% до ±15%.</p>
-  </div>
-  <figure class="motif" style="margin:0">
-    <div id="heroChart" class="chart" role="img" aria-label="Схема: курс фунта стерлингов колеблется внутри коридора ERM и 16 сентября 1992 года пробивает нижнюю границу 2,7780 марки"></div>
-    <figcaption>Схема: фунт стерлингов в коридоре ERM (центральный курс 2,95 DM) пробивает нижнюю границу 16.09.1992</figcaption>
-  </figure>
-  <div class="stack">
-    <h2 class="label">Состав группы и распределение задач</h2>
+<section class="slide sec-0 hero on" id="s1" data-sec="0" data-short="Титульный лист">
+  <canvas class="rosette hero-rosette" aria-hidden="true"></canvas>
+  <span class="rosette-mark" aria-hidden="true">ECU</span>
+  <header class="top"><span class="sec">Доклад-презентация · Группа 2</span></header>
+  <div class="body">
+    <div class="hero-text">
+      <h1>Кризис Европейской валютной системы <span class="yr">1992–1993</span></h1>
+      <p class="lead">Как система фиксированных курсов, больше пяти лет обходившаяся без пересмотров, за одиннадцать месяцев потеряла фунт и лиру и расширила коридор с ±2,25% до ±15%.</p>
+    </div>
     <div class="team">
       <article class="member">
-        <span class="role">Раздел I · Предпосылки кризиса</span>
+        <span class="role">Раздел I · Предпосылки</span>
         <h3 class="name">Аверьянов Никита Романович</h3>
-        <ul class="points">
-          <li>изучил историю создания ЕВС и устройство механизма валютных курсов (ERM);</li>
-          <li>проанализировал последствия объединения Германии и политику Бундесбанка;</li>
-          <li>подготовил материал о Маастрихтском договоре и «невозможной троице»;</li>
-          <li>составил план доклада.</li>
+        <ul>
+          <li>история ЕВС и механизм курсов ERM</li>
+          <li>объединение Германии и политика Бундесбанка</li>
+          <li>Маастрихтский договор и «невозможная троица»</li>
+          <li>план доклада</li>
         </ul>
         <span class="range">Слайды 02–08</span>
       </article>
       <article class="member">
         <span class="role">Раздел II · Ход кризиса</span>
         <h3 class="name">Гордеев Егор Александрович</h3>
-        <ul class="points">
-          <li>составил хронологию событий 1992–1993 гг.;</li>
-          <li>описал «чёрную среду» 16 сентября 1992 г. и роль Джорджа Сороса;</li>
-          <li>подготовил таблицу девальваций и материал о расширении коридора до ±15%;</li>
-          <li>свёрстал презентацию в формате сайта.</li>
+        <ul>
+          <li>хронология событий 1992–1993 гг.</li>
+          <li>«чёрная среда» и роль Джорджа Сороса</li>
+          <li>таблица девальваций, коридор ±15%</li>
+          <li>вёрстка сайта-презентации</li>
         </ul>
         <span class="range">Слайды 09–14</span>
       </article>
       <article class="member">
-        <span class="role">Раздел III · Анализ и последствия</span>
+        <span class="role">Раздел III · Анализ</span>
         <h3 class="name">Татьянченко Иван Сергеевич</h3>
-        <ul class="points">
-          <li>разобрал теоретические модели валютных кризисов;</li>
-          <li>оценил последствия для Великобритании, Италии и европейской интеграции;</li>
-          <li>сформулировал выводы и уроки кризиса;</li>
-          <li>подобрал статистику и составил список источников.</li>
+        <ul>
+          <li>теоретические модели валютных кризисов</li>
+          <li>последствия для Великобритании, Италии и ЕС</li>
+          <li>выводы и уроки кризиса</li>
+          <li>статистика и список источников</li>
         </ul>
         <span class="range">Слайды 15–19</span>
       </article>
     </div>
   </div>
+  <footer class="bot"><span class="num">01</span><span>/ 19</span><span class="name">Кризис ЕВС · 1992–1993</span></footer>
 </section>
 
 <!-- 02 · План -->
-<section class="slide" id="s2" data-short="План доклада">
-  <div class="meta"><span class="n">02 / 19</span><span>Введение</span><span class="who">Н. Р. Аверьянов</span></div>
-  <div class="head">
+<section class="slide sec-0" id="s2" data-sec="0" data-short="План доклада">
+  <header class="top"><span class="sec">Введение</span><span>Докладчик · Н. Р. Аверьянов</span></header>
+  <div class="body">
     <h2 class="title">План доклада</h2>
+    <div class="question">
+      <span class="label">Главный вопрос</span>
+      <p>Почему система, в которой курсы европейских валют почти шесть лет не пересматривались, за одиннадцать месяцев лишилась двух крупных участников и фактически стала плавающей?</p>
+    </div>
+    <div class="plan">
+      <div>
+        <div class="ph"><span class="chip" style="background:var(--sec1)"></span><span class="part">I. Предпосылки</span></div>
+        <p class="by">Н. Р. Аверьянов</p>
+        <ol>
+          <li><a href="#s3"><span>03</span><span>Зачем создали ЕВС</span></a></li>
+          <li><a href="#s4"><span>04</span><span>Механизм ERM</span></a></li>
+          <li><a href="#s5"><span>05</span><span>«Твёрдая» ЕВС 1987–1992</span></a></li>
+          <li><a href="#s6"><span>06</span><span>Объединение Германии</span></a></li>
+          <li><a href="#s7"><span>07</span><span>Маастрихт и референдумы</span></a></li>
+          <li><a href="#s8"><span>08</span><span>«Невозможная троица»</span></a></li>
+        </ol>
+      </div>
+      <div>
+        <div class="ph"><span class="chip" style="background:var(--sec2)"></span><span class="part">II. Ход кризиса</span></div>
+        <p class="by">Е. А. Гордеев</p>
+        <ol>
+          <li><a href="#s9"><span>09</span><span>Хронология 1992–1993</span></a></li>
+          <li><a href="#s10"><span>10</span><span>Сентябрь 1992: трещины</span></a></li>
+          <li><a href="#s11"><span>11</span><span>«Чёрная среда»</span></a></li>
+          <li><a href="#s12"><span>12</span><span>Сорос и одностороннее пари</span></a></li>
+          <li><a href="#s13"><span>13</span><span>Волна девальваций</span></a></li>
+          <li><a href="#s14"><span>14</span><span>Лето 1993: коридор ±15%</span></a></li>
+        </ol>
+      </div>
+      <div>
+        <div class="ph"><span class="chip" style="background:var(--sec3)"></span><span class="part">III. Анализ</span></div>
+        <p class="by">И. С. Татьянченко</p>
+        <ol>
+          <li><a href="#s15"><span>15</span><span>Объяснения экономистов</span></a></li>
+          <li><a href="#s16"><span>16</span><span>Великобритания и Италия</span></a></li>
+          <li><a href="#s17"><span>17</span><span>Путь к евро</span></a></li>
+          <li><a href="#s18"><span>18</span><span>Уроки кризиса</span></a></li>
+          <li><a href="#s19"><span>19</span><span>Источники</span></a></li>
+        </ol>
+      </div>
+    </div>
   </div>
-  <div class="question"><span class="label">Главный вопрос доклада</span><p>Почему система, в которой курсы европейских валют почти шесть лет не пересматривались, за одиннадцать месяцев 1992–1993&nbsp;гг. лишилась двух крупных участников и фактически стала плавающей?</p></div>
-  <div class="plan">
-    <div class="panel stack">
-      <span class="part">I. Предпосылки</span>
-      <span class="label">Н. Р. Аверьянов</span>
-      <ol>
-        <li><a href="#s3"><span>03</span><span>Зачем создали ЕВС</span></a></li>
-        <li><a href="#s4"><span>04</span><span>Как работал механизм ERM</span></a></li>
-        <li><a href="#s5"><span>05</span><span>«Твёрдая» ЕВС 1987–1992</span></a></li>
-        <li><a href="#s6"><span>06</span><span>Шок объединения Германии</span></a></li>
-        <li><a href="#s7"><span>07</span><span>Маастрихт и референдумы</span></a></li>
-        <li><a href="#s8"><span>08</span><span>«Невозможная троица»</span></a></li>
-      </ol>
-    </div>
-    <div class="panel stack">
-      <span class="part">II. Ход кризиса</span>
-      <span class="label">Е. А. Гордеев</span>
-      <ol>
-        <li><a href="#s9"><span>09</span><span>Хронология 1992–1993</span></a></li>
-        <li><a href="#s10"><span>10</span><span>Сентябрь 1992: первые трещины</span></a></li>
-        <li><a href="#s11"><span>11</span><span>«Чёрная среда»</span></a></li>
-        <li><a href="#s12"><span>12</span><span>Сорос и одностороннее пари</span></a></li>
-        <li><a href="#s13"><span>13</span><span>Волна девальваций</span></a></li>
-        <li><a href="#s14"><span>14</span><span>Лето 1993: коридор ±15%</span></a></li>
-      </ol>
-    </div>
-    <div class="panel stack">
-      <span class="part">III. Анализ</span>
-      <span class="label">И. С. Татьянченко</span>
-      <ol>
-        <li><a href="#s15"><span>15</span><span>Объяснения экономистов</span></a></li>
-        <li><a href="#s16"><span>16</span><span>Последствия для Великобритании и Италии</span></a></li>
-        <li><a href="#s17"><span>17</span><span>Путь к евро</span></a></li>
-        <li><a href="#s18"><span>18</span><span>Уроки кризиса</span></a></li>
-        <li><a href="#s19"><span>19</span><span>Источники</span></a></li>
-      </ol>
-    </div>
-  </div>
+  <footer class="bot"><span class="num">02</span><span>/ 19</span><span class="name">Кризис ЕВС · 1992–1993</span></footer>
 </section>
 
 <!-- 03 · ЕВС -->
-<section class="slide" id="s3" data-short="Зачем создали ЕВС">
-  <div class="meta"><span class="n">03 / 19</span><span>I. Предпосылки</span><span class="who">Н. Р. Аверьянов</span></div>
-  <div class="head">
-    <h2 class="title">Европейская валютная система: зона стабильности после Бреттон-Вудса</h2>
-    <p class="lead">После распада Бреттон-Вудской системы (1971–1973) курсы европейских валют стали резко колебаться, а первая попытка их связать, «валютная змея» 1972&nbsp;г., распалась из-за выхода участников. По инициативе Гельмута Шмидта и Валери Жискар д’Эстена <b>13&nbsp;марта 1979&nbsp;г.</b> заработала ЕВС.</p>
+<section class="slide sec-1" id="s3" data-sec="1" data-short="Зачем создали ЕВС">
+  <header class="top"><span class="sec">I · Предпосылки кризиса</span><span>Докладчик · Н. Р. Аверьянов</span></header>
+  <div class="body">
+    <div class="head">
+      <h2 class="title">Европейская валютная система: зона стабильности после Бреттон-Вудса</h2>
+      <p class="lead">После распада Бреттон-Вудской системы курсы европейских валют резко колебались, а «валютная змея» 1972&nbsp;г. распалась. По инициативе Гельмута Шмидта и Валери Жискар д’Эстена <b>13&nbsp;марта 1979&nbsp;г.</b> заработала ЕВС.</p>
+    </div>
+    <div class="trio">
+      <div class="tile">
+        <span class="code">ECU</span>
+        <h3>ЭКЮ</h3>
+        <p>Расчётная единица-корзина из валют стран ЕЭС, взвешенных по экономическому весу. Самая большая доля — у немецкой марки, около 30%.</p>
+      </div>
+      <div class="tile">
+        <span class="code">ERM</span>
+        <h3>Механизм обменных курсов</h3>
+        <p>Ядро системы: у каждой валюты центральный курс и коридор колебаний. На границе коридора центральные банки обязаны вмешаться.</p>
+      </div>
+      <div class="tile">
+        <span class="code">VSTF</span>
+        <h3>Кредитные механизмы</h3>
+        <p>Очень краткосрочное финансирование интервенций между центральными банками через Европейский фонд валютного сотрудничества.</p>
+      </div>
+    </div>
+    <p class="note">Основатели ERM в 1979&nbsp;г.: ФРГ, Франция, Италия, Нидерланды, Бельгия, Люксембург, Дания и Ирландия. Великобритания входила в ЕВС, но не в механизм курсов.</p>
   </div>
-  <div class="trio">
-    <div class="panel">
-      <span class="code-tag">ECU</span>
-      <h3>ЭКЮ</h3>
-      <p>Расчётная единица-корзина из валют стран ЕЭС, взвешенных по экономическому весу. Самая большая доля — у немецкой марки, около 30%. Центральные курсы валют устанавливались к ЭКЮ.</p>
-    </div>
-    <div class="panel">
-      <span class="code-tag">ERM</span>
-      <h3>Механизм обменных курсов</h3>
-      <p>Ядро системы: у каждой валюты центральный курс и допустимый коридор колебаний. На границе коридора центральные банки обязаны вмешаться.</p>
-    </div>
-    <div class="panel">
-      <span class="code-tag">VSTF · EMCF</span>
-      <h3>Кредитные механизмы</h3>
-      <p>Очень краткосрочное финансирование интервенций между центральными банками через Европейский фонд валютного сотрудничества.</p>
-    </div>
-  </div>
-  <p class="note">Основатели ERM в 1979&nbsp;г.: ФРГ, Франция, Италия, Нидерланды, Бельгия, Люксембург, Дания и Ирландия. Великобритания входила в ЕВС, но не в механизм курсов.</p>
+  <footer class="bot"><span class="num">03</span><span>/ 19</span><span class="name">Кризис ЕВС · 1992–1993</span></footer>
 </section>
 
 <!-- 04 · ERM -->
-<section class="slide" id="s4" data-short="Как работал механизм ERM">
-  <div class="meta"><span class="n">04 / 19</span><span>I. Предпосылки</span><span class="who">Н. Р. Аверьянов</span></div>
-  <div class="head">
+<section class="slide sec-1" id="s4" data-sec="1" data-short="Механизм ERM">
+  <header class="top"><span class="sec">I · Предпосылки кризиса</span><span>Докладчик · Н. Р. Аверьянов</span></header>
+  <div class="body">
     <h2 class="title">Как работал механизм ERM</h2>
-  </div>
-  <div class="cols">
-    <div class="stack">
-      <ul class="points">
-        <li>Из центральных курсов к ЭКЮ выводилась <b>сетка двусторонних паритетов</b> для каждой пары валют.</li>
-        <li><b>Узкий коридор ±2,25%</b> — для большинства валют; <b>широкий ±6%</b> — для лиры до 1990&nbsp;г., песеты, фунта и эскудо.</li>
-        <li>У границы коридора оба центральных банка обязаны проводить <b>неограниченные интервенции</b>: покупать слабую валюту за сильную.</li>
-        <li>Базельско-Нюборгское соглашение (1987) разрешило вмешиваться и внутри коридора и использовать процентные ставки.</li>
-        <li>Если курс удержать нельзя, страны проводят <b>реалайнмент</b> — совместно пересматривают центральные курсы.</li>
-      </ul>
-      <p class="note">Пример: фунт вошёл в ERM в 1990&nbsp;г. с центральным курсом 2,95 марки; допустимый диапазон — от 2,7780 до 3,1320&nbsp;DM.</p>
-    </div>
-    <figure class="stack" style="margin:0">
-      <div id="ermChart" class="chart" role="img" aria-label="Схема коридоров ERM: центральный курс, узкий коридор плюс-минус 2,25 процента и широкий плюс-минус 6 процентов; курс валюты касается границ, и в этих точках проводятся интервенции"></div>
-      <div class="key-row">
-        <span><i style="background:var(--accent-soft);border:1px solid var(--line)"></i>широкий коридор ±6%</span>
-        <span><i style="background:var(--c1);opacity:.25"></i>узкий коридор ±2,25%</span>
-        <span><i style="background:var(--ink-2);height:2px;vertical-align:4px"></i>центральный курс (0)</span>
-        <span><i style="background:var(--c2);border-radius:50%"></i>обязательная интервенция</span>
+    <div class="cols">
+      <div class="stack">
+        <ul class="points">
+          <li>Из центральных курсов к ЭКЮ выводилась <b>сетка двусторонних паритетов</b> для каждой пары валют.</li>
+          <li><b>Узкий коридор ±2,25%</b> — для большинства валют; <b>широкий ±6%</b> — для лиры до 1990&nbsp;г., песеты, фунта и эскудо.</li>
+          <li>У границы оба центральных банка обязаны проводить <b>неограниченные интервенции</b>: покупать слабую валюту за сильную.</li>
+          <li>Базельско-Нюборгское соглашение 1987&nbsp;г. разрешило вмешиваться и внутри коридора.</li>
+          <li>Если курс не удержать, страны проводят <b>реалайнмент</b>: пересматривают центральные курсы.</li>
+        </ul>
+        <p class="note">Пример: фунт вошёл в ERM в 1990&nbsp;г. с центральным курсом 2,95 марки; допустимый диапазон — от 2,7780 до 3,1320&nbsp;DM.</p>
       </div>
-      <figcaption class="note">Схема: отклонение рыночного курса от центрального, %</figcaption>
-    </figure>
+      <figure class="chart-fig">
+        <div id="ermChart" class="chart" role="img" aria-label="Схема коридоров ERM: центральный курс, узкий коридор плюс-минус 2,25 процента и широкий плюс-минус 6 процентов; курс касается границ, и в этих точках проводятся интервенции"></div>
+        <div class="key-row">
+          <span><i style="background:var(--hair-2);box-shadow:inset 0 0 0 1px var(--hair)"></i>широкий ±6%</span>
+          <span><i style="background:var(--c1);opacity:.45"></i>узкий ±2,25%</span>
+          <span><i style="background:var(--c2);border-radius:50%"></i>интервенция</span>
+        </div>
+        <figcaption class="note">Схема: отклонение рыночного курса от центрального, %</figcaption>
+      </figure>
+    </div>
   </div>
+  <footer class="bot"><span class="num">04</span><span>/ 19</span><span class="name">Кризис ЕВС · 1992–1993</span></footer>
 </section>
 
 <!-- 05 · Твёрдая ЕВС -->
-<section class="slide" id="s5" data-short="«Твёрдая» ЕВС 1987–1992">
-  <div class="meta"><span class="n">05 / 19</span><span>I. Предпосылки</span><span class="who">Н. Р. Аверьянов</span></div>
-  <div class="head">
+<section class="slide sec-1" id="s5" data-sec="1" data-short="«Твёрдая» ЕВС 1987–1992">
+  <header class="top"><span class="sec">I · Предпосылки кризиса</span><span>Докладчик · Н. Р. Аверьянов</span></header>
+  <div class="body">
     <h2 class="title">От гибкой к «твёрдой» ЕВС: 1979–1992</h2>
-  </div>
-  <div class="cols even">
-    <div class="stack">
-      <div class="panel stack">
-        <span class="label">1979 — январь 1987</span>
-        <h3>11 пересмотров курсов</h3>
-        <p>Разница в инфляции между странами компенсировалась регулярными реалайнментами. Система была скорее «фиксированной, но регулируемой».</p>
-      </div>
-      <div class="panel stack">
-        <span class="label">1987 — сентябрь 1992</span>
-        <h3>Ни одного общего пересмотра</h3>
-        <p>Курсы стали восприниматься как почти неизменные, процентные ставки сблизились. Единственная корректировка — технический перевод лиры в узкий коридор в январе 1990&nbsp;г.</p>
-      </div>
-      <p class="note">С 1 июля 1990&nbsp;г. директива 88/361/ЕЭС обязала большинство стран снять ограничения на движение капитала. Рынки получили полную свободу играть против курсов.</p>
-    </div>
-    <div class="stack">
-      <span class="label">Новые участники ERM</span>
-      <div class="table-wrap">
-        <table>
-          <thead><tr><th>Валюта</th><th>Вступление</th><th>Коридор</th></tr></thead>
-          <tbody>
-            <tr><td>Испанская песета<span class="ccy">ESP</span></td><td class="num">19.06.1989</td><td class="num">±6%</td></tr>
-            <tr><td>Итальянская лира<span class="ccy">ITL</span></td><td class="num">08.01.1990</td><td class="num">±6% → ±2,25%</td></tr>
-            <tr><td>Фунт стерлингов<span class="ccy">GBP</span></td><td class="num">08.10.1990</td><td class="num">±6%</td></tr>
-            <tr><td>Португальское эскудо<span class="ccy">PTE</span></td><td class="num">06.04.1992</td><td class="num">±6%</td></tr>
-          </tbody>
-        </table>
-      </div>
-      <p class="note">К апрелю 1992&nbsp;г. в ERM участвовали валюты 11 из 12 стран ЕС, вне механизма оставалась только Греция.</p>
-    </div>
-  </div>
-</section>
-
-<!-- 06 · Германия -->
-<section class="slide" id="s6" data-short="Шок объединения Германии">
-  <div class="meta"><span class="n">06 / 19</span><span>I. Предпосылки</span><span class="who">Н. Р. Аверьянов</span></div>
-  <div class="head">
-    <h2 class="title">Причина 1. Объединение Германии и высокие ставки Бундесбанка</h2>
-  </div>
-  <div class="cols">
-    <div class="stack">
-      <p>1&nbsp;июля 1990&nbsp;г. в Германии ввели валютный союз: восточную марку обменяли на западную по курсу 1:1 для зарплат и цен. Восстановление востока финансировали за счёт бюджета, трансферты превысили 100 млрд марок в год.</p>
-      <p>Получилось сочетание <b>мягкой бюджетной и жёсткой денежной политики</b>. Инфляция в Западной Германии поднялась примерно до 4%, и Бундесбанк, отвечавший только за стабильность цен в Германии, повышал ставки.</p>
-      <p>Партнёрам по ERM приходилось держать ставки не ниже немецких, хотя их экономики были в спаде: в Великобритании шла рецессия, безработица приближалась к 10%. Одновременно ФРС США снижала ставку, доллар дешевел, и капитал перетекал в марку.</p>
-    </div>
-    <div class="figs">
-      <div class="fig"><span class="v">1 : 1</span><span class="k">курс обмена восточной марки на западную для зарплат и цен, июль 1990</span></div>
-      <div class="fig"><span class="v">&gt;&nbsp;100&nbsp;млрд&nbsp;DM</span><span class="k">ежегодные трансферты в новые земли</span></div>
-      <div class="fig"><span class="v">8,75%</span><span class="k">учётная ставка Бундесбанка с 16 июля 1992; ломбардная — 9,75%</span></div>
-      <div class="fig"><span class="v">3%</span><span class="k">ставка ФРС США с сентября 1992: доллар слабеет, марка дорожает</span></div>
-    </div>
-  </div>
-</section>
-
-<!-- 07 · Маастрихт -->
-<section class="slide" id="s7" data-short="Маастрихт и референдумы">
-  <div class="meta"><span class="n">07 / 19</span><span>I. Предпосылки</span><span class="who">Н. Р. Аверьянов</span></div>
-  <div class="head">
-    <h2 class="title">Причина 2. Маастрихтский договор и кризис доверия</h2>
-  </div>
-  <div class="cols">
-    <div class="stack">
-      <ul class="points">
-        <li><b>7 февраля 1992&nbsp;г.</b> подписан Маастрихтский договор: курс на экономический и валютный союз и единую валюту.</li>
-        <li>Один из критериев конвергенции — два года в ERM без девальвации. Пересматривать курсы стало политически невозможно, и перекосы копились.</li>
-        <li>Рынок рассуждал так: пока впереди единая валюта, страны будут защищать курсы любой ценой. Если договор провалится, стимул исчезнет и девальвации станут вероятными.</li>
-        <li>Референдумы показали, что поддержка договора висит на волоске.</li>
-      </ul>
-    </div>
-    <figure class="stack" style="margin:0">
-      <span class="label">Итоги референдумов по Маастрихтскому договору, % голосов</span>
-      <div class="key-row">
-        <span><i style="background:var(--c1)"></i>за</span>
-        <span><i style="background:var(--c2)"></i>против</span>
-      </div>
-      <div class="bars">
-        <div class="bar-row">
-          <div class="cap"><span><b>Дания</b>, 2 июня 1992</span><span class="val">за 49,3 · против 50,7</span></div>
-          <div class="track">
-            <div class="stackbar">
-              <span class="seg-yes" style="width:49.3%" data-tip="Дания, 02.06.1992 — за: 49,3%"></span>
-              <span class="seg-no" style="width:50.7%" data-tip="Дания, 02.06.1992 — против: 50,7%"></span>
-            </div>
-            <span class="half" aria-hidden="true"></span>
-          </div>
+    <div class="cols even">
+      <div class="stack">
+        <div class="rule stack" style="gap:8px">
+          <span class="kicker">1979 — январь 1987</span>
+          <h3 class="h3">11 пересмотров курсов</h3>
+          <p style="color:var(--cream-2);font-size:var(--t-small)">Разница в инфляции между странами компенсировалась регулярными реалайнментами. Система была «фиксированной, но регулируемой».</p>
         </div>
-        <div class="bar-row">
-          <div class="cap"><span><b>Франция</b>, 20 сентября 1992</span><span class="val">за 51,04 · против 48,96</span></div>
-          <div class="track">
-            <div class="stackbar">
-              <span class="seg-yes" style="width:51.04%" data-tip="Франция, 20.09.1992 — за: 51,04%"></span>
-              <span class="seg-no" style="width:48.96%" data-tip="Франция, 20.09.1992 — против: 48,96%"></span>
-            </div>
-            <span class="half" aria-hidden="true"></span>
-          </div>
+        <div class="rule stack" style="gap:8px">
+          <span class="kicker">1987 — сентябрь 1992</span>
+          <h3 class="h3">Ни одного общего пересмотра</h3>
+          <p style="color:var(--cream-2);font-size:var(--t-small)">Курсы стали восприниматься как почти неизменные, ставки сблизились. Исключение — технический перевод лиры в узкий коридор в январе 1990&nbsp;г.</p>
         </div>
+        <p class="note">С 1 июля 1990&nbsp;г. директива 88/361/ЕЭС обязала большинство стран снять ограничения на движение капитала. Рынки получили свободу играть против курсов.</p>
       </div>
-      <figcaption class="note">Вертикальная линия — 50%. Французское «маленькое да» (petit oui) пришлось на разгар кризиса, через четыре дня после «чёрной среды».</figcaption>
-    </figure>
-  </div>
-</section>
-
-<!-- 08 · Трилемма -->
-<section class="slide" id="s8" data-short="«Невозможная троица»">
-  <div class="meta"><span class="n">08 / 19</span><span>I. Предпосылки</span><span class="who">Н. Р. Аверьянов</span></div>
-  <div class="head">
-    <h2 class="title">Причина 3. «Невозможная троица» и накопленные перекосы</h2>
-  </div>
-  <div class="cols">
-    <figure class="trinity" style="margin:0">
-      <svg viewBox="0 0 440 350" role="img" aria-label="Треугольник невозможной троицы: фиксированный курс, свободное движение капитала, независимая денежная политика. ERM 1990–1992 выбрал первые две вершины и отказался от независимой денежной политики.">
-        <line x1="220" y1="62" x2="360" y2="268" stroke="var(--line)" stroke-width="1.5"/>
-        <line x1="80" y1="268" x2="360" y2="268" stroke="var(--line)" stroke-width="1.5"/>
-        <line x1="220" y1="62" x2="80" y2="268" stroke="var(--c1)" stroke-width="3" stroke-linecap="round"/>
-        <circle cx="220" cy="62" r="8" fill="var(--c1)" stroke="var(--bg)" stroke-width="2"/>
-        <circle cx="80" cy="268" r="8" fill="var(--c1)" stroke="var(--bg)" stroke-width="2"/>
-        <circle cx="360" cy="268" r="7" fill="var(--bg)" stroke="var(--alert)" stroke-width="2"/>
-        <text class="lab" x="220" y="24" text-anchor="middle">Фиксированный</text>
-        <text class="lab" x="220" y="43" text-anchor="middle">курс</text>
-        <text class="lab" x="80" y="298" text-anchor="middle">Свободное</text>
-        <text class="lab" x="80" y="317" text-anchor="middle">движение капитала</text>
-        <text class="lab" x="360" y="298" text-anchor="middle">Независимая</text>
-        <text class="lab" x="360" y="317" text-anchor="middle">денежная политика</text>
-        <text class="lost" x="360" y="338" text-anchor="middle">от неё отказались</text>
-        <text class="edge on" x="136" y="158" text-anchor="end">ERM</text>
-        <text class="edge on" x="136" y="176" text-anchor="end">1990–1992</text>
-        <text class="edge" x="302" y="158" text-anchor="start">Бреттон-</text>
-        <text class="edge" x="302" y="176" text-anchor="start">Вудс</text>
-        <text class="edge" x="220" y="256" text-anchor="middle">плавающий курс</text>
-      </svg>
-    </figure>
-    <div class="stack">
-      <p>Страна может одновременно выбрать только две цели из трёх. Участники ERM после снятия контроля над капиталом выбрали фиксированный курс и свободный капитал, поэтому своей денежной политики у них фактически не было: они следовали за Бундесбанком.</p>
-      <p>Пока все боролись с инфляцией, как в 1980-х, это работало. В 1992&nbsp;г. цели разошлись: Германии нужны были высокие ставки, партнёрам в рецессии — низкие.</p>
-      <ul class="points brass">
-        <li>Инфляция в Италии, Испании и Великобритании была выше немецкой, а номинальные курсы не менялись, поэтому их валюты <b>реально дорожали</b> и теряли конкурентоспособность.</li>
-        <li>Фунт вошёл в ERM по курсу 2,95 марки, который многие экономисты считали завышенным.</li>
-        <li>Госдолг Италии превышал 100% ВВП.</li>
-      </ul>
-    </div>
-  </div>
-</section>
-
-<!-- 09 · Хронология -->
-<section class="slide" id="s9" data-short="Хронология 1992–1993">
-  <div class="meta"><span class="n">09 / 19</span><span>II. Ход кризиса</span><span class="who">Е. А. Гордеев</span></div>
-  <div class="head">
-    <h2 class="title">Хронология кризиса</h2>
-    <div class="legend">
-      <span class="tag exit">выход / плавание</span>
-      <span class="tag deval">девальвация</span>
-      <span class="tag policy">решение властей</span>
-    </div>
-  </div>
-  <div class="tl">
-    <div>
-      <h3>1992</h3>
-      <ol>
-        <li><span class="d">02.06</span><span>Дания отвергает Маастрихтский договор</span><span class="tag policy">референдум</span></li>
-        <li><span class="d">16.07</span><span>Бундесбанк поднимает учётную ставку до 8,75%</span><span class="tag policy">ставка</span></li>
-        <li><span class="d">08.09</span><span>Финляндия отпускает марку в свободное плавание</span><span class="tag exit">плавание</span></li>
-        <li><span class="d">13.09</span><span>Лира девальвирована на 7%</span><span class="tag deval">−7%</span></li>
-        <li><span class="d">16.09</span><span>«Чёрная среда»: Великобритания выходит из ERM</span><span class="tag exit">выход</span></li>
-        <li><span class="d">17.09</span><span>Италия выходит из ERM; песета девальвирована</span><span class="tag exit">выход</span></li>
-        <li><span class="d">20.09</span><span>Франция одобряет договор: 51,04% «за»</span><span class="tag policy">референдум</span></li>
-        <li><span class="d">19.11</span><span>Швеция отпускает крону</span><span class="tag exit">плавание</span></li>
-        <li><span class="d">22.11</span><span>Песета и эскудо девальвированы на 6%</span><span class="tag deval">−6%</span></li>
-        <li><span class="d">10.12</span><span>Норвегия отпускает крону</span><span class="tag exit">плавание</span></li>
-      </ol>
-    </div>
-    <div>
-      <h3>1993</h3>
-      <ol>
-        <li><span class="d">30.01</span><span>Ирландский фунт девальвирован на 10%</span><span class="tag deval">−10%</span></li>
-        <li><span class="d">13.05</span><span>Песета −8%, эскудо −6,5%</span><span class="tag deval">−8%</span></li>
-        <li><span class="d">июль</span><span>Массированная атака на французский франк</span><span class="tag exit">атака</span></li>
-        <li><span class="d">29.07</span><span>Бундесбанк не снижает учётную ставку</span><span class="tag policy">ставка</span></li>
-        <li><span class="d">02.08</span><span>Коридор ERM расширен до ±15%</span><span class="tag policy">решение ЕС</span></li>
-        <li><span class="d">01.11</span><span>Маастрихтский договор вступает в силу</span><span class="tag policy">договор</span></li>
-      </ol>
-      <p class="note" style="margin-top:14px">Финляндия, Швеция и Норвегия не входили в ERM, но в одностороннем порядке привязывали валюты к ЭКЮ. Их падение показало рынку, что привязку можно сломать.</p>
-    </div>
-  </div>
-</section>
-
-<!-- 10 · Сентябрь 1992 -->
-<section class="slide" id="s10" data-short="Сентябрь 1992: первые трещины">
-  <div class="meta"><span class="n">10 / 19</span><span>II. Ход кризиса</span><span class="who">Е. А. Гордеев</span></div>
-  <div class="head">
-    <h2 class="title">Сентябрь 1992: первые трещины</h2>
-    <p class="lead">За восемь дней, с 8 по 15 сентября, рынок проверил на прочность все слабые привязки к ЭКЮ и немецкой марке.</p>
-  </div>
-  <div class="trio">
-    <div class="panel">
-      <span class="code-tag">8 сентября · Скандинавия</span>
-      <h3>Финляндия и Швеция</h3>
-      <p>Финляндия отпускает марку в плавание. Риксбанк Швеции защищает крону ставкой 75%, а 16 сентября поднимает её до 500% годовых.</p>
-    </div>
-    <div class="panel">
-      <span class="code-tag">13–14 сентября · Италия</span>
-      <h3>Лира: −7%</h3>
-      <p>Первая вынужденная девальвация в ERM с 1987&nbsp;г. В ответ Бундесбанк символически снижает ставки: учётную до 8,25%, ломбардную до 9,5%. Рынок счёл уступку слишком малой.</p>
-    </div>
-    <div class="panel">
-      <span class="code-tag">15 сентября · Германия</span>
-      <h3>Интервью Шлезингера</h3>
-      <p>Президент Бундесбанка Гельмут Шлезингер заявил в интервью, что более широкий пересмотр курсов был бы лучше. Рынок прочитал это как сигнал: фунт будет следующим.</p>
-    </div>
-  </div>
-</section>
-
-<!-- 11 · Чёрная среда -->
-<section class="slide" id="s11" data-short="«Чёрная среда»">
-  <div class="meta"><span class="n">11 / 19</span><span>II. Ход кризиса</span><span class="who">Е. А. Гордеев</span></div>
-  <div class="head">
-    <h2 class="title">«Чёрная среда», 16&nbsp;сентября 1992&nbsp;г.</h2>
-  </div>
-  <div class="cols">
-    <ol class="day">
-      <li><span class="t">утро</span><span class="e">Массовые продажи фунта. Банк Англии скупает фунты за счёт валютных резервов, но курс не отходит от нижней границы 2,7780&nbsp;DM.</span></li>
-      <li><span class="t">11:00</span><span class="e">Базовая ставка поднята с 10% до 12%. Реакции рынка почти нет.</span></li>
-      <li><span class="t">14:15</span><span class="e">Объявлено повышение до 15% со следующего дня. Продажи продолжаются.</span></li>
-      <li class="key"><span class="t">19:30</span><span class="e">Канцлер казначейства Норман Ламонт объявляет о приостановке членства Великобритании в ERM.</span></li>
-      <li><span class="t">17.09</span><span class="e">Ставка возвращена к 10%; повышение до 15% так и не вступило в силу. Италия тоже выходит из ERM.</span></li>
-    </ol>
-    <div class="figs">
-      <div class="fig"><span class="v">2,7780 DM</span><span class="k">нижняя граница коридора фунта</span></div>
-      <div class="fig"><span class="v">10&thinsp;→&thinsp;12&thinsp;→&thinsp;15%</span><span class="k">ставка за один день (15% — только объявлено)</span></div>
-      <div class="fig"><span class="v">£3,3 млрд</span><span class="k">потери казначейства по оценке, опубликованной в 2005 г.</span></div>
-      <div class="fig"><span class="v red">16.09.1992</span><span class="k">фунт покидает ERM и больше в него не возвращается</span></div>
-    </div>
-  </div>
-  <p class="note">Повышение ставки не убедило рынок: при рецессии и ипотеке с плавающей ставкой правительство не могло долго держать ставки на уровне 12–15%, и все это понимали.</p>
-</section>
-
-<!-- 12 · Сорос -->
-<section class="slide" id="s12" data-short="Сорос и одностороннее пари">
-  <div class="meta"><span class="n">12 / 19</span><span>II. Ход кризиса</span><span class="who">Е. А. Гордеев</span></div>
-  <div class="head">
-    <h2 class="title">Джордж Сорос и логика «одностороннего пари»</h2>
-  </div>
-  <div class="cols">
-    <div class="stack">
-      <p>Фонд Quantum Джорджа Сороса и Стэнли Дракенмиллера открыл короткую позицию по фунту примерно на <b>10 млрд долларов</b> и заработал больше <b>1 млрд долларов</b>. Сороса прозвали «человеком, который сломал Банк Англии».</p>
-      <p>Против фунта играли не только хедж-фонды: банки, пенсионные фонды и компании, страховавшие валютные риски. Их общий объём многократно превышал резервы Банка Англии.</p>
-      <ul class="points">
-        <li>Спекулянт занимает фунты и продаёт их за марки по курсу у нижней границы.</li>
-        <li>Если курс удержат — он теряет немного: разницу процентных ставок за несколько дней.</li>
-        <li>Если фунт девальвируют — выкупает фунты дешевле и получает прибыль.</li>
-      </ul>
-    </div>
-    <div class="panel tint bet">
-      <span class="label">Условный пример: продажа £1 млрд по 2,78 DM</span>
-      <div class="calc">
-        <div class="line"><span>Получено от продажи</span><span class="mono">2,78 млрд DM</span></div>
-        <div class="line"><span>Курс удержан: потеря на разнице ставок за неделю</span><span class="mono">≈ 0,05%</span></div>
-        <div class="line"><span>Фунт упал до 2,50 DM: выкуп £1 млрд</span><span class="mono">2,50 млрд DM</span></div>
-        <div class="line"><span>Прибыль</span><span class="mono">0,28 млрд DM ≈ 10%</span></div>
-      </div>
-      <div class="row">
-        <div class="cap" style="display:flex;justify-content:space-between;font-size:var(--fs-s)"><span>Риск, если курс удержат</span><span class="mono">≈ 0,05%</span></div>
-        <div class="track"><span style="width:0.5%;min-width:3px;background:var(--c2)" data-tip="Возможная потеря ≈ 0,05%"></span></div>
-      </div>
-      <div class="row">
-        <div class="cap" style="display:flex;justify-content:space-between;font-size:var(--fs-s)"><span>Выигрыш при девальвации</span><span class="mono">≈ 10%</span></div>
-        <div class="track"><span style="width:100%;background:var(--c1);border-radius:4px" data-tip="Возможный выигрыш ≈ 10%"></span></div>
-      </div>
-      <p class="note">Шкала: 0–10% от суммы сделки. Цифры условные, для иллюстрации асимметрии.</p>
-    </div>
-  </div>
-</section>
-
-<!-- 13 · Волна девальваций -->
-<section class="slide" id="s13" data-short="Волна девальваций">
-  <div class="meta"><span class="n">13 / 19</span><span>II. Ход кризиса</span><span class="who">Е. А. Гордеев</span></div>
-  <div class="head">
-    <h2 class="title">Волна девальваций: сентябрь 1992 — май 1993</h2>
-  </div>
-  <div class="table-wrap">
-    <table>
-      <thead><tr><th>Валюта</th><th>Что произошло</th><th>Даты</th><th>Итог</th></tr></thead>
-      <tbody>
-        <tr><td>Фунт стерлингов<span class="ccy">GBP</span></td><td>Выход из ERM после «чёрной среды»</td><td class="num">16.09.1992</td><td><span class="tag exit">вышла</span></td></tr>
-        <tr><td>Итальянская лира<span class="ccy">ITL</span></td><td>Девальвация на 7%, затем выход из ERM</td><td class="num">13.09 · 17.09.1992</td><td><span class="tag exit">вышла</span></td></tr>
-        <tr><td>Испанская песета<span class="ccy">ESP</span></td><td>Три девальвации: −5%, −6%, −8%</td><td class="num">17.09.1992 · 22.11.1992 · 13.05.1993</td><td><span class="tag deval">×3</span></td></tr>
-        <tr><td>Португальское эскудо<span class="ccy">PTE</span></td><td>Две девальвации: −6%, −6,5%</td><td class="num">22.11.1992 · 13.05.1993</td><td><span class="tag deval">×2</span></td></tr>
-        <tr><td>Ирландский фунт<span class="ccy">IEP</span></td><td>Девальвация на 10% после месяцев защиты высокими ставками</td><td class="num">30.01.1993</td><td><span class="tag deval">×1</span></td></tr>
-        <tr><td>Французский франк<span class="ccy">FRF</span></td><td>Удержан совместными интервенциями Банка Франции и Бундесбанка</td><td class="num">сент. 1992 · янв. 1993</td><td><span class="tag policy">удержан</span></td></tr>
-        <tr><td>Датская крона, бельгийский франк<span class="ccy">DKK · BEF</span></td><td>Сильное давление, курс удержан</td><td class="num">1992–1993</td><td><span class="tag policy">удержан</span></td></tr>
-      </tbody>
-    </table>
-  </div>
-  <p class="note">23 сентября 1992&nbsp;г. Банк Франции и Бундесбанк выступили с совместным заявлением о том, что курс франка к марке соответствует экономике, и вместе провели интервенции. В 1992&nbsp;г. франк устоял.</p>
-</section>
-
-<!-- 14 · Лето 1993 -->
-<section class="slide" id="s14" data-short="Лето 1993: коридор ±15%">
-  <div class="meta"><span class="n">14 / 19</span><span>II. Ход кризиса</span><span class="who">Е. А. Гордеев</span></div>
-  <div class="head">
-    <h2 class="title">Лето 1993: атака на франк и коридор ±15%</h2>
-  </div>
-  <div class="cols">
-    <div class="stack">
-      <p>По основным показателям Франция выглядела сильнее Германии: инфляция была ниже немецкой. Но безработица превышала 10%, и рынок ставил на то, что Франция снизит ставки и откажется от привязки к марке.</p>
-      <ul class="points">
-        <li><b>29 июля 1993&nbsp;г.</b> Бундесбанк снизил лишь ломбардную ставку и оставил учётную без изменений. Рынки ждали большего.</li>
-        <li><b>30 июля</b> продажи франка, датской кроны, бельгийского франка, песеты и эскудо. Интервенции измеряются десятками миллиардов марок.</li>
-        <li><b>1–2 августа</b> министры финансов и главы центральных банков ЕС в Брюсселе расширяют коридор до <b>±15%</b>. Центральные курсы не меняются.</li>
-        <li>Марка и гульден по двустороннему соглашению сохраняют коридор ±2,25%.</li>
-      </ul>
-      <p class="note">Формально ERM сохранился, но коридор шириной 30% сделал систему почти плавающей, и атаковать курсы стало невыгодно.</p>
-    </div>
-    <figure class="stack" style="margin:0">
-      <span class="label">Ширина коридора колебаний, % от центрального курса</span>
-      <div class="band-chart">
-        <div class="bar-row">
-          <div class="cap"><span>Узкий коридор, 1979 — июль 1993</span><span class="val">±2,25%</span></div>
-          <div class="band-track"><span class="fill" style="left:42.5%;width:15%" data-tip="Узкий коридор: от −2,25% до +2,25%"></span><span class="mid"></span></div>
-        </div>
-        <div class="bar-row">
-          <div class="cap"><span>Широкий коридор (песета, фунт, эскудо)</span><span class="val">±6%</span></div>
-          <div class="band-track"><span class="fill wide" style="left:30%;width:40%" data-tip="Широкий коридор: от −6% до +6%"></span><span class="mid"></span></div>
-        </div>
-        <div class="bar-row">
-          <div class="cap"><span><b>С 2 августа 1993</b></span><span class="val">±15%</span></div>
-          <div class="band-track"><span class="fill" style="left:0;width:100%" data-tip="Новый коридор: от −15% до +15%"></span><span class="mid"></span></div>
-        </div>
-        <div class="bar-row">
-          <div class="cap"><span>Марка — гульден, двустороннее соглашение</span><span class="val">±2,25%</span></div>
-          <div class="band-track"><span class="fill" style="left:42.5%;width:15%" data-tip="Марка — гульден: от −2,25% до +2,25%"></span><span class="mid"></span></div>
-        </div>
-        <div class="band-axis" aria-hidden="true">
-          <span style="left:0">−15%</span>
-          <span style="left:30%">−6%</span>
-          <span style="left:50%">0</span>
-          <span style="left:70%">+6%</span>
-          <span style="left:100%">+15%</span>
-        </div>
-      </div>
-    </figure>
-  </div>
-</section>
-
-<!-- 15 · Теория -->
-<section class="slide" id="s15" data-short="Объяснения экономистов">
-  <div class="meta"><span class="n">15 / 19</span><span>III. Анализ и последствия</span><span class="who">И. С. Татьянченко</span></div>
-  <div class="head">
-    <h2 class="title">Как экономисты объясняют кризис</h2>
-    <p class="lead">Кризис ЕВС стал главным примером, на котором проверяли две группы моделей валютных кризисов.</p>
-  </div>
-  <div class="cols even">
-    <div class="panel tint gen">
-      <span class="label">Модели первого поколения</span>
-      <h3>Кризис неизбежен при плохих фундаментальных показателях</h3>
-      <span class="who-cite">П. Кругман, 1979</span>
-      <p>Если бюджетная и денежная политика несовместима с фиксированным курсом, резервы постепенно тают. Спекулятивная атака лишь ускоряет неизбежную девальвацию.</p>
-      <p class="apply"><b>Подходит для:</b> Италии с госдолгом выше 100% ВВП и высокой инфляцией, отчасти для Испании и завышенного курса фунта.</p>
-    </div>
-    <div class="panel tint gen">
-      <span class="label">Модели второго поколения</span>
-      <h3>Ожидания рынка сбываются сами</h3>
-      <span class="who-cite">М. Обстфельд, 1994–1996</span>
-      <p>Правительство сравнивает цену защиты курса (высокие ставки при безработице) с ценой отказа от него. Если рынок ждёт девальвации, защита дорожает, и девальвация становится выгодной.</p>
-      <p class="apply"><b>Подходит для:</b> Великобритании в рецессии и Франции 1993&nbsp;г. с низкой инфляцией, но безработицей выше 10%.</p>
-    </div>
-  </div>
-  <p class="note">Б. Эйхенгрин и Ч. Виплош (1993) добавили: после отмены контроля над капиталом даже здоровая экономика уязвима, если рынок сомневается в политической воле правительства.</p>
-</section>
-
-<!-- 16 · Последствия для стран -->
-<section class="slide" id="s16" data-short="Последствия для Великобритании и Италии">
-  <div class="meta"><span class="n">16 / 19</span><span>III. Анализ и последствия</span><span class="who">И. С. Татьянченко</span></div>
-  <div class="head">
-    <h2 class="title">Последствия для Великобритании и Италии</h2>
-  </div>
-  <div class="cols wide-left">
-    <figure class="stack" style="margin:0">
-      <span class="label">Базовая ставка Банка Англии, июль 1992 — декабрь 1993, %</span>
-      <div id="ukChart" class="chart" role="img" aria-label="Базовая ставка Банка Англии: 10 процентов до 16 сентября 1992, в тот день 12 процентов и объявленные 15, затем снижение до 9, 8, 7, 6 процентов к январю 1993 и 5,5 процента в ноябре 1993"></div>
-      <details class="data">
-        <summary>Таблица значений</summary>
+      <div class="stack">
+        <span class="label">Новые участники ERM</span>
         <div class="table-wrap">
           <table>
-            <thead><tr><th>Дата</th><th>Ставка</th></tr></thead>
+            <thead><tr><th>Валюта</th><th>Вступление</th><th>Коридор</th></tr></thead>
             <tbody>
-              <tr><td class="num">05.05.1992</td><td class="num">10%</td></tr>
-              <tr><td class="num">16.09.1992</td><td class="num">12% (объявлено 15%)</td></tr>
-              <tr><td class="num">17.09.1992</td><td class="num">10%</td></tr>
-              <tr><td class="num">22.09.1992</td><td class="num">9%</td></tr>
-              <tr><td class="num">16.10.1992</td><td class="num">8%</td></tr>
-              <tr><td class="num">13.11.1992</td><td class="num">7%</td></tr>
-              <tr><td class="num">26.01.1993</td><td class="num">6%</td></tr>
-              <tr><td class="num">23.11.1993</td><td class="num">5,5%</td></tr>
+              <tr><td>Испанская песета<span class="ccy">ESP</span></td><td class="num">19.06.1989</td><td class="num">±6%</td></tr>
+              <tr><td>Итальянская лира<span class="ccy">ITL</span></td><td class="num">08.01.1990</td><td class="num">±6% → ±2,25%</td></tr>
+              <tr><td>Фунт стерлингов<span class="ccy">GBP</span></td><td class="num">08.10.1990</td><td class="num">±6%</td></tr>
+              <tr><td>Португальское эскудо<span class="ccy">PTE</span></td><td class="num">06.04.1992</td><td class="num">±6%</td></tr>
             </tbody>
           </table>
         </div>
-      </details>
-    </figure>
-    <div class="stack">
-      <div class="panel stack">
-        <h3>Великобритания</h3>
-        <ul class="points">
-          <li>Свобода снижать ставки: с 10% до 6% за четыре месяца, экономика вышла из спада в 1993&nbsp;г.</li>
-          <li>В октябре 1992&nbsp;г. — переход к таргетированию инфляции (цель 1–4%), в 1997&nbsp;г. — независимость Банка Англии.</li>
-          <li>Удар по репутации консерваторов: Ламонт отправлен в отставку в мае 1993&nbsp;г., партия проиграла выборы 1997&nbsp;г.</li>
-        </ul>
+        <p class="note">К апрелю 1992&nbsp;г. в ERM участвовали валюты 11 из 12 стран ЕС; вне механизма оставалась только Греция.</p>
       </div>
-      <div class="panel stack">
-        <h3>Италия</h3>
+    </div>
+  </div>
+  <footer class="bot"><span class="num">05</span><span>/ 19</span><span class="name">Кризис ЕВС · 1992–1993</span></footer>
+</section>
+
+<!-- 06 · Германия -->
+<section class="slide sec-1" id="s6" data-sec="1" data-short="Объединение Германии">
+  <header class="top"><span class="sec">I · Предпосылки кризиса</span><span>Докладчик · Н. Р. Аверьянов</span></header>
+  <div class="body">
+    <h2 class="title">Причина 1. Объединение Германии и высокие ставки Бундесбанка</h2>
+    <div class="cols">
+      <div class="stack">
+        <p>1&nbsp;июля 1990&nbsp;г. восточную марку обменяли на западную по курсу 1:1 для зарплат и цен. Восстановление востока финансировали из бюджета: трансферты превысили 100 млрд марок в год.</p>
+        <p>Получилось сочетание <b>мягкой бюджетной и жёсткой денежной политики</b>. Инфляция в Западной Германии поднялась примерно до 4%, и Бундесбанк, отвечавший только за цены в Германии, повышал ставки.</p>
+        <p>Партнёрам по ERM приходилось держать ставки не ниже немецких, хотя их экономики были в спаде: в Великобритании шла рецессия. ФРС США тем временем снижала ставку, доллар дешевел, капитал перетекал в марку.</p>
+      </div>
+      <div class="figs">
+        <div class="fig"><span class="v">1 : 1</span><span class="k">обмен восточной марки на западную для зарплат и цен, июль 1990</span></div>
+        <div class="fig"><span class="v">100+</span><span class="k">млрд марок в год — трансферты в новые земли</span></div>
+        <div class="fig"><span class="v">8,75%</span><span class="k">учётная ставка Бундесбанка с 16 июля 1992; ломбардная — 9,75%</span></div>
+        <div class="fig"><span class="v">3%</span><span class="k">ставка ФРС США с сентября 1992: доллар слабеет, марка дорожает</span></div>
+      </div>
+    </div>
+  </div>
+  <footer class="bot"><span class="num">06</span><span>/ 19</span><span class="name">Кризис ЕВС · 1992–1993</span></footer>
+</section>
+
+<!-- 07 · Маастрихт -->
+<section class="slide sec-1" id="s7" data-sec="1" data-short="Маастрихт и референдумы">
+  <header class="top"><span class="sec">I · Предпосылки кризиса</span><span>Докладчик · Н. Р. Аверьянов</span></header>
+  <div class="body">
+    <h2 class="title">Причина 2. Маастрихтский договор и кризис доверия</h2>
+    <div class="cols">
+      <ul class="points">
+        <li><b>7 февраля 1992&nbsp;г.</b> подписан Маастрихтский договор: курс на экономический и валютный союз и единую валюту.</li>
+        <li>Критерий конвергенции — два года в ERM без девальвации. Пересматривать курсы стало политически невозможно, и перекосы копились.</li>
+        <li>Рынок рассуждал так: пока впереди единая валюта, курсы будут защищать любой ценой. Если договор провалится, девальвации станут вероятными.</li>
+        <li>Референдумы показали, что поддержка договора висит на волоске.</li>
+      </ul>
+      <figure class="chart-fig">
+        <span class="label">Референдумы по договору, % голосов</span>
+        <div class="key-row">
+          <span><i style="background:var(--c1)"></i>за</span>
+          <span><i style="background:var(--c2)"></i>против</span>
+        </div>
+        <div class="bars">
+          <div class="bar-row">
+            <div class="cap"><span><b>Дания</b>, 2 июня 1992</span><span class="val">49,3 / 50,7</span></div>
+            <div class="track">
+              <div class="stackbar">
+                <span class="seg-yes" style="width:49.3%" data-tip="Дания, 02.06.1992 — за: 49,3%"></span>
+                <span class="seg-no" style="width:50.7%" data-tip="Дания, 02.06.1992 — против: 50,7%"></span>
+              </div>
+              <span class="half" aria-hidden="true"></span>
+            </div>
+          </div>
+          <div class="bar-row">
+            <div class="cap"><span><b>Франция</b>, 20 сентября 1992</span><span class="val">51,04 / 48,96</span></div>
+            <div class="track">
+              <div class="stackbar">
+                <span class="seg-yes" style="width:51.04%" data-tip="Франция, 20.09.1992 — за: 51,04%"></span>
+                <span class="seg-no" style="width:48.96%" data-tip="Франция, 20.09.1992 — против: 48,96%"></span>
+              </div>
+              <span class="half" aria-hidden="true"></span>
+            </div>
+          </div>
+        </div>
+        <figcaption class="note">Светлая черта — 50%. Французское «маленькое да» пришлось на разгар кризиса, через четыре дня после «чёрной среды».</figcaption>
+      </figure>
+    </div>
+  </div>
+  <footer class="bot"><span class="num">07</span><span>/ 19</span><span class="name">Кризис ЕВС · 1992–1993</span></footer>
+</section>
+
+<!-- 08 · Трилемма -->
+<section class="slide sec-1" id="s8" data-sec="1" data-short="«Невозможная троица»">
+  <header class="top"><span class="sec">I · Предпосылки кризиса</span><span>Докладчик · Н. Р. Аверьянов</span></header>
+  <div class="body">
+    <h2 class="title">Причина 3. «Невозможная троица» и накопленные перекосы</h2>
+    <div class="cols wide-right">
+      <figure class="trinity" style="margin:0">
+        <svg viewBox="0 0 440 350" role="img" aria-label="Треугольник невозможной троицы: фиксированный курс, свободное движение капитала, независимая денежная политика. ERM 1990–1992 выбрал первые две вершины и отказался от независимой денежной политики.">
+          <line x1="220" y1="62" x2="360" y2="268" stroke="var(--hair)" stroke-width="1.5"/>
+          <line x1="80" y1="268" x2="360" y2="268" stroke="var(--hair)" stroke-width="1.5"/>
+          <line x1="220" y1="62" x2="80" y2="268" stroke="var(--c1)" stroke-width="3" stroke-linecap="round"/>
+          <circle cx="220" cy="62" r="8" fill="var(--c1)" stroke="var(--sec1)" stroke-width="2"/>
+          <circle cx="80" cy="268" r="8" fill="var(--c1)" stroke="var(--sec1)" stroke-width="2"/>
+          <circle cx="360" cy="268" r="7" fill="var(--sec1)" stroke="var(--coral)" stroke-width="2"/>
+          <text class="lab" x="220" y="24" text-anchor="middle">Фиксированный</text>
+          <text class="lab" x="220" y="43" text-anchor="middle">курс</text>
+          <text class="lab" x="80" y="298" text-anchor="middle">Свободное</text>
+          <text class="lab" x="80" y="317" text-anchor="middle">движение капитала</text>
+          <text class="lab" x="360" y="298" text-anchor="middle">Независимая</text>
+          <text class="lab" x="360" y="317" text-anchor="middle">денежная политика</text>
+          <text class="lost" x="360" y="338" text-anchor="middle">от неё отказались</text>
+          <text class="edge on" x="136" y="158" text-anchor="end">ERM</text>
+          <text class="edge on" x="136" y="176" text-anchor="end">1990–1992</text>
+          <text class="edge" x="302" y="158" text-anchor="start">Бреттон-</text>
+          <text class="edge" x="302" y="176" text-anchor="start">Вудс</text>
+          <text class="edge" x="220" y="256" text-anchor="middle">плавающий курс</text>
+        </svg>
+      </figure>
+      <div class="stack">
+        <p>Страна может выбрать только две цели из трёх. Участники ERM после снятия контроля над капиталом выбрали фиксированный курс и свободный капитал и фактически следовали за Бундесбанком.</p>
+        <p>Пока все боролись с инфляцией, это работало. В 1992&nbsp;г. цели разошлись: Германии нужны были высокие ставки, партнёрам в рецессии — низкие.</p>
         <ul class="points">
-          <li>Девальвация поддержала экспорт; правительство Амато провело жёсткую бюджетную консолидацию.</li>
-          <li>Лира вернулась в ERM в ноябре 1996&nbsp;г., а с 1999&nbsp;г. Италия в зоне евро.</li>
+          <li>Инфляция в Италии, Испании и Великобритании была выше немецкой при неизменных курсах: их валюты <b>реально дорожали</b>.</li>
+          <li>Фунт вошёл в ERM по курсу 2,95 марки, который многие считали завышенным.</li>
+          <li>Госдолг Италии превышал 100% ВВП.</li>
         </ul>
       </div>
     </div>
   </div>
+  <footer class="bot"><span class="num">08</span><span>/ 19</span><span class="name">Кризис ЕВС · 1992–1993</span></footer>
+</section>
+
+<!-- 09 · Хронология -->
+<section class="slide sec-2" id="s9" data-sec="2" data-short="Хронология 1992–1993">
+  <header class="top"><span class="sec">II · Ход кризиса</span><span>Докладчик · Е. А. Гордеев</span></header>
+  <div class="body">
+    <div class="head" style="gap:14px">
+      <h2 class="title">Хронология кризиса</h2>
+      <div class="legend">
+        <span class="tag exit">выход / плавание</span>
+        <span class="tag deval">девальвация</span>
+        <span class="tag policy">решение властей</span>
+      </div>
+    </div>
+    <div class="tl">
+      <div>
+        <div class="yr">1992</div>
+        <ol>
+          <li><span class="d">02.06</span><span>Дания отвергает Маастрихтский договор</span><span class="tag policy">референдум</span></li>
+          <li><span class="d">16.07</span><span>Бундесбанк: учётная ставка 8,75%</span><span class="tag policy">ставка</span></li>
+          <li><span class="d">08.09</span><span>Финляндия отпускает марку</span><span class="tag exit">плавание</span></li>
+          <li><span class="d">13.09</span><span>Лира девальвирована на 7%</span><span class="tag deval">−7%</span></li>
+          <li><span class="d">16.09</span><span>«Чёрная среда»: фунт выходит из ERM</span><span class="tag exit">выход</span></li>
+          <li><span class="d">17.09</span><span>Италия выходит; песета −5%</span><span class="tag exit">выход</span></li>
+          <li><span class="d">20.09</span><span>Франция: 51,04% «за» договор</span><span class="tag policy">референдум</span></li>
+          <li><span class="d">19.11</span><span>Швеция отпускает крону</span><span class="tag exit">плавание</span></li>
+          <li><span class="d">22.11</span><span>Песета и эскудо −6%</span><span class="tag deval">−6%</span></li>
+          <li><span class="d">10.12</span><span>Норвегия отпускает крону</span><span class="tag exit">плавание</span></li>
+        </ol>
+      </div>
+      <div>
+        <div class="yr">1993</div>
+        <ol>
+          <li><span class="d">30.01</span><span>Ирландский фунт −10%</span><span class="tag deval">−10%</span></li>
+          <li><span class="d">13.05</span><span>Песета −8%, эскудо −6,5%</span><span class="tag deval">−8%</span></li>
+          <li><span class="d">июль</span><span>Атака на французский франк</span><span class="tag exit">атака</span></li>
+          <li><span class="d">29.07</span><span>Бундесбанк не снижает учётную ставку</span><span class="tag policy">ставка</span></li>
+          <li><span class="d">02.08</span><span>Коридор ERM расширен до ±15%</span><span class="tag policy">решение ЕС</span></li>
+          <li><span class="d">01.11</span><span>Маастрихтский договор вступает в силу</span><span class="tag policy">договор</span></li>
+        </ol>
+        <p class="note" style="margin-top:18px">Финляндия, Швеция и Норвегия не входили в ERM, но в одностороннем порядке привязывали валюты к ЭКЮ. Их падение показало рынку, что привязку можно сломать.</p>
+      </div>
+    </div>
+  </div>
+  <footer class="bot"><span class="num">09</span><span>/ 19</span><span class="name">Кризис ЕВС · 1992–1993</span></footer>
+</section>
+
+<!-- 10 · Сентябрь 1992 -->
+<section class="slide sec-2" id="s10" data-sec="2" data-short="Сентябрь 1992: трещины">
+  <header class="top"><span class="sec">II · Ход кризиса</span><span>Докладчик · Е. А. Гордеев</span></header>
+  <div class="body">
+    <div class="head">
+      <h2 class="title">Сентябрь 1992: первые трещины</h2>
+      <p class="lead">С 8 по 15 сентября рынок проверил на прочность все слабые привязки к ЭКЮ и немецкой марке.</p>
+    </div>
+    <div class="trio">
+      <div class="tile">
+        <span class="kicker">8 сентября · Скандинавия</span>
+        <h3>Финляндия и Швеция</h3>
+        <p>Финляндия отпускает марку в плавание. Риксбанк Швеции защищает крону ставкой 75%, а 16 сентября поднимает её до 500% годовых.</p>
+      </div>
+      <div class="tile">
+        <span class="kicker">13–14 сентября · Италия</span>
+        <h3>Лира: −7%</h3>
+        <p>Первая вынужденная девальвация в ERM с 1987&nbsp;г. Бундесбанк символически снижает ставки: учётную до 8,25%, ломбардную до 9,5%. Рынок счёл уступку слишком малой.</p>
+      </div>
+      <div class="tile">
+        <span class="kicker">15 сентября · Германия</span>
+        <h3>Интервью Шлезингера</h3>
+        <p>Президент Бундесбанка Гельмут Шлезингер заявил, что более широкий пересмотр курсов был бы лучше. Рынок прочитал это так: фунт будет следующим.</p>
+      </div>
+    </div>
+  </div>
+  <footer class="bot"><span class="num">10</span><span>/ 19</span><span class="name">Кризис ЕВС · 1992–1993</span></footer>
+</section>
+
+<!-- 11 · Чёрная среда -->
+<section class="slide sec-2" id="s11" data-sec="2" data-short="«Чёрная среда»">
+  <header class="top"><span class="sec">II · Ход кризиса</span><span>Докладчик · Е. А. Гордеев</span></header>
+  <div class="body">
+    <h2 class="title">«Чёрная среда», 16&nbsp;сентября 1992&nbsp;г.</h2>
+    <div class="cols">
+      <ol class="day">
+        <li><span class="t">утро</span><span class="e">Массовые продажи фунта. Банк Англии скупает фунты за счёт резервов, но курс не отходит от нижней границы 2,7780&nbsp;DM.</span></li>
+        <li><span class="t">11:00</span><span class="e">Базовая ставка поднята с 10% до 12%. Реакции рынка почти нет.</span></li>
+        <li><span class="t">14:15</span><span class="e">Объявлено повышение до 15% со следующего дня. Продажи продолжаются.</span></li>
+        <li class="key"><span class="t">19:30</span><span class="e">Канцлер казначейства Норман Ламонт объявляет о приостановке членства Великобритании в ERM.</span></li>
+        <li><span class="t">17.09</span><span class="e">Ставка возвращена к 10%, 15% так и не введены. Италия тоже выходит из ERM.</span></li>
+      </ol>
+      <div class="stack" style="gap:28px">
+        <div class="figs">
+          <div class="fig"><span class="v">2,7780</span><span class="k">марки за фунт — нижняя граница коридора</span></div>
+          <div class="fig"><span class="v">12→15%</span><span class="k">ставка за один день; 15% только объявили</span></div>
+          <div class="fig"><span class="v">£3,3&nbsp;млрд</span><span class="k">потери казначейства по оценке 2005&nbsp;г.</span></div>
+          <div class="fig"><span class="v red">19:30</span><span class="k">фунт покидает ERM и больше не возвращается</span></div>
+        </div>
+        <p class="note">Ставка не убедила рынок: при рецессии и ипотеке с плавающей ставкой правительство не могло долго держать 12–15%, и все это понимали.</p>
+      </div>
+    </div>
+  </div>
+  <footer class="bot"><span class="num">11</span><span>/ 19</span><span class="name">Кризис ЕВС · 1992–1993</span></footer>
+</section>
+
+<!-- 12 · Сорос -->
+<section class="slide sec-2" id="s12" data-sec="2" data-short="Сорос и одностороннее пари">
+  <header class="top"><span class="sec">II · Ход кризиса</span><span>Докладчик · Е. А. Гордеев</span></header>
+  <div class="body">
+    <h2 class="title">Джордж Сорос и логика «одностороннего пари»</h2>
+    <div class="cols">
+      <div class="stack">
+        <p>Фонд Quantum Джорджа Сороса и Стэнли Дракенмиллера открыл короткую позицию по фунту примерно на <b>10 млрд долларов</b> и заработал больше <b>1 млрд</b>. Сороса прозвали «человеком, который сломал Банк Англии».</p>
+        <p>Против фунта играли и банки, пенсионные фонды, компании, страховавшие валютный риск. Их общий объём многократно превышал резервы Банка Англии.</p>
+        <ul class="points">
+          <li>Спекулянт занимает фунты и продаёт их за марки у нижней границы.</li>
+          <li>Курс удержат — он теряет немного: разницу ставок за несколько дней.</li>
+          <li>Фунт девальвируют — выкупает его дешевле и получает прибыль.</li>
+        </ul>
+      </div>
+      <div class="tile bet">
+        <span class="kicker">Условный пример: продажа £1 млрд по 2,78 DM</span>
+        <div class="calc">
+          <div class="line"><span>Получено от продажи</span><span class="v">2,78 млрд DM</span></div>
+          <div class="line"><span>Курс удержан: потеря за неделю</span><span class="v">≈ 0,05%</span></div>
+          <div class="line"><span>Фунт упал до 2,50 DM: выкуп £1 млрд</span><span class="v">2,50 млрд DM</span></div>
+          <div class="line total"><span>Прибыль</span><span class="v">0,28 млрд DM ≈ 10%</span></div>
+        </div>
+        <div class="row">
+          <div class="cap"><span>Риск, если курс удержат</span><span>≈ 0,05%</span></div>
+          <div class="track"><span style="width:0.5%;min-width:4px;background:var(--c2)" data-tip="Возможная потеря ≈ 0,05%"></span></div>
+        </div>
+        <div class="row">
+          <div class="cap"><span>Выигрыш при девальвации</span><span>≈ 10%</span></div>
+          <div class="track"><span style="width:100%;background:var(--c1)" data-tip="Возможный выигрыш ≈ 10%"></span></div>
+        </div>
+        <p class="note">Шкала 0–10% от суммы сделки. Цифры условные.</p>
+      </div>
+    </div>
+  </div>
+  <footer class="bot"><span class="num">12</span><span>/ 19</span><span class="name">Кризис ЕВС · 1992–1993</span></footer>
+</section>
+
+<!-- 13 · Волна девальваций -->
+<section class="slide sec-2" id="s13" data-sec="2" data-short="Волна девальваций">
+  <header class="top"><span class="sec">II · Ход кризиса</span><span>Докладчик · Е. А. Гордеев</span></header>
+  <div class="body">
+    <h2 class="title">Волна девальваций: сентябрь 1992 — май 1993</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Валюта</th><th>Что произошло</th><th>Даты</th><th>Итог</th></tr></thead>
+        <tbody>
+          <tr><td>Фунт стерлингов<span class="ccy">GBP</span></td><td>Выход из ERM после «чёрной среды»</td><td class="num">16.09.1992</td><td><span class="tag exit">вышла</span></td></tr>
+          <tr><td>Итальянская лира<span class="ccy">ITL</span></td><td>Девальвация на 7%, затем выход из ERM</td><td class="num">13.09 · 17.09.1992</td><td><span class="tag exit">вышла</span></td></tr>
+          <tr><td>Испанская песета<span class="ccy">ESP</span></td><td>Три девальвации: −5%, −6%, −8%</td><td class="num">17.09.92 · 22.11.92 · 13.05.93</td><td><span class="tag deval">×3</span></td></tr>
+          <tr><td>Португальское эскудо<span class="ccy">PTE</span></td><td>Две девальвации: −6%, −6,5%</td><td class="num">22.11.1992 · 13.05.1993</td><td><span class="tag deval">×2</span></td></tr>
+          <tr><td>Ирландский фунт<span class="ccy">IEP</span></td><td>−10% после месяцев защиты высокими ставками</td><td class="num">30.01.1993</td><td><span class="tag deval">×1</span></td></tr>
+          <tr><td>Французский франк<span class="ccy">FRF</span></td><td>Удержан интервенциями Банка Франции и Бундесбанка</td><td class="num">сент. 1992 · янв. 1993</td><td><span class="tag policy">удержан</span></td></tr>
+          <tr><td>Датская крона, бельг. франк<span class="ccy">DKK · BEF</span></td><td>Сильное давление, курс удержан</td><td class="num">1992–1993</td><td><span class="tag policy">удержан</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note">23 сентября 1992&nbsp;г. Банк Франции и Бундесбанк совместно заявили, что курс франка к марке соответствует экономике, и вместе провели интервенции. В 1992&nbsp;г. франк устоял.</p>
+  </div>
+  <footer class="bot"><span class="num">13</span><span>/ 19</span><span class="name">Кризис ЕВС · 1992–1993</span></footer>
+</section>
+
+<!-- 14 · Лето 1993 -->
+<section class="slide sec-2" id="s14" data-sec="2" data-short="Лето 1993: коридор ±15%">
+  <header class="top"><span class="sec">II · Ход кризиса</span><span>Докладчик · Е. А. Гордеев</span></header>
+  <div class="body">
+    <h2 class="title">Лето 1993: атака на франк и коридор ±15%</h2>
+    <div class="cols">
+      <div class="stack">
+        <p>Инфляция во Франции была ниже немецкой, но безработица превышала 10%. Рынок ставил на то, что Франция снизит ставки и откажется от привязки к марке.</p>
+        <ul class="points">
+          <li><b>29 июля</b> Бундесбанк снизил лишь ломбардную ставку, оставив учётную. Рынки ждали большего.</li>
+          <li><b>30 июля</b> продажи франка, датской кроны, бельгийского франка, песеты и эскудо; интервенции — десятки миллиардов марок.</li>
+          <li><b>1–2 августа</b> министры финансов ЕС в Брюсселе расширяют коридор до <b>±15%</b>, центральные курсы не меняются.</li>
+          <li>Марка и гульден по двустороннему соглашению сохраняют ±2,25%.</li>
+        </ul>
+      </div>
+      <figure class="chart-fig">
+        <span class="label">Ширина коридора, % от центрального курса</span>
+        <div class="band-chart">
+          <div class="bar-row">
+            <div class="cap"><span>Узкий, 1979 — июль 1993</span><span class="val">±2,25%</span></div>
+            <div class="band-track"><span class="fill" style="left:42.5%;width:15%" data-tip="Узкий коридор: от −2,25% до +2,25%"></span><span class="mid"></span></div>
+          </div>
+          <div class="bar-row">
+            <div class="cap"><span>Широкий: песета, фунт, эскудо</span><span class="val">±6%</span></div>
+            <div class="band-track"><span class="fill wide" style="left:30%;width:40%" data-tip="Широкий коридор: от −6% до +6%"></span><span class="mid"></span></div>
+          </div>
+          <div class="bar-row">
+            <div class="cap"><span><b>С 2 августа 1993</b></span><span class="val">±15%</span></div>
+            <div class="band-track"><span class="fill" style="left:0;width:100%" data-tip="Новый коридор: от −15% до +15%"></span><span class="mid"></span></div>
+          </div>
+          <div class="bar-row">
+            <div class="cap"><span>Марка — гульден</span><span class="val">±2,25%</span></div>
+            <div class="band-track"><span class="fill" style="left:42.5%;width:15%" data-tip="Марка — гульден: от −2,25% до +2,25%"></span><span class="mid"></span></div>
+          </div>
+          <div class="band-axis" aria-hidden="true">
+            <span style="left:0">−15%</span>
+            <span style="left:30%">−6%</span>
+            <span style="left:50%">0</span>
+            <span style="left:70%">+6%</span>
+            <span style="left:100%">+15%</span>
+          </div>
+        </div>
+        <figcaption class="note">Формально ERM сохранился, но коридор шириной 30% сделал систему почти плавающей.</figcaption>
+      </figure>
+    </div>
+  </div>
+  <footer class="bot"><span class="num">14</span><span>/ 19</span><span class="name">Кризис ЕВС · 1992–1993</span></footer>
+</section>
+
+<!-- 15 · Теория -->
+<section class="slide sec-3" id="s15" data-sec="3" data-short="Объяснения экономистов">
+  <header class="top"><span class="sec">III · Анализ и последствия</span><span>Докладчик · И. С. Татьянченко</span></header>
+  <div class="body">
+    <div class="head">
+      <h2 class="title">Как экономисты объясняют кризис</h2>
+      <p class="lead">Кризис ЕВС стал главным примером, на котором проверяли две группы моделей валютных кризисов.</p>
+    </div>
+    <div class="cols even">
+      <div class="tile gen">
+        <span class="kicker">Первое поколение</span>
+        <h3>Кризис неизбежен при плохих фундаментальных показателях</h3>
+        <span class="cite">П. Кругман, 1979</span>
+        <p>Если бюджетная и денежная политика несовместима с фиксированным курсом, резервы тают. Атака лишь ускоряет неизбежную девальвацию.</p>
+        <p class="apply"><b>Подходит для</b> Италии с госдолгом выше 100% ВВП и высокой инфляцией, отчасти для Испании и завышенного курса фунта.</p>
+      </div>
+      <div class="tile gen">
+        <span class="kicker">Второе поколение</span>
+        <h3>Ожидания рынка сбываются сами</h3>
+        <span class="cite">М. Обстфельд, 1994–1996</span>
+        <p>Правительство сравнивает цену защиты курса — высокие ставки при безработице — с ценой отказа от него. Если рынок ждёт девальвации, защита дорожает, и девальвация становится выгодной.</p>
+        <p class="apply"><b>Подходит для</b> Великобритании в рецессии и Франции 1993&nbsp;г. с низкой инфляцией, но безработицей выше 10%.</p>
+      </div>
+    </div>
+    <p class="note">Б. Эйхенгрин и Ч. Виплош (1993): после отмены контроля над капиталом даже здоровая экономика уязвима, если рынок сомневается в политической воле правительства.</p>
+  </div>
+  <footer class="bot"><span class="num">15</span><span>/ 19</span><span class="name">Кризис ЕВС · 1992–1993</span></footer>
+</section>
+
+<!-- 16 · Последствия для стран -->
+<section class="slide sec-3" id="s16" data-sec="3" data-short="Великобритания и Италия">
+  <header class="top"><span class="sec">III · Анализ и последствия</span><span>Докладчик · И. С. Татьянченко</span></header>
+  <div class="body">
+    <h2 class="title">Последствия для Великобритании и Италии</h2>
+    <div class="cols wide-left">
+      <figure class="chart-fig">
+        <span class="label">Базовая ставка Банка Англии, июль 1992 — декабрь 1993, %</span>
+        <div id="ukChart" class="chart" role="img" aria-label="Базовая ставка Банка Англии: 10 процентов до 16 сентября 1992, в тот день 12 процентов и объявленные 15, затем снижение до 9, 8, 7, 6 процентов к январю 1993 и 5,5 процента в ноябре 1993"></div>
+        <details class="data">
+          <summary>Таблица значений</summary>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Дата</th><th>Ставка</th></tr></thead>
+              <tbody>
+                <tr><td class="num">05.05.1992</td><td class="num">10%</td></tr>
+                <tr><td class="num">16.09.1992</td><td class="num">12% (объявлено 15%)</td></tr>
+                <tr><td class="num">17.09.1992</td><td class="num">10%</td></tr>
+                <tr><td class="num">22.09.1992</td><td class="num">9%</td></tr>
+                <tr><td class="num">16.10.1992</td><td class="num">8%</td></tr>
+                <tr><td class="num">13.11.1992</td><td class="num">7%</td></tr>
+                <tr><td class="num">26.01.1993</td><td class="num">6%</td></tr>
+                <tr><td class="num">23.11.1993</td><td class="num">5,5%</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </details>
+      </figure>
+      <div class="stack" style="gap:26px">
+        <div class="rule stack" style="gap:10px">
+          <h3 class="h3">Великобритания</h3>
+          <ul class="points" style="font-size:var(--t-small);gap:8px">
+            <li>Ставки снижены с 10% до 6% за четыре месяца, спад закончился в 1993&nbsp;г.</li>
+            <li>С октября 1992&nbsp;г. — таргетирование инфляции (цель 1–4%), в 1997&nbsp;г. — независимость Банка Англии.</li>
+            <li>Ламонт ушёл в отставку в мае 1993&nbsp;г., консерваторы проиграли выборы 1997&nbsp;г.</li>
+          </ul>
+        </div>
+        <div class="rule stack" style="gap:10px">
+          <h3 class="h3">Италия</h3>
+          <ul class="points" style="font-size:var(--t-small);gap:8px">
+            <li>Девальвация поддержала экспорт; правительство Амато провело жёсткую бюджетную консолидацию.</li>
+            <li>Лира вернулась в ERM в ноябре 1996&nbsp;г., с 1999&nbsp;г. Италия в зоне евро.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+  <footer class="bot"><span class="num">16</span><span>/ 19</span><span class="name">Кризис ЕВС · 1992–1993</span></footer>
 </section>
 
 <!-- 17 · Путь к евро -->
-<section class="slide" id="s17" data-short="Путь к евро">
-  <div class="meta"><span class="n">17 / 19</span><span>III. Анализ и последствия</span><span class="who">И. С. Татьянченко</span></div>
-  <div class="head">
-    <h2 class="title">Последствия для Европы: от широкого коридора к евро</h2>
-    <p class="lead">Кризис показал, что «фиксированные, но пересматриваемые» курсы при свободном капитале неустойчивы. Выбор был между плаванием и единой валютой, и ЕС выбрал единую валюту.</p>
+<section class="slide sec-3" id="s17" data-sec="3" data-short="Путь к евро">
+  <header class="top"><span class="sec">III · Анализ и последствия</span><span>Докладчик · И. С. Татьянченко</span></header>
+  <div class="body">
+    <div class="head">
+      <h2 class="title">Последствия для Европы: от широкого коридора к евро</h2>
+      <p class="lead">«Фиксированные, но пересматриваемые» курсы при свободном капитале оказались неустойчивы. Выбор был между плаванием и единой валютой, и ЕС выбрал единую валюту.</p>
+    </div>
+    <ol class="path">
+      <li><span class="d">02.08.1993</span><b>Коридор ±15%</b><span>Атаки на курсы теряют смысл</span></li>
+      <li><span class="d">01.11.1993</span><b>Маастрихт в силе</b><span>Критерий курса толкуют по новому коридору</span></li>
+      <li><span class="d">01.01.1994</span><b>Европейский валютный институт</b><span>Второй этап ЭВС, Франкфурт</span></li>
+      <li><span class="d">12.1995</span><b>Название «евро»</b><span>Решение саммита в Мадриде</span></li>
+      <li><span class="d">1996</span><b>Возвращения в ERM</b><span>Финляндия — октябрь, Италия — ноябрь</span></li>
+      <li><span class="d">01.06.1998</span><b>Создан ЕЦБ</b><span>Общая денежная политика вместо «якоря» Бундесбанка</span></li>
+      <li><span class="d">01.01.1999</span><b>Евро в 11 странах</b><span>Безналичный евро и ERM II с коридором ±15%</span></li>
+      <li><span class="d">01.01.2002</span><b>Наличный евро</b><span>Национальные валюты уходят из обращения</span></li>
+    </ol>
   </div>
-  <ol class="path">
-    <li><span class="d">02.08.1993</span><b>Коридор ±15%</b><span>Атаки на курсы теряют смысл</span></li>
-    <li><span class="d">01.11.1993</span><b>Маастрихт в силе</b><span>Критерий курса толкуется относительно нового коридора</span></li>
-    <li><span class="d">01.01.1994</span><b>Европейский валютный институт</b><span>Второй этап ЭВС, Франкфурт</span></li>
-    <li><span class="d">декабрь 1995</span><b>Название «евро»</b><span>Решение саммита в Мадриде</span></li>
-    <li><span class="d">1996</span><b>Возвращения в ERM</b><span>Финляндия (октябрь), Италия (ноябрь)</span></li>
-    <li><span class="d">01.06.1998</span><b>Создан ЕЦБ</b><span>Единая денежная политика вместо «якоря» Бундесбанка</span></li>
-    <li><span class="d">01.01.1999</span><b>Евро в 11 странах</b><span>Безналичный евро и ERM II со стандартным коридором ±15%</span></li>
-    <li><span class="d">01.01.2002</span><b>Наличный евро</b><span>Национальные валюты уходят из обращения</span></li>
-  </ol>
+  <footer class="bot"><span class="num">17</span><span>/ 19</span><span class="name">Кризис ЕВС · 1992–1993</span></footer>
 </section>
 
 <!-- 18 · Уроки -->
-<section class="slide" id="s18" data-short="Уроки кризиса">
-  <div class="meta"><span class="n">18 / 19</span><span>III. Анализ и последствия</span><span class="who">И. С. Татьянченко</span></div>
-  <div class="head">
+<section class="slide sec-3" id="s18" data-sec="3" data-short="Уроки кризиса">
+  <header class="top"><span class="sec">III · Анализ и последствия</span><span>Докладчик · И. С. Татьянченко</span></header>
+  <div class="body">
     <h2 class="title">Выводы: уроки кризиса ЕВС</h2>
+    <div class="lessons">
+      <div><h3>Трилемму не обойти</h3><p>Фиксированный курс, свободный капитал и разное положение экономик несовместимы.</p></div>
+      <div><h3>Доверие не купить ставкой</h3><p>В рецессии угроза держать 15% или 500% неубедительна: рынок знает, что правительство не выдержит.</p></div>
+      <div><h3>Резервы конечны</h3><p>Частный капитал может мобилизовать больше средств, чем любой центральный банк.</p></div>
+      <div><h3>Якорь работает на себя</h3><p>Бундесбанк отвечал за цены в Германии, а не за стабильность ERM. Нужна общая денежная политика.</p></div>
+      <div><h3>Отложенный пересмотр опасен</h3><p>Отказ от реалайнментов в 1987–1992&nbsp;гг. накопил перекосы, которые разрядились разом.</p></div>
+      <div><h3>Кризис ускорил евро</h3><p>Опыт 1992–1993&nbsp;гг. подтолкнул к ЕЦБ и пригодился при анализе кризисов в Мексике, Азии и России.</p></div>
+    </div>
+    <p class="verdict">Кризис вызвали не спекулянты, а противоречие между общей валютной привязкой и национальной экономической политикой. Спекулянты лишь первыми это заметили.</p>
   </div>
-  <div class="lessons">
-    <div><h3>Трилемму не обойти</h3><p>Фиксированный курс, свободный капитал и разное положение экономик несовместимы. Кто-то должен отказаться от своей денежной политики.</p></div>
-    <div><h3>Доверие не купить ставкой</h3><p>В рецессии угроза держать ставки на уровне 15% или 500% неубедительна: рынок знает, что правительство не выдержит.</p></div>
-    <div><h3>Резервы конечны</h3><p>Частный капитал может мобилизовать больше средств, чем есть у любого центрального банка.</p></div>
-    <div><h3>Якорь работает на себя</h3><p>Бундесбанк отвечал за цены в Германии, а не за стабильность ERM. Асимметричной системе нужна общая денежная политика.</p></div>
-    <div><h3>Отложенный пересмотр опасен</h3><p>Отказ от реалайнментов в 1987–1992&nbsp;гг. накопил перекосы, которые разрядились разом.</p></div>
-    <div><h3>Кризис ускорил евро</h3><p>Опыт 1992–1993&nbsp;гг. подтолкнул к единой валюте и ЕЦБ и пригодился при анализе кризисов в Мексике (1994), Азии (1997) и России (1998).</p></div>
-  </div>
-  <p class="verdict">Кризис ЕВС вызвали не спекулянты, а противоречие между общей валютной привязкой и национальной экономической политикой. Спекулянты лишь первыми это заметили.</p>
+  <footer class="bot"><span class="num">18</span><span>/ 19</span><span class="name">Кризис ЕВС · 1992–1993</span></footer>
 </section>
 
 <!-- 19 · Источники -->
-<section class="slide" id="s19" data-short="Источники">
-  <div class="meta"><span class="n">19 / 19</span><span>Заключение</span><span class="who">И. С. Татьянченко</span></div>
-  <div class="cols">
-    <div class="stack">
-      <h2 class="title">Список источников</h2>
-      <ol class="sources">
-        <li>Эйхенгрин Б. Глобализация капитала: история международной денежной системы / пер. с англ. — М.: Дело, 2009.</li>
-        <li>Eichengreen B., Wyplosz C. The Unstable EMS // Brookings Papers on Economic Activity. — 1993. — № 1. — P. 51–143.</li>
-        <li>Buiter W., Corsetti G., Pesenti P. Financial Markets and European Monetary Cooperation: The Lessons of the 1992–93 Exchange Rate Mechanism Crisis. — Cambridge: Cambridge University Press, 1998.</li>
-        <li>Krugman P. A Model of Balance-of-Payments Crises // Journal of Money, Credit and Banking. — 1979. — Vol. 11, № 3. — P. 311–325.</li>
-        <li>Obstfeld M. Models of Currency Crises with Self-Fulfilling Features // European Economic Review. — 1996. — Vol. 40. — P. 1037–1047.</li>
-        <li>HM Treasury. Документы о выходе Великобритании из ERM, раскрытые в 2005 г. по закону о свободе информации.</li>
-        <li>Bank of England. Quarterly Bulletin, 1992–1993.</li>
-        <li>Deutsche Bundesbank. Annual Report 1992. — Frankfurt am Main, 1993.</li>
-      </ol>
-    </div>
-    <div class="stack" style="gap:18px">
-      <p class="thanks">Спасибо за внимание</p>
-      <p class="thanks-sub">Готовы ответить на вопросы.</p>
-      <p class="note">Группа 2: Н. Р. Аверьянов, Е. А. Гордеев, И. С. Татьянченко</p>
-      <p><a href="#s1">Вернуться к титульному листу</a></p>
+<section class="slide sec-0" id="s19" data-sec="0" data-short="Источники и вопросы">
+  <canvas class="rosette end-rosette" aria-hidden="true"></canvas>
+  <header class="top"><span class="sec">Заключение</span><span>Докладчик · И. С. Татьянченко</span></header>
+  <div class="body">
+    <div class="cols wide-left" style="align-items:start">
+      <div class="stack">
+        <h2 class="title">Список источников</h2>
+        <ol class="sources">
+          <li>Эйхенгрин Б. Глобализация капитала: история международной денежной системы / пер. с англ. — М.: Дело, 2009.</li>
+          <li>Eichengreen B., Wyplosz C. The Unstable EMS // Brookings Papers on Economic Activity. — 1993. — № 1. — P. 51–143.</li>
+          <li>Buiter W., Corsetti G., Pesenti P. Financial Markets and European Monetary Cooperation: The Lessons of the 1992–93 Exchange Rate Mechanism Crisis. — Cambridge University Press, 1998.</li>
+          <li>Krugman P. A Model of Balance-of-Payments Crises // Journal of Money, Credit and Banking. — 1979. — Vol. 11, № 3. — P. 311–325.</li>
+          <li>Obstfeld M. Models of Currency Crises with Self-Fulfilling Features // European Economic Review. — 1996. — Vol. 40. — P. 1037–1047.</li>
+          <li>HM Treasury. Документы о выходе Великобритании из ERM, раскрытые в 2005 г.</li>
+          <li>Bank of England. Quarterly Bulletin, 1992–1993.</li>
+          <li>Deutsche Bundesbank. Annual Report 1992. — Frankfurt am Main, 1993.</li>
+        </ol>
+      </div>
+      <div class="stack" style="gap:18px">
+        <p class="thanks">Спасибо<br>за <span>внимание</span></p>
+        <p class="lead">Готовы ответить на вопросы.</p>
+        <p class="note">Группа 2: Н. Р. Аверьянов, Е. А. Гордеев, И. С. Татьянченко</p>
+      </div>
     </div>
   </div>
+  <footer class="bot"><span class="num">19</span><span>/ 19</span><span class="name">Кризис ЕВС · 1992–1993</span></footer>
 </section>
 
-</main>
+</div>
+</div>
 
-<nav class="deck-nav" aria-label="Навигация по слайдам">
-  <button type="button" id="prevBtn" aria-label="Предыдущий слайд"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
-  <span class="count" id="count" aria-live="polite">01 / 19</span>
-  <button type="button" id="nextBtn" aria-label="Следующий слайд"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button>
-  <button type="button" id="menuBtn" aria-expanded="false" aria-controls="menu"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg><span class="txt">Слайды</span></button>
+<div class="progress" aria-hidden="true"><i id="bar"></i></div>
+<nav class="ctrl" aria-label="Управление презентацией">
+  <button type="button" class="pn" id="prevBtn" aria-label="Предыдущий слайд"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
+  <button type="button" class="pn" id="nextBtn" aria-label="Следующий слайд"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button>
+  <button type="button" id="ovBtn" aria-haspopup="dialog"><svg viewBox="0 0 24 24"><path d="M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z"/></svg><span class="txt">Все слайды</span></button>
   <button type="button" id="fsBtn" aria-label="Во весь экран" hidden><svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
 </nav>
-<div class="menu" id="menu" hidden>
-  <ol id="menuList"></ol>
-  <p class="hint">Клавиши ← → или PageUp / PageDown переключают слайды, Home и End — к началу и концу.</p>
+<div class="overview" id="overview" role="dialog" aria-modal="true" aria-label="Все слайды" hidden>
+  <div class="ov-head"><h2>Все слайды</h2><button type="button" class="ov-close" id="ovClose">Закрыть</button></div>
+  <ol id="ovList"></ol>
+  <p class="hint">Стрелки ← → и пробел листают слайды, O открывает этот список, F — полноэкранный режим, Home и End — к началу и концу.</p>
 </div>
 <div class="tip" id="tip" hidden></div>
 
@@ -1082,95 +1102,108 @@ details.data .table-wrap { margin-top: 10px; }
 (function () {
   "use strict";
   var NS = "http://www.w3.org/2000/svg";
+  var root = document.documentElement;
+  var MQ = "(min-width: 900px) and (min-height: 500px) and (min-aspect-ratio: 5/4)";
+  var mq = window.matchMedia ? window.matchMedia(MQ) : { matches: false };
   var reduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var stage = document.getElementById("stage");
+  var slides = Array.prototype.slice.call(document.querySelectorAll(".slide"));
+  var total = slides.length;
+  var cur = 0;
+  var k = 1;
 
+  function pad(n) { return n < 10 ? "0" + n : String(n); }
+  function css(name) { return getComputedStyle(root).getPropertyValue(name).trim(); }
   function svgEl(tag, attrs, parent) {
     var e = document.createElementNS(NS, tag);
-    for (var k in attrs) e.setAttribute(k, attrs[k]);
+    for (var a in attrs) e.setAttribute(a, attrs[a]);
     if (parent) parent.appendChild(e);
     return e;
   }
   function txt(parent, x, y, s, attrs) {
-    var a = Object.assign({ x: x, y: y }, attrs || {});
-    var t = svgEl("text", a, parent);
+    var t = svgEl("text", Object.assign({ x: x, y: y }, attrs || {}), parent);
     t.textContent = s;
     return t;
   }
-  function pad(n) { return n < 10 ? "0" + n : String(n); }
 
-  /* ---------- hero motif: sterling breaks the floor ---------- */
-  function drawHero(box) {
-    var W = box.clientWidth; if (!W) return;
-    var H = W < 520 ? 150 : 170;
-    var m = { t: 18, r: W < 520 ? 8 : 120, b: 14, l: W < 520 ? 8 : 64 };
-    var iw = W - m.l - m.r, ih = H - m.t - m.b;
-    var lo = -15, hi = 8;
-    var y = function (v) { return m.t + (hi - v) / (hi - lo) * ih; };
-    var vals = [1.6, 0.9, 1.3, 0.4, -0.5, -0.2, -1.3, -2.1, -1.7, -2.9, -3.6, -3.2, -4.4, -5.0, -5.5, -5.83, -5.7, -5.83, -8.6, -12.4, -13.6];
-    var n = vals.length - 1;
-    var x = function (i) { return m.l + i / n * iw; };
-    var svg = svgEl("svg", { width: W, height: H, viewBox: "0 0 " + W + " " + H, "aria-hidden": "true" });
-    svgEl("rect", { x: m.l, y: y(6.17), width: iw, height: y(-5.83) - y(6.17), fill: "var(--accent-soft)" }, svg);
-    svgEl("line", { x1: m.l, x2: m.l + iw, y1: y(6.17), y2: y(6.17), stroke: "var(--line)", "stroke-width": 1 }, svg);
-    svgEl("line", { x1: m.l, x2: m.l + iw, y1: y(0), y2: y(0), stroke: "var(--line)", "stroke-width": 1 }, svg);
-    svgEl("line", { x1: m.l, x2: m.l + iw, y1: y(-5.83), y2: y(-5.83), stroke: "var(--alert)", "stroke-width": 1 }, svg);
-    var brk = 17;
-    var d1 = "", d2 = "";
-    for (var i = 0; i <= brk; i++) d1 += (i ? "L" : "M") + x(i).toFixed(1) + "," + y(vals[i]).toFixed(1);
-    for (var j = brk; j <= n; j++) d2 += (j === brk ? "M" : "L") + x(j).toFixed(1) + "," + y(vals[j]).toFixed(1);
-    svgEl("path", { d: d1, fill: "none", stroke: "var(--c1)", "stroke-width": 2, "stroke-linejoin": "round", "stroke-linecap": "round" }, svg);
-    svgEl("path", { d: d2, fill: "none", stroke: "var(--alert)", "stroke-width": 2, "stroke-linejoin": "round", "stroke-linecap": "round" }, svg);
-    svgEl("circle", { cx: x(brk), cy: y(vals[brk]), r: 5, fill: "var(--alert)", stroke: "var(--bg)", "stroke-width": 2 }, svg);
-    if (W >= 520) {
-      txt(svg, m.l - 10, y(6.17) + 4, "3,1320", { "text-anchor": "end" });
-      txt(svg, m.l - 10, y(0) + 4, "2,95", { "text-anchor": "end", "class": "ink" });
-      txt(svg, m.l - 10, y(-5.83) + 4, "2,7780", { "text-anchor": "end", "class": "red" });
-      txt(svg, m.l + iw + 12, y(6.17) + 4, "верхняя граница");
-      txt(svg, m.l + iw + 12, y(0) + 4, "центр. курс, DM");
-      txt(svg, m.l + iw + 12, y(-5.83) + 4, "нижняя граница", { "class": "red" });
-    }
-    txt(svg, x(brk) - 8, y(vals[brk]) + 22, "16.09.1992", { "text-anchor": "end", "class": "red" });
-    box.replaceChildren(svg);
+  /* ---------- гильош ---------- */
+  function rosette(cv) {
+    var size = cv.clientWidth;
+    if (!size) return;
+    var scale = (root.classList.contains("present") ? k : 1) * (window.devicePixelRatio || 1);
+    cv.width = cv.height = Math.round(size * scale);
+    var c = cv.getContext("2d");
+    c.setTransform(scale, 0, 0, scale, 0, 0);
+    c.clearRect(0, 0, size, size);
+    var R = size / 2;
+    c.translate(R, R);
+    c.strokeStyle = css("--gold") || "#DDB560";
+    c.lineWidth = Math.max(0.5, size / 1400);
+    var bands = [
+      { r: .90, a: .055, m: 20, copies: 36, alpha: .55 },
+      { r: .74, a: .075, m: 14, copies: 28, alpha: .45 },
+      { r: .54, a: .085, m: 10, copies: 22, alpha: .42 },
+      { r: .34, a: .07, m: 7, copies: 16, alpha: .38 }
+    ];
+    var steps = 900;
+    bands.forEach(function (b) {
+      c.globalAlpha = b.alpha;
+      for (var j = 0; j < b.copies; j++) {
+        var ph = j / b.copies * Math.PI * 2;
+        c.beginPath();
+        for (var s = 0; s <= steps; s++) {
+          var t = s / steps * Math.PI * 2;
+          var rr = R * (b.r + b.a * Math.sin(b.m * t + ph) + b.a * .35 * Math.sin((b.m * 3 + 1) * t - ph));
+          var x = rr * Math.cos(t), y = rr * Math.sin(t);
+          if (s) c.lineTo(x, y); else c.moveTo(x, y);
+        }
+        c.stroke();
+      }
+    });
+    c.globalAlpha = .6;
+    [.985, .20].forEach(function (f) { c.beginPath(); c.arc(0, 0, R * f, 0, Math.PI * 2); c.stroke(); });
+    c.globalAlpha = 1;
   }
 
-  /* ---------- ERM band schematic ---------- */
+  /* ---------- схема ERM ---------- */
   function drawERM(box) {
     var W = box.clientWidth; if (!W) return;
-    var H = Math.round(Math.min(320, Math.max(240, W * 0.62)));
-    var m = { t: 12, r: 10, b: 12, l: 56 };
+    var present = root.classList.contains("present");
+    var H = present ? 360 : Math.round(Math.min(300, Math.max(220, W * 0.62)));
+    var m = { t: 12, r: 10, b: 12, l: present ? 64 : 56 };
     var iw = W - m.l - m.r, ih = H - m.t - m.b;
-    var lo = -7, hi = 7;
-    var y = function (v) { return m.t + (hi - v) / (hi - lo) * ih; };
+    var y = function (v) { return m.t + (7 - v) / 14 * ih; };
     var vals = [0.3, 0.9, 1.4, 1.1, 0.4, -0.3, -1.0, -1.6, -2.0, -2.25, -1.7, -1.0, -0.2, 0.5, 1.2, 1.8, 2.1, 2.25, 1.8, 1.2, 0.9, 0.4, 0.1, -0.2];
     var n = vals.length - 1;
     var x = function (i) { return m.l + i / n * iw; };
     var svg = svgEl("svg", { width: W, height: H, viewBox: "0 0 " + W + " " + H, "aria-hidden": "true" });
-    svgEl("rect", { x: m.l, y: y(6), width: iw, height: y(-6) - y(6), fill: "var(--accent-soft)" }, svg);
-    svgEl("rect", { x: m.l, y: y(2.25), width: iw, height: y(-2.25) - y(2.25), fill: "var(--c1)", "fill-opacity": 0.12 }, svg);
+    svgEl("rect", { x: m.l, y: y(6), width: iw, height: y(-6) - y(6), fill: "var(--hair-2)", rx: 6 }, svg);
+    svgEl("rect", { x: m.l, y: y(2.25), width: iw, height: y(-2.25) - y(2.25), fill: "var(--c1)", "fill-opacity": 0.28 }, svg);
     [6, 2.25, -2.25, -6].forEach(function (v) {
-      svgEl("line", { x1: m.l, x2: m.l + iw, y1: y(v), y2: y(v), stroke: "var(--line)", "stroke-width": 1 }, svg);
+      svgEl("line", { x1: m.l, x2: m.l + iw, y1: y(v), y2: y(v), stroke: "var(--hair)", "stroke-width": 1 }, svg);
     });
-    svgEl("line", { x1: m.l, x2: m.l + iw, y1: y(0), y2: y(0), stroke: "var(--ink-2)", "stroke-width": 1 }, svg);
+    svgEl("line", { x1: m.l, x2: m.l + iw, y1: y(0), y2: y(0), stroke: "var(--cream-3)", "stroke-width": 1 }, svg);
     [[6, "+6%"], [2.25, "+2,25%"], [0, "0"], [-2.25, "−2,25%"], [-6, "−6%"]].forEach(function (p) {
-      txt(svg, m.l - 8, y(p[0]) + 4, p[1], { "text-anchor": "end", "class": p[0] === 0 ? "ink" : "" });
+      txt(svg, m.l - 10, y(p[0]) + 5, p[1], { "text-anchor": "end", "class": p[0] === 0 ? "ink" : "" });
     });
     var d = "";
     for (var i = 0; i <= n; i++) d += (i ? "L" : "M") + x(i).toFixed(1) + "," + y(vals[i]).toFixed(1);
-    svgEl("path", { d: d, fill: "none", stroke: "var(--c1)", "stroke-width": 2, "stroke-linejoin": "round", "stroke-linecap": "round" }, svg);
+    svgEl("path", { d: d, fill: "none", stroke: "var(--cream)", "stroke-width": 2, "stroke-linejoin": "round", "stroke-linecap": "round" }, svg);
     [9, 17].forEach(function (i) {
-      svgEl("circle", { cx: x(i), cy: y(vals[i]), r: 5, fill: "var(--c2)", stroke: "var(--bg)", "stroke-width": 2, "data-tip": vals[i] > 0 ? "Верхняя граница: центральные банки продают сильную валюту" : "Нижняя граница: центральные банки покупают слабую валюту" }, svg);
+      svgEl("circle", { cx: x(i), cy: y(vals[i]), r: 6, fill: "var(--c2)", stroke: "var(--sec1)", "stroke-width": 2, "data-tip": vals[i] > 0 ? "Верхняя граница: центральные банки продают сильную валюту" : "Нижняя граница: центральные банки покупают слабую валюту" }, svg);
     });
-    txt(svg, x(9), y(-2.25) + 22, "интервенция", { "text-anchor": "middle", "class": "ink" });
-    txt(svg, x(17), y(2.25) - 12, "интервенция", { "text-anchor": "middle", "class": "ink" });
+    txt(svg, x(9), y(-2.25) + 26, "интервенция", { "text-anchor": "middle", "class": "ink" });
+    txt(svg, x(17), y(2.25) - 14, "интервенция", { "text-anchor": "middle", "class": "ink" });
     box.replaceChildren(svg);
   }
 
-  /* ---------- UK base rate step chart ---------- */
+  /* ---------- ставка Банка Англии ---------- */
   function drawUK(box) {
     var W = box.clientWidth; if (!W) return;
+    var present = root.classList.contains("present");
     var narrow = W < 480;
-    var H = narrow ? 260 : 300;
-    var m = { t: 34, r: narrow ? 40 : 48, b: 30, l: 38 };
+    var H = present ? 400 : (narrow ? 250 : 300);
+    var m = { t: 36, r: narrow ? 44 : 54, b: 30, l: 42 };
     var iw = W - m.l - m.r, ih = H - m.t - m.b;
     var D = function (s) { return Date.parse(s + "T00:00:00Z"); };
     var t0 = D("1992-07-01"), t1 = D("1993-12-31");
@@ -1181,65 +1214,184 @@ details.data .table-wrap { margin-top: 10px; }
     var fmt = function (v) { return String(v).replace(".", ",") + "%"; };
     var svg = svgEl("svg", { width: W, height: H, viewBox: "0 0 " + W + " " + H });
     [0, 4, 8, 12, 16].forEach(function (v) {
-      svgEl("line", { x1: m.l, x2: m.l + iw, y1: y(v), y2: y(v), stroke: "var(--grid)", "stroke-width": 1 }, svg);
-      txt(svg, m.l - 8, y(v) + 4, v + "%", { "text-anchor": "end" });
+      svgEl("line", { x1: m.l, x2: m.l + iw, y1: y(v), y2: y(v), stroke: "var(--hair-2)", "stroke-width": 1 }, svg);
+      txt(svg, m.l - 10, y(v) + 5, v + "%", { "text-anchor": "end" });
     });
     var ticks = narrow
       ? [["1992-07-01", "07.92"], ["1993-01-01", "01.93"], ["1993-07-01", "07.93"]]
       : [["1992-07-01", "июл 1992"], ["1992-10-01", "окт"], ["1993-01-01", "янв 1993"], ["1993-04-01", "апр"], ["1993-07-01", "июл"], ["1993-10-01", "окт"]];
-    ticks.forEach(function (tk, i) {
-      txt(svg, x(tk[0]), H - 8, tk[1], { "text-anchor": i === 0 ? "start" : "middle" });
-    });
+    ticks.forEach(function (tk, i) { txt(svg, x(tk[0]), H - 6, tk[1], { "text-anchor": i === 0 ? "start" : "middle" }); });
     var xs = x("1992-09-16");
-    svgEl("line", { x1: xs, x2: xs, y1: m.t - 14, y2: m.t + ih, stroke: "var(--alert)", "stroke-width": 1 }, svg);
-    txt(svg, xs + 6, m.t - 20, "16.09.1992 — выход из ERM", { "class": "red" });
+    svgEl("line", { x1: xs, x2: xs, y1: m.t - 16, y2: m.t + ih, stroke: "var(--coral)", "stroke-width": 1 }, svg);
+    txt(svg, xs + 8, m.t - 22, "16.09.1992 — выход из ERM", { "class": "red" });
     var d = "M" + x(steps[0][0]).toFixed(1) + "," + y(steps[0][1]).toFixed(1);
-    for (var i = 1; i < steps.length; i++) {
-      d += "H" + x(steps[i][0]).toFixed(1) + "V" + y(steps[i][1]).toFixed(1);
-    }
+    for (var i = 1; i < steps.length; i++) d += "H" + x(steps[i][0]).toFixed(1) + "V" + y(steps[i][1]).toFixed(1);
     d += "H" + x(end).toFixed(1);
-    var area = d + "V" + y(0).toFixed(1) + "H" + x(steps[0][0]).toFixed(1) + "Z";
-    svgEl("path", { d: area, fill: "var(--c1)", "fill-opacity": 0.1, stroke: "none" }, svg);
-    svgEl("path", { d: d, fill: "none", stroke: "var(--c1)", "stroke-width": 2, "stroke-linejoin": "round", "stroke-linecap": "round" }, svg);
-    svgEl("line", { x1: xs, x2: xs, y1: y(12), y2: y(15), stroke: "var(--c1)", "stroke-width": 1.5, "stroke-dasharray": "3 3" }, svg);
-    svgEl("circle", { cx: xs, cy: y(15), r: 4.5, fill: "var(--surface)", stroke: "var(--c1)", "stroke-width": 2 }, svg);
-    txt(svg, xs + 10, y(15) + 4, "15% — объявлено, не введено", { "class": "ink" });
-    txt(svg, xs + 10, y(12) + 4, "12%", { "class": "ink" });
+    svgEl("path", { d: d + "V" + y(0).toFixed(1) + "H" + x(steps[0][0]).toFixed(1) + "Z", fill: "var(--cream)", "fill-opacity": 0.08, stroke: "none" }, svg);
+    svgEl("path", { d: d, fill: "none", stroke: "var(--cream)", "stroke-width": 2, "stroke-linejoin": "round", "stroke-linecap": "round" }, svg);
+    svgEl("line", { x1: xs, x2: xs, y1: y(12), y2: y(15), stroke: "var(--cream)", "stroke-width": 1.5, "stroke-dasharray": "3 3" }, svg);
+    svgEl("circle", { cx: xs, cy: y(15), r: 5, fill: "var(--sec3)", stroke: "var(--cream)", "stroke-width": 2 }, svg);
+    txt(svg, xs + 12, y(15) + 5, "15% — объявлено, не введено", { "class": "ink" });
+    txt(svg, xs + 12, y(12) + 5, "12%", { "class": "ink" });
     var xe = x(end), ye = y(5.5);
-    svgEl("circle", { cx: xe, cy: ye, r: 4.5, fill: "var(--c1)", stroke: "var(--bg)", "stroke-width": 2 }, svg);
-    txt(svg, xe + 8, ye + 4, "5,5%", { "class": "ink" });
-    txt(svg, x("1992-07-01") + 4, y(10) - 8, "10%", { "class": "ink" });
-    // hover targets
-    for (var k = 0; k < steps.length; k++) {
-      var a = x(steps[k][0]), b = x(k + 1 < steps.length ? steps[k + 1][0] : end);
+    svgEl("circle", { cx: xe, cy: ye, r: 5, fill: "var(--gold)", stroke: "var(--sec3)", "stroke-width": 2 }, svg);
+    txt(svg, xe + 10, ye + 5, "5,5%", { "class": "ink" });
+    txt(svg, x("1992-07-01") + 4, y(10) - 10, "10%", { "class": "ink" });
+    for (var j = 0; j < steps.length; j++) {
+      var a = x(steps[j][0]), b = x(j + 1 < steps.length ? steps[j + 1][0] : end);
       var w = Math.max(b - a, 10), cx = w > b - a ? a - (w - (b - a)) / 2 : a;
-      svgEl("rect", { x: cx, y: m.t, width: w, height: ih, fill: "transparent", "data-tip": steps[k][2] + " — " + fmt(steps[k][1]) + (k === 1 ? " (объявлено 15%)" : "") }, svg);
+      svgEl("rect", { x: cx, y: m.t, width: w, height: ih, fill: "transparent", "data-tip": steps[j][2] + " — " + fmt(steps[j][1]) + (j === 1 ? " (объявлено 15%)" : "") }, svg);
     }
     box.replaceChildren(svg);
   }
 
-  var charts = [["heroChart", drawHero], ["ermChart", drawERM], ["ukChart", drawUK]];
   function drawAll() {
-    charts.forEach(function (c) { var el = document.getElementById(c[0]); if (el) c[1](el); });
+    var e = document.getElementById("ermChart"); if (e) drawERM(e);
+    var u = document.getElementById("ukChart"); if (u) drawUK(u);
+    document.querySelectorAll("canvas.rosette").forEach(rosette);
   }
-  drawAll();
-  if (window.ResizeObserver) {
-    var rt;
-    var ro = new ResizeObserver(function () { clearTimeout(rt); rt = setTimeout(drawAll, 60); });
-    charts.forEach(function (c) { var el = document.getElementById(c[0]); if (el) ro.observe(el); });
-  } else {
-    window.addEventListener("resize", drawAll);
-  }
-  if (document.fonts && document.fonts.ready) document.fonts.ready.then(drawAll);
 
-  /* ---------- tooltip ---------- */
+  /* ---------- режим презентации ---------- */
+  function fit() {
+    k = Math.min(window.innerWidth / 1600, window.innerHeight / 900);
+    stage.style.setProperty("--k", k.toFixed(4));
+  }
+  function setInert() {
+    var present = root.classList.contains("present");
+    slides.forEach(function (s, i) {
+      if (present && i !== cur) s.setAttribute("inert", ""); else s.removeAttribute("inert");
+    });
+  }
+  var bar = document.getElementById("bar");
+  var prevBtn = document.getElementById("prevBtn");
+  var nextBtn = document.getElementById("nextBtn");
+  function show(i, silent) {
+    i = Math.max(0, Math.min(total - 1, i));
+    cur = i;
+    slides.forEach(function (s, j) {
+      s.classList.toggle("on", j === i);
+      s.classList.toggle("past", j < i);
+    });
+    root.setAttribute("data-sec", slides[i].getAttribute("data-sec") || "0");
+    bar.style.transform = "scaleX(" + ((i + 1) / total) + ")";
+    prevBtn.disabled = i === 0;
+    nextBtn.disabled = i === total - 1;
+    setInert();
+    markOverview();
+    if (!silent) {
+      try { history.replaceState(null, "", "#" + slides[i].id); } catch (e) {}
+    }
+  }
+  function go(i) {
+    i = Math.max(0, Math.min(total - 1, i));
+    if (root.classList.contains("present")) show(i);
+    else { cur = i; slides[i].scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" }); markOverview(); }
+  }
+  function applyMode() {
+    var present = !!mq.matches;
+    root.classList.toggle("present", present);
+    if (present) { fit(); show(cur, true); }
+    else { root.setAttribute("data-sec", "0"); setInert(); }
+    drawAll();
+  }
+
+  /* ---------- обзор ---------- */
+  var ov = document.getElementById("overview");
+  var ovList = document.getElementById("ovList");
+  var ovBtn = document.getElementById("ovBtn");
+  var secBg = { "0": "var(--ink)", "1": "var(--sec1)", "2": "var(--sec2)", "3": "var(--sec3)" };
+  slides.forEach(function (s, i) {
+    var li = document.createElement("li");
+    var b = document.createElement("button");
+    b.type = "button";
+    b.className = "card";
+    b.style.background = secBg[s.getAttribute("data-sec") || "0"];
+    var n = document.createElement("span"); n.className = "n"; n.textContent = pad(i + 1);
+    var t = document.createElement("span"); t.textContent = s.getAttribute("data-short") || "";
+    b.appendChild(n); b.appendChild(t);
+    b.addEventListener("click", function () { closeOverview(); go(i); });
+    li.appendChild(b);
+    ovList.appendChild(li);
+  });
+  var cards = ovList.querySelectorAll("button.card");
+  function markOverview() { for (var i = 0; i < cards.length; i++) cards[i].setAttribute("aria-current", i === cur ? "true" : "false"); }
+  function openOverview() {
+    if (!root.classList.contains("present")) detectFlow();
+    markOverview();
+    ov.hidden = false;
+    var c = cards[cur]; if (c) c.focus();
+  }
+  function closeOverview() { ov.hidden = true; ovBtn.focus(); }
+  ovBtn.addEventListener("click", function () { ov.hidden ? openOverview() : closeOverview(); });
+  document.getElementById("ovClose").addEventListener("click", closeOverview);
+
+  function detectFlow() {
+    var mark = window.innerHeight * 0.35, idx = 0;
+    for (var i = 0; i < total; i++) { if (slides[i].getBoundingClientRect().top <= mark) idx = i; else break; }
+    cur = idx;
+  }
+
+  prevBtn.addEventListener("click", function () { go(cur - 1); });
+  nextBtn.addEventListener("click", function () { go(cur + 1); });
+
+  document.querySelectorAll('a[href^="#s"]').forEach(function (a) {
+    a.addEventListener("click", function (e) {
+      var id = a.getAttribute("href").slice(1);
+      var idx = slides.findIndex(function (s) { return s.id === id; });
+      if (idx >= 0) { e.preventDefault(); go(idx); }
+    });
+  });
+
+  document.addEventListener("keydown", function (e) {
+    if (e.altKey || e.ctrlKey || e.metaKey) return;
+    var tag = (e.target && e.target.tagName) || "";
+    if (/INPUT|TEXTAREA|SELECT/.test(tag)) return;
+    if (!ov.hidden) {
+      if (e.key === "Escape" || e.key === "o" || e.key === "O" || e.key === "щ" || e.key === "Щ") { e.preventDefault(); closeOverview(); }
+      return;
+    }
+    if (e.key === "o" || e.key === "O" || e.key === "щ" || e.key === "Щ") { e.preventDefault(); openOverview(); return; }
+    if (e.key === "f" || e.key === "F" || e.key === "а" || e.key === "А") { toggleFs(); return; }
+    if (!root.classList.contains("present")) return;
+    var tagBtn = tag === "BUTTON" || tag === "SUMMARY" || tag === "A";
+    var fwd = ["ArrowRight", "ArrowDown", "PageDown"], back = ["ArrowLeft", "ArrowUp", "PageUp"];
+    if (fwd.indexOf(e.key) >= 0 || (e.key === " " && !tagBtn)) { e.preventDefault(); go(cur + 1); }
+    else if (back.indexOf(e.key) >= 0) { e.preventDefault(); go(cur - 1); }
+    else if (e.key === "Home") { e.preventDefault(); go(0); }
+    else if (e.key === "End") { e.preventDefault(); go(total - 1); }
+  });
+
+  /* свайп */
+  var sx = null, sy = null;
+  document.getElementById("deck").addEventListener("touchstart", function (e) {
+    if (!root.classList.contains("present")) return;
+    sx = e.touches[0].clientX; sy = e.touches[0].clientY;
+  }, { passive: true });
+  document.getElementById("deck").addEventListener("touchend", function (e) {
+    if (sx === null) return;
+    var dx = e.changedTouches[0].clientX - sx, dy = e.changedTouches[0].clientY - sy;
+    sx = null;
+    if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) go(cur + (dx < 0 ? 1 : -1));
+  }, { passive: true });
+
+  /* полноэкранный режим */
+  var fsBtn = document.getElementById("fsBtn");
+  function toggleFs() {
+    if (!document.fullscreenEnabled || !root.requestFullscreen) return;
+    var p = document.fullscreenElement ? document.exitFullscreen() : root.requestFullscreen();
+    if (p && p.catch) p.catch(function () {});
+  }
+  if (document.fullscreenEnabled && root.requestFullscreen) {
+    fsBtn.hidden = false;
+    fsBtn.addEventListener("click", toggleFs);
+  }
+
+  /* подсказки */
   var tip = document.getElementById("tip");
   function placeTip(e) {
-    var pad = 14, w = tip.offsetWidth, h = tip.offsetHeight;
-    var left = Math.min(e.clientX + pad, window.innerWidth - w - 8);
-    var top = e.clientY - h - pad < 8 ? e.clientY + pad : e.clientY - h - pad;
-    tip.style.left = Math.max(8, left) + "px";
-    tip.style.top = top + "px";
+    var w = tip.offsetWidth, h = tip.offsetHeight;
+    tip.style.left = Math.max(8, Math.min(e.clientX + 14, window.innerWidth - w - 8)) + "px";
+    tip.style.top = (e.clientY - h - 14 < 8 ? e.clientY + 14 : e.clientY - h - 14) + "px";
   }
   document.addEventListener("pointerover", function (e) {
     var t = e.target.closest && e.target.closest("[data-tip]");
@@ -1253,102 +1405,23 @@ details.data .table-wrap { margin-top: 10px; }
     var t = e.target.closest && e.target.closest("[data-tip]");
     if (t && !(e.relatedTarget && t.contains(e.relatedTarget))) tip.hidden = true;
   });
-  window.addEventListener("scroll", function () { tip.hidden = true; }, { passive: true });
 
-  /* ---------- deck navigation ---------- */
-  var slides = Array.prototype.slice.call(document.querySelectorAll(".slide"));
-  var total = slides.length;
-  var cur = 0;
-  var bar = document.getElementById("bar");
-  var count = document.getElementById("count");
-  var prevBtn = document.getElementById("prevBtn");
-  var nextBtn = document.getElementById("nextBtn");
-  var menuBtn = document.getElementById("menuBtn");
-  var menu = document.getElementById("menu");
-  var menuList = document.getElementById("menuList");
-  var fsBtn = document.getElementById("fsBtn");
-
-  slides.forEach(function (s, i) {
-    var li = document.createElement("li");
-    var a = document.createElement("a");
-    a.href = "#" + s.id;
-    var n = document.createElement("span"); n.textContent = pad(i + 1);
-    var t = document.createElement("span"); t.textContent = s.getAttribute("data-short") || "";
-    a.appendChild(n); a.appendChild(t);
-    a.addEventListener("click", function (e) { e.preventDefault(); closeMenu(); go(i); });
-    li.appendChild(a);
-    menuList.appendChild(li);
+  /* старт */
+  var m0 = /^#s(\d+)$/.exec(location.hash || "");
+  if (m0) cur = Math.max(0, Math.min(total - 1, parseInt(m0[1], 10) - 1));
+  applyMode();
+  if (m0 && !root.classList.contains("present")) slides[cur].scrollIntoView();
+  window.addEventListener("hashchange", function () {
+    var m1 = /^#s(\d+)$/.exec(location.hash || "");
+    if (m1) go(parseInt(m1[1], 10) - 1);
   });
-  var menuLinks = menuList.querySelectorAll("a");
-
-  function setCurrent(i) {
-    if (i === cur && count.textContent !== "") { /* still refresh below */ }
-    cur = i;
-    count.textContent = pad(i + 1) + " / " + pad(total);
-    bar.style.transform = "scaleX(" + ((i + 1) / total) + ")";
-    prevBtn.disabled = i === 0;
-    nextBtn.disabled = i === total - 1;
-    for (var k = 0; k < menuLinks.length; k++) menuLinks[k].setAttribute("aria-current", k === i ? "true" : "false");
-  }
-  function detect() {
-    var mark = window.innerHeight * 0.35, idx = 0;
-    for (var i = 0; i < total; i++) {
-      if (slides[i].getBoundingClientRect().top <= mark) idx = i; else break;
-    }
-    if ((window.innerHeight + window.scrollY) >= document.documentElement.scrollHeight - 4) idx = total - 1;
-    setCurrent(idx);
-  }
-  function go(i) {
-    i = Math.max(0, Math.min(total - 1, i));
-    slides[i].scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" });
-    setCurrent(i);
-  }
-  var ticking = false;
-  window.addEventListener("scroll", function () {
-    if (ticking) return;
-    ticking = true;
-    requestAnimationFrame(function () { ticking = false; detect(); });
-  }, { passive: true });
-  window.addEventListener("resize", detect);
-
-  prevBtn.addEventListener("click", function () { go(cur - 1); });
-  nextBtn.addEventListener("click", function () { go(cur + 1); });
-
-  function openMenu() { menu.hidden = false; menuBtn.setAttribute("aria-expanded", "true"); var a = menuLinks[cur]; if (a) a.focus(); }
-  function closeMenu() { menu.hidden = true; menuBtn.setAttribute("aria-expanded", "false"); }
-  menuBtn.addEventListener("click", function () { menu.hidden ? openMenu() : closeMenu(); });
-  document.addEventListener("click", function (e) {
-    if (!menu.hidden && !menu.contains(e.target) && !menuBtn.contains(e.target)) closeMenu();
+  if (mq.addEventListener) mq.addEventListener("change", applyMode);
+  var rt;
+  window.addEventListener("resize", function () {
+    clearTimeout(rt);
+    rt = setTimeout(function () { if (root.classList.contains("present")) fit(); drawAll(); }, 80);
   });
-
-  document.querySelectorAll('.plan a, a[href="#s1"]').forEach(function (a) {
-    a.addEventListener("click", function (e) {
-      var id = a.getAttribute("href").slice(1);
-      var idx = slides.findIndex(function (s) { return s.id === id; });
-      if (idx >= 0) { e.preventDefault(); go(idx); }
-    });
-  });
-
-  document.addEventListener("keydown", function (e) {
-    if (e.altKey || e.ctrlKey || e.metaKey) return;
-    var tag = (e.target && e.target.tagName) || "";
-    if (/INPUT|TEXTAREA|SELECT/.test(tag)) return;
-    if (e.key === "Escape" && !menu.hidden) { closeMenu(); menuBtn.focus(); return; }
-    var map = { ArrowRight: 1, PageDown: 1, ArrowLeft: -1, PageUp: -1 };
-    if (e.key in map) { e.preventDefault(); go(cur + map[e.key]); }
-    else if (e.key === "Home") { e.preventDefault(); go(0); }
-    else if (e.key === "End") { e.preventDefault(); go(total - 1); }
-  });
-
-  if (document.fullscreenEnabled && document.documentElement.requestFullscreen) {
-    fsBtn.hidden = false;
-    fsBtn.addEventListener("click", function () {
-      var p = document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen();
-      if (p && p.catch) p.catch(function () { fsBtn.hidden = true; });
-    });
-  }
-
-  detect();
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(drawAll);
 })();
 </script>
 </body>
