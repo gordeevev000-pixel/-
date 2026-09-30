@@ -1,0 +1,1090 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Отличия ТНК и МНК</title>
+<meta name="description" content="Доклад-презентация к семинару 3, вопрос 3: отличия деятельности ТНК и МНК в основных направлениях МЭО. Выполнил Гордеев Е.А., МЭиМБ24-1.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Sofia+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Sofia+Sans+Extra+Condensed:wght@700;800&display=swap">
+<script>
+  try {
+    document.documentElement.lang = "ru";
+    if (window.matchMedia("(min-width: 900px) and (min-height: 500px) and (min-aspect-ratio: 5/4)").matches) {
+      document.documentElement.classList.add("present");
+    }
+  } catch (e) {}
+</script>
+<style>
+/* Layout: диптих. Сцена 1600×900 разрезана золотым швом: слева тёмное поле ТНК (капитал одной страны), справа светлое поле МНК (капитал нескольких стран). Заголовки пересекают шов и меняют цвет, таблицы сравнения собраны «молнией» вдоль шва, главное различие лежит золотым мостом поверх него. На телефоне половины встают друг под друга. Одна осознанная гамма: двухцветная сцена сама несёт и тёмный, и светлый фон. */
+:root {
+  --tnk: #0D2B31;
+  --tnk-2: #12363D;
+  --tnk-line: rgba(234, 241, 239, .17);
+  --tnk-ink: #EAF1EF;
+  --tnk-dim: #A7BDBA;
+  --mnk: #E3E7E2;
+  --mnk-2: #D6DCD6;
+  --mnk-line: rgba(17, 26, 27, .17);
+  --mnk-ink: #111A1B;
+  --mnk-dim: #485756;
+  --gold: #F2B134;
+  --gold-line: rgba(26, 19, 5, .22);
+  --on-gold: #1A1305;
+  --void: #07181C;
+
+  --f-display: "Sofia Sans Extra Condensed", "Arial Narrow", "Roboto Condensed", "Helvetica Neue", sans-serif;
+  --f-text: "Sofia Sans", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --f-mono: "JetBrains Mono", "SFMono-Regular", Menlo, Consolas, monospace;
+
+  --seam: 50%;
+
+  /* лента (узкие экраны) */
+  --px: 18px;
+  --t-giant: clamp(92px, 30vw, 170px);
+  --t-h1: clamp(30px, 8.4vw, 44px);
+  --t-h2: clamp(30px, 8.6vw, 44px);
+  --t-side: 34px;
+  --t-lead: 18px;
+  --t-body: 16.5px;
+  --t-small: 14.5px;
+  --t-label: 11.5px;
+  --t-fig: 54px;
+  --t-src: 14px;
+  --barmax: 58%;
+  color-scheme: light;
+}
+html.present {
+  --px: 72px;
+  --t-giant: 330px;
+  --t-h1: 62px;
+  --t-h2: 60px;
+  --t-side: 46px;
+  --t-lead: 23px;
+  --t-body: 20.5px;
+  --t-small: 17px;
+  --t-label: 13.5px;
+  --t-fig: 92px;
+  --t-src: 15px;
+  --barmax: 430px;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html { background: var(--mnk); }
+body {
+  margin: 0;
+  background: var(--mnk);
+  color: var(--mnk-ink);
+  font-family: var(--f-text);
+  font-size: var(--t-body);
+  line-height: 1.42;
+  -webkit-font-smoothing: antialiased;
+}
+h1, h2, h3, p, ul, ol, figure { margin: 0; }
+ul, ol { padding: 0; list-style: none; }
+b, strong { font-weight: 700; }
+a { color: inherit; text-underline-offset: 3px; }
+button { font: inherit; color: inherit; }
+:focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; }
+::selection { background: var(--gold); color: var(--on-gold); }
+
+/* ---------- общие элементы ---------- */
+.kick {
+  font-family: var(--f-mono);
+  font-size: var(--t-label);
+  font-weight: 500;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  line-height: 1.5;
+}
+.ttl, .cv-title {
+  font-family: var(--f-display);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .005em;
+  line-height: .98;
+  text-wrap: balance;
+}
+.ttl { font-size: var(--t-h2); }
+
+.side {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  font-family: var(--f-display);
+  font-weight: 800;
+  font-size: var(--t-side);
+  line-height: 1;
+  letter-spacing: .01em;
+}
+.side .mk { align-self: center; }
+.side small {
+  font-family: var(--f-mono);
+  font-weight: 400;
+  font-size: var(--t-label);
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  line-height: 1.4;
+}
+.tnk .side small { color: var(--tnk-dim); }
+.mnk .side small { color: var(--mnk-dim); }
+
+/* метки: сплошной квадрат — капитал одной страны, штриховка — капиталы нескольких стран */
+.mk { display: inline-block; flex: none; width: 20px; height: 20px; }
+.mk.solid { background: var(--gold); }
+.mk.striped { background: repeating-linear-gradient(135deg, var(--gold) 0 4px, var(--mnk-ink) 4px 7px); }
+
+.pts { display: flex; flex-direction: column; gap: 16px; }
+.pts li { position: relative; padding-left: 30px; }
+.pts li::before { content: ""; position: absolute; left: 0; top: .42em; width: 12px; height: 12px; }
+.tnk .pts li::before { background: var(--gold); }
+.mnk .pts li::before { background: repeating-linear-gradient(135deg, var(--gold) 0 3px, var(--mnk-ink) 3px 5px); }
+.tnk .pts b { color: var(--tnk-ink); }
+.pts b { font-weight: 700; }
+
+.formula {
+  font-size: var(--t-lead);
+  font-weight: 600;
+  line-height: 1.3;
+  max-width: 34ch;
+}
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip {
+  font-family: var(--f-mono);
+  font-size: var(--t-label);
+  letter-spacing: .03em;
+  padding: 5px 9px;
+  line-height: 1.3;
+  white-space: nowrap;
+}
+.tnk .chip { border: 1px solid var(--tnk-line); color: var(--tnk-ink); }
+.mnk .chip { border: 1px solid var(--mnk-line); color: var(--mnk-ink); }
+.chip i { font-style: normal; opacity: .7; }
+
+.bridge {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  gap: 6px 26px;
+  background: var(--gold);
+  color: var(--on-gold);
+  padding: 16px 20px;
+}
+.bridge .lbl {
+  font-family: var(--f-mono);
+  font-size: var(--t-label);
+  font-weight: 500;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.bridge p { font-size: var(--t-lead); font-weight: 600; line-height: 1.32; }
+
+.ft {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: center;
+  font-family: var(--f-mono);
+  font-size: var(--t-label);
+  letter-spacing: .04em;
+}
+.ft-l { color: var(--tnk-dim); padding-left: var(--px); }
+.ft-r { color: var(--mnk-dim); padding-right: var(--px); justify-self: end; text-align: right; }
+.ft a { text-decoration-color: var(--gold); }
+.ft a:hover { color: var(--mnk-ink); }
+
+/* ---------- «молния»: сравнение вдоль шва ---------- */
+.bf { display: flex; flex-direction: column; min-width: 0; }
+.bf-row { display: grid; grid-template-columns: minmax(0, 1fr) var(--chip, 230px) minmax(0, 1fr); text-decoration: none; }
+.bf-l, .bf-r { display: flex; align-items: center; min-width: 0; }
+.bf-l { justify-content: flex-end; text-align: right; color: var(--tnk-ink); border-bottom: 1px solid var(--tnk-line); padding: 12px 28px 12px 0; }
+.bf-r { color: var(--mnk-ink); border-bottom: 1px solid var(--mnk-line); padding: 12px 0 12px 28px; }
+.bf-c {
+  display: flex; align-items: center; justify-content: center; text-align: center;
+  background: var(--gold); color: var(--on-gold);
+  border-bottom: 1px solid var(--gold-line);
+  font-family: var(--f-mono); font-size: var(--t-label); font-weight: 500;
+  letter-spacing: .06em; text-transform: uppercase; line-height: 1.3;
+  padding: 10px 12px;
+}
+.bf-head .bf-l, .bf-head .bf-r { border-bottom-width: 2px; padding-top: 0; padding-bottom: 14px; }
+.bf-head .bf-l { border-bottom-color: var(--tnk-ink); }
+.bf-head .bf-r { border-bottom-color: var(--mnk-ink); }
+.bf-head .bf-c { background: var(--gold); border-bottom: 2px solid var(--on-gold); }
+.bf-head .side { font-size: calc(var(--t-side) * .82); }
+.bf-head .bf-l .side { justify-content: flex-end; }
+.bf-l .side small { color: var(--tnk-dim); }
+.bf-r .side small { color: var(--mnk-dim); }
+.bf .yr { font-family: var(--f-mono); font-size: calc(var(--t-label) * 1.05); font-weight: 500; letter-spacing: .02em; }
+.bf-l .yr { color: var(--gold); }
+.bf-r .yr { color: var(--mnk-dim); }
+.bf-l > span, .bf-r > span { min-width: 0; }
+a.bf-row .bf-l, a.bf-row .bf-r { transition: background-color .15s ease; }
+a.bf-row:hover .bf-l { background: var(--tnk-2); }
+a.bf-row:hover .bf-r { background: var(--mnk-2); }
+a.bf-row:focus-visible { outline-offset: -3px; }
+
+.bar { display: block; height: 26px; flex: none; width: calc(var(--v) / 800 * var(--barmax)); }
+.bar.solid { background: var(--gold); }
+.bar.striped { background: repeating-linear-gradient(135deg, var(--gold) 0 5px, var(--mnk-ink) 5px 9px); }
+.num {
+  font-family: var(--f-display); font-weight: 800; font-size: calc(var(--t-fig) * .52);
+  line-height: 1; font-variant-numeric: tabular-nums;
+}
+.bf-bars .bf-l, .bf-bars .bf-r { gap: 16px; }
+
+/* ---------- статистика ---------- */
+.stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px 30px; }
+.stat { border-top: 1px solid var(--tnk-line); padding-top: 12px; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.fig {
+  font-family: var(--f-display); font-weight: 800; font-size: var(--t-fig);
+  line-height: .9; color: var(--tnk-ink); letter-spacing: -.005em; font-variant-numeric: lining-nums;
+}
+.fig .u { color: var(--gold); }
+.fig.codes { font-size: calc(var(--t-fig) * .62); line-height: 1.02; padding-top: calc(var(--t-fig) * .15); }
+.stat p:not(.fig) { font-size: var(--t-small); color: var(--tnk-dim); line-height: 1.35; }
+
+.mlist { display: flex; flex-direction: column; }
+.mlist li {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center;
+  gap: 14px; padding: 11px 0; border-bottom: 1px solid var(--mnk-line);
+}
+.mlist li:first-child { border-top: 1px solid var(--mnk-line); }
+.mlist b { font-weight: 700; }
+.mlist .yr { font-family: var(--f-mono); font-size: var(--t-label); color: var(--mnk-dim); font-variant-numeric: tabular-nums; min-width: 9.5ch; text-align: right; }
+.codes-chip { font-family: var(--f-mono); font-size: var(--t-label); letter-spacing: .04em; border: 1px solid var(--mnk-ink); padding: 3px 7px; white-space: nowrap; }
+.note { font-size: var(--t-small); color: var(--mnk-dim); line-height: 1.4; max-width: 56ch; }
+
+/* ---------- выводы и источники ---------- */
+.thesis { font-size: calc(var(--t-lead) * 1.18); font-weight: 600; line-height: 1.3; color: var(--tnk-ink); max-width: 26ch; }
+.concl { display: flex; flex-direction: column; counter-reset: c; }
+.concl li {
+  counter-increment: c;
+  display: grid; grid-template-columns: 58px minmax(0, 1fr); gap: 18px; align-items: baseline;
+  padding: 15px 0; border-top: 1px solid var(--mnk-line);
+}
+.concl li:last-child { border-bottom: 1px solid var(--mnk-line); }
+.concl li::before {
+  content: counter(c);
+  font-family: var(--f-display); font-weight: 800; font-size: calc(var(--t-fig) * .5);
+  line-height: .8; color: var(--mnk-ink);
+}
+.concl b { font-weight: 700; }
+
+.refs { display: flex; flex-direction: column; gap: 22px; }
+.refs h3 {
+  font-family: var(--f-mono); font-size: var(--t-label); font-weight: 500;
+  letter-spacing: .08em; text-transform: uppercase; color: var(--mnk-ink);
+  border-bottom: 2px solid var(--mnk-ink); padding-bottom: 8px;
+}
+.refs ol { list-style: decimal; padding-left: 2.2em; display: flex; flex-direction: column; gap: 9px; margin-top: 12px; }
+.refs li { font-size: var(--t-src); line-height: 1.45; padding-left: 4px; overflow-wrap: anywhere; scroll-margin: 24px; }
+.refs li::marker { font-family: var(--f-mono); font-size: .92em; color: var(--mnk-dim); }
+.refs a { text-decoration-color: var(--gold); text-decoration-thickness: 2px; }
+.refs li.flash { background: var(--gold); color: var(--on-gold); transition: background-color .2s; }
+.jump { display: flex; flex-direction: column; gap: 10px; }
+.jump a { color: var(--tnk-ink); font-size: var(--t-small); text-decoration-color: var(--gold); }
+
+/* ---------- титул ---------- */
+.w { font-family: var(--f-display); font-weight: 800; font-size: var(--t-giant); line-height: .8; letter-spacing: -.01em; }
+.w small {
+  display: block; margin-top: 20px;
+  font-family: var(--f-mono); font-weight: 400; font-size: var(--t-label);
+  letter-spacing: .08em; text-transform: uppercase; line-height: 1.4;
+}
+.neq {
+  display: grid; place-items: center;
+  width: 116px; height: 116px; border-radius: 50%;
+  background: var(--gold); color: var(--on-gold);
+  font-family: var(--f-display); font-weight: 800; font-size: 84px; line-height: 1;
+  position: relative; z-index: 2;
+}
+.neq span { transform: translateY(-4px); }
+.sign {
+  justify-self: center;
+  background: var(--gold); color: var(--on-gold);
+  font-size: var(--t-lead); font-weight: 600; line-height: 1.3;
+  padding: 14px 26px; text-align: center;
+  position: relative; z-index: 2;
+}
+
+/* ================= ЛЕНТА (по умолчанию) ================= */
+.hud, .toc, .only-present { display: none; }
+.slide {
+  display: flex; flex-direction: column;
+  background: var(--mnk);
+  border-bottom: 10px solid var(--void);
+}
+.hd { background: var(--tnk); color: var(--tnk-ink); padding: 30px var(--px) 20px; display: flex; flex-direction: column; gap: 10px; }
+.hd .kick { color: var(--tnk-dim); }
+.half { padding: 24px var(--px); display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+.half.tnk { background: var(--tnk); color: var(--tnk-ink); }
+.half.mnk { background: var(--mnk); color: var(--mnk-ink); }
+.bridge { margin: 0 var(--px) 20px; }
+.ft { padding: 12px 0 16px; background: var(--mnk); }
+.ft-l { color: var(--mnk-dim); }
+.ft { grid-template-columns: minmax(0, 1fr); gap: 4px; }
+.ft-r { justify-self: start; text-align: left; padding-left: var(--px); }
+
+.bf { padding: 18px var(--px) 22px; }
+.bf-row { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-areas: "c c" "l r"; margin-bottom: 10px; }
+.bf-c { grid-area: c; justify-content: flex-start; text-align: left; padding: 8px 10px; border-bottom: 0; }
+.bf-l { grid-area: l; background: var(--tnk); padding: 10px 10px; font-size: var(--t-small); justify-content: flex-start; text-align: left; }
+.bf-r { grid-area: r; background: var(--mnk-2); padding: 10px 10px; font-size: var(--t-small); border-bottom: 0; }
+.bf-head .bf-l, .bf-head .bf-r { padding: 12px 10px; border-bottom: 0; }
+.bf-head .bf-c { display: none; }
+.bf-head { grid-template-areas: "l r"; }
+.bf-l .side, .bf-head .bf-l .side { justify-content: flex-end; }
+
+.cover { background: var(--mnk); }
+.cv-top { background: var(--tnk); padding: 28px var(--px) 8px; }
+.cv-top .kick { color: var(--tnk-dim); }
+.cv-words { display: flex; flex-direction: column; align-items: stretch; }
+.w-l { background: var(--tnk); color: var(--tnk-ink); padding: 18px var(--px) 66px; }
+.w-l small { color: var(--tnk-dim); }
+.neq { align-self: center; margin: -48px 0; width: 96px; height: 96px; font-size: 68px; }
+.w-r { color: var(--mnk-ink); padding: 66px var(--px) 18px; text-align: right; }
+.w-r small { color: var(--mnk-dim); }
+.cv-title { font-size: var(--t-h1); padding: 8px var(--px) 18px; color: var(--mnk-ink); }
+.sign { margin: 0 var(--px) 22px; justify-self: stretch; }
+
+.rail .body { padding: 22px var(--px) 24px; min-width: 0; }
+.rail .hd { gap: 14px; padding-bottom: 26px; }
+.stats { grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 560px) {
+  .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .bf-l, .bf-r { font-size: var(--t-body); }
+}
+@media (min-width: 700px) {
+  :root { --px: 32px; }
+  .halves { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+}
+
+/* ================= СЦЕНА (широкие экраны) ================= */
+html.present, html.present body { height: 100%; overflow: hidden; background: var(--void); }
+.present .deck { position: fixed; inset: 0; overflow: hidden; background: var(--void); }
+.present .stage {
+  position: absolute; left: 50%; top: 50%;
+  width: 1600px; height: 900px;
+  transform: translate(-50%, -50%) scale(var(--k, 1));
+  overflow: hidden;
+  background: var(--mnk);
+}
+.present .slide {
+  position: absolute; inset: 0;
+  display: none;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr) auto 64px;
+  border: 0;
+  background: linear-gradient(90deg, var(--tnk) 0 var(--seam), var(--mnk) var(--seam) 100%);
+}
+.present .slide.is-active { display: grid; }
+.present .slide > * { position: relative; z-index: 1; min-width: 0; }
+.present .slide::after {
+  content: ""; position: absolute; top: 0; bottom: 0; left: var(--seam);
+  width: 2px; margin-left: -1px; background: var(--gold);
+  transform-origin: top; z-index: 0; pointer-events: none;
+}
+.present .slide.is-active::after { animation: seam .7s cubic-bezier(.2, .7, .2, 1) both; }
+@keyframes seam { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+
+/* текст, пересекающий шов, меняет цвет ровно на шве */
+.present .dual, .present .dual-dim {
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; color: transparent;
+}
+.present .dual { background-image: linear-gradient(90deg, var(--tnk-ink) 0 50%, var(--mnk-ink) 50% 100%); }
+.present .dual-dim { background-image: linear-gradient(90deg, var(--tnk-dim) 0 50%, var(--mnk-dim) 50% 100%); }
+
+.present .hd { background: transparent; padding: 50px var(--px) 0; gap: 12px; }
+.present .halves { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); min-height: 0; }
+.present .half { background: transparent; gap: 20px; }
+.present .half.tnk { padding: 30px 64px 22px var(--px); }
+.present .half.mnk { padding: 30px var(--px) 22px 64px; }
+.present .bridge {
+  justify-self: center; width: 1060px; margin: 0 0 18px;
+  grid-template-columns: 170px minmax(0, 1fr); align-items: center; padding: 16px 28px;
+}
+.present .ft { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); padding: 0; background: transparent; gap: 0; }
+.present .ft-l { color: var(--tnk-dim); padding-left: var(--px); }
+.present .ft-r { justify-self: end; text-align: right; padding-right: var(--px); padding-left: 160px; }
+.present .only-present { display: inline; }
+.present .half.tnk, .present .half.mnk { padding-top: 40px; gap: 24px; }
+.present .half .pts { font-size: 23.5px; gap: 24px; line-height: 1.4; }
+.present .half .pts li::before { top: .45em; }
+.present .half .formula { font-size: 27px; }
+.present .concl li { font-size: 23px; grid-template-columns: 64px minmax(0, 1fr); padding: 20px 0; }
+
+.present .bf { padding: 26px var(--px) 0; justify-content: center; }
+.present .bf-row { grid-template-columns: minmax(0, 1fr) var(--chip, 230px) minmax(0, 1fr); grid-template-areas: none; margin: 0; }
+.present .bf-c { grid-area: auto; justify-content: center; text-align: center; padding: 10px 12px; border-bottom: 1px solid var(--gold-line); }
+.present .bf-l { grid-area: auto; background: transparent; justify-content: flex-end; text-align: right; padding: 14px 28px 14px 0; font-size: var(--t-body); border-bottom: 1px solid var(--tnk-line); }
+.present .bf-r { grid-area: auto; background: transparent; padding: 14px 0 14px 28px; font-size: var(--t-body); border-bottom: 1px solid var(--mnk-line); }
+.present .bf-head .bf-c { display: flex; }
+.present .bf-head .bf-l, .present .bf-head .bf-r { padding-top: 0; padding-bottom: 14px; border-bottom-width: 2px; }
+.present .bf-head .bf-l { border-bottom-color: var(--tnk-ink); }
+.present .bf-head .bf-r { border-bottom-color: var(--mnk-ink); }
+.present a.bf-row:hover .bf-l { background: var(--tnk-2); }
+.present a.bf-row:hover .bf-r { background: var(--mnk-2); }
+.present .bf-l .side { justify-content: flex-end; }
+.present .bf-bars .bf-l, .present .bf-bars .bf-r { padding-top: 16px; padding-bottom: 16px; }
+
+/* титул */
+.present .cover { grid-template-rows: auto minmax(0, 1fr) auto auto 64px; }
+.present .cv-top { background: transparent; padding: 46px var(--px) 0; text-align: center; }
+.present .cv-words { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; }
+.present .w-l { background: transparent; justify-self: end; text-align: right; padding: 0 46px 0 0; }
+.present .w-r { justify-self: start; text-align: left; padding: 0 0 0 46px; }
+.present .neq { margin: 0; width: 116px; height: 116px; font-size: 84px; }
+.present .cv-title { text-align: center; padding: 0 150px; }
+.present .sign { justify-self: center; margin: 30px 0 22px; }
+
+/* слайды-«колонны»: шов сдвинут влево */
+.present .rail { --seam: 31%; grid-template-columns: var(--seam) minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) 64px; }
+.present .rail .hd { grid-column: 1; grid-row: 1; padding: 50px 48px 30px var(--px); gap: 20px; }
+.present .rail .hd .push { margin-top: auto; }
+.present .rail .body { grid-column: 2; grid-row: 1; padding: 50px var(--px) 24px 64px; min-height: 0; display: flex; flex-direction: column; }
+.present .rail .ft { grid-column: 1 / -1; grid-row: 2; grid-template-columns: var(--seam) minmax(0, 1fr); }
+.present .rail .ft-r { padding-left: 64px; }
+.present .rail .ttl { color: var(--tnk-ink); }
+.present .scroll { overflow-y: auto; min-height: 0; flex: 1; padding-right: 18px; scrollbar-color: var(--mnk-dim) transparent; }
+.present .concl { justify-content: center; flex: 1; }
+
+/* пульт */
+.present .hud {
+  display: flex; align-items: center; gap: 2px;
+  position: absolute; z-index: 20; left: 50%; bottom: 12px; transform: translateX(-50%);
+  background: var(--void); padding: 4px; border-radius: 999px;
+}
+.hud button {
+  width: 40px; height: 36px; border: 0; border-radius: 999px;
+  background: transparent; color: var(--gold); cursor: pointer;
+  display: grid; place-items: center;
+}
+.hud button:hover { background: rgba(242, 177, 52, .16); }
+.hud button:disabled { opacity: .35; cursor: default; background: transparent; }
+.hud svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: square; }
+.hud .count {
+  font-family: var(--f-mono); font-size: 14px; color: var(--tnk-ink);
+  padding: 0 10px; min-width: 76px; text-align: center; font-variant-numeric: tabular-nums;
+}
+
+.present .toc {
+  display: flex; flex-direction: column; gap: 18px;
+  position: absolute; z-index: 30; top: 0; right: 0; bottom: 0; width: 500px;
+  background: var(--void); color: var(--tnk-ink); padding: 44px 40px;
+  box-shadow: -30px 0 60px rgba(7, 24, 28, .35);
+}
+.present .toc[hidden] { display: none; }
+.toc-head { display: flex; justify-content: space-between; align-items: center; }
+.toc-head .kick { color: var(--tnk-dim); }
+.toc-close { width: 40px; height: 36px; border: 0; background: transparent; color: var(--gold); cursor: pointer; font-size: 26px; line-height: 1; border-radius: 999px; }
+.toc-close:hover { background: rgba(242, 177, 52, .16); }
+.toc ol { display: flex; flex-direction: column; overflow-y: auto; }
+.toc a {
+  display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 10px; align-items: baseline;
+  padding: 9px 8px; text-decoration: none; font-size: 17px; line-height: 1.3;
+  border-bottom: 1px solid var(--tnk-line);
+}
+.toc a span { font-family: var(--f-mono); font-size: 13px; color: var(--tnk-dim); font-variant-numeric: tabular-nums; }
+.toc a:hover, .toc a[aria-current="true"] { background: var(--tnk-2); }
+.toc a[aria-current="true"] span { color: var(--gold); }
+
+@media (prefers-reduced-motion: reduce) {
+  .present .slide.is-active::after { animation: none; }
+  a.bf-row .bf-l, a.bf-row .bf-r, .refs li.flash { transition: none; }
+}
+</style>
+</head>
+<body>
+<main class="deck" id="deck">
+<div class="stage" id="stage">
+
+<!-- 1. Титул -->
+<section class="slide cover" id="s1" data-title="Отличия ТНК и МНК: титул">
+  <div class="cv-top"><p class="kick dual-dim">Семинар 3 · ТНК и МНК как ключевые субъекты мировой экономики и МЭО · Вопрос 3</p></div>
+  <div class="cv-words">
+    <p class="w w-l">ТНК<small>капитал одной страны</small></p>
+    <div class="neq" aria-label="не равно"><span>≠</span></div>
+    <p class="w w-r">МНК<small>капитал нескольких стран</small></p>
+  </div>
+  <h1 class="cv-title dual">Отличия деятельности ТНК и МНК в основных направлениях МЭО</h1>
+  <p class="sign">Выполнил: Гордеев Егор Александрович (МЭиМБ24-1)</p>
+  <footer class="ft"><span class="ft-l">Доклад-презентация</span><span class="ft-r"><span class="only-present">Листать: стрелки ← → или свайп</span></span></footer>
+</section>
+
+<!-- 2. Понятия -->
+<section class="slide" id="s2" data-title="Два типа международных корпораций">
+  <header class="hd">
+    <p class="kick dual-dim">Понятия</p>
+    <h2 class="ttl dual">Два типа международных корпораций</h2>
+  </header>
+  <div class="halves">
+    <div class="half tnk">
+      <p class="side"><span class="mk solid"></span>ТНК <small>транснациональная корпорация</small></p>
+      <p class="formula">Национальная по капиталу и контролю, международная по сфере деятельности</p>
+      <ul class="pts">
+        <li><b>Одна страна базирования.</b> Материнская компания контролирует филиалы за рубежом; по методике UNCTAD контроль начинается с доли от 10% голосующих акций.</li>
+        <li><b>Один центр решений.</b> Стратегию задаёт штаб-квартира, прибыль консолидируется в стране базирования.</li>
+      </ul>
+      <div class="chips"><span class="chip">Apple <i>US</i></span><span class="chip">Toyota <i>JP</i></span><span class="chip">Siemens <i>DE</i></span><span class="chip">«Росатом» <i>RU</i></span></div>
+    </div>
+    <div class="half mnk">
+      <p class="side"><span class="mk striped"></span>МНК <small>многонациональная корпорация</small></p>
+      <p class="formula">Международная по капиталу, контролю и сфере деятельности</p>
+      <ul class="pts">
+        <li><b>Несколько стран-учредителей.</b> Капитал объединён из двух и более стран: две параллельные материнские компании или одна с паритетом участников.</li>
+        <li><b>Совместный центр решений.</b> В органах управления представлены все страны-учредители, прибыль делится по согласованной формуле.</li>
+      </ul>
+      <div class="chips"><span class="chip">Shell <i>NL · GB</i></span><span class="chip">Unilever <i>NL · GB</i></span><span class="chip">ABB <i>SE · CH</i></span><span class="chip">Airbus <i>FR · DE · ES</i></span></div>
+    </div>
+  </div>
+  <div class="bridge"><span class="lbl">Термины</span><p>UNCTAD называет такие компании TNC, ОЭСР — MNE. Российская школа МЭО разводит ТНК и МНК по национальной принадлежности капитала.</p></div>
+  <footer class="ft"><span class="ft-l">Вопрос 3 · ТНК и МНК в МЭО</span><span class="ft-r">Источники: <a href="#r1">[1]</a>, <a href="#r3">[3]</a>, <a href="#r4">[4]</a>, <a href="#r17">[17]</a>, <a href="#r24">[24]</a></span></footer>
+</section>
+
+<!-- 3. Признаки -->
+<section class="slide" id="s3" data-title="Семь признаков различия">
+  <header class="hd">
+    <p class="kick dual-dim">Критерии разграничения</p>
+    <h2 class="ttl dual">Семь признаков различия</h2>
+  </header>
+  <div class="bf">
+    <div class="bf-row bf-head">
+      <div class="bf-l"><p class="side">ТНК<span class="mk solid"></span></p></div>
+      <div class="bf-c">Признак</div>
+      <div class="bf-r"><p class="side"><span class="mk striped"></span>МНК</p></div>
+    </div>
+    <div class="bf-row"><div class="bf-l"><span>капитал одной страны</span></div><div class="bf-c">Капитал</div><div class="bf-r"><span>капиталы двух и более стран</span></div></div>
+    <div class="bf-row"><div class="bf-l"><span>одна, в стране базирования</span></div><div class="bf-c">Материнская компания</div><div class="bf-r"><span>две параллельные или одна с паритетом стран</span></div></div>
+    <div class="bf-row"><div class="bf-l"><span>штаб-квартира в стране базирования</span></div><div class="bf-c">Центр решений</div><div class="bf-r"><span>органы с представителями всех стран-учредителей</span></div></div>
+    <div class="bf-row"><div class="bf-l"><span>право страны базирования и стран филиалов</span></div><div class="bf-c">Юрисдикция</div><div class="bf-r"><span>несколько «домашних» юрисдикций сразу</span></div></div>
+    <div class="bf-row"><div class="bf-l"><span>как правило, биржа страны базирования</span></div><div class="bf-c">Листинг акций</div><div class="bf-r"><span>параллельно на биржах стран-учредителей</span></div></div>
+    <div class="bf-row"><div class="bf-l"><span>выход за рубеж: ПИИ, поглощения</span></div><div class="bf-c">Происхождение</div><div class="bf-r"><span>слияние равных, межгосударственный проект</span></div></div>
+    <div class="bf-row"><div class="bf-l"><span>десятки тысяч компаний</span></div><div class="bf-c">Распространённость</div><div class="bf-r"><span>единицы, в основном в Западной Европе</span></div></div>
+  </div>
+  <div class="bridge"><span class="lbl">Критерий</span><p>Главный признак — чей капитал и чей контроль. Остальные различия вытекают из него.</p></div>
+  <footer class="ft"><span class="ft-l">Вопрос 3 · ТНК и МНК в МЭО</span><span class="ft-r">Источники: <a href="#r1">[1]</a>, <a href="#r2">[2]</a>, <a href="#r4">[4]</a>, <a href="#r5">[5]</a>, <a href="#r8">[8]</a></span></footer>
+</section>
+
+<!-- 4. Масштаб -->
+<section class="slide" id="s4" data-title="Масштаб: массовая и редкая формы">
+  <header class="hd">
+    <p class="kick dual-dim">Масштаб</p>
+    <h2 class="ttl dual">ТНК — массовая форма, МНК — редкая</h2>
+  </header>
+  <div class="halves">
+    <div class="half tnk">
+      <p class="side"><span class="mk solid"></span>ТНК <small>задают структуру торговли и инвестиций</small></p>
+      <div class="stats">
+        <div class="stat"><p class="fig">80<span class="u">%</span></p><p>мировой торговли связаны с производственными сетями ТНК (оценка UNCTAD)</p></div>
+        <div class="stat"><p class="fig">≈30<span class="u">%</span></p><p>экспорта страны в среднем приходится на внутрифирменную торговлю</p></div>
+        <div class="stat"><p class="fig"><span class="u">$</span>1,6 <span class="u">трлн</span></p><p>мировые ПИИ в 2025 г., рост на 6% к 2024 г.</p></div>
+        <div class="stat"><p class="fig codes">US · JP · CN</p><p>крупнейшие источники ПИИ в 2025 г. — страны базирования ведущих ТНК</p></div>
+      </div>
+    </div>
+    <div class="half mnk">
+      <p class="side"><span class="mk striped"></span>МНК <small>единичные примеры, в основном европейские</small></p>
+      <ul class="mlist">
+        <li><b>Royal Dutch Shell</b><span class="codes-chip">NL · GB</span><span class="yr">1907–2022</span></li>
+        <li><b>Unilever</b><span class="codes-chip">NL · GB</span><span class="yr">1930–2020</span></li>
+        <li><b>Airbus</b><span class="codes-chip">FR · DE · ES</span><span class="yr">с 1970</span></li>
+        <li><b>ABB</b><span class="codes-chip">SE · CH</span><span class="yr">с 1988</span></li>
+        <li><b>Stellantis</b><span class="codes-chip">FR · IT · US</span><span class="yr">с 2021</span></li>
+      </ul>
+      <p class="note">МНК появляются там, где проект не под силу капиталу одной страны или где государства хотят сообща контролировать стратегическую отрасль.</p>
+    </div>
+  </div>
+  <div class="bridge"><span class="lbl">Вывод</span><p>ТНК исчисляются десятками тысяч, МНК — единицами. Зато МНК стоят в стратегических отраслях: авиастроение, нефтегаз, автопром, товары массового спроса.</p></div>
+  <footer class="ft"><span class="ft-l">Вопрос 3 · ТНК и МНК в МЭО</span><span class="ft-r">Источники: <a href="#r5">[5]</a>, <a href="#r8">[8]</a>, <a href="#r23">[23]</a>, <a href="#r24">[24]</a></span></footer>
+</section>
+
+<!-- 5. Карта направлений -->
+<section class="slide" id="s5" data-title="Шесть направлений МЭО">
+  <header class="hd">
+    <p class="kick dual-dim">Карта сравнения · нажмите на строку, чтобы перейти</p>
+    <h2 class="ttl dual">Шесть направлений МЭО, где расходятся ТНК и МНК</h2>
+  </header>
+  <div class="bf">
+    <div class="bf-row bf-head">
+      <div class="bf-l"><p class="side">ТНК<span class="mk solid"></span></p></div>
+      <div class="bf-c">Направление</div>
+      <div class="bf-r"><p class="side"><span class="mk striped"></span>МНК</p></div>
+    </div>
+    <a class="bf-row" href="#s6"><div class="bf-l"><span>внутрифирменные поставки и трансфертные цены</span></div><div class="bf-c">1 · Торговля</div><div class="bf-r"><span>поставки между странами-учредителями по долям работ</span></div></a>
+    <a class="bf-row" href="#s7"><div class="bf-l"><span>прямые инвестиции из страны базирования</span></div><div class="bf-c">2 · Капитал</div><div class="bf-r"><span>слияние капиталов нескольких стран</span></div></a>
+    <a class="bf-row" href="#s8"><div class="bf-l"><span>одно казначейство, налоговое планирование</span></div><div class="bf-c">3 · Финансы</div><div class="bf-r"><span>две линии акций, несколько налоговых режимов</span></div></a>
+    <a class="bf-row" href="#s9"><div class="bf-l"><span>НИОКР в центре, лицензии филиалам</span></div><div class="bf-c">4 · Технологии</div><div class="bf-r"><span>научные школы нескольких стран в одном продукте</span></div></a>
+    <a class="bf-row" href="#s10"><div class="bf-l"><span>глобальные цепочки стоимости по издержкам</span></div><div class="bf-c">5 · Производство</div><div class="bf-r"><span>распределение работ между странами-учредителями</span></div></a>
+    <a class="bf-row" href="#s11"><div class="bf-l"><span>экспатрианты из страны базирования</span></div><div class="bf-c">6 · Рабочая сила</div><div class="bf-r"><span>смешанные команды и паритет в руководстве</span></div></a>
+  </div>
+  <div class="bridge"><span class="lbl">Логика</span><p>Каждое направление разобрано по одной схеме: как действует ТНК, как действует МНК и в чём главное различие.</p></div>
+  <footer class="ft"><span class="ft-l">Вопрос 3 · ТНК и МНК в МЭО</span><span class="ft-r">Источники: <a href="#r1">[1]</a>, <a href="#r2">[2]</a>, <a href="#r4">[4]</a></span></footer>
+</section>
+
+<!-- 6. Торговля -->
+<section class="slide" id="s6" data-title="1. Международная торговля">
+  <header class="hd">
+    <p class="kick dual-dim">Направление 1 из 6</p>
+    <h2 class="ttl dual">Международная торговля</h2>
+  </header>
+  <div class="halves">
+    <div class="half tnk">
+      <p class="side"><span class="mk solid"></span>ТНК <small>торгует внутри собственной сети</small></p>
+      <ul class="pts">
+        <li><b>Внутрифирменная торговля.</b> Поставки между материнской компанией и филиалами дают в среднем около 30% экспорта страны; 80% мировой торговли связано с сетями ТНК.</li>
+        <li><b>Трансфертные цены.</b> Цену внутри группы назначает сама корпорация; по стандарту ОЭСР она должна соответствовать принципу «вытянутой руки».</li>
+        <li><b>Маршрут задаёт штаб-квартира.</b> Экспорт страны базирования нередко означает отгрузку компонентов собственным зарубежным филиалам.</li>
+      </ul>
+    </div>
+    <div class="half mnk">
+      <p class="side"><span class="mk striped"></span>МНК <small>делит торговлю между странами-учредителями</small></p>
+      <ul class="pts">
+        <li><b>Внутренняя для компании, внешняя для стран.</b> Перевозка узлов между заводами в разных странах-учредителях — это экспорт и импорт каждой из них.</li>
+        <li><b>Поставки по согласованным долям.</b> Кто и что поставляет, закреплено соглашением участников о распределении работ, а не только ценой.</li>
+        <li><b>Экспорт в пользу нескольких стран.</b> Продажи МНК на третьи рынки улучшают торговый баланс сразу нескольких стран-учредителей.</li>
+      </ul>
+    </div>
+  </div>
+  <div class="bridge"><span class="lbl">Главное различие</span><p>ТНК торгует сама с собой через границы своей сети. МНК распределяет торговлю между странами-учредителями по согласованной схеме.</p></div>
+  <footer class="ft"><span class="ft-l">Вопрос 3 · ТНК и МНК в МЭО</span><span class="ft-r">Источники: <a href="#r3">[3]</a>, <a href="#r17">[17]</a>, <a href="#r23">[23]</a></span></footer>
+</section>
+
+<!-- 7. Капитал -->
+<section class="slide" id="s7" data-title="2. Движение капитала">
+  <header class="hd">
+    <p class="kick dual-dim">Направление 2 из 6</p>
+    <h2 class="ttl dual">Международное движение капитала</h2>
+  </header>
+  <div class="halves">
+    <div class="half tnk">
+      <p class="side"><span class="mk solid"></span>ТНК <small>вывозит капитал из страны базирования</small></p>
+      <ul class="pts">
+        <li><b>Прямые иностранные инвестиции.</b> Новые предприятия, поглощения, реинвестирование прибыли филиалов. В 2025 г. мировые ПИИ выросли на 6%, до $1,6 трлн.</li>
+        <li><b>Источник — одна страна.</b> Крупнейшими источниками ПИИ в 2025 г. стали США, Япония и Китай, где базируются ведущие ТНК.</li>
+        <li><b>Капитал следует политике страны базирования.</b> Её санкции и экспортный контроль обязательны для всей группы; поэтому в 2022 г. западные ТНК массово уходили из России.</li>
+      </ul>
+    </div>
+    <div class="half mnk">
+      <p class="side"><span class="mk striped"></span>МНК <small>складывает капиталы нескольких стран</small></p>
+      <ul class="pts">
+        <li><b>Слияние равных.</b> Капиталы объединяются, а не вывозятся: Royal Dutch и Shell (1907), ASEA и Brown Boveri (1988), PSA и FCA (2021).</li>
+        <li><b>Доли закреплены формулой.</b> При унификации Unilever в 2020 г. акционеры NV получили 55% капитала, акционеры PLC — 45%.</li>
+        <li><b>Государства как акционеры.</b> Франции и Германии принадлежит примерно по 10,8% Airbus, Испании — 4,1%.</li>
+      </ul>
+    </div>
+  </div>
+  <div class="bridge"><span class="lbl">Главное различие</span><p>ТНК экспортирует капитал одной страны. МНК возникает, когда капиталы нескольких стран объединяются в общую компанию.</p></div>
+  <footer class="ft"><span class="ft-l">Вопрос 3 · ТНК и МНК в МЭО</span><span class="ft-r">Источники: <a href="#r6">[6]</a>, <a href="#r8">[8]</a>, <a href="#r11">[11]</a>, <a href="#r15">[15]</a>, <a href="#r20">[20]</a>, <a href="#r24">[24]</a></span></footer>
+</section>
+
+<!-- 8. Финансы -->
+<section class="slide" id="s8" data-title="3. Валютно-финансовые отношения">
+  <header class="hd">
+    <p class="kick dual-dim">Направление 3 из 6</p>
+    <h2 class="ttl dual">Валютно-кредитные и финансовые отношения</h2>
+  </header>
+  <div class="halves">
+    <div class="half tnk">
+      <p class="side"><span class="mk solid"></span>ТНК <small>одно казначейство на всю группу</small></p>
+      <ul class="pts">
+        <li><b>Внутренний рынок капитала.</b> Кэш-пулинг, взаимозачёт платежей филиалов и внутригрупповые займы снижают потребность во внешнем финансировании.</li>
+        <li><b>Централизованный валютный риск.</b> Казначейство головной компании хеджирует риск и ведёт отчётность в валюте страны базирования.</li>
+        <li><b>Налоговое планирование.</b> Прибыль перемещают через трансфертные цены и холдинги; ответ государств — глобальный минимальный налог 15% (Pillar Two).</li>
+      </ul>
+    </div>
+    <div class="half mnk">
+      <p class="side"><span class="mk striped"></span>МНК <small>согласует валюты, налоги и права акционеров</small></p>
+      <ul class="pts">
+        <li><b>Две линии акций.</b> До 2020 г. у Unilever было две материнские компании и договор об уравнивании прав акционеров, у Shell до 2022 г. — акции классов A и B.</li>
+        <li><b>Спор о налоговой резиденции.</b> В 2022 г. Shell перенесла штаб-квартиру и налоговую резиденцию в Великобританию, уйдя от нидерландского налога на дивиденды 15%.</li>
+        <li><b>Несколько бирж.</b> Листинг в Амстердаме, Лондоне и Нью-Йорке открывает доступ к нескольким рынкам капитала сразу.</li>
+      </ul>
+    </div>
+  </div>
+  <div class="bridge"><span class="lbl">Главное различие</span><p>ТНК управляет финансами из одного центра. МНК вынуждена согласовывать интересы нескольких налоговых и правовых систем.</p></div>
+  <footer class="ft"><span class="ft-l">Вопрос 3 · ТНК и МНК в МЭО</span><span class="ft-r">Источники: <a href="#r7">[7]</a>, <a href="#r11">[11]</a>, <a href="#r12">[12]</a>, <a href="#r18">[18]</a>, <a href="#r22">[22]</a>, <a href="#r25">[25]</a></span></footer>
+</section>
+
+<!-- 9. Технологии -->
+<section class="slide" id="s9" data-title="4. Обмен технологиями">
+  <header class="hd">
+    <p class="kick dual-dim">Направление 4 из 6</p>
+    <h2 class="ttl dual">Международный обмен технологиями</h2>
+  </header>
+  <div class="halves">
+    <div class="half tnk">
+      <p class="side"><span class="mk solid"></span>ТНК <small>держит технологии в центре</small></p>
+      <ul class="pts">
+        <li><b>НИОКР в стране базирования.</b> Ключевые разработки и патенты сосредоточены у материнской компании.</li>
+        <li><b>Внутрифирменные лицензии.</b> Филиалы получают технологии по лицензиям и платят материнской компании роялти, поэтому заметная часть международных платежей за технологии — внутрифирменная.</li>
+        <li><b>Экспортный контроль одной страны.</b> Передачу технологий за рубеж ограничивают правила государства базирования.</li>
+      </ul>
+    </div>
+    <div class="half mnk">
+      <p class="side"><span class="mk striped"></span>МНК <small>складывает технологии нескольких стран</small></p>
+      <ul class="pts">
+        <li><b>Специализация стран-участниц.</b> У Airbus крыло делают в Великобритании, хвостовое оперение — в Испании, секции фюзеляжа — в Германии и Франции.</li>
+        <li><b>Общая технологическая база.</b> Результаты разработок принадлежат компании в целом, а их передачу за рубеж согласуют несколько правительств.</li>
+        <li><b>Продукт, который не создать в одиночку.</b> A300, впервые взлетевший в 1972 г., стал первым в мире двухдвигательным широкофюзеляжным лайнером.</li>
+      </ul>
+    </div>
+  </div>
+  <div class="bridge"><span class="lbl">Главное различие</span><p>ТНК распространяет технологии из центра по своей сети. МНК объединяет научные школы нескольких стран в одном продукте.</p></div>
+  <footer class="ft"><span class="ft-l">Вопрос 3 · ТНК и МНК в МЭО</span><span class="ft-r">Источники: <a href="#r4">[4]</a>, <a href="#r10">[10]</a>, <a href="#r13">[13]</a></span></footer>
+</section>
+
+<!-- 10. Производство -->
+<section class="slide" id="s10" data-title="5. Производственная кооперация">
+  <header class="hd">
+    <p class="kick dual-dim">Направление 5 из 6</p>
+    <h2 class="ttl dual">Международная производственная кооперация</h2>
+  </header>
+  <div class="halves">
+    <div class="half tnk">
+      <p class="side"><span class="mk solid"></span>ТНК <small>размещает производство там, где выгоднее</small></p>
+      <ul class="pts">
+        <li><b>Глобальные цепочки стоимости.</b> Головная компания оставляет себе НИОКР, бренд и сбыт, а производство передаёт филиалам и подрядчикам.</li>
+        <li><b>Неакционерные формы.</b> Контрактное производство, франчайзинг и лицензирование позволяют управлять цепочкой, не владея заводами.</li>
+        <li><b>Размещение по издержкам и рискам.</b> В 2020-е годы к цене добавилась надёжность страны: ТНК переносят мощности в дружественные юрисдикции (френдшоринг).</li>
+      </ul>
+    </div>
+    <div class="half mnk">
+      <p class="side"><span class="mk striped"></span>МНК <small>делит производство между странами-учредителями</small></p>
+      <ul class="pts">
+        <li><b>Доли работ по соглашению.</b> Каждая страна-участница получает производство и рабочие места примерно пропорционально своему вкладу.</li>
+        <li><b>Сборка в нескольких странах.</b> Линии финальной сборки Airbus работают в Тулузе и Гамбурге, а также в Мобиле (США) и Тяньцзине (Китай).</li>
+        <li><b>Баланс интересов стоит дороже.</b> Размещение определяет политический компромисс: издержки выше, зато проект поддерживают несколько правительств.</li>
+      </ul>
+    </div>
+  </div>
+  <div class="bridge"><span class="lbl">Главное различие</span><p>Для ТНК размещение производства — вопрос издержек и рисков. Для МНК это ещё и вопрос баланса интересов государств-участников.</p></div>
+  <footer class="ft"><span class="ft-l">Вопрос 3 · ТНК и МНК в МЭО</span><span class="ft-r">Источники: <a href="#r5">[5]</a>, <a href="#r9">[9]</a>, <a href="#r14">[14]</a>, <a href="#r23">[23]</a>, <a href="#r24">[24]</a></span></footer>
+</section>
+
+<!-- 11. Рабочая сила -->
+<section class="slide" id="s11" data-title="6. Миграция рабочей силы">
+  <header class="hd">
+    <p class="kick dual-dim">Направление 6 из 6</p>
+    <h2 class="ttl dual">Миграция рабочей силы и управление персоналом</h2>
+  </header>
+  <div class="halves">
+    <div class="half tnk">
+      <p class="side"><span class="mk solid"></span>ТНК <small>переносит за рубеж модель страны базирования</small></p>
+      <ul class="pts">
+        <li><b>Этноцентрическая модель.</b> По классификации Х. Перлмуттера ключевые посты в филиалах чаще занимают экспатрианты из страны базирования.</li>
+        <li><b>Внутрикорпоративные переводы.</b> Перемещение менеджеров и специалистов между филиалами стало отдельным каналом трудовой миграции; в ЕС для него действует директива 2014/66/ЕС.</li>
+        <li><b>Единая культура.</b> Стандарты управления, корпоративный язык и правила карьеры задаёт страна базирования.</li>
+      </ul>
+    </div>
+    <div class="half mnk">
+      <p class="side"><span class="mk striped"></span>МНК <small>строит смешанные команды</small></p>
+      <ul class="pts">
+        <li><b>Паритет в руководстве.</b> Места в советах директоров и правлениях распределяются между странами-учредителями.</li>
+        <li><b>Геоцентрическая модель.</b> Сотрудников отбирают по компетенциям, а не по гражданству; рабочим языком обычно становится английский.</li>
+        <li><b>Мобильность между странами-учредителями.</b> Специалисты переходят между заводами и офисами разных стран, оставаясь в одной компании.</li>
+      </ul>
+    </div>
+  </div>
+  <div class="bridge"><span class="lbl">Главное различие</span><p>ТНК переносит за рубеж модель управления своей страны. МНК формирует наднациональную команду на основе компромисса стран-учредителей.</p></div>
+  <footer class="ft"><span class="ft-l">Вопрос 3 · ТНК и МНК в МЭО</span><span class="ft-r">Источники: <a href="#r2">[2]</a>, <a href="#r16">[16]</a>, <a href="#r19">[19]</a></span></footer>
+</section>
+
+<!-- 12. Эволюция -->
+<section class="slide" id="s12" data-title="Эволюция МНК">
+  <header class="hd">
+    <p class="kick dual-dim">Тенденция · время идёт справа налево, через шов</p>
+    <h2 class="ttl dual">От двух материнских компаний к одной</h2>
+  </header>
+  <div class="bf" style="--chip: 190px">
+    <div class="bf-row bf-head">
+      <div class="bf-l"><p class="side">Стало <small>одна материнская компания</small></p></div>
+      <div class="bf-c">Компания</div>
+      <div class="bf-r"><p class="side">Было <small>двойная структура или консорциум</small></p></div>
+    </div>
+    <div class="bf-row"><div class="bf-l"><span><span class="yr">2005</span> одна Royal Dutch Shell plc с акциями A и B; <span class="yr">2022</span> Shell plc: одна линия акций, штаб-квартира и налоговая резиденция в Великобритании</span></div><div class="bf-c">Shell</div><div class="bf-r"><span><span class="yr">1907–2005</span> две материнские компании: Royal Dutch (NL) — 60%, Shell Transport (GB) — 40%</span></div></div>
+    <div class="bf-row"><div class="bf-l"><span><span class="yr">2020</span> единая Unilever PLC со штаб-квартирой в Лондоне; держатели акций NV получили 55% капитала</span></div><div class="bf-c">Unilever</div><div class="bf-r"><span><span class="yr">1930–2020</span> Unilever NV (Роттердам) и Unilever PLC (Лондон), связанные договором об уравнивании</span></div></div>
+    <div class="bf-row"><div class="bf-l"><span><span class="yr">2000</span> EADS, с <span class="yr">2017</span> Airbus SE (Нидерланды): одно юрлицо, но ≈25,7% капитала у государств Франции, Германии и Испании</span></div><div class="bf-c">Airbus</div><div class="bf-r"><span><span class="yr">1970</span> консорциум Airbus Industrie (FR, DE); <span class="yr">1971</span> вошла CASA (ES), <span class="yr">1979</span> — British Aerospace (GB)</span></div></div>
+    <div class="bf-row"><div class="bf-l"><span><span class="yr">2021</span> сразу одно юрлицо Stellantis N.V. (Нидерланды) с листингом в Милане, Париже и Нью-Йорке</span></div><div class="bf-c">Stellantis</div><div class="bf-r"><span><span class="yr">2019</span> PSA (FR) и FCA (IT, US) договорились о слиянии на равных</span></div></div>
+  </div>
+  <div class="bridge"><span class="lbl">Почему</span><p>Двойная структура дорога: две отчётности, два налоговых режима, медленные решения. Зрелые МНК упрощаются до одной материнской компании и по форме сближаются с ТНК, сохраняя капитал нескольких стран.</p></div>
+  <footer class="ft"><span class="ft-l">Вопрос 3 · ТНК и МНК в МЭО</span><span class="ft-r">Источники: <a href="#r11">[11]</a>, <a href="#r12">[12]</a>, <a href="#r13">[13]</a>, <a href="#r15">[15]</a>, <a href="#r20">[20]</a>, <a href="#r22">[22]</a>, <a href="#r25">[25]</a></span></footer>
+</section>
+
+<!-- 13. Кейс -->
+<section class="slide" id="s13" data-title="Кейс: Boeing и Airbus">
+  <header class="hd">
+    <p class="kick dual-dim">Кейс · гражданское авиастроение</p>
+    <h2 class="ttl dual">Boeing и Airbus: ТНК и МНК на одном рынке</h2>
+  </header>
+  <div class="bf" style="--chip: 200px">
+    <div class="bf-row bf-head">
+      <div class="bf-l"><p class="side">Boeing <small>ТНК · США</small><span class="mk solid"></span></p></div>
+      <div class="bf-c">Признак</div>
+      <div class="bf-r"><p class="side"><span class="mk striped"></span>Airbus <small>МНК · FR · DE · ES</small></p></div>
+    </div>
+    <div class="bf-row"><div class="bf-l"><span>американский капитал, акции торгуются в Нью-Йорке</span></div><div class="bf-c">Капитал</div><div class="bf-r"><span>государства: Франция 10,8%, Германия 10,8%, Испания 4,1%; остальное — частные инвесторы</span></div></div>
+    <div class="bf-row"><div class="bf-l"><span>США, штаб-квартира в Арлингтоне (Вирджиния)</span></div><div class="bf-c">Регистрация</div><div class="bf-r"><span>Airbus SE, Нидерланды; операционный центр в Тулузе</span></div></div>
+    <div class="bf-row"><div class="bf-l"><span>ядро в США, крупные узлы поставляют зарубежные партнёры</span></div><div class="bf-c">Производство</div><div class="bf-r"><span>заводы во Франции, Германии, Испании и Великобритании; сборка также в США и Китае</span></div></div>
+    <div class="bf-row"><div class="bf-l"><span>одно государство: правительство США как заказчик и регулятор</span></div><div class="bf-c">Опора</div><div class="bf-r"><span>три государства-акционера и межправительственные соглашения</span></div></div>
+    <div class="bf-row bf-bars"><div class="bf-l"><b class="num">600</b><span class="bar solid" style="--v: 600" role="img" aria-label="Boeing: 600 самолётов"></span></div><div class="bf-c">Поставки 2025,<br>самолётов</div><div class="bf-r"><span class="bar striped" style="--v: 793" role="img" aria-label="Airbus: 793 самолёта"></span><b class="num">793</b></div></div>
+  </div>
+  <div class="bridge"><span class="lbl">Итог кейса</span><p>МНК позволила европейским странам сообща создать конкурента американской ТНК. В 2025 г. Airbus поставил 793 самолёта при выручке €73,4 млрд.</p></div>
+  <footer class="ft"><span class="ft-l">Вопрос 3 · ТНК и МНК в МЭО</span><span class="ft-r">Источники: <a href="#r14">[14]</a>, <a href="#r15">[15]</a>, <a href="#r21">[21]</a></span></footer>
+</section>
+
+<!-- 14. Выводы -->
+<section class="slide rail" id="s14" data-title="Выводы">
+  <header class="hd">
+    <p class="kick">Итоги</p>
+    <h2 class="ttl">Выводы</h2>
+    <p class="thesis push">Национальная принадлежность капитала определяет, как корпорация действует во всех шести направлениях МЭО.</p>
+  </header>
+  <div class="body">
+    <ol class="concl">
+      <li><p><b>Главный критерий различия — чей капитал и чей контроль.</b> У ТНК одна страна базирования, у МНК несколько стран-учредителей.</p></li>
+      <li><p><b>Торговля и производство.</b> ТНК строит внутрифирменные цепочки по издержкам и рискам, МНК распределяет поставки и работы между странами-учредителями по соглашению.</p></li>
+      <li><p><b>Движение капитала.</b> ТНК вывозит прямые инвестиции из страны базирования, МНК возникает из слияния капиталов разных стран.</p></li>
+      <li><p><b>Финансы, технологии, кадры.</b> ТНК централизована, МНК опирается на паритет и компромисс нескольких государств.</p></li>
+      <li><p><b>Тенденция.</b> Двойные структуры упрощаются (Shell, Unilever), и МНК по форме сближаются с ТНК. В условиях фрагментации мировой экономики обе формы всё сильнее зависят от политики государств.</p></li>
+    </ol>
+  </div>
+  <footer class="ft"><span class="ft-l">Вопрос 3 · ТНК и МНК в МЭО</span><span class="ft-r">Источники: <a href="#r5">[5]</a>, <a href="#r8">[8]</a>, <a href="#r24">[24]</a></span></footer>
+</section>
+
+<!-- 15. Источники -->
+<section class="slide rail" id="s15" data-title="Список источников">
+  <header class="hd">
+    <p class="kick">Литература</p>
+    <h2 class="ttl">Список источников</h2>
+    <nav class="jump push" aria-label="Разделы списка">
+      <a href="#refs-main">Основная литература · 1–4</a>
+      <a href="#refs-add">Дополнительная литература · 5–10</a>
+      <a href="#refs-web">Статьи, доклады и документы · 11–25</a>
+    </nav>
+  </header>
+  <div class="body">
+    <div class="scroll" tabindex="0" aria-label="Список источников, прокручивается">
+      <div class="refs">
+        <section>
+          <h3 id="refs-main">Основная литература</h3>
+          <ol>
+            <li id="r1">Мировая экономика и МЭО: учебник / под общей редакцией проф., д.э.н. В.В. Перской, проф., д.э.н., академика РАО М.А. Эскиндарова. — Т. 1. — Текст: непосредственный.</li>
+            <li id="r2">Мировая экономика и МЭО: учебник / под общей редакцией проф., д.э.н. В.В. Перской, проф., д.э.н., академика РАО М.А. Эскиндарова. — Т. 2. — Текст: непосредственный.</li>
+            <li id="r3">Зубенко, В.В. Мировая экономика и международные экономические отношения: учебник для направления бакалавриата «Экономика» / В.В. Зубенко, В.А. Зубенко; Финуниверситет; под ред. В.В. Зубенко. — Москва: Кнорус, 2021. — 318 с. — (Бакалавриат). — Текст: непосредственный. — То же. — 2023. — ЭБС BOOK.ru. — URL: <a href="https://book.ru/book/945961" target="_blank" rel="noopener">https://book.ru/book/945961</a> (дата обращения: 30.09.2026). — Текст: электронный.</li>
+            <li id="r4">Мировая экономика и международные экономические отношения: учебник для студентов, обучающихся по направлению подготовки «Экономика» (квалификация (степень) «бакалавр») / М.А. Эскиндаров, Б.М. Смитиенко, Н.В. Лукьянович [и др.]; Финуниверситет; под ред. В.К. Поспелова. — Москва: Инфра-М, 2018, 2021. — 370 с. — (Высшее образование: Бакалавриат). — Текст: непосредственный. — То же. — 2024. — DOI 10.12737/835. — ЭБС ZNANIUM. — URL: <a href="https://znanium.com/catalog/product/2073483" target="_blank" rel="noopener">https://znanium.com/catalog/product/2073483</a> (дата обращения: 30.09.2026). — Текст: электронный.</li>
+          </ol>
+        </section>
+        <section>
+          <h3 id="refs-add">Дополнительная литература</h3>
+          <ol start="5">
+            <li id="r5">Акторы и субъекты международных экономических отношений на современном этапе развития мирового сообщества. Часть 2. Трансформационные процессы в системе международных экономических отношений: современность и будущее: монография / под ред. В.В. Перской, Н.С. Ревенко, А.А. Ткаченко. — Москва: ИНФРА-М, 2024. — 239 с. — (Научная мысль). — DOI 10.12737/2086351. — ISBN 978-5-16-019095-2. — ЭБС ZNANIUM. — URL: <a href="https://znanium.ru/catalog/product/2086351" target="_blank" rel="noopener">https://znanium.ru/catalog/product/2086351</a> (дата обращения: 30.09.2026). — Текст: электронный.</li>
+            <li id="r6">Внешнеэкономическая политика России в условиях глобальных вызовов: монография / под ред. А.А. Ткаченко. — Москва: Вузовский учебник: ИНФРА-М, 2023. — 231 с. — (Научная книга). — ISBN 978-5-9558-0651-8. — ЭБС ZNANIUM. — URL: <a href="https://znanium.ru/catalog/product/2019751" target="_blank" rel="noopener">https://znanium.ru/catalog/product/2019751</a> (дата обращения: 30.09.2026). — Текст: электронный.</li>
+            <li id="r7">Международные валютно-кредитные и финансовые отношения: учебник для вузов / Л.Н. Красавина [и др.]; ответственный редактор Л.Н. Красавина. — 5-е изд., перераб. и доп. — Москва: Издательство Юрайт, 2024. — 534 с. — (Высшее образование). — ISBN 978-5-534-08791-8. — Образовательная платформа Юрайт [сайт]. — URL: <a href="https://urait.ru/bcode/556501" target="_blank" rel="noopener">https://urait.ru/bcode/556501</a> (дата обращения: 30.09.2026). — Текст: электронный.</li>
+            <li id="r8">Перская, В.В. Многополярность: институты и механизмы согласования национальных интересов: монография / В.В. Перская, М.А. Эскиндаров; Финуниверситет. — Москва: Кнорус, 2018. — 537 с. — Текст: непосредственный. — То же. — 2021. — ЭБС BOOK.ru. — URL: <a href="https://book.ru/book/936974" target="_blank" rel="noopener">https://book.ru/book/936974</a> (дата обращения: 30.09.2026). — Текст: электронный.</li>
+            <li id="r9">Современные международные отношения: учебник и практикум для вузов / В.К. Белозёров [и др.]; под редакцией В.К. Белозёрова, М.М. Васильевой, А.И. Позднякова. — 3-е изд., перераб. и доп. — Москва: Издательство Юрайт, 2024. — 379 с. — (Высшее образование). — ISBN 978-5-534-15880-9. — Образовательная платформа Юрайт [сайт]. — URL: <a href="https://urait.ru/bcode/535906" target="_blank" rel="noopener">https://urait.ru/bcode/535906</a> (дата обращения: 30.09.2026). — Текст: электронный.</li>
+            <li id="r10">Тесленко, И.Б. Экономика в условиях глобальных вызовов современности: монография / И.Б. Тесленко; под ред. И.Б. Тесленко. — Москва: Русайнс, 2020. — 206 с. — ISBN 978-5-4365-1271-6. — ЭБС BOOK.ru. — URL: <a href="https://book.ru/book/934761" target="_blank" rel="noopener">https://book.ru/book/934761</a> (дата обращения: 30.09.2026). — Текст: электронный.</li>
+          </ol>
+        </section>
+        <section>
+          <h3 id="refs-web">Статьи, аналитические доклады и электронные ресурсы</h3>
+          <ol start="11">
+            <li id="r11">Рождественская, Я. Unilever меняет две головы на одну: компания проводит крупнейшую за 90 лет реструктуризацию / Я. Рождественская. — Текст: электронный // Коммерсантъ: [сайт]. — 2020. — 11 июня. — URL: <a href="https://www.kommersant.ru/doc/4377681" target="_blank" rel="noopener">https://www.kommersant.ru/doc/4377681</a> (дата обращения: 30.09.2026).</li>
+            <li id="r12">Сарханянц, К. R упала, D пропала: что останется от Shell после предложенных руководством компании перемен / К. Сарханянц. — Текст: электронный // Коммерсантъ: [сайт]. — 2021. — 15 ноября. — URL: <a href="https://www.kommersant.ru/doc/5077830" target="_blank" rel="noopener">https://www.kommersant.ru/doc/5077830</a> (дата обращения: 30.09.2026).</li>
+            <li id="r13">Airbus. 28 October, 50th Anniversary of the first flight of the Airbus A300. — Text: electronic // Airbus: [site]. — 2022. — October 28. — URL: <a href="https://www.airbus.com/en/newsroom/stories/2022-10-28-october-50th-anniversary-of-the-first-flight-of-the-airbus-a300" target="_blank" rel="noopener">https://www.airbus.com/en/newsroom/stories/2022-10-28-october-50th-anniversary-of-the-first-flight-of-the-airbus-a300</a> (access date: 30.09.2026).</li>
+            <li id="r14">Airbus reports Full-Year (FY) 2025 results. — Text: electronic // Airbus: [site]. — 2026. — February 19. — URL: <a href="https://www.airbus.com/en/newsroom/press-releases/2026-02-airbus-reports-full-year-fy-2025-results" target="_blank" rel="noopener">https://www.airbus.com/en/newsroom/press-releases/2026-02-airbus-reports-full-year-fy-2025-results</a> (access date: 30.09.2026).</li>
+            <li id="r15">Airbus. Share price and information: shareholding structure. — Text: electronic // Airbus: [site]. — URL: <a href="https://www.airbus.com/en/investors/share-price-and-information" target="_blank" rel="noopener">https://www.airbus.com/en/investors/share-price-and-information</a> (access date: 30.09.2026).</li>
+            <li id="r16">Directive 2014/66/EU of the European Parliament and of the Council of 15 May 2014 on the conditions of entry and residence of third-country nationals in the framework of an intra-corporate transfer. — Text: electronic // Official Journal of the European Union. — 2014. — L 157. — P. 1–22. — URL: <a href="https://eur-lex.europa.eu/eli/dir/2014/66/oj" target="_blank" rel="noopener">https://eur-lex.europa.eu/eli/dir/2014/66/oj</a> (access date: 30.09.2026).</li>
+            <li id="r17">OECD Transfer Pricing Guidelines for Multinational Enterprises and Tax Administrations 2022. — Paris: OECD Publishing, 2022. — DOI 10.1787/0e655865-en. — URL: <a href="https://doi.org/10.1787/0e655865-en" target="_blank" rel="noopener">https://doi.org/10.1787/0e655865-en</a> (access date: 30.09.2026). — Text: electronic.</li>
+            <li id="r18">OECD. Global Anti-Base Erosion Model Rules (Pillar Two). — Text: electronic // OECD: [site]. — URL: <a href="https://www.oecd.org/en/topics/sub-issues/global-minimum-tax/global-anti-base-erosion-model-rules-pillar-two.html" target="_blank" rel="noopener">https://www.oecd.org/en/topics/sub-issues/global-minimum-tax/global-anti-base-erosion-model-rules-pillar-two.html</a> (access date: 30.09.2026).</li>
+            <li id="r19">Perlmutter, H.V. The Tortuous Evolution of the Multinational Corporation / H.V. Perlmutter // Columbia Journal of World Business. — 1969. — Vol. 4, No. 1. — P. 9–18. — Text: unmediated.</li>
+            <li id="r20">Samilton, T. Stellantis is official as merger of FCA and PSA Group completed / T. Samilton. — Text: electronic // Michigan Public: [site]. — 2021. — January 18. — URL: <a href="https://www.michiganpublic.org/auto/2021-01-18/stellantis-is-official-as-merger-of-fca-and-psa-group-completed" target="_blank" rel="noopener">https://www.michiganpublic.org/auto/2021-01-18/stellantis-is-official-as-merger-of-fca-and-psa-group-completed</a> (access date: 30.09.2026).</li>
+            <li id="r21">Samora, S. Boeing delivered 600 commercial aircraft in 2025 / S. Samora. — Text: electronic // Manufacturing Dive: [site]. — 2026. — January 14. — URL: <a href="https://www.manufacturingdive.com/news/boeing-deliveries-q4-full-year-2025-commercial-airbus/809504/" target="_blank" rel="noopener">https://www.manufacturingdive.com/news/boeing-deliveries-q4-full-year-2025-commercial-airbus/809504/</a> (access date: 30.09.2026).</li>
+            <li id="r22">Shell Begins Trading in Single-Line Ordinary Shares. — Text: electronic // Energy Connects: [site]. — 2022. — January 31. — URL: <a href="https://www.energyconnects.com/news/oil/2022/january/shell-begins-trading-in-single-line-ordinary-shares/" target="_blank" rel="noopener">https://www.energyconnects.com/news/oil/2022/january/shell-begins-trading-in-single-line-ordinary-shares/</a> (access date: 30.09.2026).</li>
+            <li id="r23">UNCTAD. World Investment Report 2013. Global Value Chains: Investment and Trade for Development. — New York; Geneva: United Nations, 2013. — URL: <a href="https://unctad.org/publication/world-investment-report-2013" target="_blank" rel="noopener">https://unctad.org/publication/world-investment-report-2013</a> (access date: 30.09.2026). — Text: electronic.</li>
+            <li id="r24">UNCTAD. World Investment Report 2026. International Investment in a Turbulent Era. — Geneva: United Nations, 2026. — URL: <a href="https://investmentpolicy.unctad.org/publications/1324/world-investment-report-2026-international-investment-in-a-turbulent-era" target="_blank" rel="noopener">https://investmentpolicy.unctad.org/publications/1324/world-investment-report-2026-international-investment-in-a-turbulent-era</a> (access date: 30.09.2026). — Text: electronic.</li>
+            <li id="r25">Unilever. Completion of Unilever’s Unification. — London: Unilever PLC, 2020. — 30 November. — URL: <a href="https://www.unilever.com/files/origin/1eb23c6cfcfeb76ffcc22aac915f3d6991a5d190.pdf/completion-of-unilever-unification_en.pdf" target="_blank" rel="noopener">https://www.unilever.com/files/origin/1eb23c6cfcfeb76ffcc22aac915f3d6991a5d190.pdf/completion-of-unilever-unification_en.pdf</a> (access date: 30.09.2026). — Text: electronic.</li>
+          </ol>
+        </section>
+      </div>
+    </div>
+  </div>
+  <footer class="ft"><span class="ft-l">Вопрос 3 · ТНК и МНК в МЭО</span><span class="ft-r">25 источников</span></footer>
+</section>
+
+<div class="hud" id="hud" role="toolbar" aria-label="Управление презентацией">
+  <button type="button" id="prev" aria-label="Предыдущий слайд"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
+  <span class="count" id="count" aria-live="polite">1 / 15</span>
+  <button type="button" id="next" aria-label="Следующий слайд"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>
+  <button type="button" id="tocBtn" aria-label="Содержание" aria-controls="toc" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+  <button type="button" id="fsBtn" aria-label="Во весь экран"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
+</div>
+
+<nav class="toc" id="toc" hidden aria-label="Содержание">
+  <div class="toc-head"><p class="kick">Содержание</p><button type="button" class="toc-close" id="tocClose" aria-label="Закрыть содержание">×</button></div>
+  <ol id="tocList"></ol>
+</nav>
+
+</div>
+</main>
+
+<script>
+(function () {
+  var root = document.documentElement;
+  var slides = Array.prototype.slice.call(document.querySelectorAll(".slide"));
+  var N = slides.length;
+  var cur = 0;
+  var mq = window.matchMedia("(min-width: 900px) and (min-height: 500px) and (min-aspect-ratio: 5/4)");
+  var count = document.getElementById("count");
+  var prevBtn = document.getElementById("prev");
+  var nextBtn = document.getElementById("next");
+  var toc = document.getElementById("toc");
+  var tocBtn = document.getElementById("tocBtn");
+  var tocList = document.getElementById("tocList");
+  var fsBtn = document.getElementById("fsBtn");
+
+  function pad(n) { return (n < 10 ? "0" : "") + n; }
+  function isPresent() { return root.classList.contains("present"); }
+
+  slides.forEach(function (s, i) {
+    s.setAttribute("role", "group");
+    s.setAttribute("aria-roledescription", "слайд");
+    s.setAttribute("aria-label", (i + 1) + " из " + N + ": " + s.getAttribute("data-title"));
+    var li = document.createElement("li");
+    var a = document.createElement("a");
+    a.href = "#" + s.id;
+    a.innerHTML = "<span>" + pad(i + 1) + "</span>";
+    a.appendChild(document.createTextNode(s.getAttribute("data-title")));
+    li.appendChild(a);
+    tocList.appendChild(li);
+  });
+  var tocLinks = tocList.querySelectorAll("a");
+
+  function fit() {
+    var k = Math.min(window.innerWidth / 1600, window.innerHeight / 900);
+    root.style.setProperty("--k", String(k));
+  }
+
+  function show(i) {
+    i = Math.max(0, Math.min(N - 1, i));
+    cur = i;
+    var present = isPresent();
+    slides.forEach(function (s, j) {
+      var on = j === i;
+      s.classList.toggle("is-active", on);
+      if (present && !on) { s.setAttribute("aria-hidden", "true"); s.inert = true; }
+      else { s.removeAttribute("aria-hidden"); s.inert = false; }
+    });
+    count.textContent = pad(i + 1) + " / " + N;
+    prevBtn.disabled = i === 0;
+    nextBtn.disabled = i === N - 1;
+    for (var t = 0; t < tocLinks.length; t++) tocLinks[t].setAttribute("aria-current", t === i ? "true" : "false");
+    if (present) {
+      try { history.replaceState(null, "", "#" + slides[i].id); } catch (e) {}
+    }
+  }
+
+  function openToc(open) {
+    toc.hidden = !open;
+    tocBtn.setAttribute("aria-expanded", open ? "true" : "false");
+    if (open && tocLinks[cur]) tocLinks[cur].focus();
+  }
+
+  function setMode() {
+    root.classList.toggle("present", mq.matches);
+    fit();
+    if (!mq.matches) openToc(false);
+    show(cur);
+  }
+
+  function indexOfTarget(id) {
+    var el = id && document.getElementById(id);
+    if (!el) return null;
+    var s = el.closest(".slide");
+    return s ? { i: slides.indexOf(s), el: el, slide: s } : null;
+  }
+
+  function flash(el) {
+    if (!el || el.tagName !== "LI") return;
+    el.classList.add("flash");
+    setTimeout(function () { el.classList.remove("flash"); }, 1600);
+  }
+
+  document.addEventListener("click", function (e) {
+    var a = e.target.closest && e.target.closest('a[href^="#"]');
+    if (!a) return;
+    var hit = indexOfTarget(a.getAttribute("href").slice(1));
+    if (!hit) return;
+    if (isPresent()) {
+      e.preventDefault();
+      openToc(false);
+      show(hit.i);
+      if (hit.el !== hit.slide) {
+        hit.el.scrollIntoView({ block: hit.el.tagName === "H3" ? "start" : "center" });
+      }
+    }
+    flash(hit.el);
+  });
+
+  prevBtn.addEventListener("click", function () { show(cur - 1); });
+  nextBtn.addEventListener("click", function () { show(cur + 1); });
+  tocBtn.addEventListener("click", function () { openToc(toc.hidden); });
+  document.getElementById("tocClose").addEventListener("click", function () { openToc(false); tocBtn.focus(); });
+
+  if (document.fullscreenEnabled) {
+    fsBtn.addEventListener("click", function () {
+      try {
+        if (document.fullscreenElement) { document.exitFullscreen(); }
+        else {
+          var p = root.requestFullscreen();
+          if (p && p.catch) p.catch(function () {});
+        }
+      } catch (e) {}
+    });
+  } else {
+    fsBtn.hidden = true;
+  }
+
+  document.addEventListener("keydown", function (e) {
+    if (!isPresent() || e.altKey || e.ctrlKey || e.metaKey) return;
+    var k = e.key;
+    var inScroll = e.target.closest && e.target.closest(".scroll");
+    if (k === "Escape" && !toc.hidden) { openToc(false); tocBtn.focus(); return; }
+    if (!toc.hidden) return;
+    if (k === "ArrowRight" || k === "PageDown" || (k === " " && !inScroll && !(e.target.closest && e.target.closest("button, a")))) {
+      e.preventDefault(); show(cur + 1);
+    } else if (k === "ArrowLeft" || k === "PageUp") {
+      e.preventDefault(); show(cur - 1);
+    } else if (k === "Home" && !inScroll) {
+      e.preventDefault(); show(0);
+    } else if (k === "End" && !inScroll) {
+      e.preventDefault(); show(N - 1);
+    }
+  });
+
+  var sx = null, sy = null;
+  document.addEventListener("touchstart", function (e) {
+    if (!isPresent() || e.touches.length !== 1) return;
+    sx = e.touches[0].clientX; sy = e.touches[0].clientY;
+  }, { passive: true });
+  document.addEventListener("touchend", function (e) {
+    if (sx === null) return;
+    var dx = e.changedTouches[0].clientX - sx, dy = e.changedTouches[0].clientY - sy;
+    sx = sy = null;
+    if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.3) show(cur + (dx < 0 ? 1 : -1));
+  }, { passive: true });
+
+  window.addEventListener("resize", fit);
+  if (mq.addEventListener) mq.addEventListener("change", setMode);
+  else if (mq.addListener) mq.addListener(setMode);
+
+  var start = indexOfTarget(location.hash.slice(1));
+  cur = start ? start.i : 0;
+  setMode();
+  if (start && start.el !== start.slide && isPresent()) start.el.scrollIntoView({ block: "center" });
+})();
+</script>
+</body>
+</html>
