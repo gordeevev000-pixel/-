@@ -133,13 +133,11 @@ html.present .stats.four { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 /* ---------- титул ---------- */
 .cover { border-top: 0; padding: 0; gap: 0; }
 .cv-left { display: flex; flex-direction: column; gap: 20px; padding: 26px 20px 30px; border-top: 8px solid var(--red); }
-.org { font-weight: 700; font-size: var(--t-small); max-width: 36ch; }
 .kicker { font-size: var(--t-label); font-weight: 500; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3); max-width: 60ch; line-height: 1.5; }
 .cover h1 { font-weight: 800; font-size: var(--t-h1); line-height: .98; letter-spacing: -.035em; max-width: 13ch; }
 .by { border-top: 8px solid var(--ink); padding-top: 14px; display: flex; flex-direction: column; gap: 4px; }
 .by span { font-size: var(--t-label); font-weight: 700; letter-spacing: .07em; text-transform: uppercase; }
 .by b { font-size: var(--t-lead); font-weight: 600; line-height: 1.3; }
-.city { font-size: var(--t-small); color: var(--ink-3); }
 
 /* ---------- теория ---------- */
 .def { font-size: calc(var(--t-lead) * 1.08); font-weight: 500; line-height: 1.35; letter-spacing: -.01em; }
@@ -354,11 +352,9 @@ html.present .only-present { display: grid !important; }
 <!-- 1. Титул -->
 <section class="slide cover" id="s1" data-short="Титульный слайд">
   <div class="cv-left">
-    <p class="org">Финансовый университет при Правительстве Российской Федерации</p>
     <p class="kicker">Семинар 3. ТНК и МНК как ключевые субъекты мировой экономики и международных экономических отношений</p>
     <h1>Источники конкурентных преимуществ ТНК</h1>
     <div class="by"><span>Выполнил:</span><b>Аверьянов Никита Романович (МЭиМБ24-1)</b></div>
-    <p class="city">Москва, 2026</p>
   </div>
 </section>
 
@@ -751,7 +747,7 @@ html.present .only-present { display: grid !important; }
 
 <!-- 15. Источники -->
 <section class="slide" id="s15" data-short="Список источников">
-  <div class="rail"><span class="no"></span><span class="sec">Список источников</span><span class="pips"></span><span class="refs-mini">Оформление — как в рабочей программе дисциплины</span></div>
+  <div class="rail"><span class="no"></span><span class="sec">Список источников</span><span class="pips"></span></div>
   <div class="main">
     <div class="head"><h2 class="title">Список источников</h2></div>
     <div class="content scroll" tabindex="0" aria-label="Список источников, прокручивается">
