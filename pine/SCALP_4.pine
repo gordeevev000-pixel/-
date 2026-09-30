@@ -1,0 +1,367 @@
+//@version=6
+// ═════════════════════════════════════════════════════════════════════════════
+//  СКАЛЬП 1m · 4 УСЛОВИЯ
+//  Индикатор не торгует. Сигнал входа появляется только когда одновременно
+//  выполнены все 4 условия:
+//      1. Направление — цена по одну сторону от VWAP и EMA 50 с 5m.
+//      2. Рынок живой — ATR выше среднего, нужная сессия, нет новостей, спред ок.
+//      3. Триггер     — откат к EMA 20 / VWAP и пробой последней откатной свечи
+//                       на повышенном объёме.
+//      4. Риск        — стоп за экстремумом отката (не дальше 1 ATR), день не
+//                       заблокирован, предыдущий сигнал закрыт.
+//  По умолчанию на графике только сигналы: стрелка, зоны риска/прибыли и
+//  результат сделки. Линии и таблица включаются в группе «Отображение».
+//  Без перерисовки: всё решается на закрытии свечи (barstate.isconfirmed),
+//  EMA 50 берётся только с закрытых 5m баров, lookahead не используется.
+// ═════════════════════════════════════════════════════════════════════════════
+indicator("Скальп 1m · 4 условия", shorttitle = "SCALP-4", overlay = true, max_labels_count = 500, max_lines_count = 500, max_boxes_count = 500)
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 0. ГРУППЫ НАСТРОЕК
+// ─────────────────────────────────────────────────────────────────────────────
+const string GR_DIR  = "Направление"
+const string GR_VOL  = "Волатильность"
+const string GR_TIME = "Время"
+const string GR_TRIG = "Триггер"
+const string GR_RISK = "Риск"
+const string GR_VIS  = "Отображение"
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 1. НАСТРОЙКИ
+// ─────────────────────────────────────────────────────────────────────────────
+// Направление
+string htfTf  = input.timeframe("5", "Старший ТФ", group = GR_DIR, tooltip = "С какого таймфрейма берётся EMA. Значение фиксируется только после закрытия бара этого ТФ.")
+int    htfLen = input.int(50, "EMA старшего ТФ, период", minval = 1, group = GR_DIR)
+
+// Волатильность
+int   atrLen     = input.int(14, "ATR, период", minval = 1, group = GR_VOL)
+int   atrAvgLen  = input.int(50, "SMA от ATR, период", minval = 1, group = GR_VOL, tooltip = "Рынок живой, если ATR выше своей средней за этот период.")
+float spreadPts  = input.float(2.0, "Спред, пункты", minval = 0.0, step = 0.5, group = GR_VOL, tooltip = "Вводится вручную. 1 пункт = минимальный шаг цены инструмента (syminfo.mintick). Пример: EURUSD с 5 знаками, спред 0.8 пипса = 8 пунктов. XAUUSD с шагом 0.01, спред 0.20 $ = 20 пунктов.")
+float spreadPct  = input.float(15.0, "Макс. спред, % от ATR", minval = 0.0, step = 1.0, group = GR_VOL, tooltip = "Сигнал блокируется, если спред больше этой доли ATR.")
+
+// Время
+string tzIn   = input.string("Europe/Moscow", "Часовой пояс", group = GR_TIME, tooltip = "Для сессий, новостей и смены дня. Примеры: Europe/Moscow, GMT+3, Europe/London, America/New_York, UTC.")
+bool   useS1  = input.bool(true, "Лондон", inline = "s1", group = GR_TIME)
+string sess1  = input.session("1000-1300", "", inline = "s1", group = GR_TIME)
+bool   useS2  = input.bool(true, "Нью-Йорк", inline = "s2", group = GR_TIME)
+string sess2  = input.session("1630-1900", "", inline = "s2", group = GR_TIME, tooltip = "Сигналы только внутри включённых сессий, время — в выбранном часовом поясе.")
+int    newsWin = input.int(5, "Блокировка вокруг новости, ± мин", minval = 0, group = GR_TIME)
+bool   n1On   = input.bool(false, "Новость 1", inline = "n1", group = GR_TIME)
+string n1Str  = input.string("15:30", "", inline = "n1", group = GR_TIME)
+bool   n2On   = input.bool(false, "Новость 2", inline = "n2", group = GR_TIME)
+string n2Str  = input.string("17:00", "", inline = "n2", group = GR_TIME)
+bool   n3On   = input.bool(false, "Новость 3", inline = "n3", group = GR_TIME)
+string n3Str  = input.string("21:00", "", inline = "n3", group = GR_TIME, tooltip = "Время новости в формате ЧЧ:ММ по выбранному часовому поясу. Действует каждый день, пока галочка включена.")
+
+// Триггер
+int   emaLen = input.int(20, "EMA отката, период", minval = 1, group = GR_TRIG)
+int   pbLen  = input.int(5, "Окно отката, баров", minval = 1, maxval = 50, group = GR_TRIG, tooltip = "За последние N баров low (для шорта — high) должен коснуться EMA 20 или VWAP, после чего текущий close пробивает high последней красной свечи (для шорта — low последней зелёной).")
+int   volLen = input.int(20, "SMA объёма, период", minval = 1, group = GR_TRIG)
+float volK   = input.float(1.2, "Объём больше средней в, раз", minval = 0.0, step = 0.1, group = GR_TRIG)
+
+// Риск
+float stopBuf   = input.float(0.1, "Отступ стопа за экстремум, × ATR", minval = 0.0, step = 0.05, group = GR_RISK)
+float maxStopK  = input.float(1.0, "Макс. стоп, × ATR", minval = 0.1, step = 0.1, group = GR_RISK)
+float rr        = input.float(1.5, "Тейк, R", minval = 0.1, step = 0.1, group = GR_RISK)
+int   maxLosses = input.int(3, "Стопов подряд до блокировки", minval = 1, group = GR_RISK)
+float dayLossR  = input.float(-3.0, "Дневной лимит убытка, R", maxval = 0.0, step = 0.5, group = GR_RISK, tooltip = "При достижении лимита или серии стопов сигналы блокируются до конца дня. Новый день — по выбранному часовому поясу.")
+
+// Отображение
+color colL      = input.color(#089981, "Лонг", inline = "c", group = GR_VIS)
+color colS      = input.color(#F23645, "Шорт", inline = "c", group = GR_VIS)
+bool  showZones = input.bool(true, "Зоны риска и прибыли", group = GR_VIS)
+bool  showTags  = input.bool(true, "Цены стопа и тейка у открытой сделки", group = GR_VIS)
+bool  showRes   = input.bool(true, "Результат сделки (+R / −R)", group = GR_VIS)
+bool  showTable = input.bool(false, "Таблица условий", group = GR_VIS)
+bool  showEma20 = input.bool(false, "Линия EMA 20", group = GR_VIS)
+bool  showHtf   = input.bool(false, "Линия EMA 50 (5m)", group = GR_VIS)
+bool  showVwap  = input.bool(false, "Линия VWAP", group = GR_VIS)
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 2. УСЛОВИЕ 1 — НАПРАВЛЕНИЕ
+//    EMA 50 с 5m без lookahead: значение фиксируется на первом 1m баре нового
+//    5m бара и берётся с последнего 1m бара предыдущего 5m бара ([1]), когда
+//    тот 5m бар уже полностью закрыт. История и реалтайм совпадают.
+// ─────────────────────────────────────────────────────────────────────────────
+float htfLive = request.security(syminfo.tickerid, htfTf, ta.ema(close, htfLen), lookahead = barmerge.lookahead_off)
+var float emaHtf = na
+if timeframe.change(htfTf)
+    emaHtf := htfLive[1]
+
+float vwap = ta.vwap(hlc3)
+int   dir  = close > vwap and close > emaHtf ? 1 : close < vwap and close < emaHtf ? -1 : 0
+bool  c1   = dir != 0
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 3. УСЛОВИЕ 2 — РЫНОК ЖИВОЙ: ATR, сессии, новости, спред
+// ─────────────────────────────────────────────────────────────────────────────
+float atr    = ta.atr(atrLen)
+float atrAvg = ta.sma(atr, atrAvgLen)
+bool  atrOk  = atr > atrAvg
+
+bool inS1   = not na(time(timeframe.period, sess1, tzIn))
+bool inS2   = not na(time(timeframe.period, sess2, tzIn))
+bool sessOk = (useS1 and inS1) or (useS2 and inS2)
+
+// Время новости ЧЧ:ММ → метка времени текущего дня в выбранном поясе
+f_newsTime(string hhmm) =>
+    int ts = na
+    array<string> parts = str.split(str.replace_all(hhmm, " ", ""), ":")
+    if parts.size() == 2
+        float h = str.tonumber(parts.get(0))
+        float m = str.tonumber(parts.get(1))
+        if not na(h) and not na(m) and h >= 0 and h < 24 and m >= 0 and m < 60
+            ts := timestamp(tzIn, year(time, tzIn), month(time, tzIn), dayofmonth(time, tzIn), int(h), int(m), 0)
+    ts
+
+// Свеча пересекает окно [новость − N мин; новость + N мин]
+// Проверяются вчера/сегодня/завтра, чтобы окно корректно переходило через полночь
+f_nearNews(bool on, string hhmm) =>
+    bool hit = false
+    if on
+        int t0 = f_newsTime(hhmm)
+        if not na(t0)
+            int w = newsWin * 60000
+            for k = -1 to 1
+                int t = t0 + k * 86400000
+                if time < t + w and time_close > t - w
+                    hit := true
+    hit
+
+bool news1     = f_nearNews(n1On, n1Str)
+bool news2     = f_nearNews(n2On, n2Str)
+bool news3     = f_nearNews(n3On, n3Str)
+bool newsBlock = news1 or news2 or news3
+
+float spreadPx = spreadPts * syminfo.mintick
+bool  spreadOk = atr > 0 and spreadPx <= atr * spreadPct / 100.0
+
+bool c2 = atrOk and sessOk and not newsBlock and spreadOk
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 4. УСЛОВИЕ 3 — ТРИГГЕР: откат + пробой откатной свечи + объём
+// ─────────────────────────────────────────────────────────────────────────────
+float ema20  = ta.ema(close, emaLen)
+float vol    = nz(volume)
+float volAvg = ta.sma(vol, volLen)
+bool  volOk  = vol > volAvg * volK
+
+float redHigh  = na      // high последней красной свечи в окне (лонг)
+float greenLow = na      // low последней зелёной свечи в окне (шорт)
+bool  touchL   = false   // low касался EMA 20 или VWAP
+bool  touchS   = false   // high касался EMA 20 или VWAP
+for i = 1 to pbLen
+    if na(redHigh) and close[i] < open[i]
+        redHigh := high[i]
+    if na(greenLow) and close[i] > open[i]
+        greenLow := low[i]
+    if low[i] <= ema20[i] or low[i] <= vwap[i]
+        touchL := true
+    if high[i] >= ema20[i] or high[i] >= vwap[i]
+        touchS := true
+
+// Пробой свежий: на прошлой свече close ещё не был за уровнем
+bool breakL = not na(redHigh) and close > redHigh and close[1] <= redHigh
+bool breakS = not na(greenLow) and close < greenLow and close[1] >= greenLow
+bool trigL  = touchL and breakL and volOk
+bool trigS  = touchS and breakS and volOk
+bool c3     = dir == 1 ? trigL : dir == -1 ? trigS : false
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 5. УСЛОВИЕ 4 — РИСК: стоп за экстремумом отката, но не дальше maxStopK × ATR
+// ─────────────────────────────────────────────────────────────────────────────
+float pbLow   = ta.lowest(low, pbLen + 1)
+float pbHigh  = ta.highest(high, pbLen + 1)
+float riskL   = math.min(close - (pbLow - stopBuf * atr), maxStopK * atr)
+float riskS   = math.min(pbHigh + stopBuf * atr - close, maxStopK * atr)
+float riskNow = dir == 1 ? riskL : dir == -1 ? riskS : na
+bool  riskOk  = not na(riskNow) and riskNow >= syminfo.mintick
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 6. СОСТОЯНИЕ: открытый сигнал и дневной счётчик
+// ─────────────────────────────────────────────────────────────────────────────
+var bool   inTrade  = false
+var int    tDir     = 0
+var float  tEntry   = na
+var float  tStop    = na
+var float  tTake    = na
+var int    tBar     = na
+var int    dayCnt   = 0       // сигналов за день
+var int    lossRow  = 0       // стопов подряд
+var float  dayR     = 0.0     // результат дня в R
+var int    totWin   = 0       // вся загруженная история: тейков
+var int    totLoss  = 0       // вся загруженная история: стопов
+var float  totR     = 0.0     // вся загруженная история: итог в R
+var bool   dayBlock = false
+var string blockWhy = ""
+
+var box   bxRisk = na
+var box   bxRew  = na
+var line  lnEnt  = na
+var line  lnSl   = na
+var line  lnTp   = na
+var label lbSl   = na
+var label lbTp   = na
+
+// Сброс счётчика в начале нового дня
+int  dayKey = year(time, tzIn) * 10000 + month(time, tzIn) * 100 + dayofmonth(time, tzIn)
+bool newDay = dayKey != dayKey[1]
+if newDay
+    dayCnt   := 0
+    lossRow  := 0
+    dayR     := 0.0
+    dayBlock := false
+    blockWhy := ""
+
+// Растянуть зоны и линии открытого сигнала до свечи x
+f_stretch(int x) =>
+    if not na(bxRisk)
+        box.set_right(bxRisk, x)
+    if not na(bxRew)
+        box.set_right(bxRew, x)
+    if not na(lnEnt)
+        line.set_x2(lnEnt, x)
+    if not na(lnSl)
+        line.set_x2(lnSl, x)
+    if not na(lnTp)
+        line.set_x2(lnTp, x)
+
+f_fmtR(float r) =>
+    (r > 0 ? "+" : r < 0 ? "−" : "") + str.tostring(math.abs(r), "#.##") + "R"
+
+// Закрытие открытого сигнала по стопу или тейку — только на закрытой свече.
+// Если в одной свече задеты и стоп, и тейк, засчитывается стоп (консервативно).
+if barstate.isconfirmed and inTrade and bar_index > tBar
+    bool hitSl = tDir == 1 ? low <= tStop : high >= tStop
+    bool hitTp = tDir == 1 ? high >= tTake : low <= tTake
+    if hitSl or hitTp
+        float res = hitSl ? -1.0 : rr
+        dayR    += res
+        totR    += res
+        totWin  += hitSl ? 0 : 1
+        totLoss += hitSl ? 1 : 0
+        lossRow := hitSl ? lossRow + 1 : 0
+        inTrade := false
+        if lossRow >= maxLosses
+            dayBlock := true
+            blockWhy := str.tostring(lossRow) + " стопа подряд"
+        else if dayR <= dayLossR
+            dayBlock := true
+            blockWhy := "дневной лимит " + f_fmtR(dayLossR)
+        // фиксируем правый край рисунка на свече выхода
+        f_stretch(bar_index)
+        label.delete(lbSl)
+        label.delete(lbTp)
+        if showRes
+            color rc = hitSl ? colS : colL
+            label.new(bar_index, hitSl ? tStop : tTake, f_fmtR(res), style = label.style_label_left, color = color.new(rc, 15), textcolor = color.white, size = size.tiny)
+
+bool c4 = not dayBlock and not inTrade and riskOk
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 7. СИГНАЛ: все 4 условия на закрытой свече
+// ─────────────────────────────────────────────────────────────────────────────
+int  score = (c1 ? 1 : 0) + (c2 ? 1 : 0) + (c3 ? 1 : 0) + (c4 ? 1 : 0)
+bool all4  = c1 and c2 and c3 and c4
+bool sigL  = barstate.isconfirmed and all4 and dir == 1
+bool sigS  = barstate.isconfirmed and all4 and dir == -1
+
+if sigL or sigS
+    int   d     = sigL ? 1 : -1
+    float entry = close
+    float stop  = math.round_to_mintick(entry - d * riskNow)
+    float take  = math.round_to_mintick(entry + d * math.abs(entry - stop) * rr)
+    inTrade := true
+    tDir    := d
+    tEntry  := entry
+    tStop   := stop
+    tTake   := take
+    tBar    := bar_index
+    dayCnt  += 1
+
+    color  c   = d == 1 ? colL : colS
+    string tip = (d == 1 ? "ЛОНГ" : "ШОРТ") + "\nВход: " + str.tostring(entry, format.mintick) + "\nСтоп: " + str.tostring(stop, format.mintick) + "  (−1R)" + "\nТейк: " + str.tostring(take, format.mintick) + "  (" + f_fmtR(rr) + ")" + "\nСтоп = " + str.tostring(math.abs(entry - stop) / atr, "#.##") + " ATR"
+    label.new(bar_index, d == 1 ? low : high, d == 1 ? "▲ ЛОНГ" : "▼ ШОРТ", yloc = d == 1 ? yloc.belowbar : yloc.abovebar, style = d == 1 ? label.style_label_up : label.style_label_down, color = c, textcolor = color.white, size = size.small, tooltip = tip)
+
+    if showZones
+        bxRew := box.new(bar_index, math.max(entry, take), bar_index + 1, math.min(entry, take), border_color = color.new(colL, 100), bgcolor = color.new(colL, 85))
+        bxRisk := box.new(bar_index, math.max(entry, stop), bar_index + 1, math.min(entry, stop), border_color = color.new(colS, 100), bgcolor = color.new(colS, 85))
+    lnEnt := line.new(bar_index, entry, bar_index + 1, entry, color = color.new(chart.fg_color, 40), style = line.style_dotted, width = 1)
+    lnSl  := line.new(bar_index, stop, bar_index + 1, stop, color = colS, width = 1)
+    lnTp  := line.new(bar_index, take, bar_index + 1, take, color = colL, width = 1)
+    if showTags
+        lbSl := label.new(bar_index + 1, stop, "SL " + str.tostring(stop, format.mintick), style = label.style_label_left, color = color.new(colS, 30), textcolor = color.white, size = size.tiny)
+        lbTp := label.new(bar_index + 1, take, "TP " + str.tostring(take, format.mintick), style = label.style_label_left, color = color.new(colL, 30), textcolor = color.white, size = size.tiny)
+
+// Пока сигнал открыт, зоны и линии тянутся до текущей свечи
+if inTrade and bar_index > tBar
+    f_stretch(bar_index + 1)
+    if not na(lbSl)
+        label.set_x(lbSl, bar_index + 1)
+    if not na(lbTp)
+        label.set_x(lbTp, bar_index + 1)
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 8. ЛИНИИ (по умолчанию выключены)
+// ─────────────────────────────────────────────────────────────────────────────
+plot(showEma20 ? ema20 : na, "EMA 20", color = color.new(#F7A600, 0), linewidth = 1)
+plot(showHtf ? emaHtf : na, "EMA 50 (5m)", color = color.new(#7E57C2, 0), linewidth = 2, style = plot.style_stepline)
+plot(showVwap ? vwap : na, "VWAP", color = color.new(#2962FF, 0), linewidth = 2)
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 9. АЛЕРТЫ
+//    Скрытые серии Entry/Stop/Take подставляются в текст alertcondition.
+//    Дополнительно alert() — для режима «Любой вызов alert()» с готовым текстом.
+// ─────────────────────────────────────────────────────────────────────────────
+plot(sigL or sigS ? tEntry : na, "Entry", display = display.data_window, editable = false)
+plot(sigL or sigS ? tStop : na, "Stop", display = display.data_window, editable = false)
+plot(sigL or sigS ? tTake : na, "Take", display = display.data_window, editable = false)
+
+alertcondition(sigL, "SCALP-4: ЛОНГ", '{{ticker}} ЛОНГ 1m | вход {{plot("Entry")}} | стоп {{plot("Stop")}} | тейк {{plot("Take")}}')
+alertcondition(sigS, "SCALP-4: ШОРТ", '{{ticker}} ШОРТ 1m | вход {{plot("Entry")}} | стоп {{plot("Stop")}} | тейк {{plot("Take")}}')
+
+if sigL or sigS
+    alert(syminfo.ticker + (sigL ? " ЛОНГ" : " ШОРТ") + " 1m | вход " + str.tostring(tEntry, format.mintick) + " | стоп " + str.tostring(tStop, format.mintick) + " | тейк " + str.tostring(tTake, format.mintick), alert.freq_once_per_bar_close)
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 10. ТАБЛИЦА УСЛОВИЙ (по умолчанию выключена)
+// ─────────────────────────────────────────────────────────────────────────────
+var table tb = table.new(position.top_right, 3, 9, bgcolor = color.new(#131722, 8), frame_color = color.new(#787B86, 60), frame_width = 1, border_color = color.new(#787B86, 80), border_width = 1)
+
+f_mark(bool ok) =>
+    ok ? "✓" : "✗"
+
+f_row(int r, string name, bool ok, string info) =>
+    table.cell(tb, 0, r, name, text_color = color.white, text_size = size.small, text_halign = text.align_left)
+    table.cell(tb, 1, r, f_mark(ok), text_color = color.white, bgcolor = ok ? color.new(colL, 20) : color.new(colS, 20), text_size = size.small)
+    table.cell(tb, 2, r, info, text_color = color.new(color.white, 25), text_size = size.small, text_halign = text.align_left)
+
+if showTable and barstate.islast
+    string dirTxt = dir == 1 ? "ЛОНГ" : dir == -1 ? "ШОРТ" : "нет"
+    color  scCol  = score == 4 ? colL : score == 3 ? color.new(#F7A600, 0) : color.new(#787B86, 0)
+    table.cell(tb, 0, 0, "SCALP-4", text_color = color.white, text_size = size.small, text_halign = text.align_left)
+    table.cell(tb, 1, 0, str.tostring(score) + "/4", text_color = color.white, bgcolor = scCol, text_size = size.small)
+    table.cell(tb, 2, 0, timeframe.period == "1" ? "" : "рассчитан на 1m", text_color = color.new(#F7A600, 0), text_size = size.small, text_halign = text.align_left)
+
+    f_row(1, "1 Направление", c1, dir != 0 ? dirTxt : "цена между VWAP и EMA50")
+    f_row(2, "2 Рынок", c2, "ATR " + f_mark(atrOk) + " · сессия " + f_mark(sessOk) + " · новости " + f_mark(not newsBlock) + " · спред " + f_mark(spreadOk))
+    string trgTxt = dir == 1 ? "откат " + f_mark(touchL) + " · пробой " + f_mark(breakL) + " · объём " + f_mark(volOk) : dir == -1 ? "откат " + f_mark(touchS) + " · пробой " + f_mark(breakS) + " · объём " + f_mark(volOk) : "нет направления"
+    f_row(3, "3 Триггер", c3, trgTxt)
+    string rskTxt = dayBlock ? "день закрыт" : inTrade ? "сигнал открыт" : riskOk ? "стоп " + str.tostring(riskNow / atr, "#.##") + " ATR" : "нет стопа"
+    f_row(4, "4 Риск", c4, rskTxt)
+
+    table.cell(tb, 0, 5, "Направление", text_color = color.white, text_size = size.small, text_halign = text.align_left)
+    table.cell(tb, 1, 5, dir == 1 ? "▲" : dir == -1 ? "▼" : "—", text_color = color.white, bgcolor = dir == 1 ? color.new(colL, 20) : dir == -1 ? color.new(colS, 20) : color.new(#787B86, 50), text_size = size.small)
+    table.cell(tb, 2, 5, dirTxt, text_color = color.new(color.white, 25), text_size = size.small, text_halign = text.align_left)
+
+    table.cell(tb, 0, 6, "Блокировка", text_color = color.white, text_size = size.small, text_halign = text.align_left)
+    table.cell(tb, 1, 6, dayBlock ? "⛔" : "—", text_color = color.white, bgcolor = dayBlock ? color.new(colS, 20) : color.new(colL, 20), text_size = size.small)
+    table.cell(tb, 2, 6, dayBlock ? blockWhy : "нет", text_color = color.new(color.white, 25), text_size = size.small, text_halign = text.align_left)
+
+    table.cell(tb, 0, 7, "Сегодня", text_color = color.white, text_size = size.small, text_halign = text.align_left)
+    table.cell(tb, 1, 7, str.tostring(dayCnt), text_color = color.white, bgcolor = color.new(#787B86, 50), text_size = size.small)
+    table.cell(tb, 2, 7, "стопов подряд " + str.tostring(lossRow) + " · итог " + f_fmtR(dayR), text_color = color.new(color.white, 25), text_size = size.small, text_halign = text.align_left)
+
+    table.cell(tb, 0, 8, "История", text_color = color.white, text_size = size.small, text_halign = text.align_left)
+    table.cell(tb, 1, 8, str.tostring(totWin + totLoss), text_color = color.white, bgcolor = totR >= 0 ? color.new(colL, 20) : color.new(colS, 20), text_size = size.small)
+    table.cell(tb, 2, 8, "тейков " + str.tostring(totWin) + " · стопов " + str.tostring(totLoss) + " · итог " + f_fmtR(totR), text_color = color.new(color.white, 25), text_size = size.small, text_halign = text.align_left)
