@@ -46,7 +46,7 @@
   color-scheme: light;
 }
 html.present {
-  --t-h1: 100px;
+  --t-h1: 110px;
   --t-title: 52px;
   --t-lead: 23px;
   --t-body: 20px;
@@ -96,7 +96,6 @@ a:hover { color: var(--red); }
 .refs-mini { order: 3; font-size: var(--t-label); color: var(--ink-3); line-height: 1.5; }
 .refs-mini a { color: var(--ink-3); }
 .refs-mini a:hover { color: var(--red); }
-.notes { order: 4; }
 
 .head { display: flex; flex-direction: column; gap: 12px; }
 .title { font-weight: 700; font-size: var(--t-title); line-height: 1.05; letter-spacing: -.025em; max-width: 26ch; }
@@ -133,22 +132,10 @@ html.present .stats.four { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 
 /* ---------- титул ---------- */
 .cover { border-top: 0; padding: 0; gap: 0; }
-.cv-red {
-  position: relative; overflow: hidden; background: var(--red); color: var(--on-red);
-  height: 230px; order: 0;
-}
-.cv-red .q { position: absolute; left: 20px; top: 18px; font-weight: 800; font-size: 20px; letter-spacing: -.01em; }
-.cv-red .of { position: absolute; left: 20px; top: 46px; font-size: 13px; font-weight: 500; letter-spacing: .06em; text-transform: uppercase; }
-.cv-red .four {
-  position: absolute; right: -6px; bottom: -58px; font-family: var(--f-num); font-weight: 600;
-  font-size: 300px; line-height: 1; letter-spacing: -.02em;
-  animation: rise 1.1s cubic-bezier(.2, .7, .2, 1) both;
-}
-@keyframes rise { from { transform: translateY(8%); } to { transform: none; } }
-.cv-left { order: 1; display: flex; flex-direction: column; gap: 20px; padding: 26px 20px 30px; }
+.cv-left { display: flex; flex-direction: column; gap: 20px; padding: 26px 20px 30px; border-top: 8px solid var(--red); }
 .org { font-weight: 700; font-size: var(--t-small); max-width: 36ch; }
 .kicker { font-size: var(--t-label); font-weight: 500; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3); max-width: 60ch; line-height: 1.5; }
-.cover h1 { font-weight: 800; font-size: var(--t-h1); line-height: .98; letter-spacing: -.035em; max-width: 11ch; }
+.cover h1 { font-weight: 800; font-size: var(--t-h1); line-height: .98; letter-spacing: -.035em; max-width: 13ch; }
 .by { border-top: 8px solid var(--ink); padding-top: 14px; display: flex; flex-direction: column; gap: 4px; }
 .by span { font-size: var(--t-label); font-weight: 700; letter-spacing: .07em; text-transform: uppercase; }
 .by b { font-size: var(--t-lead); font-weight: 600; line-height: 1.3; }
@@ -285,11 +272,6 @@ html.present .smile text.zone { font-size: 13px; }
 .refs li.hit a { color: var(--on-red); }
 @media (min-width: 900px) { .refs { columns: 2; column-gap: 44px; } }
 
-/* текст выступления (лента) */
-.notes { border-top: 1px solid var(--hair); padding-top: 10px; font-size: var(--t-small); color: var(--ink-2); }
-.notes summary { cursor: pointer; font-size: var(--t-label); font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: var(--red); }
-.notes p { margin-top: 8px; max-width: 72ch; }
-
 /* ---------- режим презентации ---------- */
 html.present, html.present body { height: 100%; overflow: hidden; }
 html.present .deck { position: fixed; inset: 0; background: var(--paper); }
@@ -315,18 +297,12 @@ html.present .pips { display: grid; grid-template-columns: repeat(5, 14px); gap:
 .pips a:hover { border-color: var(--red); }
 html.present .refs-mini { margin-top: auto; }
 html.present .main { border-top: 8px solid var(--ink); padding-top: 20px; min-height: 0; }
-html.present .notes { display: none; }
 html.present .cover { display: block; padding: 0; }
-html.present .cv-red { position: absolute; right: 0; top: 0; bottom: 0; width: 540px; height: auto; }
-html.present .cv-red .q { left: 44px; top: 50px; font-size: 34px; }
-html.present .cv-red .of { left: 44px; top: 98px; font-size: 14px; }
-html.present .cv-red .four { right: auto; left: 30px; bottom: -150px; font-size: 900px; }
-html.present .cv-left { position: absolute; left: 64px; top: 56px; bottom: 48px; width: 880px; padding: 0; gap: 26px; }
+html.present .cv-left { position: absolute; left: 64px; right: 64px; top: 56px; bottom: 48px; padding: 24px 0 0; gap: 22px; }
 html.present .cv-left .by { margin-top: auto; }
 html.present .scroll { overflow-y: auto; justify-content: flex-start; padding-right: 8px; }
 @media (prefers-reduced-motion: reduce) {
   html.present .slide, html.present .slide.on { transition: none; }
-  .cv-red .four { animation: none; }
 }
 
 /* управление */
@@ -363,13 +339,6 @@ html.present .only-present { display: grid !important; }
 .card .n { font-family: var(--f-num); font-weight: 500; font-size: 34px; line-height: 1; color: var(--red); }
 .card .t { font-weight: 700; font-size: 15px; line-height: 1.2; }
 
-.notes-panel {
-  position: fixed; z-index: 25; left: 16px; right: 16px; bottom: calc(72px + env(safe-area-inset-bottom, 0px));
-  max-width: 920px; margin: 0 auto; max-height: 40vh; overflow: auto;
-  background: var(--paper); color: var(--ink); border: 2px solid var(--ink); border-top: 8px solid var(--red);
-  padding: 14px 20px 16px; font-size: 16px; line-height: 1.5;
-}
-.notes-panel .label { display: block; margin-bottom: 6px; color: var(--red); }
 
 .tip {
   position: fixed; z-index: 40; pointer-events: none; max-width: 300px;
@@ -384,7 +353,6 @@ html.present .only-present { display: grid !important; }
 
 <!-- 1. Титул -->
 <section class="slide cover" id="s1" data-short="Титульный слайд">
-  <div class="cv-red" aria-hidden="true"><span class="q">Вопрос</span><span class="of">Семинар 3 · вопрос 4 из 11</span><span class="four">4</span></div>
   <div class="cv-left">
     <p class="org">Финансовый университет при Правительстве Российской Федерации</p>
     <p class="kicker">Семинар 3. ТНК и МНК как ключевые субъекты мировой экономики и международных экономических отношений</p>
@@ -392,7 +360,6 @@ html.present .only-present { display: grid !important; }
     <div class="by"><span>Выполнил:</span><b>Аверьянов Никита Романович (МЭиМБ24-1)</b></div>
     <p class="city">Москва, 2026</p>
   </div>
-  <details class="notes"><summary>Текст выступления</summary><p>Здравствуйте. Тема моего доклада — источники конкурентных преимуществ транснациональных корпораций. Я разберу, за счёт чего ТНК выигрывают у национальных компаний и друг у друга, как эти источники описывает теория и как они меняются в 2020-е годы.</p></details>
 </section>
 
 <!-- 2. Масштаб -->
@@ -412,7 +379,6 @@ html.present .only-present { display: grid !important; }
       </div>
     </div>
   </div>
-  <details class="notes"><summary>Текст выступления</summary><p>Начну с масштаба. Пятьсот крупнейших компаний мира в 2025 году получили 43,1 триллиона долларов выручки и 3,4 триллиона прибыли. Amazon впервые обогнал Walmart по выручке. По оценке ЮНКТАД, около 80% мировой торговли проходит через производственные сети ТНК. Такой масштаб уже сам по себе результат конкурентных преимуществ: компания растёт за рубежом, только если умеет что-то лучше местных фирм.</p></details>
 </section>
 
 <!-- 3. Понятие и теории -->
@@ -450,7 +416,6 @@ html.present .only-present { display: grid !important; }
       </div>
     </div>
   </div>
-  <details class="notes"><summary>Текст выступления</summary><p>Конкурентное преимущество ТНК — это то, что позволяет ей работать в чужой стране эффективнее местных фирм. Стивен Хаймер показал, что у иностранной компании изначально есть недостатки: она хуже знает рынок, право и язык, несёт валютные и политические риски. Значит, нужно преимущество, которое перекрывает эти издержки. Дальше теория шла от одного монопольного актива к системным моделям: интернализация, парадигма Даннинга, гибкость сети, ромб Портера, ресурсная концепция Барни.</p></details>
 </section>
 
 <!-- 4. OLI -->
@@ -505,7 +470,6 @@ html.present .only-present { display: grid !important; }
       </div>
     </div>
   </div>
-  <details class="notes"><summary>Текст выступления</summary><p>Центральная модель — парадигма OLI Джона Даннинга. O — что у фирмы есть такого, чего нет у других. L — почему выгодно производить именно в этой стране. I — почему выгоднее делать всё внутри своей компании, а не продавать лицензию. Если есть только O, фирма продаёт лицензию; если O и I — экспортирует; если все три — строит или покупает предприятие за рубежом и становится ТНК. По этим трём группам построена дальнейшая часть доклада.</p></details>
 </section>
 
 <!-- 5. НИОКР -->
@@ -529,7 +493,6 @@ html.present .only-present { display: grid !important; }
       </div>
     </div>
   </div>
-  <details class="notes"><summary>Текст выступления</summary><p>Первый внутрифирменный источник — технологии. Две тысячи крупнейших компаний вложили в НИОКР около 1,44 триллиона евро, пятёрка лидеров — примерно 15% этой суммы, и все пятеро из США. Исследования — это постоянные затраты: чем больше мировой рынок компании, тем дешевле обходится каждая единица знаний. Поэтому ТНК могут тратить на науку больше, чем национальные фирмы. Huawei девятый год подряд лидирует по международным патентным заявкам.</p></details>
 </section>
 
 <!-- 6. Бренд -->
@@ -557,7 +520,6 @@ html.present .only-present { display: grid !important; }
       </div>
     </div>
   </div>
-  <details class="notes"><summary>Текст выступления</summary><p>Второй источник — бренд. Бренды первой четвёрки — Apple, Microsoft, Amazon и Google — стоят в 3,5–5 раз дороже, чем пятый в рейтинге Samsung. Бренд даёт ценовую премию и доверие, которое переносится в новые страны: покупатель в любой стране заранее знает, чего ждать от продукта.</p></details>
 </section>
 
 <!-- 7. Масштаб, финансы, организация -->
@@ -597,7 +559,6 @@ html.present .only-present { display: grid !important; }
       </div>
     </div>
   </div>
-  <details class="notes"><summary>Текст выступления</summary><p>Следующие источники — масштаб, финансы и организация. Пятёрка лидеров по НИОКР имела выручку 1,76 триллиона евро при операционной рентабельности 27,5%. Финансовые преимущества — дешёвый капитал, внутренний рынок капитала группы и управление валютными рисками; налоговый арбитраж теперь ограничен глобальным минимальным налогом 15%. Самые устойчивые преимущества — организационные: систему Toyota изучают десятилетиями, но полностью повторить её удаётся немногим, потому что она держится на культуре и навыках людей.</p></details>
 </section>
 
 <!-- 8. Ромб Портера -->
@@ -621,7 +582,6 @@ html.present .only-present { display: grid !important; }
       </div>
     </div>
   </div>
-  <details class="notes"><summary>Текст выступления</summary><p>Вторая группа — преимущества, связанные с географией, и начнём со страны базирования. По модели Портера сильные международные компании вырастают там, где есть квалифицированные кадры и наука, требовательный спрос, кластеры поставщиков и жёсткая конкуренция дома. Государство и случай влияют на все четыре фактора. В многополярном мире, как показывают Перская и Эскиндаров, роль государства в поддержке своих компаний за рубежом растёт.</p></details>
 </section>
 
 <!-- 9. Размещение -->
@@ -654,7 +614,6 @@ html.present .only-present { display: grid !important; }
       </div>
     </div>
   </div>
-  <details class="notes"><summary>Текст выступления</summary><p>Преимущества размещения объясняют, куда идёт ТНК. Даннинг выделял четыре мотива: поиск ресурсов, рынков, эффективности и стратегических активов. Сейчас выбор страны всё больше определяет политика: 20 крупнейших принимающих экономик получили более 80% мировых ПИИ, а доля стратегических отраслей в новых проектах выросла с 16 до 44%.</p></details>
 </section>
 
 <!-- 10. Интернализация -->
@@ -687,7 +646,6 @@ html.present .only-present { display: grid !important; }
       </div>
     </div>
   </div>
-  <details class="notes"><summary>Текст выступления</summary><p>Третья группа — интернализация. ТНК оставляют внутри фирмы самые дорогие звенья: исследования, дизайн, бренд, отношения с клиентом, а сборку отдают подрядчикам. Это хорошо видно на кривой улыбки. Классический пример — iPhone: в 2010 году Apple получала 58,5% цены продажи в виде прибыли, а оплата труда сборщиков в Китае составляла всего 1,8%.</p></details>
 </section>
 
 <!-- 11. Сеть -->
@@ -717,7 +675,6 @@ html.present .only-present { display: grid !important; }
       </div>
     </div>
   </div>
-  <details class="notes"><summary>Текст выступления</summary><p>Сама сеть филиалов в разных странах даёт преимущества, которых нет у национальной фирмы. Коугут называл это операционной гибкостью: производство можно перенести туда, где выгоднее. Гемават предложил формулу AAA: адаптация, агрегация, арбитраж. Добавлю диверсификацию рисков и обмен знаниями между филиалами.</p></details>
 </section>
 
 <!-- 12. Нематериальные активы -->
@@ -746,7 +703,6 @@ html.present .only-present { display: grid !important; }
       </div>
     </div>
   </div>
-  <details class="notes"><summary>Текст выступления</summary><p>Главный сдвиг последних десятилетий — переход от материальных активов к нематериальным. В 1975 году нематериальные активы давали 17% рыночной стоимости компаний индекса S&amp;P 500, в 2025 году — около 92%. В цифровой экономике к ним добавились данные, платформы и сетевые эффекты. Такие ТНК растут за рубежом почти без заводов и складов.</p></details>
 </section>
 
 <!-- 13. Россия -->
@@ -774,7 +730,6 @@ html.present .only-present { display: grid !important; }
       </div>
     </div>
   </div>
-  <details class="notes"><summary>Текст выступления</summary><p>Российские корпорации опираются прежде всего на ресурсную базу, государственную поддержку и технологические ниши. Лучший пример — Росатом: портфель зарубежных заказов 206 миллиардов долларов, 41 энергоблок в 11 странах. Его преимущество — комплексное предложение: строительство, топливо на весь срок службы, подготовка кадров и финансирование. После 2022 года западное оборудование заменили российским и китайским.</p></details>
 </section>
 
 <!-- 14. Выводы -->
@@ -792,7 +747,6 @@ html.present .only-present { display: grid !important; }
       </ol>
     </div>
   </div>
-  <details class="notes"><summary>Текст выступления</summary><p>Подведу итоги. Первое: без конкурентных преимуществ ТНК не может окупить издержки иностранности. Второе: источники удобно группировать по парадигме OLI, а сама сеть филиалов — отдельный источник. Третье: главным источником стали нематериальные активы. Четвёртое: преимущества концентрируются у немногих лидеров, но их размывают регулирование, налоги и санкции. Пятое: геополитика меняет выбор стран размещения. Спасибо за внимание, готов ответить на вопросы.</p></details>
 </section>
 
 <!-- 15. Источники -->
@@ -843,7 +797,6 @@ html.present .only-present { display: grid !important; }
       </div>
     </div>
   </div>
-  <details class="notes"><summary>Текст выступления</summary><p>Список источников: литература из программы дисциплины, научные работы и статистические доклады, из которых взяты цифры.</p></details>
 </section>
 
 </div>
@@ -854,11 +807,8 @@ html.present .only-present { display: grid !important; }
   <span class="count" id="count" aria-live="polite">01 / 15</span>
   <button type="button" id="nextBtn" aria-label="Следующий слайд"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button>
   <button type="button" id="ovBtn" aria-label="Все слайды (O)"><svg viewBox="0 0 24 24"><path d="M4 4h6.5v6.5H4zM13.5 4H20v6.5h-6.5zM4 13.5h6.5V20H4zM13.5 13.5H20V20h-6.5z"/></svg></button>
-  <button type="button" id="notesBtn" class="only-present" aria-label="Текст выступления (N)" aria-pressed="false"><svg viewBox="0 0 24 24"><path d="M5 5h14v10H10l-5 4z"/></svg></button>
   <button type="button" id="fsBtn" class="only-present" aria-label="Во весь экран (F)"><svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
 </nav>
-
-<div class="notes-panel" id="notesPanel" hidden><span class="label" id="notesTitle">Текст выступления</span><p id="notesText"></p></div>
 
 <div class="overview" id="overview" hidden role="dialog" aria-modal="true" aria-label="Все слайды">
   <div class="ov-head"><h2>Все слайды</h2><button type="button" class="ov-close" id="ovClose">Закрыть</button></div>
@@ -1021,11 +971,6 @@ html.present .only-present { display: grid !important; }
   var nextBtn = document.getElementById("nextBtn");
   var count = document.getElementById("count");
   var ctrl = document.getElementById("ctrl");
-  var notesPanel = document.getElementById("notesPanel");
-  var notesBtn = document.getElementById("notesBtn");
-  var notesText = document.getElementById("notesText");
-  var notesTitle = document.getElementById("notesTitle");
-  var notesOn = false;
 
   function fit() {
     k = Math.min(window.innerWidth / 1600, window.innerHeight / 900);
@@ -1042,9 +987,6 @@ html.present .only-present { display: grid !important; }
     prevBtn.disabled = cur === 0;
     nextBtn.disabled = cur === total - 1;
     markOverview();
-    var np = slides[cur].querySelector(".notes p");
-    notesText.textContent = np ? np.textContent : "";
-    notesTitle.textContent = "Текст выступления · слайд " + (cur + 1);
   }
   function show(i, silent) {
     cur = Math.max(0, Math.min(total - 1, i));
@@ -1069,7 +1011,6 @@ html.present .only-present { display: grid !important; }
     root.classList.toggle("present", pr);
     if (pr) { fit(); show(cur, true); wake(); }
     else { slides.forEach(function (s) { s.classList.remove("on"); }); setInert(); updateChrome(); ctrl.classList.remove("idle"); }
-    notesPanel.hidden = !(pr && notesOn);
     drawAll();
   }
 
@@ -1120,14 +1061,7 @@ html.present .only-present { display: grid !important; }
     scrollRaf = requestAnimationFrame(function () { scrollRaf = 0; detectFlow(); });
   }, { passive: true });
 
-  /* ---------- заметки и полный экран ---------- */
-  function toggleNotes() {
-    if (!present()) return;
-    notesOn = !notesOn;
-    notesPanel.hidden = !notesOn;
-    notesBtn.setAttribute("aria-pressed", notesOn ? "true" : "false");
-  }
-  notesBtn.addEventListener("click", toggleNotes);
+  /* ---------- полный экран ---------- */
   function toggleFs() {
     try {
       if (document.fullscreenElement) { document.exitFullscreen().catch(function () {}); }
@@ -1173,9 +1107,7 @@ html.present .only-present { display: grid !important; }
     else if (key === "ArrowLeft" || key === "PageUp" || (key === " " && e.shiftKey)) { e.preventDefault(); go(cur - 1); }
     else if (key === "Home") { e.preventDefault(); go(0); }
     else if (key === "End") { e.preventDefault(); go(total - 1); }
-    else if (key === "n" || key === "N" || key === "т" || key === "Т") { e.preventDefault(); toggleNotes(); }
     else if (key === "f" || key === "F" || key === "а" || key === "А") { e.preventDefault(); toggleFs(); }
-    else if (key === "Escape" && notesOn) { toggleNotes(); }
   });
   var tx = null, ty = null;
   document.addEventListener("touchstart", function (e) {
