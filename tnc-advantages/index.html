@@ -1,0 +1,1566 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Конкурентные преимущества ТНК</title>
+<meta name="description" content="Доклад-презентация к семинару 3, вопрос 4: источники конкурентных преимуществ ТНК. Выполнил Аверьянов Н.Р., МЭиМБ24-1.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Onest:wght@400;500;600&family=Prata&display=swap">
+<script>
+  try {
+    document.documentElement.lang = "ru";
+    if (window.matchMedia("(min-width: 900px) and (min-height: 500px) and (min-aspect-ratio: 5/4)").matches) {
+      document.documentElement.classList.add("present");
+    }
+  } catch (e) {}
+</script>
+<style>
+/* Layout: сцена 1600×900 как лист годового отчёта корпорации — светлая бумага, кобальтовые данные, жёлтый маркер аналитика на ключевых цифрах; на узких экранах слайды идут лентой. */
+:root {
+  --paper: #ECEFF2;
+  --sheet: #F7F9FB;
+  --ink: #0E1824;
+  --ink-2: #3A4754;
+  --ink-3: #5F6C79;
+  --rule: #C2CBD3;
+  --rule-2: #DAE0E6;
+  --cobalt: #1E45C4;
+  --cobalt-tint: rgba(30, 69, 196, .09);
+  --on-cobalt: #FFFFFF;
+  --muted-fill: #B9C3CD;
+  --marker: #F6CB2F;
+  --marker-hl: #F6CB2F;
+  --shadow: rgba(14, 24, 36, .12);
+
+  --f-display: "Prata", "Bodoni 72", Didot, Georgia, "Times New Roman", serif;
+  --f-body: "Onest", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --f-mono: "IBM Plex Mono", "SFMono-Regular", Menlo, Consolas, monospace;
+
+  /* лента (узкие экраны) */
+  --t-h1: clamp(34px, 9vw, 50px);
+  --t-title: clamp(25px, 6.4vw, 34px);
+  --t-lead: 17px;
+  --t-body: 16px;
+  --t-small: 14.5px;
+  --t-label: 11.5px;
+  --t-fig: 40px;
+  --t-src: 13.5px;
+  --pad-x: 20px;
+  --pad-top: 34px;
+  --pad-bot: 28px;
+  --gap: 22px;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #0C131B;
+    --sheet: #131C26;
+    --ink: #E5EBF1;
+    --ink-2: #B0BBC6;
+    --ink-3: #8894A0;
+    --rule: #2C3845;
+    --rule-2: #1D2733;
+    --cobalt: #7D9BFF;
+    --cobalt-tint: rgba(125, 155, 255, .13);
+    --on-cobalt: #0C131B;
+    --muted-fill: #3A4756;
+    --marker: #F2C335;
+    --marker-hl: rgba(242, 195, 53, .40);
+    --shadow: rgba(0, 0, 0, .45);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #0C131B;
+  --sheet: #131C26;
+  --ink: #E5EBF1;
+  --ink-2: #B0BBC6;
+  --ink-3: #8894A0;
+  --rule: #2C3845;
+  --rule-2: #1D2733;
+  --cobalt: #7D9BFF;
+  --cobalt-tint: rgba(125, 155, 255, .13);
+  --on-cobalt: #0C131B;
+  --muted-fill: #3A4756;
+  --marker: #F2C335;
+  --marker-hl: rgba(242, 195, 53, .40);
+  --shadow: rgba(0, 0, 0, .45);
+  color-scheme: dark;
+}
+/* режим презентации: размеры в пикселях сцены 1600×900 */
+html.present {
+  --t-h1: 78px;
+  --t-title: 46px;
+  --t-lead: 23px;
+  --t-body: 20px;
+  --t-small: 17px;
+  --t-label: 13px;
+  --t-fig: 62px;
+  --t-src: 14px;
+  --pad-x: 96px;
+  --pad-top: 48px;
+  --pad-bot: 38px;
+  --gap: 28px;
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--f-body);
+  font-size: var(--t-body);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+h1, h2, h3 { margin: 0; font-weight: 400; text-wrap: balance; }
+p, ul, ol, dl, dd, figure { margin: 0; }
+ul, ol { padding: 0; }
+b, strong { font-weight: 600; }
+a { color: var(--cobalt); text-underline-offset: 3px; }
+:focus-visible { outline: 2px solid var(--cobalt); outline-offset: 3px; border-radius: 3px; }
+::selection { background: var(--marker-hl); color: var(--ink); }
+mark {
+  color: inherit;
+  background: linear-gradient(180deg, transparent 58%, var(--marker-hl) 58%, var(--marker-hl) 93%, transparent 93%);
+  padding: 0 .06em;
+}
+
+/* ---------- слайд ---------- */
+.slide {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+  padding: var(--pad-top) var(--pad-x) var(--pad-bot);
+  background: var(--paper);
+  border-bottom: 1px solid var(--rule);
+}
+.top, .bot {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 24px;
+  font-family: var(--f-mono);
+  font-size: var(--t-label);
+  color: var(--ink-3);
+}
+.top {
+  justify-content: space-between;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--rule);
+}
+.top .part { color: var(--cobalt); font-weight: 500; }
+.bot {
+  align-items: baseline;
+  padding-top: 12px;
+  border-top: 1px solid var(--rule);
+}
+.bot .num { color: var(--ink); font-weight: 500; font-variant-numeric: tabular-nums; min-width: 5.5em; }
+.bot .src { min-width: 0; }
+.bot .src a { color: inherit; }
+.bot .src a:hover { color: var(--cobalt); }
+
+.head { display: flex; flex-direction: column; gap: 12px; }
+.title { font-family: var(--f-display); font-size: var(--t-title); line-height: 1.12; letter-spacing: -.005em; max-width: 34ch; }
+.lead { font-size: var(--t-lead); color: var(--ink-2); line-height: 1.45; max-width: 64ch; }
+.label { font-family: var(--f-mono); font-size: var(--t-label); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); font-weight: 500; }
+.note { font-size: var(--t-small); color: var(--ink-3); max-width: 80ch; }
+.content { flex: 1; min-height: 0; display: flex; flex-direction: column; justify-content: center; gap: var(--gap); }
+
+.cols { display: grid; grid-template-columns: minmax(0, 1fr); gap: calc(var(--gap) * 1.3); align-items: start; }
+.cols > * { min-width: 0; }
+@media (min-width: 760px) {
+  .cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .cols-wide { grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); }
+  .cols-narrow { grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); }
+}
+.stack { display: flex; flex-direction: column; gap: calc(var(--gap) * .8); }
+
+/* списки */
+.pts { list-style: none; display: flex; flex-direction: column; gap: 12px; }
+.pts li { position: relative; padding-left: 24px; }
+.pts li::before { content: ""; position: absolute; left: 0; top: .72em; width: 12px; height: 2px; background: var(--cobalt); }
+.pts.small { font-size: var(--t-small); gap: 10px; }
+.pts .sub { color: var(--ink-2); }
+h3.h { font-family: var(--f-body); font-weight: 600; font-size: var(--t-lead); line-height: 1.25; }
+
+/* цифры */
+.stats { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--gap) calc(var(--gap) * 1.6); }
+@media (min-width: 640px) { .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.stat { border-top: 2px solid var(--ink); padding-top: 14px; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.fig { font-family: var(--f-display); font-size: var(--t-fig); line-height: 1.05; letter-spacing: -.01em; font-variant-numeric: lining-nums; }
+.fig.sm { font-size: calc(var(--t-fig) * .72); }
+.stat p { color: var(--ink-2); font-size: var(--t-small); max-width: 46ch; }
+
+/* выделенный блок: используется для одного элемента на слайде */
+.sheet { background: var(--sheet); border: 1px solid var(--rule); border-radius: 6px; padding: 22px 26px; }
+.def { font-size: var(--t-lead); line-height: 1.45; }
+.def .label { display: block; margin-bottom: 10px; }
+.formula {
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: 10px 16px;
+  font-family: var(--f-display); font-size: calc(var(--t-lead) * 1.05);
+  border-top: 2px solid var(--ink); padding-top: 14px;
+}
+.formula .op { font-family: var(--f-mono); color: var(--cobalt); font-size: .9em; }
+
+/* титульный слайд */
+.cover .cover-grid { flex: 1; display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--gap); align-items: center; }
+html.present .cover .cover-grid { grid-template-columns: minmax(0, 1.2fr) minmax(0, .8fr); gap: 56px; }
+.cover-text { display: flex; flex-direction: column; gap: 22px; min-width: 0; }
+.org { font-size: var(--t-small); font-weight: 500; letter-spacing: .02em; color: var(--ink-2); max-width: 44ch; }
+.cover h1 { font-family: var(--f-display); font-size: var(--t-h1); line-height: 1.1; letter-spacing: -.01em; max-width: 13ch; }
+.cover .lead { max-width: 44ch; }
+.byline { border-top: 2px solid var(--ink); padding-top: 14px; display: flex; flex-direction: column; gap: 4px; max-width: 40ch; }
+.byline dt { font-family: var(--f-mono); font-size: var(--t-label); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); }
+.byline dd { font-size: var(--t-lead); font-weight: 500; line-height: 1.35; }
+.cover-art { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+#net { display: block; width: 100%; aspect-ratio: 4 / 3; max-width: 100%; }
+html.present #net { aspect-ratio: 1 / 1; }
+.net-legend { display: flex; flex-wrap: wrap; gap: 6px 18px; font-family: var(--f-mono); font-size: var(--t-label); color: var(--ink-3); }
+.net-legend span { display: inline-flex; align-items: center; gap: 8px; }
+.net-legend i { display: inline-block; border-radius: 50%; }
+.k-hq { width: 13px; height: 13px; background: var(--marker); box-shadow: 0 0 0 2px var(--ink); }
+.k-reg { width: 10px; height: 10px; background: var(--cobalt); }
+.k-aff { width: 8px; height: 8px; background: var(--paper); box-shadow: 0 0 0 1.5px var(--cobalt); }
+
+/* план */
+.plan { list-style: none; display: grid; grid-template-columns: minmax(0, 1fr); gap: 0 calc(var(--gap) * 2); counter-reset: p; }
+@media (min-width: 760px) { .plan { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-flow: column; grid-template-rows: repeat(5, auto); } }
+.plan li { counter-increment: p; border-top: 1px solid var(--rule); }
+.plan a {
+  display: grid; grid-template-columns: 2.4em minmax(0, 1fr) auto; gap: 12px; align-items: baseline;
+  padding: 14px 0; color: var(--ink); text-decoration: none;
+}
+.plan a::before { content: counter(p, decimal-leading-zero); font-family: var(--f-mono); font-size: var(--t-small); color: var(--cobalt); }
+.plan a:hover .pt { text-decoration: underline; text-decoration-color: var(--cobalt); }
+.plan .sl { font-family: var(--f-mono); font-size: var(--t-label); color: var(--ink-3); white-space: nowrap; }
+
+/* хронология */
+.tl { list-style: none; display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px 30px; }
+@media (min-width: 760px) { .tl { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.tl li { border-top: 1px solid var(--ink); padding-top: 12px; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.tl .yr { font-family: var(--f-display); font-size: calc(var(--t-fig) * .58); line-height: 1; color: var(--cobalt); }
+.tl .who { font-weight: 600; font-size: var(--t-small); }
+.tl p { font-size: var(--t-small); color: var(--ink-2); line-height: 1.42; }
+
+/* OLI */
+.oli { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--gap) calc(var(--gap) * 1.3); }
+@media (min-width: 760px) { .oli { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.oli > div { border-top: 2px solid var(--ink); padding-top: 14px; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.oli .letter { font-family: var(--f-display); font-size: calc(var(--t-fig) * 1.35); line-height: .9; color: var(--cobalt); }
+.oli .en { font-family: var(--f-mono); font-size: var(--t-label); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); }
+.oli .q { font-weight: 600; }
+.oli p { font-size: var(--t-small); color: var(--ink-2); }
+
+/* таблицы */
+.tablewrap { overflow-x: auto; max-width: 100%; }
+table.tb { border-collapse: collapse; width: 100%; font-size: var(--t-small); font-variant-numeric: tabular-nums; }
+.tb th, .tb td { padding: 9px 14px 9px 0; border-bottom: 1px solid var(--rule); text-align: left; vertical-align: top; }
+.tb thead th { font-family: var(--f-mono); font-size: var(--t-label); letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3); font-weight: 500; border-bottom: 1px solid var(--ink); }
+.tb .c { text-align: center; padding-right: 0; }
+.tb .yes { color: var(--cobalt); font-weight: 600; }
+.tb .no { color: var(--ink-3); }
+.tb tr.win td { font-weight: 600; }
+.tb td.res { color: var(--ink); }
+
+/* классификация */
+.groups { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--gap) calc(var(--gap) * 1.3); }
+@media (min-width: 760px) { .groups { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.group { border-top: 2px solid var(--ink); padding-top: 14px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.group h3 { font-family: var(--f-display); font-size: calc(var(--t-title) * .7); line-height: 1.15; }
+.group ul { list-style: none; display: flex; flex-direction: column; }
+.group li { border-top: 1px solid var(--rule); }
+.group li:first-child { border-top: 0; }
+.group a { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; padding: 10px 0; color: var(--ink); text-decoration: none; font-size: var(--t-small); }
+.group a:hover span:first-child { text-decoration: underline; text-decoration-color: var(--cobalt); }
+.group a .sl { font-family: var(--f-mono); font-size: var(--t-label); color: var(--cobalt); white-space: nowrap; }
+
+/* столбиковые диаграммы */
+.chart { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.chart .cap { display: flex; flex-direction: column; gap: 4px; }
+.chart .cap b { font-weight: 600; font-size: var(--t-small); }
+.bars { list-style: none; display: flex; flex-direction: column; gap: 9px; }
+.bars li { display: grid; grid-template-columns: minmax(0, 10.5em) minmax(0, 1fr); gap: 14px; align-items: center; border-radius: 4px; }
+.bars .lab { font-size: var(--t-small); line-height: 1.15; min-width: 0; }
+.bars .lab small { display: block; color: var(--ink-3); font-size: .8em; }
+.bars .track { position: relative; height: 24px; margin-right: 3.6em; }
+.bars .bar { position: absolute; left: 0; top: 0; bottom: 0; width: calc(var(--v) * 100%); background: var(--cobalt); border-radius: 0 4px 4px 0; }
+.bars .val { position: absolute; top: 50%; left: calc(var(--v) * 100% + 8px); transform: translateY(-50%); font-size: var(--t-small); font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.bars li:hover .bar, .bars li:focus-visible .bar { background: var(--ink); }
+@media (max-width: 480px) {
+  .bars li { grid-template-columns: minmax(0, 1fr); gap: 4px; }
+}
+
+/* 100%-столбики (Ocean Tomo) */
+.colchart { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: var(--t-small); color: var(--ink-2); }
+.legend span { display: inline-flex; align-items: center; gap: 8px; }
+.legend i { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+.cc-plot { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 14px; height: 230px; align-items: stretch; }
+html.present .cc-plot { height: 380px; gap: 22px; }
+.cc-col { display: flex; flex-direction: column; gap: 2px; min-width: 0; border-radius: 4px; }
+.cc-col .tan { flex: 1; background: var(--muted-fill); border-radius: 4px 4px 0 0; }
+.cc-col .int {
+  height: calc(var(--v) * 1%); background: var(--cobalt); color: var(--on-cobalt);
+  display: flex; justify-content: center; align-items: flex-start; padding-top: 6px;
+  font-weight: 600; font-size: var(--t-small); font-variant-numeric: tabular-nums;
+}
+.cc-col:hover .int { background: var(--ink); color: var(--paper); }
+.cc-x { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 14px; font-family: var(--f-mono); font-size: var(--t-label); color: var(--ink-3); text-align: center; }
+html.present .cc-x { gap: 22px; }
+
+/* кривая улыбки и iPhone */
+.smile { width: 100%; min-width: 0; }
+.smile svg { display: block; max-width: 100%; }
+.smile text { fill: var(--ink-2); font-family: var(--f-body); font-size: 13px; }
+html.present .smile text { font-size: 15px; }
+.smile text.zone { font-family: var(--f-mono); font-size: 11px; letter-spacing: .06em; text-transform: uppercase; }
+html.present .smile text.zone { font-size: 13px; }
+.smile text.zone.own { fill: var(--cobalt); }
+.split { display: flex; gap: 2px; height: 40px; }
+.split span { display: block; height: 100%; }
+.split .s1 { background: var(--cobalt); border-radius: 4px 0 0 4px; }
+.split .s2 { background: var(--muted-fill); }
+.split .s3 { background: var(--marker); border-radius: 0 4px 4px 0; min-width: 5px; }
+.split-legend { list-style: none; display: flex; flex-direction: column; gap: 8px; font-size: var(--t-small); }
+.split-legend li { display: grid; grid-template-columns: 14px 4.2em minmax(0, 1fr); gap: 10px; align-items: baseline; }
+.split-legend i { width: 12px; height: 12px; border-radius: 3px; display: inline-block; transform: translateY(1px); }
+.split-legend b { font-variant-numeric: tabular-nums; }
+
+/* ромб Портера */
+.diamond { position: relative; display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; }
+.diamond .lines { display: none; }
+.dm { min-width: 0; }
+.dm h3 { font-family: var(--f-body); font-weight: 600; font-size: var(--t-small); line-height: 1.25; margin-bottom: 4px; }
+.dm p { font-size: var(--t-small); color: var(--ink-2); line-height: 1.4; }
+.dm.core { border-top: 2px solid var(--ink); padding-top: 10px; }
+.dm.ext h3 { color: var(--ink-3); font-family: var(--f-mono); font-weight: 500; letter-spacing: .06em; text-transform: uppercase; font-size: var(--t-label); }
+.dm.center { font-family: var(--f-display); font-size: calc(var(--t-lead) * 1.05); text-align: center; color: var(--cobalt); line-height: 1.2; }
+@media (min-width: 760px) {
+  .diamond { grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-rows: auto auto auto; gap: 26px 40px; align-items: center; }
+  .diamond .lines { display: block; position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+  .diamond .lines polygon { fill: none; stroke: var(--rule); stroke-width: 1.5; }
+  .dm { position: relative; background: var(--paper); padding: 10px 14px; }
+  .dm.core { border-top: 0; border: 1px solid var(--ink); border-radius: 6px; padding: 12px 16px; background: var(--sheet); }
+  .d-f { grid-column: 2; grid-row: 1; }
+  .d-s { grid-column: 1; grid-row: 2; }
+  .d-c { grid-column: 2; grid-row: 2; }
+  .d-d { grid-column: 3; grid-row: 2; }
+  .d-r { grid-column: 2; grid-row: 3; }
+  .d-ch { grid-column: 1; grid-row: 1; align-self: start; }
+  .d-g { grid-column: 3; grid-row: 3; align-self: end; }
+}
+
+/* кейс */
+.case { display: flex; flex-direction: column; gap: 14px; }
+.case .fig { color: var(--ink); }
+.case .row { border-top: 1px solid var(--rule); padding-top: 10px; font-size: var(--t-small); color: var(--ink-2); }
+.case .row:first-of-type { border-top: 0; padding-top: 0; }
+
+/* выводы */
+.concl { list-style: none; counter-reset: c; display: grid; grid-template-columns: minmax(0, 1fr); gap: 0 calc(var(--gap) * 1.6); }
+@media (min-width: 760px) { .concl { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.concl li { counter-increment: c; border-top: 1px solid var(--rule); padding: 14px 0 14px 3em; position: relative; min-width: 0; }
+.concl li::before { content: counter(c); position: absolute; left: 0; top: 8px; font-family: var(--f-display); font-size: calc(var(--t-fig) * .6); line-height: 1; color: var(--cobalt); }
+.concl li.wide { grid-column: 1 / -1; }
+
+/* список источников */
+.refs { display: flex; flex-direction: column; gap: 14px; }
+.refs h3 { font-family: var(--f-body); font-weight: 600; font-size: var(--t-small); }
+.refs ol { padding-left: 2.1em; font-size: var(--t-src); line-height: 1.42; color: var(--ink-2); }
+.refs li { margin-bottom: 7px; padding-left: 4px; break-inside: avoid; border-radius: 3px; }
+.refs li::marker { color: var(--ink); font-variant-numeric: tabular-nums; }
+.refs a { overflow-wrap: anywhere; word-break: break-word; }
+.refs li.hit { background: var(--marker-hl); color: var(--ink); }
+html.present .refs ol { line-height: 1.38; }
+
+/* текст выступления (лента) */
+.notes { border-top: 1px dashed var(--rule); padding-top: 10px; font-size: var(--t-small); color: var(--ink-2); }
+.notes summary { cursor: pointer; font-family: var(--f-mono); font-size: var(--t-label); letter-spacing: .08em; text-transform: uppercase; color: var(--cobalt); }
+.notes p { margin-top: 8px; max-width: 72ch; }
+
+/* ---------- режим презентации ---------- */
+html.present, html.present body { height: 100%; overflow: hidden; }
+html.present .deck { position: fixed; inset: 0; background: var(--paper); }
+html.present .stage {
+  position: absolute; left: 50%; top: 50%;
+  width: 1600px; height: 900px;
+  transform: translate(-50%, -50%) scale(var(--k, 1));
+}
+html.present .slide {
+  position: absolute; inset: 0; border: 0;
+  opacity: 0; visibility: hidden;
+  transition: opacity .35s ease, visibility 0s linear .35s;
+}
+html.present .slide.on { opacity: 1; visibility: visible; transition: opacity .35s ease, visibility 0s; }
+html.present .bot { padding-right: 290px; }
+html.present .notes { display: none; }
+@media (prefers-reduced-motion: reduce) {
+  html.present .slide, html.present .slide.on { transition: none; }
+}
+
+/* панель управления */
+.progress { position: fixed; top: 0; left: 0; right: 0; height: 3px; background: var(--cobalt); transform-origin: 0 50%; transform: scaleX(0); z-index: 21; display: none; transition: transform .3s ease; }
+html.present .progress { display: block; }
+.ctrl {
+  position: fixed; right: 16px; bottom: calc(14px + env(safe-area-inset-bottom, 0px)); z-index: 22;
+  display: flex; align-items: center; gap: 2px; padding: 4px;
+  background: var(--sheet); border: 1px solid var(--rule); border-radius: 10px;
+  box-shadow: 0 6px 22px var(--shadow);
+}
+.ctrl button {
+  width: 38px; height: 38px; border: 0; border-radius: 7px; background: transparent; color: var(--ink-2);
+  display: grid; place-items: center; cursor: pointer; padding: 0;
+}
+.ctrl button:hover { background: var(--cobalt-tint); color: var(--cobalt); }
+.ctrl button:disabled { opacity: .35; cursor: default; background: transparent; color: var(--ink-2); }
+.ctrl button[aria-pressed="true"] { background: var(--cobalt-tint); color: var(--cobalt); }
+.ctrl svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.ctrl .count { font-family: var(--f-mono); font-size: 12px; color: var(--ink-3); padding: 0 8px; font-variant-numeric: tabular-nums; min-width: 4.6em; text-align: center; }
+.only-present { display: none !important; }
+html.present .only-present { display: grid !important; }
+
+.overview { position: fixed; inset: 0; z-index: 30; background: var(--paper); overflow: auto; padding: calc(20px + env(safe-area-inset-top, 0px)) 16px calc(24px + env(safe-area-inset-bottom, 0px)); }
+.ov-head { max-width: 1240px; margin: 0 auto 16px; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.ov-head h2 { font-family: var(--f-display); font-size: 26px; }
+.ov-close { font: inherit; font-size: 14px; border: 1px solid var(--rule); background: var(--sheet); color: var(--ink); border-radius: 8px; padding: 8px 14px; cursor: pointer; }
+.ov-close:hover { border-color: var(--cobalt); color: var(--cobalt); }
+.overview ol { list-style: none; max-width: 1240px; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 12px; }
+.card {
+  width: 100%; aspect-ratio: 16 / 9; max-width: 100%; text-align: left; cursor: pointer;
+  display: flex; flex-direction: column; justify-content: space-between; gap: 8px;
+  padding: 12px 14px; border: 1px solid var(--rule); border-radius: 8px; background: var(--sheet); color: var(--ink); font: inherit;
+}
+.card:hover { border-color: var(--cobalt); }
+.card[aria-current="true"] { border-color: var(--cobalt); box-shadow: inset 0 0 0 1px var(--cobalt); }
+.card .n { font-family: var(--f-mono); font-size: 12px; color: var(--cobalt); }
+.card .t { font-family: var(--f-display); font-size: 16px; line-height: 1.22; }
+
+.notes-panel {
+  position: fixed; z-index: 25; left: 16px; right: 16px; bottom: calc(70px + env(safe-area-inset-bottom, 0px));
+  max-width: 920px; margin: 0 auto; max-height: 40vh; overflow: auto;
+  background: var(--sheet); color: var(--ink); border: 1px solid var(--rule); border-radius: 10px;
+  padding: 16px 20px; box-shadow: 0 10px 30px var(--shadow); font-size: 16px; line-height: 1.5;
+}
+.notes-panel .label { display: block; margin-bottom: 6px; color: var(--cobalt); }
+
+.tip {
+  position: fixed; z-index: 40; pointer-events: none; max-width: 300px;
+  background: var(--ink); color: var(--paper); border-radius: 6px; padding: 7px 10px;
+  font-size: 13px; line-height: 1.4; box-shadow: 0 6px 18px var(--shadow);
+}
+</style>
+</head>
+<body>
+
+<div class="progress" id="bar" aria-hidden="true"></div>
+
+<main class="deck" id="deck">
+<div class="stage" id="stage">
+
+<!-- 1. Титул -->
+<section class="slide cover" id="s1" data-short="Титульный слайд">
+  <div class="cover-grid">
+    <div class="cover-text">
+      <p class="org">Финансовый университет при Правительстве Российской Федерации</p>
+      <p class="label">Семинар 3 · ТНК и МНК как ключевые субъекты мировой экономики и международных экономических отношений</p>
+      <h1>Источники конкурентных преимуществ ТНК</h1>
+      <p class="lead">Доклад-презентация по вопросу 4 семинара</p>
+      <dl class="byline">
+        <dt>Выполнил:</dt>
+        <dd>Аверьянов Никита Романович (МЭиМБ24-1)</dd>
+      </dl>
+    </div>
+    <figure class="cover-art">
+      <canvas id="net" aria-hidden="true"></canvas>
+      <figcaption class="net-legend">
+        <span><i class="k-hq"></i>головная компания</span>
+        <span><i class="k-reg"></i>региональные центры</span>
+        <span><i class="k-aff"></i>зарубежные филиалы</span>
+      </figcaption>
+    </figure>
+  </div>
+  <footer class="bot"><span class="num"></span><span class="src">Москва · 2026</span></footer>
+  <details class="notes"><summary>Текст выступления</summary><p>Здравствуйте. Тема моего доклада — источники конкурентных преимуществ транснациональных корпораций. Я разберу, за счёт чего ТНК выигрывают у национальных компаний и друг у друга, как эти источники описывает теория и как они меняются в 2020-е годы.</p></details>
+</section>
+
+<!-- 2. План -->
+<section class="slide" id="s2" data-short="План доклада">
+  <header class="top"><span class="part">План доклада</span><span>Источники конкурентных преимуществ ТНК</span></header>
+  <div class="head"><h2 class="title">План доклада</h2></div>
+  <div class="content">
+    <ol class="plan">
+      <li><a href="#s3"><span class="pt">ТНК в мировой экономике: масштаб</span><span class="sl">сл. 3</span></a></li>
+      <li><a href="#s4"><span class="pt">Понятие конкурентного преимущества и эволюция теорий</span><span class="sl">сл. 4–5</span></a></li>
+      <li><a href="#s6"><span class="pt">Парадигма OLI и три группы источников</span><span class="sl">сл. 6–7</span></a></li>
+      <li><a href="#s8"><span class="pt">Внутрифирменные источники: технологии, бренд, масштаб, финансы, организация</span><span class="sl">сл. 8–11</span></a></li>
+      <li><a href="#s12"><span class="pt">Страна базирования и преимущества размещения</span><span class="sl">сл. 12–13</span></a></li>
+      <li><a href="#s14"><span class="pt">Интернализация и преимущества сети филиалов</span><span class="sl">сл. 14–15</span></a></li>
+      <li><a href="#s16"><span class="pt">Нематериальные активы и устойчивость преимуществ</span><span class="sl">сл. 16–17</span></a></li>
+      <li><a href="#s18"><span class="pt">Российские корпорации</span><span class="sl">сл. 18</span></a></li>
+      <li><a href="#s19"><span class="pt">Выводы</span><span class="sl">сл. 19</span></a></li>
+      <li><a href="#s20"><span class="pt">Список источников</span><span class="sl">сл. 20–22</span></a></li>
+    </ol>
+  </div>
+  <footer class="bot"><span class="num"></span><span class="src">Нажмите на пункт, чтобы перейти к слайду</span></footer>
+  <details class="notes"><summary>Текст выступления</summary><p>Доклад построен от общего к частному: сначала масштаб ТНК и теория, затем три группы преимуществ по парадигме OLI, потом новые источники, устойчивость преимуществ и особенности российских корпораций.</p></details>
+</section>
+
+<!-- 3. Масштаб -->
+<section class="slide" id="s3" data-short="ТНК — ядро мировой экономики">
+  <header class="top"><span class="part">I · ТНК в мировой экономике</span><span>Источники конкурентных преимуществ ТНК</span></header>
+  <div class="head">
+    <h2 class="title">ТНК — ядро мировой экономики</h2>
+    <p class="lead">Масштаб крупнейших корпораций — следствие их конкурентных преимуществ: за рубежом растёт только та компания, которая умеет что-то лучше местных фирм.</p>
+  </div>
+  <div class="content">
+    <div class="stats">
+      <div class="stat">
+        <span class="fig"><mark>$43,1&nbsp;трлн</mark></span>
+        <p>выручка 500 крупнейших компаний мира за 2025&nbsp;г., прибыль — $3,4&nbsp;трлн. В списке 141 компания из США и 122 — из Большого Китая.</p>
+      </div>
+      <div class="stat">
+        <span class="fig">$716,9&nbsp;млрд</span>
+        <p>выручка Amazon, впервые № 1 рейтинга Fortune Global 500. У Walmart, лидера предыдущих 12 лет, — $713,2&nbsp;млрд.</p>
+      </div>
+      <div class="stat">
+        <span class="fig">≈&nbsp;80%</span>
+        <p>мировой торговли связано с международными производственными сетями ТНК (оценка ЮНКТАД).</p>
+      </div>
+      <div class="stat">
+        <span class="fig">$1,6&nbsp;трлн</span>
+        <p>мировые прямые иностранные инвестиции в 2025&nbsp;г. (+6%) — главный канал зарубежной экспансии ТНК.</p>
+      </div>
+    </div>
+  </div>
+  <footer class="bot"><span class="num"></span><span class="src">Источники: <a class="ref" href="#r17">[17]</a>, <a class="ref" href="#r27">[27]</a>, <a class="ref" href="#r29">[29]</a></span></footer>
+  <details class="notes"><summary>Текст выступления</summary><p>Начну с масштаба. Пятьсот крупнейших компаний мира в 2025 году получили 43,1 триллиона долларов выручки и 3,4 триллиона прибыли. Amazon впервые обогнал Walmart по выручке. По оценке ЮНКТАД, около 80% мировой торговли проходит через производственные сети ТНК. Такой масштаб уже сам по себе результат конкурентных преимуществ: компания растёт за рубежом, только если умеет что-то лучше местных фирм.</p></details>
+</section>
+
+<!-- 4. Понятие -->
+<section class="slide" id="s4" data-short="Понятие конкурентного преимущества">
+  <header class="top"><span class="part">II · Понятие и теории</span><span>Источники конкурентных преимуществ ТНК</span></header>
+  <div class="head"><h2 class="title">Конкурентное преимущество ТНК: что это</h2></div>
+  <div class="content">
+    <p class="sheet def"><span class="label">Определение</span>Конкурентное преимущество ТНК — совокупность ресурсов, компетенций и условий деятельности, которая позволяет компании работать в других странах эффективнее местных фирм и международных конкурентов и получать доход выше среднего по отрасли.</p>
+    <div class="cols cols-2">
+      <div class="stack">
+        <h3 class="h">Издержки иностранности <span class="label">С. Хаймер</span></h3>
+        <ul class="pts small">
+          <li>незнание рынка, языка, права и деловых обычаев;</li>
+          <li>валютный и политический риск;</li>
+          <li>недоверие властей и потребителей к иностранной фирме;</li>
+          <li>затраты на управление филиалами на расстоянии.</li>
+        </ul>
+      </div>
+      <div class="stack">
+        <h3 class="h">Чем их перекрывают <span class="label">М. Портер</span></h3>
+        <ul class="pts small">
+          <li><b>Низкие издержки:</b> экономия на масштабе, дешёвые ресурсы, эффективная логистика.</li>
+          <li><b>Дифференциация:</b> уникальный продукт, технология или бренд, за которые покупатель платит больше.</li>
+        </ul>
+      </div>
+    </div>
+    <p class="formula"><span>Преимущество ТНК</span><span class="op">&gt;</span><span>издержки иностранности</span><span class="op">→</span><span>выход за рубеж окупается</span></p>
+  </div>
+  <footer class="bot"><span class="num"></span><span class="src">Источники: <a class="ref" href="#r1">[1]</a>, <a class="ref" href="#r3">[3]</a>, <a class="ref" href="#r4">[4]</a>, <a class="ref" href="#r12">[12]</a>, <a class="ref" href="#r19">[19]</a></span></footer>
+  <details class="notes"><summary>Текст выступления</summary><p>Конкурентное преимущество ТНК — это то, что позволяет ей работать в чужой стране эффективнее местных фирм. Стивен Хаймер показал, что у иностранной компании изначально есть недостатки: она хуже знает рынок, право и язык, несёт валютные и политические риски. Значит, у неё должно быть преимущество, которое перекрывает эти издержки. По Портеру, преимущество бывает двух типов: более низкие издержки или дифференциация.</p></details>
+</section>
+
+<!-- 5. Теории -->
+<section class="slide" id="s5" data-short="Эволюция теорий">
+  <header class="top"><span class="part">II · Понятие и теории</span><span>Источники конкурентных преимуществ ТНК</span></header>
+  <div class="head"><h2 class="title">Как теория объясняла преимущества ТНК</h2></div>
+  <div class="content">
+    <ol class="tl">
+      <li><span class="yr">1960</span><span class="who">С. Хаймер</span><p>Монополистические преимущества: за рубеж выходит фирма с уникальным активом — технологией, брендом, доступом к капиталу.</p></li>
+      <li><span class="yr">1966</span><span class="who">Р. Вернон</span><p>Жизненный цикл продукта: преимущество сначала технологическое, потом ценовое, и производство уходит в страны с дешёвыми факторами.</p></li>
+      <li><span class="yr">1976</span><span class="who">П. Бакли, М. Кассон</span><p>Интернализация: знания выгоднее использовать внутри фирмы, чем продавать на несовершенном рынке.</p></li>
+      <li><span class="yr">1977–1988</span><span class="who">Дж. Даннинг</span><p>Эклектическая парадигма OLI: для ПИИ нужны сразу преимущества собственности, размещения и интернализации.</p></li>
+      <li><span class="yr">1985</span><span class="who">Б. Коугут</span><p>Операционная гибкость: сеть филиалов позволяет перебрасывать производство между странами.</p></li>
+      <li><span class="yr">1990</span><span class="who">М. Портер</span><p>Ромб конкурентных преимуществ: сильные ТНК вырастают из конкурентной среды страны базирования.</p></li>
+      <li><span class="yr">1991</span><span class="who">Дж. Барни</span><p>Ресурсная концепция: устойчивое преимущество дают ценные, редкие и трудно копируемые ресурсы.</p></li>
+      <li><span class="yr">2006</span><span class="who">Дж. Мэтьюз</span><p>Модель LLL для ТНК из развивающихся стран: связи, рычаг, обучение (Linkage, Leverage, Learning).</p></li>
+    </ol>
+    <p class="note">Работа Хаймера — диссертация 1960&nbsp;г., опубликована в 1976&nbsp;г.</p>
+  </div>
+  <footer class="bot"><span class="num"></span><span class="src">Источники: <a class="ref" href="#r12">[12]</a>, <a class="ref" href="#r14">[14]</a>, <a class="ref" href="#r15">[15]</a>, <a class="ref" href="#r16">[16]</a>, <a class="ref" href="#r19">[19]</a>, <a class="ref" href="#r21">[21]</a>, <a class="ref" href="#r23">[23]</a>, <a class="ref" href="#r30">[30]</a></span></footer>
+  <details class="notes"><summary>Текст выступления</summary><p>Теория прошла путь от одного монопольного актива у Хаймера к системным объяснениям. Вернон связал преимущество с жизненным циклом продукта, Бакли и Кассон — с интернализацией, Даннинг объединил всё в эклектическую парадигму. Позже появились взгляды на сеть филиалов как на самостоятельный источник преимуществ, ресурсная концепция Барни и модель LLL для ТНК из развивающихся стран.</p></details>
+</section>
+
+<!-- 6. OLI -->
+<section class="slide" id="s6" data-short="Парадигма OLI">
+  <header class="top"><span class="part">III · Парадигма OLI</span><span>Источники конкурентных преимуществ ТНК</span></header>
+  <div class="head">
+    <h2 class="title">Парадигма OLI Дж. Даннинга</h2>
+    <p class="lead">Компания становится ТНК, когда у неё одновременно есть три группы преимуществ.</p>
+  </div>
+  <div class="content">
+    <div class="oli">
+      <div>
+        <span class="letter">O</span>
+        <span class="en">Ownership · собственность</span>
+        <span class="q">Что есть у фирмы, чего нет у конкурентов?</span>
+        <p>Технологии и патенты, бренды, управленческие навыки, масштаб, доступ к капиталу.</p>
+      </div>
+      <div>
+        <span class="letter">L</span>
+        <span class="en">Location · размещение</span>
+        <span class="q">Почему производить именно в этой стране?</span>
+        <p>Ресурсы, ёмкость рынка, стоимость труда, логистика, налоги, торговые барьеры.</p>
+      </div>
+      <div>
+        <span class="letter">I</span>
+        <span class="en">Internalization · интернализация</span>
+        <span class="q">Почему внутри фирмы, а не по контракту?</span>
+        <p>Экономия трансакционных издержек, защита ноу-хау, контроль качества, трансфертные цены.</p>
+      </div>
+    </div>
+    <div class="tablewrap">
+      <table class="tb">
+        <thead><tr><th scope="col">Способ выхода на зарубежный рынок</th><th scope="col" class="c">O</th><th scope="col" class="c">I</th><th scope="col" class="c">L</th></tr></thead>
+        <tbody>
+          <tr><td>Лицензирование</td><td class="c yes">есть</td><td class="c no">нет</td><td class="c no">нет</td></tr>
+          <tr><td>Экспорт</td><td class="c yes">есть</td><td class="c yes">есть</td><td class="c no">нет</td></tr>
+          <tr class="win"><td>Прямые иностранные инвестиции — компания становится ТНК</td><td class="c yes">есть</td><td class="c yes">есть</td><td class="c yes">есть</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <footer class="bot"><span class="num"></span><span class="src">Источники: <a class="ref" href="#r1">[1]</a>, <a class="ref" href="#r4">[4]</a>, <a class="ref" href="#r16">[16]</a></span></footer>
+  <details class="notes"><summary>Текст выступления</summary><p>Центральная модель — парадигма OLI Джона Даннинга. O — что у фирмы есть такого, чего нет у других. L — почему выгодно производить именно в этой стране. I — почему выгоднее делать всё внутри своей компании, а не продавать лицензию. Если есть только O, фирма продаёт лицензию; если O и I — экспортирует; если все три — строит или покупает предприятие за рубежом и становится ТНК.</p></details>
+</section>
+
+<!-- 7. Классификация -->
+<section class="slide" id="s7" data-short="Три группы источников">
+  <header class="top"><span class="part">III · Парадигма OLI</span><span>Источники конкурентных преимуществ ТНК</span></header>
+  <div class="head">
+    <h2 class="title">Источники преимуществ: три группы</h2>
+    <p class="lead">На основе OLI источники делятся на внутрифирменные, страновые и сетевые. Дальше — по каждой группе.</p>
+  </div>
+  <div class="content">
+    <div class="groups">
+      <div class="group">
+        <span class="label">O · Внутрифирменные</span>
+        <h3>Что компания создала сама</h3>
+        <ul>
+          <li><a href="#s8"><span>Технологии и НИОКР</span><span class="sl">сл. 8</span></a></li>
+          <li><a href="#s9"><span>Бренд и маркетинг</span><span class="sl">сл. 9</span></a></li>
+          <li><a href="#s10"><span>Масштаб и финансы</span><span class="sl">сл. 10</span></a></li>
+          <li><a href="#s11"><span>Организация и человеческий капитал</span><span class="sl">сл. 11</span></a></li>
+        </ul>
+      </div>
+      <div class="group">
+        <span class="label">L · Страновые</span>
+        <h3>Что даёт география</h3>
+        <ul>
+          <li><a href="#s12"><span>Страна базирования: ромб Портера</span><span class="sl">сл. 12</span></a></li>
+          <li><a href="#s12"><span>Государственная поддержка</span><span class="sl">сл. 12</span></a></li>
+          <li><a href="#s13"><span>Принимающие страны: ресурсы, рынки, издержки</span><span class="sl">сл. 13</span></a></li>
+        </ul>
+      </div>
+      <div class="group">
+        <span class="label">I · Сетевые</span>
+        <h3>Что даёт сеть филиалов</h3>
+        <ul>
+          <li><a href="#s14"><span>Интернализация и цепочка ценности</span><span class="sl">сл. 14</span></a></li>
+          <li><a href="#s15"><span>Гибкость, арбитраж, диверсификация</span><span class="sl">сл. 15</span></a></li>
+          <li><a href="#s16"><span>Данные, платформы, сетевые эффекты</span><span class="sl">сл. 16</span></a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <footer class="bot"><span class="num"></span><span class="src">Источники: <a class="ref" href="#r1">[1]</a>, <a class="ref" href="#r2">[2]</a>, <a class="ref" href="#r3">[3]</a>, <a class="ref" href="#r16">[16]</a></span></footer>
+  <details class="notes"><summary>Текст выступления</summary><p>На основе парадигмы OLI источники можно разделить на три группы. Внутрифирменные — то, что компания создала сама. Страновые — то, что даёт география: страна происхождения и страны, куда компания приходит. Сетевые — то, что возникает из самой сети филиалов. Дальше я пройду по каждой группе.</p></details>
+</section>
+
+<!-- 8. НИОКР -->
+<section class="slide" id="s8" data-short="Технологии и НИОКР">
+  <header class="top"><span class="part">IV · Внутрифирменные источники</span><span>Источники конкурентных преимуществ ТНК</span></header>
+  <div class="head"><h2 class="title">Технологии: НИОКР как входной билет на мировой рынок</h2></div>
+  <div class="content">
+    <div class="cols cols-wide">
+      <figure class="chart">
+        <div class="cap"><b>Крупнейшие корпоративные инвесторы в НИОКР, 2024&nbsp;г.</b><span class="label">млрд евро</span></div>
+        <ol class="bars" id="rdBars"></ol>
+        <p class="note">* Amazon не раскрывает НИОКР отдельно, это оценка JRC. Apple — расчёт по итогу пятёрки лидеров (214,9&nbsp;млрд&nbsp;€).</p>
+      </figure>
+      <div class="stack">
+        <div class="stat"><span class="fig sm"><mark>≈&nbsp;€1,44&nbsp;трлн</mark></span><p>вложили в НИОКР 2000 крупнейших компаний мира. Пятёрка лидеров даёт около 15% — за 10 лет их доля почти удвоилась.</p></div>
+        <div class="stat"><span class="fig sm">47,1%</span><p>корпоративных НИОКР мира приходится на компании США; ЕС — 16,2%, Китай — 16,1%.</p></div>
+        <div class="stat"><span class="fig sm">7&nbsp;523</span><p>международные патентные заявки Huawei (PCT) в 2025&nbsp;г. — первое место девятый год подряд.</p></div>
+      </div>
+    </div>
+    <p class="note">НИОКР — постоянные затраты: чем больше мировой рынок компании, тем дешевле ей обходится каждая единица знаний.</p>
+  </div>
+  <footer class="bot"><span class="num"></span><span class="src">Источники: <a class="ref" href="#r26">[26]</a>, <a class="ref" href="#r31">[31]</a></span></footer>
+  <details class="notes"><summary>Текст выступления</summary><p>Первый внутрифирменный источник — технологии. Две тысячи крупнейших компаний вложили в НИОКР около 1,44 триллиона евро, пятёрка лидеров — примерно 15% этой суммы. Логика простая: исследования — это постоянные затраты, и чем больше мировой рынок компании, тем дешевле обходится каждая единица знаний. Поэтому ТНК могут тратить на науку больше, чем национальные фирмы. Huawei девятый год подряд лидирует по международным патентным заявкам.</p></details>
+</section>
+
+<!-- 9. Бренд -->
+<section class="slide" id="s9" data-short="Бренд">
+  <header class="top"><span class="part">IV · Внутрифирменные источники</span><span>Источники конкурентных преимуществ ТНК</span></header>
+  <div class="head"><h2 class="title">Бренд: доверие, которое работает в любой стране</h2></div>
+  <div class="content">
+    <div class="cols cols-wide">
+      <figure class="chart">
+        <div class="cap"><b>Самые дорогие бренды мира, 2025&nbsp;г. (Interbrand)</b><span class="label">млрд долларов</span></div>
+        <ol class="bars" id="brandBars"></ol>
+      </figure>
+      <div class="stack">
+        <h3 class="h">Что даёт глобальный бренд</h3>
+        <ul class="pts small">
+          <li><b>Ценовую премию:</b> покупатель платит за уверенность в качестве.</li>
+          <li><b>Дешёвый выход на новые рынки:</b> бренд известен ещё до прихода компании.</li>
+          <li><b>Переговорную силу</b> с торговыми сетями и партнёрами.</li>
+          <li><b>Гибкость:</b> продукт можно адаптировать к местным вкусам без потери узнаваемости — глокализация, как местное меню McDonald’s.</li>
+        </ul>
+        <div class="stat"><span class="fig sm">$3,6&nbsp;трлн</span><p>стоимость 100 ведущих брендов мира, +4,4% за год.</p></div>
+      </div>
+    </div>
+  </div>
+  <footer class="bot"><span class="num"></span><span class="src">Источники: <a class="ref" href="#r3">[3]</a>, <a class="ref" href="#r20">[20]</a></span></footer>
+  <details class="notes"><summary>Текст выступления</summary><p>Второй источник — бренд. Бренды первой четвёрки — Apple, Microsoft, Amazon и Google — стоят в 3,5–5 раз дороже, чем пятый в рейтинге Samsung. Бренд даёт ценовую премию и доверие, которое переносится в новые страны: покупатель в любой стране заранее знает, чего ждать от продукта.</p></details>
+</section>
+
+<!-- 10. Масштаб и финансы -->
+<section class="slide" id="s10" data-short="Масштаб и финансы">
+  <header class="top"><span class="part">IV · Внутрифирменные источники</span><span>Источники конкурентных преимуществ ТНК</span></header>
+  <div class="head"><h2 class="title">Масштаб и финансы</h2></div>
+  <div class="content">
+    <div class="cols cols-2">
+      <div class="stack">
+        <h3 class="h">Экономия на масштабе и охвате</h3>
+        <ul class="pts small">
+          <li>Затраты на НИОКР, бренд и ИТ распределяются на мировой объём продаж.</li>
+          <li>Крупный заказчик диктует условия поставщикам и получает льготы от правительств.</li>
+          <li>Стандарты и платформы компании становятся отраслевыми.</li>
+        </ul>
+        <div class="stat">
+          <span class="fig sm"><mark>27,5%</mark></span>
+          <p>операционная рентабельность пятёрки лидеров по НИОКР (Amazon, Alphabet, Meta, Microsoft, Apple) при выручке €1,76&nbsp;трлн в 2024&nbsp;г. Авторы рейтинга ЕС связывают её и с эффективностью, масштабом, сетевыми эффектами, и с рыночной властью.</p>
+        </div>
+      </div>
+      <div class="stack">
+        <h3 class="h">Финансовые преимущества</h3>
+        <ul class="pts small">
+          <li>Доступ к мировым рынкам капитала и дешёвому долгу благодаря высоким кредитным рейтингам.</li>
+          <li>Внутренний рынок капитала группы: кэш-пулинг, внутригрупповые займы, взаимозачёт платежей (неттинг).</li>
+          <li>Управление валютным риском: хеджирование, выбор валюты расчётов и места производства.</li>
+          <li>Трансфертные цены и налоговое планирование. Их ограничивает глобальный минимальный налог 15% (правила Pillar Two ОЭСР/G20) для групп с выручкой от €750&nbsp;млн.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <footer class="bot"><span class="num"></span><span class="src">Источники: <a class="ref" href="#r7">[7]</a>, <a class="ref" href="#r25">[25]</a>, <a class="ref" href="#r26">[26]</a></span></footer>
+  <details class="notes"><summary>Текст выступления</summary><p>Третий и четвёртый источники — масштаб и финансы. Пятёрка лидеров по НИОКР в 2024 году имела выручку 1,76 триллиона евро при операционной рентабельности 27,5%. Авторы рейтинга ЕС объясняют это и эффективностью, и рыночной властью. Финансовые преимущества — дешёвый капитал, внутренний рынок капитала группы, управление валютными рисками. Налоговый арбитраж теперь ограничен глобальным минимальным налогом 15%.</p></details>
+</section>
+
+<!-- 11. Организация -->
+<section class="slide" id="s11" data-short="Организация и люди">
+  <header class="top"><span class="part">IV · Внутрифирменные источники</span><span>Источники конкурентных преимуществ ТНК</span></header>
+  <div class="head"><h2 class="title">Организация и люди: что труднее всего скопировать</h2></div>
+  <div class="content">
+    <div class="cols cols-wide">
+      <ul class="pts">
+        <li><b>Производственные системы.</b> <span class="sub">Toyota Production System: «точно вовремя», кайдзен, дзидока. Её инструменты описаны в сотнях книг, но целиком перенять систему удаётся немногим: она держится на культуре и навыках людей.</span></li>
+        <li><b>Управление знаниями.</b> <span class="sub">Лучшие практики и технологии быстро передаются между филиалами в разных странах.</span></li>
+        <li><b>Человеческий капитал.</b> <span class="sub">Глобальный наём, ротация менеджеров между странами, корпоративные университеты.</span></li>
+        <li><b>Единые стандарты.</b> <span class="sub">Одинаковое качество продукта и сервиса во всех странах присутствия.</span></li>
+      </ul>
+      <p class="sheet def"><span class="label">Дж. Барни</span>Ресурсы, которые складываются из отношений, культуры и репутации, Барни называет социально сложными. Их нельзя купить на рынке и трудно скопировать, поэтому они дают самое устойчивое преимущество.</p>
+    </div>
+  </div>
+  <footer class="bot"><span class="num"></span><span class="src">Источники: <a class="ref" href="#r2">[2]</a>, <a class="ref" href="#r3">[3]</a>, <a class="ref" href="#r14">[14]</a></span></footer>
+  <details class="notes"><summary>Текст выступления</summary><p>Пятый источник — организация и люди. Производственную систему Toyota изучают по всему миру десятилетиями, но полностью её повторить удаётся немногим, потому что она держится на культуре и навыках людей. Барни называет такие ресурсы социально сложными: их нельзя купить и трудно скопировать.</p></details>
+</section>
+
+<!-- 12. Ромб Портера -->
+<section class="slide" id="s12" data-short="Ромб Портера">
+  <header class="top"><span class="part">V · Страна и размещение</span><span>Источники конкурентных преимуществ ТНК</span></header>
+  <div class="head">
+    <h2 class="title">Страна базирования: ромб Портера</h2>
+    <p class="lead">Сильные ТНК вырастают из конкурентной среды своей страны. Четыре детерминанты усиливают друг друга.</p>
+  </div>
+  <div class="content">
+    <div class="diamond">
+      <svg class="lines" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><polygon points="50,14 84,50 50,86 16,50" vector-effect="non-scaling-stroke"></polygon></svg>
+      <div class="dm core d-f"><h3>Факторные условия</h3><p>Квалифицированные кадры, наука, инфраструктура, капитал.</p></div>
+      <div class="dm core d-s"><h3>Стратегия, структура, соперничество</h3><p>Жёсткая конкуренция дома готовит к мировому рынку.</p></div>
+      <div class="dm center d-c">Конкуренто&shy;способность компаний страны</div>
+      <div class="dm core d-d"><h3>Условия спроса</h3><p>Требовательные покупатели заставляют улучшать продукт раньше конкурентов.</p></div>
+      <div class="dm core d-r"><h3>Родственные и поддерживающие отрасли</h3><p>Кластеры поставщиков: Кремниевая долина, Шэньчжэнь, Баден-Вюртемберг.</p></div>
+      <div class="dm ext d-ch"><h3>Случай</h3><p>Технологические прорывы, кризисы, скачки курсов валют.</p></div>
+      <div class="dm ext d-g"><h3>Государство</h3><p>Промышленная политика, поддержка национальных компаний, экономическая дипломатия.</p></div>
+    </div>
+  </div>
+  <footer class="bot"><span class="num"></span><span class="src">Источники: <a class="ref" href="#r8">[8]</a>, <a class="ref" href="#r12">[12]</a></span></footer>
+  <details class="notes"><summary>Текст выступления</summary><p>Вторая группа — преимущества страны базирования. По модели Портера сильные международные компании вырастают там, где есть квалифицированные кадры и наука, требовательный спрос, кластеры поставщиков и жёсткая конкуренция дома. Государство и случай влияют на все четыре фактора. В многополярном мире, как показывают Перская и Эскиндаров, роль государства в поддержке своих компаний за рубежом растёт.</p></details>
+</section>
+
+<!-- 13. Размещение -->
+<section class="slide" id="s13" data-short="Преимущества размещения">
+  <header class="top"><span class="part">V · Страна и размещение</span><span>Источники конкурентных преимуществ ТНК</span></header>
+  <div class="head"><h2 class="title">Преимущества размещения: почему ТНК идут в конкретную страну</h2></div>
+  <div class="content">
+    <div class="cols cols-wide">
+      <div class="tablewrap">
+        <table class="tb">
+          <thead><tr><th scope="col">Мотив ПИИ (Даннинг)</th><th scope="col">Что ищет ТНК</th><th scope="col">Пример</th></tr></thead>
+          <tbody>
+            <tr><td><b>Ресурсы</b></td><td>Сырьё, энергия, земля</td><td>Нефтегазовые и горнодобывающие ТНК</td></tr>
+            <tr><td><b>Рынки</b></td><td>Близость к покупателю, обход пошлин</td><td>Заводы автоконцернов в Китае и Мексике</td></tr>
+            <tr><td><b>Эффективность</b></td><td>Дешевле труд и логистика, специализация</td><td>Сборка электроники во Вьетнаме и Индии</td></tr>
+            <tr><td><b>Стратегические активы</b></td><td>Технологии, бренды, кадры через слияния и поглощения</td><td>Покупка Volvo Cars компанией Geely в 2010&nbsp;г.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="stack">
+        <h3 class="h">Что меняется в 2024–2025&nbsp;гг.</h3>
+        <ul class="pts small">
+          <li>ТНК переносят цепочки поставок в Юго-Восточную Азию, Восточную Европу и Центральную Америку.</li>
+          <li>20 крупнейших принимающих экономик получают более 80% мировых ПИИ.</li>
+          <li>Стратегические отрасли (ИИ-инфраструктура, полупроводники, критические минералы, энергопереход) — <mark>44%</mark> стоимости новых проектов «с нуля» против 16% в 2020&nbsp;г.</li>
+          <li>Страну выбирают не только по издержкам, но и по политической надёжности: френд-шоринг, ниаршоринг.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <footer class="bot"><span class="num"></span><span class="src">Источники: <a class="ref" href="#r5">[5]</a>, <a class="ref" href="#r16">[16]</a>, <a class="ref" href="#r28">[28]</a>, <a class="ref" href="#r29">[29]</a></span></footer>
+  <details class="notes"><summary>Текст выступления</summary><p>Преимущества размещения объясняют, куда идёт ТНК. Даннинг выделял четыре мотива: поиск ресурсов, рынков, эффективности и стратегических активов. Сейчас выбор страны всё больше определяет политика: 20 крупнейших принимающих экономик получили более 80% мировых ПИИ, а доля стратегических отраслей в новых проектах выросла с 16 до 44%.</p></details>
+</section>
+
+<!-- 14. Интернализация -->
+<section class="slide" id="s14" data-short="Интернализация и кривая улыбки">
+  <header class="top"><span class="part">VI · Интернализация и сеть</span><span>Источники конкурентных преимуществ ТНК</span></header>
+  <div class="head"><h2 class="title">Интернализация: ТНК оставляют себе самые дорогие звенья цепочки</h2></div>
+  <div class="content">
+    <div class="cols cols-wide">
+      <figure class="chart">
+        <div class="cap"><b>Кривая улыбки: добавленная стоимость по звеньям цепочки</b><span class="label">схема без масштаба</span></div>
+        <div class="smile" id="smile" role="img" aria-label="Кривая улыбки: высокая добавленная стоимость в НИОКР, дизайне, маркетинге и сервисе, низкая в производстве компонентов, сборке и логистике"></div>
+      </figure>
+      <div class="stack">
+        <div class="chart">
+          <div class="cap"><b>iPhone 4, 2010&nbsp;г.: кому достаётся цена продажи</b></div>
+          <div class="split" role="img" aria-label="Прибыль Apple 58,5%, прочее 39,7%, труд в Китае 1,8%">
+            <span class="s1" style="width:58.5%" data-tip="Прибыль Apple — 58,5% цены продажи"></span>
+            <span class="s2" style="width:39.7%" data-tip="Материалы, прочий труд и прибыль других компаний — 39,7%"></span>
+            <span class="s3" style="width:1.8%" data-tip="Оплата труда сборщиков в Китае — 1,8%"></span>
+          </div>
+          <ul class="split-legend">
+            <li><i style="background:var(--cobalt)"></i><b>58,5%</b><span>прибыль Apple</span></li>
+            <li><i style="background:var(--muted-fill)"></i><b>39,7%</b><span>материалы, прочий труд, прибыль других компаний</span></li>
+            <li><i style="background:var(--marker)"></i><b>1,8%</b><span>оплата труда сборщиков в Китае</span></li>
+          </ul>
+        </div>
+        <p class="note">Внутри фирмы остаётся то, что трудно защитить контрактом: технологии, дизайн, бренд, отношения с покупателем. Сборку ведут подрядчики (Foxconn), а Apple контролирует их через стандарты и закупки.</p>
+      </div>
+    </div>
+  </div>
+  <footer class="bot"><span class="num"></span><span class="src">Источники: <a class="ref" href="#r4">[4]</a>, <a class="ref" href="#r15">[15]</a>, <a class="ref" href="#r22">[22]</a></span></footer>
+  <details class="notes"><summary>Текст выступления</summary><p>Третья группа — интернализация. ТНК оставляют внутри фирмы самые дорогие звенья: исследования, дизайн, бренд, отношения с клиентом, а сборку отдают подрядчикам. Это хорошо видно на кривой улыбки. Классический пример — iPhone: в 2010 году Apple получала 58,5% цены продажи в виде прибыли, а оплата труда сборщиков в Китае составляла всего 1,8%.</p></details>
+</section>
+
+<!-- 15. Сеть -->
+<section class="slide" id="s15" data-short="Преимущества сети филиалов">
+  <header class="top"><span class="part">VI · Интернализация и сеть</span><span>Источники конкурентных преимуществ ТНК</span></header>
+  <div class="head"><h2 class="title">Сеть сильнее суммы филиалов: преимущества многонациональности</h2></div>
+  <div class="content">
+    <div class="cols cols-narrow">
+      <div class="stack">
+        <span class="label">Стратегия AAA · П. Гемават</span>
+        <div class="oli" style="grid-template-columns:minmax(0,1fr)">
+          <div><span class="q">Адаптация</span><p>Продукт и управление подстраиваются под местные условия ради роста доли рынка.</p></div>
+          <div><span class="q">Агрегация</span><p>Единые платформы, регионы и бренды ради экономии на масштабе.</p></div>
+          <div><span class="q">Арбитраж</span><p>Использование различий между странами: в зарплатах, налогах, знаниях, ресурсах.</p></div>
+        </div>
+      </div>
+      <ul class="pts">
+        <li><b>Операционная гибкость</b> <span class="sub">(Б. Коугут): производство и закупки переносятся туда, где выгоднее при изменении курсов, пошлин и издержек.</span></li>
+        <li><b>Диверсификация рисков:</b> <span class="sub">спад в одной стране компенсируется ростом в другой.</span></li>
+        <li><b>Обучение сети:</b> <span class="sub">разработки филиалов расходятся по всей компании, включая «обратные инновации» из развивающихся стран.</span></li>
+        <li><b>Круглосуточная разработка:</b> <span class="sub">центры НИОКР в разных часовых поясах передают работу друг другу.</span></li>
+      </ul>
+    </div>
+  </div>
+  <footer class="bot"><span class="num"></span><span class="src">Источники: <a class="ref" href="#r2">[2]</a>, <a class="ref" href="#r18">[18]</a>, <a class="ref" href="#r21">[21]</a></span></footer>
+  <details class="notes"><summary>Текст выступления</summary><p>Сама сеть филиалов в разных странах даёт преимущества, которых нет у национальной фирмы. Коугут называл это операционной гибкостью: производство можно перенести туда, где выгоднее. Гемават предложил формулу AAA: адаптация, агрегация, арбитраж. Добавлю диверсификацию рисков и обмен знаниями между филиалами.</p></details>
+</section>
+
+<!-- 16. Нематериальные активы -->
+<section class="slide" id="s16" data-short="Нематериальные активы">
+  <header class="top"><span class="part">VII · Новые источники и устойчивость</span><span>Источники конкурентных преимуществ ТНК</span></header>
+  <div class="head"><h2 class="title">Главный сдвиг: от заводов к нематериальным активам</h2></div>
+  <div class="content">
+    <div class="cols cols-wide">
+      <figure class="colchart">
+        <div class="cap"><b>Структура рыночной стоимости компаний индекса S&amp;P&nbsp;500, %</b></div>
+        <div class="legend"><span><i style="background:var(--cobalt)"></i>нематериальные активы</span><span><i style="background:var(--muted-fill)"></i>материальные активы</span></div>
+        <div class="cc-plot" id="itPlot"></div>
+        <div class="cc-x" id="itX"></div>
+        <p class="note">Годы, для которых Ocean Tomo публикует оценки; интервалы между ними неравные.</p>
+      </figure>
+      <div class="stack">
+        <h3 class="h">Новые источники в цифровой экономике</h3>
+        <ul class="pts small">
+          <li><b>Данные и алгоритмы ИИ:</b> чем больше клиентов, тем точнее продукт.</li>
+          <li><b>Платформы и сетевые эффекты:</b> ценность сервиса растёт с числом пользователей.</li>
+          <li><b>Экосистемы:</b> клиенту дорого уйти из связанных сервисов одной компании.</li>
+          <li><b>«Лёгкая» интернационализация:</b> цифровые ТНК выходят на зарубежные рынки почти без заводов и складов.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <footer class="bot"><span class="num"></span><span class="src">Источники: <a class="ref" href="#r10">[10]</a>, <a class="ref" href="#r24">[24]</a>, <a class="ref" href="#r28">[28]</a></span></footer>
+  <details class="notes"><summary>Текст выступления</summary><p>Главный сдвиг последних десятилетий — переход от материальных активов к нематериальным. В 1975 году нематериальные активы давали 17% рыночной стоимости компаний индекса S&amp;P 500, в 2025 году — около 92%. В цифровой экономике к ним добавились данные, платформы и сетевые эффекты. Такие ТНК растут за рубежом почти без заводов и складов.</p></details>
+</section>
+
+<!-- 17. Устойчивость -->
+<section class="slide" id="s17" data-short="Устойчивость преимуществ">
+  <header class="top"><span class="part">VII · Новые источники и устойчивость</span><span>Источники конкурентных преимуществ ТНК</span></header>
+  <div class="head"><h2 class="title">Насколько устойчивы преимущества</h2></div>
+  <div class="content">
+    <div class="cols cols-wide">
+      <div class="stack">
+        <span class="label">Ресурсный подход Дж. Барни (VRIN, позднее VRIO)</span>
+        <div class="tablewrap">
+          <table class="tb">
+            <thead><tr><th scope="col">Ценный?</th><th scope="col">Редкий?</th><th scope="col">Трудно скопировать?</th><th scope="col">Компания умеет использовать?</th><th scope="col">Результат</th></tr></thead>
+            <tbody>
+              <tr><td class="no">нет</td><td class="no">—</td><td class="no">—</td><td class="no">—</td><td class="res">Конкурентный недостаток</td></tr>
+              <tr><td class="yes">да</td><td class="no">нет</td><td class="no">—</td><td class="no">—</td><td class="res">Паритет с конкурентами</td></tr>
+              <tr><td class="yes">да</td><td class="yes">да</td><td class="no">нет</td><td class="no">—</td><td class="res">Временное преимущество</td></tr>
+              <tr><td class="yes">да</td><td class="yes">да</td><td class="yes">да</td><td class="no">нет</td><td class="res">Неиспользованное преимущество</td></tr>
+              <tr class="win"><td class="yes">да</td><td class="yes">да</td><td class="yes">да</td><td class="yes">да</td><td class="res">Устойчивое преимущество</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="stack">
+        <h3 class="h">Что ослабляет преимущества ТНК сегодня</h3>
+        <ul class="pts small">
+          <li>Копирование и распространение технологий, особенно при локализации производства.</li>
+          <li>Антимонопольное регулирование цифровых платформ (Закон ЕС о цифровых рынках, DMA).</li>
+          <li>Глобальный минимальный налог 15% снижает выгоду налогового арбитража.</li>
+          <li>Неопротекционизм, санкции и требования локализации дробят глобальные сети.</li>
+          <li>ТНК из развивающихся стран догоняют лидеров по технологиям: Huawei, BYD, CATL.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <footer class="bot"><span class="num"></span><span class="src">Источники: <a class="ref" href="#r5">[5]</a>, <a class="ref" href="#r9">[9]</a>, <a class="ref" href="#r14">[14]</a>, <a class="ref" href="#r25">[25]</a>, <a class="ref" href="#r31">[31]</a></span></footer>
+  <details class="notes"><summary>Текст выступления</summary><p>Не каждое преимущество устойчиво. По Барни, устойчивым оно становится, если ресурс ценный, редкий, трудно копируемый и компания умеет его использовать. Сегодня преимущества ТНК подтачивают копирование технологий, антимонопольное регулирование, минимальный налог, санкции и требования локализации, а также быстрый рост компаний из Китая.</p></details>
+</section>
+
+<!-- 18. Россия -->
+<section class="slide" id="s18" data-short="Российские корпорации">
+  <header class="top"><span class="part">VIII · Российские корпорации</span><span>Источники конкурентных преимуществ ТНК</span></header>
+  <div class="head"><h2 class="title">Российские корпорации: на чём держатся преимущества</h2></div>
+  <div class="content">
+    <div class="cols cols-wide">
+      <ul class="pts small">
+        <li><b>Ресурсная база и вертикальная интеграция:</b> нефть, газ, металлы, удобрения (Роснефть, ЛУКОЙЛ, Норникель, Русал, ФосАгро).</li>
+        <li><b>Технологические ниши мирового уровня:</b> атомная энергетика, кибербезопасность.</li>
+        <li><b>Государственная поддержка:</b> межправительственные соглашения, государственные кредиты, экономическая дипломатия.</li>
+        <li><b>Переориентация после 2022&nbsp;г.:</b> рынки Азии, Ближнего Востока и Африки, расчёты в национальных валютах, замена западного оборудования и технологий.</li>
+        <li><b>Ограничения:</b> санкции, дорогой капитал, закрытый доступ к части технологий. Главная задача — превращать ресурсные преимущества в технологические.</li>
+      </ul>
+      <div class="sheet case">
+        <span class="label">Кейс · Росатом</span>
+        <span class="fig sm"><mark>$206,2&nbsp;млрд</mark></span>
+        <p class="row" style="border-top:0;padding-top:0">портфель зарубежных заказов на весь жизненный цикл (итоги 2025&nbsp;г.); 41 энергоблок в 11 странах на разных стадиях реализации.</p>
+        <p class="row"><b>Комплексное предложение:</b> строительство, ядерное топливо на весь срок службы, подготовка кадров, финансирование (госкредит Венгрии на «Пакш-2» — до €10&nbsp;млрд).</p>
+        <p class="row"><b>Модель BOO</b> на АЭС «Аккую» (Турция): Росатом строит станцию, владеет ею и эксплуатирует её.</p>
+        <p class="row">После 2022&nbsp;г. западное оборудование для зарубежных проектов заменено российским и китайским.</p>
+      </div>
+    </div>
+  </div>
+  <footer class="bot"><span class="num"></span><span class="src">Источники: <a class="ref" href="#r6">[6]</a>, <a class="ref" href="#r8">[8]</a>, <a class="ref" href="#r11">[11]</a>, <a class="ref" href="#r13">[13]</a></span></footer>
+  <details class="notes"><summary>Текст выступления</summary><p>Российские корпорации опираются прежде всего на ресурсную базу, государственную поддержку и технологические ниши. Лучший пример — Росатом: портфель зарубежных заказов 206 миллиардов долларов, 41 энергоблок в 11 странах. Его преимущество — комплексное предложение: строительство, топливо на весь срок службы, подготовка кадров и финансирование. После 2022 года западное оборудование заменили российским и китайским.</p></details>
+</section>
+
+<!-- 19. Выводы -->
+<section class="slide" id="s19" data-short="Выводы">
+  <header class="top"><span class="part">Выводы</span><span>Источники конкурентных преимуществ ТНК</span></header>
+  <div class="head"><h2 class="title">Выводы</h2></div>
+  <div class="content">
+    <ol class="concl">
+      <li>Конкурентные преимущества — условие существования ТНК: без них издержки иностранности делают зарубежную экспансию убыточной.</li>
+      <li>Парадигма OLI объединяет источники в три группы — собственность, размещение, интернализация. Сеть филиалов добавляет преимущества многонациональности.</li>
+      <li>Главный источник сместился от физического капитала к нематериальным активам: технологиям, брендам, данным, платформам. Это около 92% стоимости компаний S&amp;P&nbsp;500.</li>
+      <li>Преимущества концентрируются у немногих лидеров: пять компаний дают около 15% корпоративных НИОКР мира. Это путь к олигополии на мировых рынках.</li>
+      <li class="wide">Геополитика меняет преимущества размещения: страну выбирают по надёжности, а не только по издержкам. Для российских корпораций ключевыми остаются ресурсная база, господдержка и технологические ниши.</li>
+    </ol>
+  </div>
+  <footer class="bot"><span class="num"></span><span class="src">Спасибо за внимание</span></footer>
+  <details class="notes"><summary>Текст выступления</summary><p>Подведу итоги. Первое: без конкурентных преимуществ ТНК не может окупить издержки иностранности. Второе: источники удобно группировать по парадигме OLI, а сама сеть филиалов — отдельный источник. Третье: главным источником стали нематериальные активы. Четвёртое: преимущества концентрируются у немногих лидеров. Пятое: геополитика меняет выбор стран размещения. Спасибо за внимание, готов ответить на вопросы.</p></details>
+</section>
+
+<!-- 20. Источники: программа -->
+<section class="slide" id="s20" data-short="Источники: литература программы">
+  <header class="top"><span class="part">Список источников · 1 / 3</span><span>Источники конкурентных преимуществ ТНК</span></header>
+  <div class="head"><h2 class="title">Список источников</h2></div>
+  <div class="content">
+    <div class="refs">
+      <h3>Основная литература</h3>
+      <ol>
+        <li id="r1">Мировая экономика и МЭО: учебник / под общей редакцией проф., д.э.н. В.В. Перской, проф., д.э.н., академика РАО М.А. Эскиндарова. — Т. 1. — Текст: непосредственный.</li>
+        <li id="r2">Мировая экономика и МЭО: учебник / под общей редакцией проф., д.э.н. В.В. Перской, проф., д.э.н., академика РАО М.А. Эскиндарова. — Т. 2. — Текст: непосредственный.</li>
+        <li id="r3">Зубенко, В.В. Мировая экономика и международные экономические отношения: учебник для направления бакалавриата «Экономика» / В.В. Зубенко, В.А. Зубенко; Финуниверситет; под ред. В.В. Зубенко. — Москва: Кнорус, 2021. — 318 с. — (Бакалавриат). — Текст: непосредственный. — То же. — 2023. — ЭБС BOOK.ru. — URL: <a href="https://book.ru/book/945961" target="_blank" rel="noopener">https://book.ru/book/945961</a> (дата обращения: 30.09.2026). — Текст: электронный.</li>
+        <li id="r4">Мировая экономика и международные экономические отношения: учебник для студентов, обучающихся по направлению подготовки «Экономика» (квалификация (степень) «бакалавр») / М.А. Эскиндаров, Б.М. Смитиенко, Н.В. Лукьянович [и др.]; Финуниверситет; под ред. В.К. Поспелова. — Москва: Инфра-М, 2018, 2021. — 370 с. — (Высшее образование: Бакалавриат). — Текст: непосредственный. — То же. — 2024. — DOI 10.12737/835. — ЭБС ZNANIUM. — URL: <a href="https://znanium.com/catalog/product/2073483" target="_blank" rel="noopener">https://znanium.com/catalog/product/2073483</a> (дата обращения: 30.09.2026). — Текст: электронный.</li>
+      </ol>
+      <h3>Дополнительная литература</h3>
+      <ol start="5">
+        <li id="r5">Акторы и субъекты международных экономических отношений на современном этапе развития мирового сообщества. Часть 2. Трансформационные процессы в системе международных экономических отношений: современность и будущее: монография / под ред. В.В. Перской, Н.С. Ревенко, А.А. Ткаченко. — Москва: ИНФРА-М, 2024. — 239 с. — (Научная мысль). — DOI 10.12737/2086351. — ISBN 978-5-16-019095-2. — ЭБС ZNANIUM. — URL: <a href="https://znanium.ru/catalog/product/2086351" target="_blank" rel="noopener">https://znanium.ru/catalog/product/2086351</a> (дата обращения: 30.09.2026). — Текст: электронный.</li>
+        <li id="r6">Внешнеэкономическая политика России в условиях глобальных вызовов: монография / под ред. А.А. Ткаченко. — Москва: Вузовский учебник: ИНФРА-М, 2023. — 231 с. — (Научная книга). — ISBN 978-5-9558-0651-8. — ЭБС ZNANIUM. — URL: <a href="https://znanium.ru/catalog/product/2019751" target="_blank" rel="noopener">https://znanium.ru/catalog/product/2019751</a> (дата обращения: 30.09.2026). — Текст: электронный.</li>
+        <li id="r7">Международные валютно-кредитные и финансовые отношения: учебник для вузов / Л.Н. Красавина [и др.]; ответственный редактор Л.Н. Красавина. — 5-е изд., перераб. и доп. — Москва: Издательство Юрайт, 2024. — 534 с. — (Высшее образование). — ISBN 978-5-534-08791-8. — Образовательная платформа Юрайт [сайт]. — URL: <a href="https://urait.ru/bcode/556501" target="_blank" rel="noopener">https://urait.ru/bcode/556501</a> (дата обращения: 30.09.2026). — Текст: электронный.</li>
+        <li id="r8">Перская, В.В. Многополярность: институты и механизмы согласования национальных интересов: монография / В.В. Перская, М.А. Эскиндаров; Финуниверситет. — Москва: Кнорус, 2018. — 537 с. — Текст: непосредственный. — То же. — 2021. — ЭБС BOOK.ru. — URL: <a href="https://book.ru/book/936974" target="_blank" rel="noopener">https://book.ru/book/936974</a> (дата обращения: 30.09.2026). — Текст: электронный.</li>
+        <li id="r9">Современные международные отношения: учебник и практикум для вузов / В.К. Белозёров [и др.]; под редакцией В.К. Белозёрова, М.М. Васильевой, А.И. Позднякова. — 3-е изд., перераб. и доп. — Москва: Издательство Юрайт, 2024. — 379 с. — (Высшее образование). — ISBN 978-5-534-15880-9. — Образовательная платформа Юрайт [сайт]. — URL: <a href="https://urait.ru/bcode/535906" target="_blank" rel="noopener">https://urait.ru/bcode/535906</a> (дата обращения: 30.09.2026). — Текст: электронный.</li>
+        <li id="r10">Тесленко, И.Б. Экономика в условиях глобальных вызовов современности: монография / И.Б. Тесленко; под ред. И.Б. Тесленко. — Москва: Русайнс, 2020. — 206 с. — ISBN 978-5-4365-1271-6. — ЭБС BOOK.ru. — URL: <a href="https://book.ru/book/934761" target="_blank" rel="noopener">https://book.ru/book/934761</a> (дата обращения: 30.09.2026). — Текст: электронный.</li>
+      </ol>
+    </div>
+  </div>
+  <footer class="bot"><span class="num"></span><span class="src">Литература из рабочей программы дисциплины</span></footer>
+  <details class="notes"><summary>Текст выступления</summary><p>Список источников: основная и дополнительная литература из программы дисциплины.</p></details>
+</section>
+
+<!-- 21. Источники: научные работы -->
+<section class="slide" id="s21" data-short="Источники: научные работы">
+  <header class="top"><span class="part">Список источников · 2 / 3</span><span>Источники конкурентных преимуществ ТНК</span></header>
+  <div class="head"><h2 class="title">Список источников</h2></div>
+  <div class="content">
+    <div class="refs">
+      <h3>Научные работы, аналитические доклады и электронные ресурсы</h3>
+      <ol start="11">
+        <li id="r11">Волобуев, А. АЭС не сразу строятся / А. Волобуев, Е. Чабан. — Текст: электронный // Эксперт: [сайт]. — 2025. — 21 августа. — URL: <a href="https://expert.ru/promishlennost/aes-ne-srazu-stroyatsya" target="_blank" rel="noopener">https://expert.ru/promishlennost/aes-ne-srazu-stroyatsya</a> (дата обращения: 30.09.2026).</li>
+        <li id="r12">Портер, М. Международная конкуренция: конкурентные преимущества стран / М. Портер; пер. с англ.; под ред. и с предисл. В.Д. Щетинина. — Москва: Международные отношения, 1993. — 896 с. — Текст: непосредственный.</li>
+        <li id="r13">«Росатом» представил итоги своей деятельности за 2025 год. — Текст: электронный // Атом Медиа: [сайт]. — 2026. — 10 июля. — URL: <a href="https://atommedia.online/press-releases/rosatom-predstavil-itogi-svoey-deyatelnosti-za-2025-god/" target="_blank" rel="noopener">https://atommedia.online/press-releases/rosatom-predstavil-itogi-svoey-deyatelnosti-za-2025-god/</a> (дата обращения: 30.09.2026).</li>
+        <li id="r14">Barney, J. Firm Resources and Sustained Competitive Advantage / J. Barney. — Text: electronic // Journal of Management. — 1991. — Vol. 17, No. 1. — P. 99–120. — DOI 10.1177/014920639101700108. — URL: <a href="https://doi.org/10.1177/014920639101700108" target="_blank" rel="noopener">https://doi.org/10.1177/014920639101700108</a> (access date: 30.09.2026).</li>
+        <li id="r15">Buckley, P.J. The Future of the Multinational Enterprise / P.J. Buckley, M. Casson. — London: Macmillan, 1976. — Text: unmediated.</li>
+        <li id="r16">Dunning, J.H. The Eclectic Paradigm of International Production: A Restatement and Some Possible Extensions / J.H. Dunning. — Text: electronic // Journal of International Business Studies. — 1988. — Vol. 19, No. 1. — P. 1–31. — DOI 10.1057/palgrave.jibs.8490372. — URL: <a href="https://doi.org/10.1057/palgrave.jibs.8490372" target="_blank" rel="noopener">https://doi.org/10.1057/palgrave.jibs.8490372</a> (access date: 30.09.2026).</li>
+        <li id="r17">Fortune Announces 2026 Fortune Global 500 List. — Text: electronic // Fortune Media: [site]. — 2026. — July 28. — URL: <a href="https://fortunemedia.mediaroom.com/2026-07-28-Fortune-Announces-2026-Fortune-Global-500-List" target="_blank" rel="noopener">https://fortunemedia.mediaroom.com/2026-07-28-Fortune-Announces-2026-Fortune-Global-500-List</a> (access date: 30.09.2026).</li>
+        <li id="r18">Ghemawat, P. Managing Differences: The Central Challenge of Global Strategy / P. Ghemawat. — Text: electronic // Harvard Business Review. — 2007. — Vol. 85, No. 3. — P. 58–68. — URL: <a href="https://hbr.org/2007/03/managing-differences-the-central-challenge-of-global-strategy" target="_blank" rel="noopener">https://hbr.org/2007/03/managing-differences-the-central-challenge-of-global-strategy</a> (access date: 30.09.2026).</li>
+        <li id="r19">Hymer, S.H. The International Operations of National Firms: A Study of Direct Foreign Investment / S.H. Hymer. — Cambridge (MA): MIT Press, 1976. — Text: unmediated.</li>
+        <li id="r20">Interbrand. Best Global Brands 2025. — Text: electronic // Interbrand: [site]. — 2025. — URL: <a href="https://interbrand.com/best-global-brands/" target="_blank" rel="noopener">https://interbrand.com/best-global-brands/</a> (access date: 30.09.2026).</li>
+        <li id="r21">Kogut, B. Designing Global Strategies: Profiting from Operational Flexibility / B. Kogut // Sloan Management Review. — 1985. — Vol. 27, No. 1. — P. 27–38. — Text: unmediated.</li>
+      </ol>
+    </div>
+  </div>
+  <footer class="bot"><span class="num"></span><span class="src">Оформление по ГОСТ Р 7.0.100–2018, как в рабочей программе</span></footer>
+  <details class="notes"><summary>Текст выступления</summary><p>Научные работы и аналитические материалы, на которые я опирался.</p></details>
+</section>
+
+<!-- 22. Источники: статистика -->
+<section class="slide" id="s22" data-short="Источники: доклады и статистика">
+  <header class="top"><span class="part">Список источников · 3 / 3</span><span>Источники конкурентных преимуществ ТНК</span></header>
+  <div class="head"><h2 class="title">Список источников</h2></div>
+  <div class="content">
+    <div class="refs">
+      <h3>Научные работы, аналитические доклады и электронные ресурсы (окончание)</h3>
+      <ol start="22">
+        <li id="r22">Kraemer, K.L. Capturing Value in Global Networks: Apple’s iPad and iPhone / K.L. Kraemer, G. Linden, J. Dedrick. — Irvine: University of California, Irvine, 2011. — URL: <a href="http://pcic.merage.uci.edu/papers/2011/value_ipad_iphone.pdf" target="_blank" rel="noopener">http://pcic.merage.uci.edu/papers/2011/value_ipad_iphone.pdf</a> (access date: 30.09.2026). — Text: electronic.</li>
+        <li id="r23">Mathews, J.A. Dragon Multinationals: New Players in 21st Century Globalization / J.A. Mathews. — Text: electronic // Asia Pacific Journal of Management. — 2006. — Vol. 23, No. 1. — P. 5–27. — DOI 10.1007/s10490-006-6113-0. — URL: <a href="https://doi.org/10.1007/s10490-006-6113-0" target="_blank" rel="noopener">https://doi.org/10.1007/s10490-006-6113-0</a> (access date: 30.09.2026).</li>
+        <li id="r24">Ocean Tomo. Intangible Asset Market Value Study 2025. — Text: electronic // Ocean Tomo: [site]. — 2026. — URL: <a href="https://oceantomo.com/intangible-asset-market-value-study/" target="_blank" rel="noopener">https://oceantomo.com/intangible-asset-market-value-study/</a> (access date: 30.09.2026).</li>
+        <li id="r25">OECD. Global Anti-Base Erosion Model Rules (Pillar Two). — Text: electronic // OECD: [site]. — URL: <a href="https://www.oecd.org/en/topics/sub-issues/global-minimum-tax/global-anti-base-erosion-model-rules-pillar-two.html" target="_blank" rel="noopener">https://www.oecd.org/en/topics/sub-issues/global-minimum-tax/global-anti-base-erosion-model-rules-pillar-two.html</a> (access date: 30.09.2026).</li>
+        <li id="r26">The 2025 EU Industrial R&amp;D Investment Scoreboard / European Commission, Joint Research Centre. — Luxembourg: Publications Office of the European Union, 2025. — URL: <a href="https://publications.jrc.ec.europa.eu/repository/bitstream/JRC144638/JRC144638_01.pdf" target="_blank" rel="noopener">https://publications.jrc.ec.europa.eu/repository/bitstream/JRC144638/JRC144638_01.pdf</a> (access date: 30.09.2026). — Text: electronic.</li>
+        <li id="r27">UNCTAD. World Investment Report 2013. Global Value Chains: Investment and Trade for Development. — New York; Geneva: United Nations, 2013. — URL: <a href="https://unctad.org/publication/world-investment-report-2013" target="_blank" rel="noopener">https://unctad.org/publication/world-investment-report-2013</a> (access date: 30.09.2026). — Text: electronic.</li>
+        <li id="r28">UNCTAD. World Investment Report 2025. International Investment in the Digital Economy. — Geneva: United Nations, 2025. — URL: <a href="https://unctad.org/publication/world-investment-report-2025" target="_blank" rel="noopener">https://unctad.org/publication/world-investment-report-2025</a> (access date: 30.09.2026). — Text: electronic.</li>
+        <li id="r29">UNCTAD. World Investment Report 2026. International Investment in a Turbulent Era. — Geneva: United Nations, 2026. — URL: <a href="https://investmentpolicy.unctad.org/publications/1324/world-investment-report-2026-international-investment-in-a-turbulent-era" target="_blank" rel="noopener">https://investmentpolicy.unctad.org/publications/1324/world-investment-report-2026-international-investment-in-a-turbulent-era</a> (access date: 30.09.2026). — Text: electronic.</li>
+        <li id="r30">Vernon, R. International Investment and International Trade in the Product Cycle / R. Vernon. — Text: electronic // The Quarterly Journal of Economics. — 1966. — Vol. 80, No. 2. — P. 190–207. — DOI 10.2307/1880689. — URL: <a href="https://doi.org/10.2307/1880689" target="_blank" rel="noopener">https://doi.org/10.2307/1880689</a> (access date: 30.09.2026).</li>
+        <li id="r31">WIPO. Patent Cooperation Treaty Yearly Review 2026: The International Patent System. — Geneva: WIPO, 2026. — URL: <a href="https://www.wipo.int/edocs/pubdocs/en/wipo-pub-901-2026-en-patent-cooperation-treaty-yearly-review-2026.pdf" target="_blank" rel="noopener">https://www.wipo.int/edocs/pubdocs/en/wipo-pub-901-2026-en-patent-cooperation-treaty-yearly-review-2026.pdf</a> (access date: 30.09.2026). — Text: electronic.</li>
+      </ol>
+    </div>
+  </div>
+  <footer class="bot"><span class="num"></span><span class="src">Аверьянов Н.Р. · МЭиМБ24-1 · 2026</span></footer>
+  <details class="notes"><summary>Текст выступления</summary><p>Статистические доклады и отчёты, из которых взяты цифры.</p></details>
+</section>
+
+</div>
+</main>
+
+<nav class="ctrl" aria-label="Управление презентацией">
+  <button type="button" id="prevBtn" aria-label="Предыдущий слайд"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
+  <span class="count" id="count" aria-live="polite">01 / 22</span>
+  <button type="button" id="nextBtn" aria-label="Следующий слайд"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button>
+  <button type="button" id="ovBtn" aria-label="Все слайды (O)"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="6.5" height="6.5" rx="1"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1"/></svg></button>
+  <button type="button" id="notesBtn" class="only-present" aria-label="Текст выступления (N)" aria-pressed="false"><svg viewBox="0 0 24 24"><path d="M5 5h14v10H10l-5 4z"/><path d="M8.5 9h7M8.5 12h4.5"/></svg></button>
+  <button type="button" id="fsBtn" class="only-present" aria-label="Во весь экран (F)"><svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
+</nav>
+
+<div class="notes-panel" id="notesPanel" hidden><span class="label" id="notesTitle">Текст выступления</span><p id="notesText"></p></div>
+
+<div class="overview" id="overview" hidden role="dialog" aria-modal="true" aria-label="Все слайды">
+  <div class="ov-head"><h2>Все слайды</h2><button type="button" class="ov-close" id="ovClose">Закрыть</button></div>
+  <ol id="ovList"></ol>
+</div>
+
+<div class="tip" id="tip" hidden></div>
+
+<script>
+(function () {
+  "use strict";
+  var NS = "http://www.w3.org/2000/svg";
+  var root = document.documentElement;
+  var MQ = "(min-width: 900px) and (min-height: 500px) and (min-aspect-ratio: 5/4)";
+  var mq = window.matchMedia ? window.matchMedia(MQ) : null;
+  var reduced = !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+  var stage = document.getElementById("stage");
+  var slides = Array.prototype.slice.call(document.querySelectorAll(".slide"));
+  var total = slides.length;
+  var cur = 0;
+  var k = 1;
+
+  function pad(n) { return n < 10 ? "0" + n : String(n); }
+  function css(name) { return getComputedStyle(root).getPropertyValue(name).trim(); }
+  function present() { return root.classList.contains("present"); }
+  function fmt(v) { return String(v).replace(".", ","); }
+  function svgEl(tag, attrs, parent) {
+    var e = document.createElementNS(NS, tag);
+    for (var a in attrs) e.setAttribute(a, attrs[a]);
+    if (parent) parent.appendChild(e);
+    return e;
+  }
+
+  slides.forEach(function (s, i) {
+    var n = s.querySelector(".bot .num");
+    if (n) n.textContent = pad(i + 1) + " / " + pad(total);
+  });
+
+  /* ---------- горизонтальные столбики ---------- */
+  function bars(id, data, max) {
+    var ol = document.getElementById(id);
+    if (!ol) return;
+    data.forEach(function (d) {
+      var li = document.createElement("li");
+      li.tabIndex = 0;
+      li.setAttribute("data-tip", d.n + " (" + d.c + "): " + fmt(d.v.toFixed(1)) + (d.u || "") + (d.t ? ". " + d.t : ""));
+      li.style.setProperty("--v", (d.v / max).toFixed(4));
+      li.innerHTML = '<span class="lab"></span><span class="track"><span class="bar"></span><span class="val"></span></span>';
+      var lab = li.querySelector(".lab");
+      lab.textContent = d.n;
+      var sm = document.createElement("small"); sm.textContent = d.c; lab.appendChild(sm);
+      li.querySelector(".val").textContent = fmt(d.v.toFixed(1)) + (d.star ? "*" : "");
+      ol.appendChild(li);
+    });
+  }
+  bars("rdBars", [
+    { n: "Amazon", c: "США", v: 65.3, u: " млрд €", star: 1, t: "Оценка JRC. Прирост к 2023 г.: +10%" },
+    { n: "Alphabet", c: "США", v: 46.1, u: " млрд €", t: "Прирост к 2023 г.: +10%" },
+    { n: "Meta", c: "США", v: 42.0, u: " млрд €", t: "Прирост к 2023 г.: +20%, наибольший в абсолютном выражении" },
+    { n: "Microsoft", c: "США", v: 31.3, u: " млрд €", t: "Прирост к 2023 г.: +10%" },
+    { n: "Apple", c: "США", v: 30.2, u: " млрд €", star: 1, t: "Расчёт: итог пятёрки лидеров минус четыре компании" },
+    { n: "Huawei", c: "Китай", v: 22.9, u: " млрд €", t: "Крупнейший инвестор в НИОКР вне США. Прирост: +11%" },
+    { n: "Samsung Electronics", c: "Респ. Корея", v: 22.8, u: " млрд €", t: "Прирост к 2023 г.: +23%" },
+    { n: "Volkswagen", c: "Германия", v: 20.9, u: " млрд €", t: "Крупнейший инвестор в НИОКР из ЕС" }
+  ], 70);
+  bars("brandBars", [
+    { n: "Apple", c: "США", v: 470.9, u: " млрд $", t: "−4% к 2024 г." },
+    { n: "Microsoft", c: "США", v: 388.5, u: " млрд $", t: "+10% к 2024 г." },
+    { n: "Amazon", c: "США", v: 319.9, u: " млрд $", t: "+7% к 2024 г." },
+    { n: "Google", c: "США", v: 317.1, u: " млрд $", t: "+9% к 2024 г." },
+    { n: "Samsung", c: "Респ. Корея", v: 90.5, u: " млрд $", t: "−10% к 2024 г." },
+    { n: "Toyota", c: "Япония", v: 74.2, u: " млрд $" },
+    { n: "Coca-Cola", c: "США", v: 60.1, u: " млрд $" },
+    { n: "Instagram", c: "США", v: 57.3, u: " млрд $", t: "Первая соцсеть в десятке рейтинга" }
+  ], 500);
+
+  /* ---------- нематериальные активы: 100%-столбики ---------- */
+  (function () {
+    var plot = document.getElementById("itPlot"), xs = document.getElementById("itX");
+    if (!plot) return;
+    [[1975, 17], [1985, 32], [2005, 79], [2020, 90], [2025, 92]].forEach(function (p) {
+      var col = document.createElement("div");
+      col.className = "cc-col";
+      col.tabIndex = 0;
+      col.style.setProperty("--v", p[1]);
+      col.setAttribute("data-tip", p[0] + ": нематериальные активы — " + p[1] + "%, материальные — " + (100 - p[1]) + "%");
+      col.innerHTML = '<span class="tan"></span><span class="int">' + p[1] + '%</span>';
+      plot.appendChild(col);
+      var y = document.createElement("span"); y.textContent = p[0]; xs.appendChild(y);
+    });
+  })();
+
+  /* ---------- кривая улыбки ---------- */
+  function drawSmile(box) {
+    var W = box.clientWidth; if (!W) return;
+    var pr = present();
+    var narrow = W < 560;
+    var H = pr ? 420 : Math.round(Math.max(250, Math.min(340, W * 0.72)));
+    var m = { t: 34, r: 14, b: narrow ? 60 : 44, l: 34 };
+    var iw = W - m.l - m.r, ih = H - m.t - m.b;
+    var st = [
+      ["НИОКР", "Исследования и разработки: патенты и ноу-хау остаются в головной компании"],
+      ["Дизайн", "Дизайн и проектирование продукта"],
+      ["Компоненты", "Комплектующие: частично у ТНК (чипы), частично у поставщиков"],
+      ["Сборка", "Сборка: минимальная добавленная стоимость, её выполняют контрактные производители"],
+      ["Логистика", "Логистика и дистрибуция"],
+      ["Маркетинг", "Маркетинг и бренд: ключевой нематериальный актив"],
+      ["Сервис", "Послепродажное обслуживание, сервисы и подписки"]
+    ];
+    var val = [0.9, 0.74, 0.4, 0.1, 0.38, 0.76, 0.9];
+    var n = st.length, step = iw / n;
+    var x = function (i) { return m.l + step * (i + 0.5); };
+    var y = function (v) { return m.t + (1 - v) * ih; };
+    var svg = svgEl("svg", { width: W, height: H, viewBox: "0 0 " + W + " " + H, "aria-hidden": "true" });
+    // зоны
+    svgEl("rect", { x: m.l, y: m.t - 24, width: step * 2, height: ih + 24, fill: "var(--cobalt-tint)", rx: 4 }, svg);
+    svgEl("rect", { x: m.l + step * 5, y: m.t - 24, width: step * 2, height: ih + 24, fill: "var(--cobalt-tint)", rx: 4 }, svg);
+    var zl = svgEl("text", { x: m.l + step, y: m.t - 8, "text-anchor": "middle", "class": "zone own" }, svg); zl.textContent = narrow ? "ТНК" : "Контроль ТНК";
+    var zr = svgEl("text", { x: m.l + step * 6, y: m.t - 8, "text-anchor": "middle", "class": "zone own" }, svg); zr.textContent = narrow ? "ТНК" : "Контроль ТНК";
+    var zm = svgEl("text", { x: m.l + step * 3.5, y: m.t - 8, "text-anchor": "middle", "class": "zone" }, svg); zm.textContent = narrow ? "Подрядчики" : "Контрактные производители";
+    // ось
+    svgEl("line", { x1: m.l, x2: m.l + iw, y1: m.t + ih, y2: m.t + ih, stroke: "var(--rule)", "stroke-width": 1 }, svg);
+    svgEl("line", { x1: m.l - 14, x2: m.l - 14, y1: m.t + ih, y2: m.t + 6, stroke: "var(--ink-3)", "stroke-width": 1.2 }, svg);
+    svgEl("path", { d: "M" + (m.l - 18) + "," + (m.t + 12) + " L" + (m.l - 14) + "," + (m.t + 4) + " L" + (m.l - 10) + "," + (m.t + 12), fill: "none", stroke: "var(--ink-3)", "stroke-width": 1.2 }, svg);
+    var yl = svgEl("text", { x: 0, y: 0, "text-anchor": "middle", transform: "translate(" + (m.l - 22) + "," + (m.t + ih / 2) + ") rotate(-90)" }, svg);
+    yl.textContent = "Добавленная стоимость";
+    // кривая (Catmull-Rom → Безье)
+    var P = val.map(function (v, i) { return [x(i), y(v)]; });
+    var d = "M" + P[0][0].toFixed(1) + "," + P[0][1].toFixed(1);
+    for (var i = 0; i < P.length - 1; i++) {
+      var p0 = P[i - 1] || P[i], p1 = P[i], p2 = P[i + 1], p3 = P[i + 2] || p2;
+      var c1x = p1[0] + (p2[0] - p0[0]) / 6, c1y = p1[1] + (p2[1] - p0[1]) / 6;
+      var c2x = p2[0] - (p3[0] - p1[0]) / 6, c2y = p2[1] - (p3[1] - p1[1]) / 6;
+      d += " C" + c1x.toFixed(1) + "," + c1y.toFixed(1) + " " + c2x.toFixed(1) + "," + c2y.toFixed(1) + " " + p2[0].toFixed(1) + "," + p2[1].toFixed(1);
+    }
+    svgEl("path", { d: d + " L" + P[n - 1][0].toFixed(1) + "," + (m.t + ih) + " L" + P[0][0].toFixed(1) + "," + (m.t + ih) + " Z", fill: "var(--cobalt)", "fill-opacity": 0.08, stroke: "none" }, svg);
+    svgEl("path", { d: d, fill: "none", stroke: "var(--cobalt)", "stroke-width": 2.5, "stroke-linecap": "round" }, svg);
+    P.forEach(function (p, i) {
+      svgEl("circle", { cx: p[0], cy: p[1], r: pr ? 7 : 6, fill: i === 3 ? "var(--marker)" : "var(--cobalt)", stroke: "var(--paper)", "stroke-width": 2 }, svg);
+      var lx = x(i), ly = m.t + ih + (narrow ? (i % 2 ? 42 : 22) : 26);
+      var t = svgEl("text", { x: lx, y: ly, "text-anchor": "middle" }, svg);
+      t.textContent = st[i][0];
+      svgEl("rect", { x: m.l + step * i, y: m.t - 24, width: step, height: H - m.t + 24, fill: "transparent", "data-tip": st[i][1] }, svg);
+    });
+    box.replaceChildren(svg);
+  }
+
+  /* ---------- сеть ТНК на титуле ---------- */
+  var net = (function () {
+    var seed = 20260930;
+    function rnd() { seed |= 0; seed = seed + 0x6D2B79F5 | 0; var t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }
+    function clamp(v) { return Math.max(0.05, Math.min(0.95, v)); }
+    var hq = { x: 0.47, y: 0.5, t: 0 };
+    var nodes = [hq], links = [], regs = [];
+    [-2.35, -0.55, 1.05, 2.55].forEach(function (a) {
+      var r = 0.25 + rnd() * 0.05;
+      var n = { x: clamp(hq.x + Math.cos(a) * r), y: clamp(hq.y + Math.sin(a) * r), t: 1 };
+      regs.push(n); nodes.push(n); links.push({ a: hq, b: n, w: 1.6, o: 0.5 });
+    });
+    var affs = [];
+    regs.forEach(function (rg) {
+      var base = Math.atan2(rg.y - hq.y, rg.x - hq.x);
+      var cnt = 6 + Math.floor(rnd() * 3);
+      for (var j = 0; j < cnt; j++) {
+        var a = base + (rnd() - 0.5) * 2.1, dd = 0.09 + rnd() * 0.14;
+        var n = { x: clamp(rg.x + Math.cos(a) * dd), y: clamp(rg.y + Math.sin(a) * dd), t: 2 };
+        nodes.push(n); affs.push(n); links.push({ a: rg, b: n, w: 1, o: 0.34 });
+      }
+    });
+    for (var q = 0; q < 5; q++) links.push({ a: hq, b: affs[Math.floor(rnd() * affs.length)], w: 0.8, o: 0.2 });
+    for (var r2 = 0; r2 < 7; r2++) {
+      var A = affs[Math.floor(rnd() * affs.length)], B = affs[Math.floor(rnd() * affs.length)];
+      if (A !== B) links.push({ a: A, b: B, w: 0.8, o: 0.14 });
+    }
+    links.forEach(function (l) {
+      var dx = l.b.x - l.a.x, dy = l.b.y - l.a.y;
+      var bend = (rnd() - 0.5) * 0.35;
+      l.cx = (l.a.x + l.b.x) / 2 - dy * bend;
+      l.cy = (l.a.y + l.b.y) / 2 + dx * bend;
+    });
+    var parts = [];
+    for (var p = 0; p < 30; p++) parts.push({ l: links[Math.floor(rnd() * links.length)], t: rnd(), s: 0.0025 + rnd() * 0.004, back: rnd() < 0.4 });
+    var cv = null, ctx = null, W = 0, H = 0, raf = 0, running = false;
+    function size() {
+      cv = document.getElementById("net"); if (!cv) return;
+      W = cv.clientWidth; H = cv.clientHeight; if (!W || !H) return;
+      var sc = (present() ? k : 1) * (window.devicePixelRatio || 1);
+      cv.width = Math.round(W * sc); cv.height = Math.round(H * sc);
+      ctx = cv.getContext("2d"); ctx.setTransform(sc, 0, 0, sc, 0, 0);
+    }
+    function pt(l, t) {
+      var u = 1 - t;
+      return [(u * u * l.a.x + 2 * u * t * l.cx + t * t * l.b.x) * W, (u * u * l.a.y + 2 * u * t * l.cy + t * t * l.b.y) * H];
+    }
+    function draw() {
+      if (!ctx) return;
+      var C = { ink: css("--ink"), cobalt: css("--cobalt"), paper: css("--paper"), marker: css("--marker") };
+      ctx.clearRect(0, 0, W, H);
+      ctx.lineCap = "round";
+      links.forEach(function (l) {
+        ctx.globalAlpha = l.o; ctx.strokeStyle = C.cobalt; ctx.lineWidth = l.w;
+        ctx.beginPath(); ctx.moveTo(l.a.x * W, l.a.y * H); ctx.quadraticCurveTo(l.cx * W, l.cy * H, l.b.x * W, l.b.y * H); ctx.stroke();
+      });
+      ctx.globalAlpha = 1;
+      parts.forEach(function (p) {
+        var q = pt(p.l, p.back ? 1 - p.t : p.t);
+        ctx.fillStyle = p.back ? C.marker : C.cobalt;
+        ctx.beginPath(); ctx.arc(q[0], q[1], 2.3, 0, Math.PI * 2); ctx.fill();
+      });
+      nodes.forEach(function (n) {
+        var x = n.x * W, y = n.y * H;
+        ctx.beginPath();
+        if (n.t === 0) { ctx.arc(x, y, 11, 0, Math.PI * 2); ctx.fillStyle = C.marker; ctx.fill(); ctx.lineWidth = 2.5; ctx.strokeStyle = C.ink; ctx.stroke(); }
+        else if (n.t === 1) { ctx.arc(x, y, 6.5, 0, Math.PI * 2); ctx.fillStyle = C.cobalt; ctx.fill(); ctx.lineWidth = 2; ctx.strokeStyle = C.paper; ctx.stroke(); }
+        else { ctx.arc(x, y, 3.8, 0, Math.PI * 2); ctx.fillStyle = C.paper; ctx.fill(); ctx.lineWidth = 1.5; ctx.strokeStyle = C.cobalt; ctx.stroke(); }
+      });
+    }
+    function tick() {
+      parts.forEach(function (p) {
+        p.t += p.s;
+        if (p.t > 1) { p.t = 0; p.l = links[Math.floor(Math.random() * links.length)]; p.back = Math.random() < 0.4; }
+      });
+      draw();
+      raf = running ? requestAnimationFrame(tick) : 0;
+    }
+    return {
+      resize: function () { size(); draw(); },
+      play: function (on) {
+        on = on && !reduced && !document.hidden;
+        if (on && !running) { running = true; raf = requestAnimationFrame(tick); }
+        else if (!on && running) { running = false; if (raf) cancelAnimationFrame(raf); raf = 0; draw(); }
+      },
+      redraw: draw
+    };
+  })();
+
+  function drawAll() {
+    var s = document.getElementById("smile"); if (s) drawSmile(s);
+    net.resize();
+  }
+
+  /* ---------- режимы ---------- */
+  var bar = document.getElementById("bar");
+  var prevBtn = document.getElementById("prevBtn");
+  var nextBtn = document.getElementById("nextBtn");
+  var count = document.getElementById("count");
+  var notesPanel = document.getElementById("notesPanel");
+  var notesBtn = document.getElementById("notesBtn");
+  var notesText = document.getElementById("notesText");
+  var notesTitle = document.getElementById("notesTitle");
+  var titleObserverOn = true;
+
+  function fit() {
+    k = Math.min(window.innerWidth / 1600, window.innerHeight / 900);
+    stage.style.setProperty("--k", k.toFixed(4));
+  }
+  function setInert() {
+    var pr = present();
+    slides.forEach(function (s, i) {
+      if (pr && i !== cur) s.setAttribute("inert", ""); else s.removeAttribute("inert");
+    });
+  }
+  function updateChrome() {
+    count.textContent = pad(cur + 1) + " / " + pad(total);
+    prevBtn.disabled = cur === 0;
+    nextBtn.disabled = cur === total - 1;
+    bar.style.transform = "scaleX(" + ((cur + 1) / total) + ")";
+    markOverview();
+    var np = slides[cur].querySelector(".notes p");
+    notesText.textContent = np ? np.textContent : "";
+    notesTitle.textContent = "Текст выступления · слайд " + (cur + 1);
+  }
+  function show(i, silent) {
+    cur = Math.max(0, Math.min(total - 1, i));
+    slides.forEach(function (s, j) { s.classList.toggle("on", j === cur); });
+    setInert();
+    updateChrome();
+    net.play(cur === 0);
+    if (!silent) { try { history.replaceState(null, "", "#" + slides[cur].id); } catch (e) {} }
+  }
+  function go(i, target) {
+    i = Math.max(0, Math.min(total - 1, i));
+    if (present()) {
+      show(i);
+    } else {
+      cur = i;
+      updateChrome();
+      (target || slides[i]).scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: target ? "center" : "start" });
+    }
+  }
+  function applyMode() {
+    var pr = !!(mq && mq.matches);
+    root.classList.toggle("present", pr);
+    if (pr) { fit(); show(cur, true); if (!notesPanel.dataset.on) notesPanel.hidden = true; }
+    else { slides.forEach(function (s) { s.classList.remove("on"); }); setInert(); notesPanel.hidden = true; updateChrome(); }
+    notesPanel.hidden = !(pr && notesPanel.dataset.on === "1");
+    drawAll();
+    net.play(pr ? cur === 0 : titleObserverOn);
+  }
+
+  /* ---------- обзор ---------- */
+  var ov = document.getElementById("overview");
+  var ovList = document.getElementById("ovList");
+  var ovBtn = document.getElementById("ovBtn");
+  slides.forEach(function (s, i) {
+    var li = document.createElement("li");
+    var b = document.createElement("button");
+    b.type = "button"; b.className = "card";
+    var n = document.createElement("span"); n.className = "n"; n.textContent = pad(i + 1);
+    var t = document.createElement("span"); t.className = "t"; t.textContent = s.getAttribute("data-short") || "";
+    b.appendChild(n); b.appendChild(t);
+    b.addEventListener("click", function () { closeOverview(); go(i); });
+    li.appendChild(b); ovList.appendChild(li);
+  });
+  var cards = ovList.querySelectorAll("button.card");
+  function markOverview() { for (var i = 0; i < cards.length; i++) cards[i].setAttribute("aria-current", i === cur ? "true" : "false"); }
+  function openOverview() {
+    if (!present()) detectFlow();
+    markOverview();
+    ov.hidden = false;
+    var c = cards[cur]; if (c) c.focus();
+  }
+  function closeOverview() { ov.hidden = true; ovBtn.focus(); }
+  ovBtn.addEventListener("click", function () { ov.hidden ? openOverview() : closeOverview(); });
+  document.getElementById("ovClose").addEventListener("click", closeOverview);
+
+  function detectFlow() {
+    var mark = window.innerHeight * 0.35, idx = 0;
+    for (var i = 0; i < total; i++) { if (slides[i].getBoundingClientRect().top <= mark) idx = i; else break; }
+    if (idx !== cur) { cur = idx; updateChrome(); }
+  }
+  var scrollRaf = 0;
+  window.addEventListener("scroll", function () {
+    if (present() || scrollRaf) return;
+    scrollRaf = requestAnimationFrame(function () { scrollRaf = 0; detectFlow(); });
+  }, { passive: true });
+
+  /* ---------- заметки и полный экран ---------- */
+  function toggleNotes() {
+    if (!present()) return;
+    var on = notesPanel.hidden;
+    notesPanel.hidden = !on;
+    notesPanel.dataset.on = on ? "1" : "";
+    notesBtn.setAttribute("aria-pressed", on ? "true" : "false");
+  }
+  notesBtn.addEventListener("click", toggleNotes);
+  function toggleFs() {
+    try {
+      if (document.fullscreenElement) { document.exitFullscreen().catch(function () {}); }
+      else if (root.requestFullscreen) { root.requestFullscreen().catch(function () {}); }
+    } catch (e) {}
+  }
+  document.getElementById("fsBtn").addEventListener("click", toggleFs);
+
+  prevBtn.addEventListener("click", function () { if (!present()) detectFlow(); go(cur - 1); });
+  nextBtn.addEventListener("click", function () { if (!present()) detectFlow(); go(cur + 1); });
+
+  /* ---------- внутренние ссылки (план, источники) ---------- */
+  document.addEventListener("click", function (e) {
+    var a = e.target.closest && e.target.closest('a[href^="#"]');
+    if (!a) return;
+    var id = a.getAttribute("href").slice(1);
+    var target = id && document.getElementById(id);
+    if (!target) return;
+    var sl = target.closest(".slide");
+    if (!sl) return;
+    e.preventDefault();
+    var idx = slides.indexOf(sl);
+    var inner = target !== sl ? target : null;
+    go(idx, inner);
+    if (inner) {
+      inner.classList.add("hit");
+      setTimeout(function () { inner.classList.remove("hit"); }, 2600);
+    }
+  });
+
+  /* ---------- клавиатура и свайпы ---------- */
+  document.addEventListener("keydown", function (e) {
+    if (e.altKey || e.ctrlKey || e.metaKey) return;
+    var tag = (e.target && e.target.tagName) || "";
+    if (/INPUT|TEXTAREA|SELECT/.test(tag)) return;
+    var key = e.key;
+    if (!ov.hidden) {
+      if (key === "Escape" || key === "o" || key === "O" || key === "щ" || key === "Щ") { e.preventDefault(); closeOverview(); }
+      return;
+    }
+    if (key === "o" || key === "O" || key === "щ" || key === "Щ") { e.preventDefault(); openOverview(); return; }
+    if (!present()) return;
+    if (key === "ArrowRight" || key === "PageDown" || (key === " " && !e.shiftKey)) { e.preventDefault(); go(cur + 1); }
+    else if (key === "ArrowLeft" || key === "PageUp" || (key === " " && e.shiftKey)) { e.preventDefault(); go(cur - 1); }
+    else if (key === "Home") { e.preventDefault(); go(0); }
+    else if (key === "End") { e.preventDefault(); go(total - 1); }
+    else if (key === "n" || key === "N" || key === "т" || key === "Т") { e.preventDefault(); toggleNotes(); }
+    else if (key === "f" || key === "F" || key === "а" || key === "А") { e.preventDefault(); toggleFs(); }
+    else if (key === "Escape" && !notesPanel.hidden) { toggleNotes(); }
+  });
+  var tx = null, ty = null;
+  document.addEventListener("touchstart", function (e) {
+    if (!present() || e.touches.length !== 1) return;
+    tx = e.touches[0].clientX; ty = e.touches[0].clientY;
+  }, { passive: true });
+  document.addEventListener("touchend", function (e) {
+    if (!present() || tx === null) return;
+    var dx = e.changedTouches[0].clientX - tx, dy = e.changedTouches[0].clientY - ty;
+    tx = ty = null;
+    if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.4) go(cur + (dx < 0 ? 1 : -1));
+  }, { passive: true });
+
+  /* ---------- подсказки ---------- */
+  var tip = document.getElementById("tip");
+  function placeTip(x, y) {
+    var r = tip.getBoundingClientRect();
+    var left = Math.min(window.innerWidth - r.width - 10, Math.max(10, x + 14));
+    var top = y - r.height - 14; if (top < 10) top = y + 18;
+    tip.style.left = left + "px"; tip.style.top = top + "px";
+  }
+  document.addEventListener("pointermove", function (e) {
+    var t = e.target.closest && e.target.closest("[data-tip]");
+    if (!t) { tip.hidden = true; return; }
+    tip.textContent = t.getAttribute("data-tip");
+    tip.hidden = false;
+    placeTip(e.clientX, e.clientY);
+  });
+  document.addEventListener("focusin", function (e) {
+    var t = e.target.closest && e.target.closest("[data-tip]");
+    if (!t) { tip.hidden = true; return; }
+    tip.textContent = t.getAttribute("data-tip");
+    tip.hidden = false;
+    var r = t.getBoundingClientRect();
+    placeTip(r.left + Math.min(r.width, 240) / 2, r.top);
+  });
+  document.addEventListener("focusout", function () { tip.hidden = true; });
+
+  /* ---------- запуск ---------- */
+  var h = (location.hash || "").slice(1);
+  if (h) {
+    var hi = slides.findIndex(function (s) { return s.id === h; });
+    if (hi >= 0) cur = hi;
+  }
+  if (mq) {
+    if (mq.addEventListener) mq.addEventListener("change", applyMode);
+    else if (mq.addListener) mq.addListener(applyMode);
+  }
+  var rsz = 0;
+  window.addEventListener("resize", function () {
+    if (rsz) cancelAnimationFrame(rsz);
+    rsz = requestAnimationFrame(function () { if (present()) fit(); drawAll(); });
+  });
+  if ("IntersectionObserver" in window) {
+    new IntersectionObserver(function (en) {
+      titleObserverOn = en[0].isIntersecting;
+      if (!present()) net.play(titleObserverOn);
+    }).observe(slides[0]);
+  }
+  document.addEventListener("visibilitychange", function () { net.play(present() ? cur === 0 : titleObserverOn); });
+  try {
+    new MutationObserver(function () { net.redraw(); }).observe(root, { attributes: true, attributeFilter: ["data-theme"] });
+    if (window.matchMedia) {
+      var dm = window.matchMedia("(prefers-color-scheme: dark)");
+      if (dm.addEventListener) dm.addEventListener("change", function () { net.redraw(); });
+    }
+  } catch (e) {}
+
+  applyMode();
+  if (!present() && cur > 0) slides[cur].scrollIntoView();
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(drawAll);
+})();
+</script>
+</body>
+</html>
