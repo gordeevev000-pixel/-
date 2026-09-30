@@ -12,18 +12,20 @@
 //      с подписями «200 (15м)»; совпавшие средние подписываются через «=»
 //      Цвет — по периоду: 20 оранжевый, 50 синий, 100 фиолетовый, 200 жёлтый.
 //
-//  Два режима:
+//  Уровни не перерисовываются ни в одном режиме: уровень появляется, когда подтвердился
+//  свинг, дальше не двигается и не пропадает от движения цены.
+//
+//  Два режима для каналов и средних старших ТФ:
 //    «Как у автора» (по умолчанию) — канал подбирается заново на каждом новом свинге
 //      по всей истории от якоря, как рисует автор задним числом. Картинка на последнем
 //      баре ближе всего к авторской, но линии текущего канала двигаются: это перерисовка,
-//      по истории в этом режиме нельзя судить, где можно было войти.
+//      по истории каналов в этом режиме нельзя судить, где можно было войти.
 //    «Торговля без перерисовки» — всё решается только на закрытых барах, на истории
 //      и в реальном времени одинаково, нарисованное не двигается:
 //    • канал фиксируется в момент подтверждения (точка) и больше не меняется. Пунктир
 //      от якоря до точки — как канал строился, торговать можно сплошную часть после неё;
 //    • изменение структуры — это новый канал, старый остаётся как был и обрывается
 //      на баре слома;
-//    • уровень появляется, когда подтвердился свинг, и не пропадает от движения цены;
 //    • средние старших ТФ — по их закрытым барам.
 //  Цена этого — запаздывание: свинг подтверждается через N баров, канал — после свинга.
 //
@@ -52,7 +54,7 @@ indicator("MARKUP · каналы, уровни, MTF-средние", "MARKUP", 
 M_AUTHOR = "Как у автора"
 M_TRADE  = "Торговля без перерисовки"
 mode = input.string(M_AUTHOR, "Режим", options = [M_AUTHOR, M_TRADE],
-     tooltip = "«Как у автора» — каналы подбираются задним числом по всей истории, как на авторских скриншотах; текущий канал перерисовывается. «Торговля без перерисовки» — канал фиксируется в момент подтверждения и больше не двигается, уровни и средние старших ТФ тоже без перерисовки.")
+     tooltip = "«Как у автора» — каналы подбираются задним числом по всей истории, как на авторских скриншотах; текущий канал перерисовывается. «Торговля без перерисовки» — канал фиксируется в момент подтверждения и больше не двигается, средние старших ТФ тоже без перерисовки. Уровни в обоих режимах без перерисовки.")
 live = mode == M_AUTHOR
 
 gCh = "Каналы"
@@ -92,13 +94,11 @@ gLv = "Горизонтальные уровни"
 lvOn    = input.bool(true, "Рисовать уровни", group = gLv)
 lvLen   = input.int(30, "Свинг для уровня, баров слева и справа", minval = 2, maxval = 500, group = gLv)
 lvGap   = input.float(4.0, "Свинг ближе к уровню — касание, а не новый уровень, ATR(200)", minval = 0, step = 0.5, group = gLv)
-lvUp    = input.int(6, "Как у автора: уровней выше цены", minval = 0, maxval = 30, group = gLv)
-lvDn    = input.int(6, "Как у автора: уровней ниже цены", minval = 0, maxval = 30, group = gLv)
-lvMax   = input.int(16, "Без перерисовки: уровней на графике", minval = 1, maxval = 60, group = gLv,
-     tooltip = "Без перерисовки уровень появляется, когда подтвердился свинг, и дальше не исчезает. Сверх лимита убирается тот, которого цена дольше всех не касалась.")
+lvMax   = input.int(16, "Уровней на графике", minval = 1, maxval = 60, group = gLv,
+     tooltip = "В обоих режимах уровень появляется, когда подтвердился свинг, и дальше не двигается. Сверх лимита снимается уровень, которого цена дольше всех не касалась: его линия обрывается на этом баре, прошлое не меняется.")
 lvCol   = input.color(color.white, "Цвет", group = gLv, inline = "lv")
 lvW     = input.int(2, "толщина", minval = 1, maxval = 5, group = gLv, inline = "lv")
-lvPrice = input.bool(false, "Подписывать цену и число касаний", group = gLv)
+lvPrice = input.bool(false, "Подписывать цену уровня", group = gLv)
 
 gMa = "Средние: периоды и цвета"
 maType = input.string("EMA", "Тип", options = ["EMA", "SMA"], group = gMa)
@@ -144,7 +144,6 @@ lbSize = input.string(size.normal, "Размер подписей", options = [s
 
 // ── константы ─────────────────────────────────────────────────────────────────
 BUF       = 5000   // глубина собственного буфера цен для поиска экстремумов
-LV_KEEP   = 200    // «как у автора»: уровней в памяти, из них показываются ближайшие к цене
 PIV_MAX   = 300    // свингов одного типа на масштаб
 CAP       = 16     // свингов с каждой стороны, по которым подбирается линия
 W_BASE    = 2.0    // касание линии тренда весит вдвое больше касания параллели
@@ -589,24 +588,22 @@ if chOn and live
     sc3.drawLive(s3W, not s3On or (s2On and f_same(sc3.cur, sc2.cur)) or (s1On and f_same(sc3.cur, sc1.cur)))
 
 // ── горизонтальные уровни ─────────────────────────────────────────────────────
-// Без перерисовки уровень рисуется в момент подтверждения свинга и дальше не двигается,
-// какие уровни видны, от текущей цены не зависит. «Как у автора» — показываются
-// ближайшие к цене уровни, набор пересобирается на последнем баре.
+// В обоих режимах без перерисовки: уровень рисуется в момент подтверждения свинга
+// (от бара свинга вправо) и дальше не двигается. Свинг рядом с известным уровнем —
+// его касание, новой линии нет. Сверх лимита снимается уровень, которого цена дольше
+// всех не касалась: его линия обрывается на этом баре, прошлое остаётся как было.
+// Какие уровни видны, от текущей цены не зависит.
 type Level
     float price
     int   x
-    int   hits
     int   lastT      // бар последнего касания
     line  ln
-    label lb
 
 var array<Level> lvAll = array.new<Level>()
 
 phL   = ta.pivothigh(high, lvLen, lvLen)
 plL   = ta.pivotlow(low, lvLen, lvLen)
 atrLv = nz(ta.atr(200), high - low)
-
-f_lvText(Level l) => str.tostring(l.price, format.mintick) + (l.hits > 1 ? "  ×" + str.tostring(l.hits) : "")
 
 // свинг рядом с известным уровнем — ещё одно касание, иначе новый уровень
 f_level(array<Level> lv, float p, int x, float gap) =>
@@ -619,26 +616,23 @@ f_level(array<Level> lv, float p, int x, float gap) =>
             bestD := d
     if best >= 0
         Level hit = lv.get(best)
-        hit.hits := hit.hits + 1
         hit.lastT := bar_index
-        if not na(hit.lb)
-            hit.lb.set_text(f_lvText(hit))
     else
-        Level nl = Level.new(p, x, 1, bar_index)
-        if not live
-            nl.ln := line.new(math.max(x, bar_index - BUF + 1), p, bar_index, p, color = lvCol, width = lvW, extend = extend.right)
-            if lvPrice
-                nl.lb := label.new(x, p, f_lvText(nl), color = color(na), style = label.style_label_lower_left,
-                     textcolor = lvCol, size = size.small)
+        Level nl = Level.new(p, x, bar_index)
+        nl.ln := line.new(math.max(x, bar_index - BUF + 1), p, bar_index, p, color = lvCol, width = lvW, extend = extend.right)
+        if lvPrice
+            label.new(x, p, str.tostring(p, format.mintick), color = color(na), style = label.style_label_lower_left,
+                 textcolor = lvCol, size = size.small)
         lv.push(nl)
-        if lv.size() > (live ? LV_KEEP : lvMax)
+        if lv.size() > lvMax
             int oi = 0
             for [i, l] in lv
                 if l.lastT < lv.get(oi).lastT
                     oi := i
+            // снятый уровень обрывается на этом баре, его прошлое не трогаем
             Level o = lv.remove(oi)
-            line.delete(o.ln)
-            label.delete(o.lb)
+            o.ln.set_x2(bar_index)
+            o.ln.set_extend(extend.none)
     best
 
 if lvOn and barstate.isconfirmed
@@ -646,51 +640,6 @@ if lvOn and barstate.isconfirmed
         f_level(lvAll, phL, bar_index - lvLen, atrLv * lvGap)
     if not na(plL)
         f_level(lvAll, plL, bar_index - lvLen, atrLv * lvGap)
-
-// «как у автора»: ближайшие к цене уровни с одной стороны, не ближе gap друг к другу
-f_pick(array<Level> lv, float px, int side, int n, float gap, array<float> taken) =>
-    array<float> dist = array.new_float()
-    array<int>   ids  = array.new_int()
-    for [i, l] in lv
-        float d = (l.price - px) * side
-        if side > 0 ? d >= 0 : d > 0
-            dist.push(d)
-            ids.push(i)
-    array<Level> out = array.new<Level>()
-    if dist.size() > 0
-        array<int> ord = dist.sort_indices(order.ascending)
-        for k in ord
-            if out.size() >= n
-                break
-            Level cand = lv.get(ids.get(k))
-            bool ok = true
-            for t in taken
-                if math.abs(t - cand.price) < gap
-                    ok := false
-                    break
-            if ok
-                out.push(cand)
-                taken.push(cand.price)
-    out
-
-var array<line>  lvShow  = array.new<line>()
-var array<label> lvShowL = array.new<label>()
-if lvOn and live and barstate.islast
-    for ln in lvShow
-        ln.delete()
-    lvShow.clear()
-    for lb in lvShowL
-        lb.delete()
-    lvShowL.clear()
-    array<float> taken = array.new_float()
-    array<Level> pick = f_pick(lvAll, close, 1, lvUp, atrLv * lvGap, taken)
-    pick.concat(f_pick(lvAll, close, -1, lvDn, atrLv * lvGap, taken))
-    for l in pick
-        lvShow.push(line.new(math.max(l.x, bar_index - BUF + 1), l.price, bar_index, l.price, color = lvCol, width = lvW,
-             extend = extend.right))
-        if lvPrice
-            lvShowL.push(label.new(l.x, l.price, f_lvText(l), color = color(na), style = label.style_label_lower_left,
-                 textcolor = lvCol, size = size.small))
 
 // ── средние: лента рабочего ТФ ────────────────────────────────────────────────
 f_ma(float src, simple int len) =>
