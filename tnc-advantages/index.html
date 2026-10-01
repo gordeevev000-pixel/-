@@ -89,8 +89,8 @@ a:hover { color: var(--red); }
   border-top: 8px solid var(--ink);
 }
 .rail { display: contents; }
-.no { order: 0; font-family: var(--f-num); font-weight: 500; font-size: var(--t-num); line-height: .82; color: var(--red); letter-spacing: -.01em; font-variant-numeric: tabular-nums; }
-.sec { order: 1; font-weight: 700; font-size: var(--t-label); letter-spacing: .07em; text-transform: uppercase; margin-top: -8px; }
+.no { order: 0; font-family: var(--f-num); font-weight: 500; font-size: var(--t-num); line-height: 1; color: var(--red); letter-spacing: -.01em; font-variant-numeric: tabular-nums; }
+.sec { order: 1; font-weight: 700; font-size: var(--t-label); letter-spacing: .07em; text-transform: uppercase; }
 .pips { display: none; }
 .main { order: 2; display: flex; flex-direction: column; gap: var(--gap); min-width: 0; }
 .refs-mini { order: 3; font-size: var(--t-label); color: var(--ink-3); line-height: 1.5; }
@@ -121,13 +121,13 @@ a:hover { color: var(--red); }
 .pts .sub { color: var(--ink-2); }
 h3.h { font-weight: 700; font-size: var(--t-lead); line-height: 1.2; letter-spacing: -.01em; }
 
-.fig { font-family: var(--f-num); font-weight: 500; font-size: var(--t-fig); line-height: .95; letter-spacing: -.01em; font-variant-numeric: lining-nums; }
+.fig { font-family: var(--f-num); font-weight: 500; font-size: var(--t-fig); line-height: 1.15; letter-spacing: -.01em; font-variant-numeric: lining-nums; }
 .fig.red { color: var(--red); }
 .fig.sm { font-size: calc(var(--t-fig) * .62); }
 .stats { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--gap) calc(var(--gap) * 1.2); }
 @media (min-width: 640px) { .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-html.present .stats.four { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-.stat { border-top: 3px solid var(--ink); padding-top: 14px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+html.present .stats.four { gap: 36px 72px; }
+.stat { border-top: 3px solid var(--ink); padding-top: 12px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
 .stat p { font-size: var(--t-small); color: var(--ink-2); }
 
 /* ---------- титул ---------- */
@@ -147,7 +147,7 @@ html.present .stats.four { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 @media (min-width: 640px) { .tl { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 html.present .tl { grid-template-columns: repeat(6, minmax(0, 1fr)); }
 .tl li { border-top: 1px solid var(--ink); padding-top: 8px; display: flex; flex-direction: column; gap: 3px; min-width: 0; }
-.tl .yr { font-family: var(--f-num); font-weight: 500; font-size: calc(var(--t-small) * 1.6); line-height: 1; color: var(--red); }
+.tl .yr { font-family: var(--f-num); font-weight: 500; font-size: calc(var(--t-small) * 1.6); line-height: 1.25; color: var(--red); }
 .tl .who { font-weight: 700; font-size: var(--t-small); }
 .tl p { font-size: calc(var(--t-small) * .92); color: var(--ink-2); line-height: 1.35; }
 
@@ -155,7 +155,7 @@ html.present .tl { grid-template-columns: repeat(6, minmax(0, 1fr)); }
 .oli { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--gap) calc(var(--gap) * 1.4); }
 @media (min-width: 760px) { .oli { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 .oli > div { border-top: 3px solid var(--ink); padding-top: 10px; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
-.oli .letter { font-family: var(--f-num); font-weight: 600; font-size: calc(var(--t-fig) * 1.3); line-height: .9; color: var(--red); }
+.oli .letter { font-family: var(--f-num); font-weight: 600; font-size: calc(var(--t-fig) * 1.05); line-height: 1.3; color: var(--red); }
 .oli .en { font-size: var(--t-label); font-weight: 700; letter-spacing: .07em; text-transform: uppercase; }
 .oli .q { font-weight: 700; font-size: var(--t-small); }
 .oli p { font-size: var(--t-small); color: var(--ink-2); }
@@ -256,7 +256,7 @@ html.present .smile text.zone { font-size: 13px; }
 .concl { list-style: none; counter-reset: c; display: grid; grid-template-columns: minmax(0, 1fr); gap: 0 calc(var(--gap) * 1.5); }
 @media (min-width: 760px) { .concl { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .concl li { counter-increment: c; border-top: 3px solid var(--ink); padding: 12px 0 18px 64px; position: relative; min-width: 0; }
-.concl li::before { content: counter(c); position: absolute; left: 0; top: 8px; font-family: var(--f-num); font-weight: 600; font-size: calc(var(--t-fig) * .62); line-height: 1; color: var(--red); }
+.concl li::before { content: counter(c); position: absolute; left: 0; top: 6px; font-family: var(--f-num); font-weight: 600; font-size: calc(var(--t-fig) * .62); line-height: 1.1; color: var(--red); }
 .concl li.wide { grid-column: 1 / -1; }
 
 /* источники */
@@ -359,12 +359,12 @@ html.present .only-present { display: grid !important; }
 </section>
 
 <!-- 2. Масштаб -->
-<section class="slide" id="s2" data-short="ТНК в мировой экономике">
+<section class="slide" id="s2" data-short="Роль ТНК в мировой экономике">
   <div class="rail"><span class="no"></span><span class="sec">ТНК в мировой экономике</span><span class="pips"></span><span class="refs-mini">Источники: <a href="#r17">[17]</a>, <a href="#r26">[26]</a>, <a href="#r28">[28]</a></span></div>
   <div class="main">
     <div class="head">
-      <h2 class="title">ТНК — ядро мировой экономики</h2>
-      <p class="lead">Масштаб крупнейших корпораций — следствие их конкурентных преимуществ: за рубежом растёт только та компания, которая умеет что-то лучше местных фирм.</p>
+      <h2 class="title">Роль ТНК в мировой экономике</h2>
+      <p class="lead">Масштаб деятельности крупнейших корпораций отражает их конкурентные преимущества перед национальными фирмами.</p>
     </div>
     <div class="content">
       <div class="stats four">
@@ -378,10 +378,10 @@ html.present .only-present { display: grid !important; }
 </section>
 
 <!-- 3. Понятие и теории -->
-<section class="slide" id="s3" data-short="Понятие и теории">
+<section class="slide" id="s3" data-short="Понятие конкурентного преимущества">
   <div class="rail"><span class="no"></span><span class="sec">Понятие и теории</span><span class="pips"></span><span class="refs-mini">Источники: <a href="#r1">[1]</a>, <a href="#r3">[3]</a>, <a href="#r4">[4]</a>, <a href="#r12">[12]</a>, <a href="#r14">[14]</a>, <a href="#r15">[15]</a>, <a href="#r16">[16]</a>, <a href="#r19">[19]</a>, <a href="#r21">[21]</a></span></div>
   <div class="main">
-    <div class="head"><h2 class="title">Конкурентное преимущество ТНК</h2></div>
+    <div class="head"><h2 class="title">Понятие конкурентного преимущества ТНК</h2></div>
     <div class="content">
       <div class="cols cols-wide">
         <div class="stack">
@@ -400,7 +400,7 @@ html.present .only-present { display: grid !important; }
         </div>
       </div>
       <div class="stack">
-        <span class="label">Как развивалась теория</span>
+        <span class="label">Развитие теории</span>
         <ol class="tl">
           <li><span class="yr">1960</span><span class="who">С. Хаймер</span><p>монополистические преимущества фирмы</p></li>
           <li><span class="yr">1976</span><span class="who">П. Бакли, М. Кассон</span><p>интернализация: знания выгоднее использовать внутри фирмы</p></li>
@@ -448,8 +448,8 @@ html.present .only-present { display: grid !important; }
           <span class="en">Internalization · интернализация</span>
           <span class="q">Почему внутри фирмы, а не по контракту?</span>
           <ul class="srcl">
-            <li><a href="#s10"><span>Контроль дорогих звеньев цепочки</span><span class="sl">10</span></a></li>
-            <li><a href="#s11"><span>Преимущества сети филиалов</span><span class="sl">11</span></a></li>
+            <li><a href="#s10"><span>Интернализация и цепочка создания стоимости</span><span class="sl">10</span></a></li>
+            <li><a href="#s11"><span>Преимущества многонациональности</span><span class="sl">11</span></a></li>
             <li><a href="#s12"><span>Нематериальные активы и платформы</span><span class="sl">12</span></a></li>
           </ul>
         </div>
@@ -472,7 +472,7 @@ html.present .only-present { display: grid !important; }
 <section class="slide" id="s5" data-short="Технологии и НИОКР">
   <div class="rail"><span class="no"></span><span class="sec">O · Собственность</span><span class="pips"></span><span class="refs-mini">Источники: <a href="#r25">[25]</a>, <a href="#r29">[29]</a></span></div>
   <div class="main">
-    <div class="head"><h2 class="title">Технологии: НИОКР как входной билет на мировой рынок</h2></div>
+    <div class="head"><h2 class="title">Технологические преимущества: НИОКР и патенты</h2></div>
     <div class="content">
       <div class="cols cols-wide">
         <figure class="chart">
@@ -495,7 +495,7 @@ html.present .only-present { display: grid !important; }
 <section class="slide" id="s6" data-short="Бренд">
   <div class="rail"><span class="no"></span><span class="sec">O · Собственность</span><span class="pips"></span><span class="refs-mini">Источники: <a href="#r3">[3]</a>, <a href="#r20">[20]</a></span></div>
   <div class="main">
-    <div class="head"><h2 class="title">Бренд: доверие, которое работает в любой стране</h2></div>
+    <div class="head"><h2 class="title">Бренд как источник конкурентного преимущества</h2></div>
     <div class="content">
       <div class="cols cols-wide">
         <figure class="chart">
@@ -504,7 +504,7 @@ html.present .only-present { display: grid !important; }
           <ol class="bars" id="brandBars"></ol>
         </figure>
         <div class="stack">
-          <h3 class="h">Что даёт глобальный бренд</h3>
+          <h3 class="h">Преимущества глобального бренда</h3>
           <ul class="pts small">
             <li><b>Ценовую премию:</b> покупатель платит за уверенность в качестве.</li>
             <li><b>Дешёвый выход на новые рынки:</b> бренд известен ещё до прихода компании.</li>
@@ -522,7 +522,7 @@ html.present .only-present { display: grid !important; }
 <section class="slide" id="s7" data-short="Масштаб, финансы, организация">
   <div class="rail"><span class="no"></span><span class="sec">O · Собственность</span><span class="pips"></span><span class="refs-mini">Источники: <a href="#r7">[7]</a>, <a href="#r14">[14]</a>, <a href="#r24">[24]</a>, <a href="#r25">[25]</a></span></div>
   <div class="main">
-    <div class="head"><h2 class="title">Масштаб, финансы, организация</h2></div>
+    <div class="head"><h2 class="title">Масштаб, финансы и организация</h2></div>
     <div class="content">
       <div class="cols cols-3">
         <div class="stack ruled">
@@ -562,8 +562,8 @@ html.present .only-present { display: grid !important; }
   <div class="rail"><span class="no"></span><span class="sec">L · Размещение</span><span class="pips"></span><span class="refs-mini">Источники: <a href="#r8">[8]</a>, <a href="#r12">[12]</a></span></div>
   <div class="main">
     <div class="head">
-      <h2 class="title">Страна базирования: ромб Портера</h2>
-      <p class="lead">Сильные ТНК вырастают из конкурентной среды своей страны. Четыре детерминанты усиливают друг друга.</p>
+      <h2 class="title">Преимущества страны базирования: ромб Портера</h2>
+      <p class="lead">Конкурентоспособность компаний определяется четырьмя взаимосвязанными детерминантами национальной среды.</p>
     </div>
     <div class="content">
       <div class="diamond">
@@ -584,7 +584,7 @@ html.present .only-present { display: grid !important; }
 <section class="slide" id="s9" data-short="Принимающие страны">
   <div class="rail"><span class="no"></span><span class="sec">L · Размещение</span><span class="pips"></span><span class="refs-mini">Источники: <a href="#r5">[5]</a>, <a href="#r16">[16]</a>, <a href="#r27">[27]</a>, <a href="#r28">[28]</a></span></div>
   <div class="main">
-    <div class="head"><h2 class="title">Принимающие страны: зачем ТНК идут в конкретную страну</h2></div>
+    <div class="head"><h2 class="title">Преимущества размещения в принимающих странах</h2></div>
     <div class="content">
       <div class="cols cols-wide">
         <div class="tablewrap">
@@ -599,7 +599,7 @@ html.present .only-present { display: grid !important; }
           </table>
         </div>
         <div class="stack ruled">
-          <h3 class="h">Что меняется в 2024–2025&nbsp;гг.</h3>
+          <h3 class="h">Тенденции 2024–2025&nbsp;гг.</h3>
           <ul class="pts small">
             <li>ТНК переносят цепочки поставок в Юго-Восточную Азию, Восточную Европу и Центральную Америку.</li>
             <li>20 крупнейших принимающих экономик получают более 80% мировых ПИИ.</li>
@@ -613,10 +613,10 @@ html.present .only-present { display: grid !important; }
 </section>
 
 <!-- 10. Интернализация -->
-<section class="slide" id="s10" data-short="Интернализация">
+<section class="slide" id="s10" data-short="Интернализация и цепочка стоимости">
   <div class="rail"><span class="no"></span><span class="sec">I · Интернализация</span><span class="pips"></span><span class="refs-mini">Источники: <a href="#r4">[4]</a>, <a href="#r15">[15]</a>, <a href="#r22">[22]</a></span></div>
   <div class="main">
-    <div class="head"><h2 class="title">ТНК оставляют себе самые дорогие звенья цепочки</h2></div>
+    <div class="head"><h2 class="title">Интернализация и цепочка создания стоимости</h2></div>
     <div class="content">
       <div class="cols cols-wide">
         <figure class="chart">
@@ -645,10 +645,10 @@ html.present .only-present { display: grid !important; }
 </section>
 
 <!-- 11. Сеть -->
-<section class="slide" id="s11" data-short="Преимущества сети филиалов">
+<section class="slide" id="s11" data-short="Преимущества многонациональности">
   <div class="rail"><span class="no"></span><span class="sec">I · Интернализация</span><span class="pips"></span><span class="refs-mini">Источники: <a href="#r2">[2]</a>, <a href="#r18">[18]</a>, <a href="#r21">[21]</a></span></div>
   <div class="main">
-    <div class="head"><h2 class="title">Сеть сильнее суммы филиалов</h2></div>
+    <div class="head"><h2 class="title">Преимущества многонациональности</h2></div>
     <div class="content">
       <div class="cols cols-2">
         <div class="stack">
@@ -660,7 +660,7 @@ html.present .only-present { display: grid !important; }
           </div>
         </div>
         <div class="stack">
-          <span class="label">Что ещё даёт многонациональность</span>
+          <span class="label">Другие преимущества сети филиалов</span>
           <ul class="pts">
             <li><b>Операционная гибкость</b> <span class="sub">(Б. Коугут): производство и закупки переносятся туда, где выгоднее при изменении курсов, пошлин и издержек.</span></li>
             <li><b>Диверсификация рисков:</b> <span class="sub">спад в одной стране компенсируется ростом в другой.</span></li>
@@ -677,7 +677,7 @@ html.present .only-present { display: grid !important; }
 <section class="slide" id="s12" data-short="Нематериальные активы">
   <div class="rail"><span class="no"></span><span class="sec">Новые источники</span><span class="pips"></span><span class="refs-mini">Источники: <a href="#r10">[10]</a>, <a href="#r23">[23]</a>, <a href="#r27">[27]</a></span></div>
   <div class="main">
-    <div class="head"><h2 class="title">Главный сдвиг: от заводов к нематериальным активам</h2></div>
+    <div class="head"><h2 class="title">Нематериальные активы как источник преимуществ</h2></div>
     <div class="content">
       <div class="cols cols-wide">
         <figure class="chart">
@@ -705,7 +705,7 @@ html.present .only-present { display: grid !important; }
 <section class="slide" id="s13" data-short="Российские корпорации">
   <div class="rail"><span class="no"></span><span class="sec">Российские корпорации</span><span class="pips"></span><span class="refs-mini">Источники: <a href="#r6">[6]</a>, <a href="#r8">[8]</a>, <a href="#r11">[11]</a>, <a href="#r13">[13]</a></span></div>
   <div class="main">
-    <div class="head"><h2 class="title">Российские корпорации: на чём держатся преимущества</h2></div>
+    <div class="head"><h2 class="title">Конкурентные преимущества российских корпораций</h2></div>
     <div class="content">
       <div class="cols cols-wide">
         <ul class="pts small">
