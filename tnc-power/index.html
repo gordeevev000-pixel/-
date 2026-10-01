@@ -1,0 +1,1102 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Мощь и влияние ТНК</title>
+<meta name="description" content="Доклад-презентация к семинару 3, вопрос 1: рост экономической мощи и влияния ТНК в современной мировой экономике. Выполнил Татьянченко И.С., МЭиМБ24-1.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fira+Sans:ital,wght@0,400;0,500;0,600;1,400&family=Fira+Sans+Extra+Condensed:wght@500;600&family=Old+Standard+TT:ital,wght@0,400;0,700;1,400&display=swap">
+<script>
+  try {
+    document.documentElement.lang = "ru";
+    if (window.matchMedia("(min-width: 900px) and (min-height: 500px) and (min-aspect-ratio: 5/4)").matches) {
+      document.documentElement.classList.add("present");
+    } else {
+      document.documentElement.classList.add("paged");
+    }
+  } catch (e) {}
+</script>
+<style>
+/* Layout: атлас корпоративной мощи. Каждый слайд — лист атласа 1600×900 в рамке топографической карты (двойная линия и минутная шкала из чередующихся штрихов), за рамкой — зарамочное оформление: раздел, номер листа, источники. Величины окрашены гипсометрической шкалой (зелёный → охра → коричневый), государства — цветом моря с пунктирной границей, корпорации — коричневым «рельефом». На телефоне листы идут по одному. Одна светлая «бумажная» гамма, выбранная намеренно. */
+:root {
+  --paper: #F3F5F0;
+  --paper-2: #E7ECE5;
+  --card: #FAFBF8;
+  --ink: #1C2934;
+  --ink-2: #47555E;
+  --ink-3: #66737B;
+  --line: #C3CCC7;
+  --grid: #CBD8DB;
+  --sea: #D5E7EF;
+  --sea-2: #8DB6CA;
+  --sea-ink: #255C7C;
+  --h1: #D9E6BF;
+  --h2: #EDE0A0;
+  --h3: #E4BD86;
+  --h4: #CB8F5C;
+  --h5: #9C5A35;
+  --h6: #6B3521;
+  --on-dark: #FFFCF5;
+  --border: #B3322B;
+  --void: #14252F;
+
+  --f-display: "Old Standard TT", "Times New Roman", Georgia, serif;
+  --f-text: "Fira Sans", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --f-label: "Fira Sans Extra Condensed", "Fira Sans Condensed", "Arial Narrow", "Roboto Condensed", sans-serif;
+
+  /* лента и телефоны */
+  --t-h1: clamp(30px, 8vw, 42px);
+  --t-h2: clamp(25px, 6.6vw, 32px);
+  --t-lead: 17px;
+  --t-body: 16px;
+  --t-small: 14px;
+  --t-label: 12.5px;
+  --t-fig: clamp(32px, 9vw, 42px);
+  --t-src: 13.5px;
+  --px: 16px;
+  color-scheme: light;
+}
+html.present {
+  --t-h1: 58px;
+  --t-h2: 44px;
+  --t-lead: 23px;
+  --t-body: 20px;
+  --t-small: 17px;
+  --t-label: 14px;
+  --t-fig: 54px;
+  --t-src: 14.5px;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html { background: var(--paper); }
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--f-text);
+  font-size: var(--t-body);
+  line-height: 1.42;
+  -webkit-font-smoothing: antialiased;
+}
+h1, h2, h3, p, ul, ol, figure { margin: 0; }
+ul, ol { padding: 0; list-style: none; }
+b, strong { font-weight: 600; }
+a { color: inherit; text-decoration-color: var(--sea-2); text-underline-offset: 3px; }
+a:hover { color: var(--sea-ink); }
+button { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--border); outline-offset: 2px; }
+::selection { background: var(--h2); color: var(--ink); }
+.num, .fig, .sheet { font-variant-numeric: lining-nums tabular-nums; }
+
+/* ---------- общие элементы ---------- */
+.lbl, .kick, .marg {
+  font-family: var(--f-label); font-weight: 600; font-size: var(--t-label);
+  letter-spacing: .16em; text-transform: uppercase; line-height: 1.35;
+}
+.kick { color: var(--border); }
+.ttl {
+  font-family: var(--f-display); font-weight: 700; font-size: var(--t-h2);
+  line-height: 1.08; letter-spacing: -.005em; text-wrap: balance; color: var(--ink);
+}
+.hd { display: flex; flex-direction: column; gap: 10px; }
+.lead { font-size: var(--t-lead); line-height: 1.4; color: var(--ink-2); max-width: 62ch; }
+.note { font-size: var(--t-small); color: var(--ink-3); line-height: 1.4; }
+.note i, .it { font-family: var(--f-display); font-style: italic; }
+.refs-in a, .src a, .sym-r a { text-decoration: none; color: var(--sea-ink); font-weight: 500; }
+.refs-in a:hover, .src a:hover, .sym-r a:hover { text-decoration: underline; }
+
+/* гипсометрические тона */
+.h1 { fill: var(--h1); background-color: var(--h1); }
+.h2 { fill: var(--h2); background-color: var(--h2); }
+.h3 { fill: var(--h3); background-color: var(--h3); }
+.h4 { fill: var(--h4); background-color: var(--h4); }
+.h5 { fill: var(--h5); background-color: var(--h5); }
+.h6 { fill: var(--h6); background-color: var(--h6); }
+
+/* «отметка высоты»: крупная цифра + подпись */
+.mark { display: grid; grid-template-columns: 14px minmax(0, 1fr); gap: 4px 14px; align-items: baseline; }
+.mark::before { content: ""; width: 10px; height: 10px; border-radius: 50%; background: var(--ink); transform: translateY(-.35em); grid-row: 1; }
+.mark .fig { font-family: var(--f-display); font-weight: 700; font-size: var(--t-fig); line-height: 1; letter-spacing: -.01em; }
+.mark .fig small { font-size: .5em; font-weight: 400; letter-spacing: 0; }
+.mark p:not(.fig) { grid-column: 2; font-size: var(--t-small); color: var(--ink-2); line-height: 1.38; }
+
+/* врезка-легенда, как на карте */
+.inset { background: var(--card); border: 1px solid var(--ink); padding: 16px 18px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.inset > .lbl { border-bottom: 1px solid var(--ink); padding-bottom: 8px; }
+
+/* ---------- лист: базовая лента (без скрипта и на телефонах) ---------- */
+.deck { position: relative; }
+.graticule { display: none; }
+.hud, .toc, .only-present { display: none; }
+.slide {
+  position: relative; display: flex; flex-direction: column;
+  background: var(--paper); border-bottom: 10px solid var(--paper-2);
+}
+.frame { display: none; }
+.marg { display: flex; justify-content: space-between; gap: 14px; color: var(--ink-2); padding: 14px var(--px); }
+.marg.top { border-bottom: 2px solid var(--ink); }
+.marg.bot { text-transform: none; letter-spacing: 0; font-family: var(--f-text); font-weight: 400; font-size: var(--t-src); color: var(--ink-3); padding-top: 4px; }
+.marg .sheet { white-space: nowrap; color: var(--ink); }
+.inner { display: flex; flex-direction: column; gap: 22px; padding: 22px var(--px) 14px; min-width: 0; }
+.body { display: flex; flex-direction: column; gap: 22px; min-width: 0; }
+.scroll-x { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.scroll-x > svg { min-width: 620px; }
+
+/* ---------- титул ---------- */
+.cv { gap: 28px; }
+.cv-text { display: flex; flex-direction: column; gap: 18px; }
+.cv-title { font-family: var(--f-display); font-weight: 700; font-size: var(--t-h1); line-height: 1.06; letter-spacing: -.01em; text-wrap: balance; }
+.cv-lead { font-size: var(--t-lead); color: var(--ink-2); max-width: 46ch; }
+.cv-author { border-top: 2px solid var(--ink); padding-top: 14px; font-size: var(--t-lead); line-height: 1.35; }
+.cv-author .lbl { display: block; color: var(--ink-3); margin-bottom: 4px; }
+.cv-author b { font-family: var(--f-display); font-weight: 700; font-size: 1.15em; }
+.cv-fig { position: relative; max-width: 520px; width: 100%; align-self: center; }
+.globe { display: block; width: 100%; height: auto; }
+.g-sea { fill: var(--sea); }
+.g-grid polyline { fill: none; stroke: var(--sea-2); stroke-width: 1; }
+.g-grid .eq polyline { stroke: var(--sea-ink); stroke-width: 1.6; }
+.g-rim { fill: none; stroke: var(--ink); stroke-width: 2; }
+.hyps { position: absolute; right: 0; bottom: 4px; background: var(--card); border: 1px solid var(--ink); padding: 10px 12px; display: flex; flex-direction: column; gap: 6px; width: 200px; }
+.hyps .lbl { font-size: 11px; letter-spacing: .12em; line-height: 1.25; }
+.hyps ol { display: flex; flex-direction: column-reverse; }
+.hyps li { display: grid; grid-template-columns: 22px 46px minmax(0, 1fr); gap: 8px; align-items: center; font-size: 13.5px; line-height: 1; padding: 2px 0; }
+.hyps li span:first-child { height: 16px; border: 1px solid var(--ink); }
+.hyps li b { font-family: var(--f-display); font-weight: 700; font-size: 15px; text-align: right; }
+.cv-foot { font-family: var(--f-text); text-transform: none; letter-spacing: 0; }
+
+/* ---------- лист 2: содержание ---------- */
+.plan { display: flex; flex-direction: column; gap: 22px; }
+.thesis { display: flex; flex-direction: column; gap: 14px; }
+.thesis-t { font-family: var(--f-display); font-style: italic; font-size: calc(var(--t-lead) * 1.3); line-height: 1.25; text-wrap: balance; }
+.thesis-n { font-size: var(--t-body); color: var(--ink-2); }
+.sheets { display: flex; flex-direction: column; border-top: 2px solid var(--ink); }
+.sheets > li { display: grid; grid-template-columns: 40px minmax(0, 1fr); gap: 14px; padding: 10px 0; border-bottom: 1px solid var(--line); align-items: baseline; }
+.sheets .g { font-family: var(--f-display); font-weight: 700; font-size: 1.15em; color: var(--border); }
+.sheets .gname { font-family: var(--f-label); font-weight: 600; text-transform: uppercase; letter-spacing: .14em; font-size: var(--t-label); color: var(--ink-3); display: block; margin-bottom: 4px; }
+.sheets a { display: flex; gap: 12px; text-decoration: none; padding: 2px 0; }
+.sheets a b { font-variant-numeric: lining-nums tabular-nums; color: var(--ink-3); font-weight: 500; min-width: 26px; }
+.sheets a:hover span { text-decoration: underline; text-decoration-color: var(--border); }
+
+/* ---------- лист 3: определение и легенда ---------- */
+.defn { display: flex; flex-direction: column; gap: 16px; }
+.defn-term { font-family: var(--f-display); font-weight: 700; font-size: calc(var(--t-lead) * 1.35); line-height: 1.15; }
+.defn-text { font-size: var(--t-lead); line-height: 1.45; max-width: 52ch; }
+.defn-pair { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; border-top: 1px solid var(--ink); padding-top: 16px; }
+.defn-pair p { font-size: var(--t-body); color: var(--ink-2); }
+.defn-pair p b { color: var(--ink); font-family: var(--f-display); font-size: 1.12em; }
+.legend-list { display: flex; flex-direction: column; }
+.legend-list li { display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; gap: 14px; align-items: center; padding: 9px 0; border-bottom: 1px solid var(--line); }
+.legend-list li:last-child { border-bottom: 0; padding-bottom: 0; }
+.legend-list svg { width: 44px; height: 26px; display: block; }
+.legend-list b { display: block; font-weight: 600; }
+.legend-list span { font-size: var(--t-small); color: var(--ink-2); line-height: 1.3; display: block; }
+.legend-list a { font-size: var(--t-small); white-space: nowrap; color: var(--sea-ink); text-decoration: none; font-variant-numeric: lining-nums tabular-nums; }
+.legend-list a:hover { text-decoration: underline; }
+.lg-stroke { fill: none; stroke: var(--ink); stroke-width: 1.5; }
+.lg-gdp { stroke: var(--sea-ink); stroke-width: 3; }
+.lg-red { fill: none; stroke: var(--border); stroke-width: 2; stroke-dasharray: 8 3 2 3; }
+
+/* ---------- лист 4: значки ---------- */
+.syms { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px 16px; }
+.sym { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.sym-fig svg { display: block; width: 100%; max-width: 250px; height: auto; margin: 0 auto; }
+.sym-o { stroke: var(--ink); stroke-width: 1.5; }
+.sym-i { fill: var(--card); stroke: var(--ink); stroke-width: 1.5; }
+.sym-y { font-family: var(--f-display); font-weight: 700; font-size: calc(var(--t-lead) * 1.35); line-height: 1.1; text-align: center; border-top: 2px solid var(--ink); padding-top: 8px; margin-top: 6px; }
+.sym-t { font-size: var(--t-small); line-height: 1.3; display: flex; align-items: center; justify-content: center; gap: 8px; text-align: center; }
+.sym-t b { font-weight: 600; }
+.sym-r { text-align: center; font-size: var(--t-small); }
+.k-in, .k-out { width: 13px; height: 13px; border-radius: 50%; border: 1.5px solid var(--ink); flex: none; }
+.k-in { background: var(--card); }
+.drivers { display: flex; flex-direction: column; gap: 12px; }
+.drivers li { display: grid; grid-template-columns: 18px minmax(0, 1fr); gap: 10px; font-size: var(--t-body); line-height: 1.4; }
+.drivers li::before { content: ""; width: 0; height: 0; margin-top: .42em; border-left: 7px solid transparent; border-right: 7px solid transparent; border-bottom: 12px solid var(--ink); }
+.drivers b { font-weight: 600; }
+
+/* ---------- лист 5: профиль ПИИ ---------- */
+.fdi-wrap { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.fdi { display: block; width: 100%; height: auto; overflow: visible; }
+.fdi .iso { stroke: var(--line); stroke-width: 1; }
+.fdi .iso-over { stroke: var(--ink); stroke-opacity: .28; }
+.fdi .iso-t, .fdi .unit { font-family: var(--f-display); font-style: italic; font-size: 19px; fill: var(--ink-3); }
+.fdi .ridge { fill: none; stroke: var(--ink); stroke-width: 2.5; stroke-linejoin: round; }
+.fdi .base, .fdi .tick { stroke: var(--ink); stroke-width: 1.5; }
+.fdi .yr { font-family: var(--f-text); font-size: 18px; fill: var(--ink-2); }
+.fdi .spot { fill: var(--ink); stroke: var(--paper); stroke-width: 2; }
+.fdi .spot-v { font-family: var(--f-display); font-weight: 700; font-size: 25px; fill: var(--ink); paint-order: stroke; stroke: var(--paper); stroke-width: 5px; stroke-linejoin: round; }
+.fdi .spot-s { font-family: var(--f-text); font-size: 16px; fill: var(--ink-2); paint-order: stroke; stroke: var(--paper); stroke-width: 5px; stroke-linejoin: round; }
+.fdi .note-t { font-family: var(--f-display); font-style: italic; font-size: 18px; fill: var(--ink); }
+.hlegend { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; font-size: var(--t-small); color: var(--ink-2); }
+.hlegend ol { display: flex; flex-wrap: wrap; }
+.hlegend li { display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 13px; font-variant-numeric: lining-nums tabular-nums; }
+.hlegend .sw { width: 52px; height: 14px; border: 1px solid var(--ink); }
+.hlegend li + li .sw { border-left: 0; }
+.marks { display: flex; flex-direction: column; gap: 20px; }
+
+/* ---------- лист 6: доли как масштабные линейки ---------- */
+.rulers { display: flex; flex-direction: column; gap: 18px; }
+.ruler { display: flex; flex-direction: column; gap: 6px; }
+.ruler-h { display: flex; align-items: baseline; gap: 12px; }
+.ruler-h .fig { font-family: var(--f-display); font-weight: 700; font-size: calc(var(--t-fig) * .78); line-height: 1; min-width: 3.1em; }
+.ruler-h p { font-size: var(--t-body); line-height: 1.3; }
+.bar-scale { position: relative; height: 16px; border: 1.5px solid var(--ink);
+  background: repeating-linear-gradient(90deg, var(--card) 0 10%, var(--line) 10% 20%); }
+.bar-scale i { position: absolute; left: 0; top: 0; bottom: 0; width: var(--w); background: var(--h4); border-right: 2px solid var(--ink); }
+.bar-scale.alt i { background: var(--h5); }
+.ruler-ticks { display: flex; justify-content: space-between; font-size: 12.5px; color: var(--ink-3); font-variant-numeric: lining-nums tabular-nums; }
+.passport { gap: 0; }
+.passport dl { display: grid; grid-template-columns: minmax(0, 1fr) auto; margin: 0; }
+.passport dt, .passport dd { margin: 0; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.passport dt { font-size: var(--t-small); color: var(--ink-2); line-height: 1.3; }
+.passport dd { font-family: var(--f-display); font-weight: 700; font-size: calc(var(--t-lead) * 1.2); text-align: right; white-space: nowrap; padding-left: 14px; font-variant-numeric: lining-nums tabular-nums; }
+.passport dd small { font-family: var(--f-text); font-weight: 400; font-size: 13px; color: var(--ink-3); margin-left: 6px; }
+.passport .foot { font-size: var(--t-small); color: var(--ink-2); padding-top: 12px; line-height: 1.38; }
+
+/* ---------- лист 7: картограмма ---------- */
+.carto-key { display: flex; flex-wrap: wrap; gap: 8px 24px; align-items: center; font-size: var(--t-small); color: var(--ink-2); }
+.carto-key span { display: inline-flex; align-items: center; gap: 8px; }
+.carto-key svg { width: 24px; height: 24px; flex: none; }
+.pairs { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px 28px; }
+.pair { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.pair-fig svg { display: block; width: 100%; max-width: 460px; height: auto; margin: 0 auto; }
+.pair-cap { text-align: center; font-size: var(--t-small); color: var(--ink-2); border-top: 1px solid var(--ink); padding-top: 6px; }
+.c-corp { fill: var(--h3); stroke: var(--h6); stroke-width: 2; }
+.c-ctry { fill: var(--sea); stroke: var(--border); stroke-width: 2; stroke-dasharray: 10 4 2 4; }
+.c-n { font-family: var(--f-text); font-weight: 600; font-size: 19px; fill: var(--ink); }
+.c-v { font-family: var(--f-display); font-weight: 700; font-size: 25px; fill: var(--ink); }
+.c-n.ctry { font-family: var(--f-display); font-style: italic; font-weight: 400; font-size: 21px; fill: var(--sea-ink); }
+.c-v.ctry { fill: var(--sea-ink); }
+
+/* ---------- листы 8–9: полосы ---------- */
+.bars { display: flex; flex-direction: column; gap: 0; }
+.bars-axis { display: none; grid-template-columns: var(--namecol) minmax(0, 1fr) var(--valcol); gap: 14px; font-size: 12.5px; color: var(--ink-3); }
+.bars-axis .ax { position: relative; height: 16px; }
+.bars-axis .ax span { position: absolute; transform: translateX(-50%); font-variant-numeric: lining-nums tabular-nums; }
+.bars-axis .ax span:first-child { transform: none; }
+.brow { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "nm v" "tr tr"; gap: 6px 14px; align-items: center; padding: 8px 0; border-top: 1px solid var(--line); }
+.brow .nm { grid-area: nm; } .brow .tr { grid-area: tr; } .brow .v { grid-area: v; }
+.brow .nm { font-weight: 600; line-height: 1.2; min-width: 0; }
+.brow .nm small { display: block; font-weight: 400; font-size: 12.5px; color: var(--ink-3); }
+.brow .tr { position: relative; height: var(--bh, 22px); }
+.brow .tr::before { content: ""; position: absolute; inset: 0; background: repeating-linear-gradient(90deg, transparent 0 calc(var(--step) - 1px), var(--grid) calc(var(--step) - 1px) var(--step)); }
+.brow .b { position: absolute; left: 0; top: 0; bottom: 0; width: var(--w); background: var(--h4); border: 1px solid var(--h6); }
+.brow .b.oth { background: var(--h2); border-color: var(--h5); }
+.brow .gdp { position: absolute; top: -7px; bottom: -7px; left: var(--g); width: 0; border-left: 3px solid var(--sea-ink); }
+.brow .gdp span { position: absolute; right: 6px; bottom: -3px; transform: translateY(100%); white-space: nowrap; font-family: var(--f-display); font-style: italic; font-size: 14.5px; color: var(--sea-ink); }
+.brow .v { font-family: var(--f-display); font-weight: 700; font-size: calc(var(--t-body) * 1.15); text-align: right; font-variant-numeric: lining-nums tabular-nums; white-space: nowrap; }
+.cap-bars { --namecol: 104px; --valcol: 64px; --step: 16.6667%; --bh: 24px; }
+.cap-bars .brow { padding-bottom: 30px; }
+.rd-bars { --namecol: 116px; --valcol: 48px; --step: 14.2857%; --bh: 20px; }
+.bkey { display: flex; flex-wrap: wrap; gap: 6px 20px; font-size: var(--t-small); color: var(--ink-2); align-items: center; }
+.bkey span { display: inline-flex; align-items: center; gap: 8px; }
+.bkey i { width: 22px; height: 12px; border: 1px solid var(--h6); display: inline-block; }
+.bkey i.oth { border-color: var(--h5); }
+.bkey i.gd { width: 0; height: 18px; border: 0; border-left: 3px solid var(--sea-ink); }
+
+/* ---------- лист 10: полосы рынков ---------- */
+.strips { display: flex; flex-direction: column; gap: 18px; }
+.strip { display: flex; flex-direction: column; gap: 6px; }
+.strip-h { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; flex-wrap: wrap; }
+.strip-h b { font-weight: 600; font-size: var(--t-body); }
+.strip-h span { font-size: var(--t-small); color: var(--ink-3); }
+.strip-b { display: flex; height: 44px; border: 1.5px solid var(--ink); background: var(--card); }
+.seg { flex: 0 0 var(--w); display: flex; align-items: center; padding: 0 10px; overflow: hidden; white-space: nowrap; font-size: var(--t-small); border-right: 1.5px solid var(--ink); min-width: 0; }
+.seg:last-child { border-right: 0; }
+.seg .sn { display: none; }
+.present .seg .sn { display: inline; }
+.seg b { font-family: var(--f-display); font-weight: 700; font-size: 1.12em; }
+.present .seg b { margin-left: 6px; }
+.seg.h5, .seg.h6 { color: var(--on-dark); }
+.seg.rest { background: repeating-linear-gradient(135deg, var(--card) 0 6px, var(--line) 6px 7.5px); color: var(--ink-2); }
+.seg.tiny { padding: 0; justify-content: center; }
+.strip-k { font-size: 13.5px; color: var(--ink-3); }
+
+/* ---------- лист 11: каналы влияния ---------- */
+.chan { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
+.ch { background: var(--card); border: 1px solid var(--ink); padding: 16px 18px; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.ch-h { display: flex; align-items: center; gap: 12px; }
+.ch-h svg { width: 38px; height: 22px; flex: none; }
+.ch-h h3 { font-family: var(--f-label); font-weight: 600; text-transform: uppercase; letter-spacing: .12em; font-size: calc(var(--t-label) * 1.08); }
+.ch .fig { font-family: var(--f-display); font-weight: 700; font-size: calc(var(--t-fig) * .72); line-height: 1.05; }
+.ch p { font-size: var(--t-small); color: var(--ink-2); line-height: 1.4; }
+.ch .refs-in { margin-top: auto; font-size: 13px; color: var(--ink-3); }
+.route { fill: none; stroke: var(--border); stroke-width: 2.5; stroke-linecap: round; }
+.route-dot { fill: var(--card); stroke: var(--ink); stroke-width: 2; }
+
+/* ---------- лист 12: железная дорога событий ---------- */
+.rail { position: relative; display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; padding-left: 26px; }
+.rail::before { content: ""; position: absolute; left: 6px; top: 6px; bottom: 6px; width: 7px; border: 1.5px solid var(--ink);
+  background: repeating-linear-gradient(180deg, var(--ink) 0 26px, var(--card) 26px 52px); }
+.st { position: relative; display: flex; flex-direction: column; gap: 4px; }
+.st::before { content: ""; position: absolute; left: -26px; top: 3px; width: 19px; height: 19px; border-radius: 50%; background: var(--card); border: 2.5px solid var(--ink); }
+.st.us::before { background: var(--border); border-color: var(--border); }
+.st-d { font-family: var(--f-label); font-weight: 600; text-transform: uppercase; letter-spacing: .12em; font-size: var(--t-label); color: var(--border); }
+.st-t { font-weight: 600; line-height: 1.3; }
+.st-x { font-size: var(--t-small); color: var(--ink-2); line-height: 1.38; }
+.verdict { border-top: 2px solid var(--ink); padding-top: 14px; font-family: var(--f-display); font-style: italic; font-size: calc(var(--t-lead) * 1.08); line-height: 1.35; }
+
+/* ---------- лист 13: выводы ---------- */
+.concl { display: flex; flex-direction: column; gap: 22px; }
+.concl-big { font-family: var(--f-display); font-style: italic; font-size: calc(var(--t-lead) * 1.35); line-height: 1.25; text-wrap: balance; }
+.concl-list { display: flex; flex-direction: column; border-top: 2px solid var(--ink); }
+.concl-list li { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line); line-height: 1.4; }
+.concl-list li::before { content: ""; width: 0; height: 0; margin-top: .38em; border-left: 8px solid transparent; border-right: 8px solid transparent; border-bottom: 13px solid var(--h5); }
+.concl-list b { font-weight: 600; }
+
+/* ---------- лист 14: источники ---------- */
+.refs h3 { font-family: var(--f-label); font-weight: 600; text-transform: uppercase; letter-spacing: .14em; font-size: var(--t-label); color: var(--border); margin: 18px 0 8px; }
+.refs h3:first-child { margin-top: 0; }
+.refs ol { list-style: decimal; padding-left: 2.3em; display: flex; flex-direction: column; gap: 7px; }
+.refs li { font-size: var(--t-small); line-height: 1.42; padding-left: 4px; overflow-wrap: anywhere; border-radius: 2px; transition: background-color .4s; }
+.refs li::marker { font-variant-numeric: lining-nums tabular-nums; color: var(--ink-3); }
+.refs li a { color: var(--sea-ink); }
+.refs li.flash { background: var(--h2); }
+
+/* ========== СЦЕНА 1600×900 (широкие экраны) ========== */
+html.present, html.present body { height: 100%; overflow: hidden; background: var(--void); }
+.present .deck { position: fixed; inset: 0; overflow: hidden; background: var(--void); }
+.present .stage {
+  position: absolute; left: 50%; top: 50%; width: 1600px; height: 900px;
+  transform: translate(-50%, -50%) scale(var(--k, 1));
+  overflow: hidden; background: var(--paper);
+}
+.present .graticule { display: block; position: absolute; inset: 0; width: 1600px; height: 900px; fill: none; stroke: var(--grid); stroke-width: 1; pointer-events: none; }
+.present .slide { position: absolute; inset: 0; display: none; border: 0; background: transparent; }
+.present .slide.is-active { display: block; }
+.present .frame {
+  display: block; position: absolute; inset: 46px 44px 50px; pointer-events: none;
+  border: 2.5px solid var(--ink);
+  background:
+    repeating-linear-gradient(90deg, var(--ink) 0 48px, transparent 48px 96px) top left / 100% 7px no-repeat,
+    repeating-linear-gradient(90deg, var(--ink) 0 48px, transparent 48px 96px) bottom left / 100% 7px no-repeat,
+    repeating-linear-gradient(180deg, var(--ink) 0 48px, transparent 48px 96px) top left / 7px 100% no-repeat,
+    repeating-linear-gradient(180deg, var(--ink) 0 48px, transparent 48px 96px) top right / 7px 100% no-repeat;
+}
+.present .frame::after { content: ""; position: absolute; inset: 7px; border: 1px solid var(--ink); }
+.present .marg { position: absolute; left: 46px; right: 46px; padding: 0; border: 0; align-items: center; }
+.present .marg.top { top: 0; height: 46px; }
+.present .marg.bot { bottom: 0; height: 50px; right: 330px; }
+.present .marg.bot .src { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.present .inner {
+  position: absolute; top: 56px; bottom: 60px; left: 54px; right: 54px;
+  padding: 34px 54px 30px; display: grid; grid-template-rows: auto minmax(0, 1fr); gap: 28px;
+}
+.present .body { min-height: 0; }
+.present .scroll-x { overflow: visible; }
+.present .scroll-x > svg { min-width: 0; }
+.present .only-present { display: inline; }
+.present .scroll { overflow-y: auto; min-height: 0; padding-right: 16px; scrollbar-color: var(--line) transparent; }
+
+/* титул */
+.present .cv { grid-template-rows: minmax(0, 1fr); grid-template-columns: minmax(0, 1fr) 560px; gap: 56px; align-items: center; padding: 40px 64px 40px 72px; }
+.present .cv-text { gap: 26px; }
+.present .cv-author { margin-top: 18px; }
+.present .cv-fig { max-width: 560px; }
+.present .hyps { right: -6px; bottom: 0; }
+
+/* сетки по листам */
+.present .plan { display: grid; grid-template-columns: 520px minmax(0, 1fr); gap: 64px; align-items: start; }
+.present .thesis { padding-top: 6px; }
+.present .sheets > li { grid-template-columns: 54px minmax(0, 1fr); padding: 11px 0; }
+.present .sheets .links { display: flex; flex-wrap: wrap; gap: 2px 28px; }
+.present .s3 .body { display: grid; grid-template-columns: minmax(0, 1fr) 640px; gap: 56px; align-items: start; }
+.present .defn-pair { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 28px; }
+.present .s4 .body { display: grid; grid-template-columns: minmax(0, 1fr) 400px; gap: 48px; align-items: end; }
+.present .syms { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 18px; align-items: end; }
+.present .s5 .body { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 44px; align-items: start; }
+.present .s6 .body { display: grid; grid-template-columns: minmax(0, 1fr) 470px; gap: 56px; align-items: start; }
+.present .s7 .body { gap: 14px; }
+.present .pairs { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px 34px; }
+.present .pair-fig svg { max-height: 222px; }
+.present .s8 .body, .present .s9 .body { display: grid; grid-template-columns: minmax(0, 1fr) 420px; gap: 56px; align-items: start; }
+.present .bars-axis { display: grid; }
+.present .brow { grid-template-columns: var(--namecol) minmax(0, 1fr) var(--valcol); grid-template-areas: "nm tr v"; }
+.present .cap-bars { --namecol: 150px; --valcol: 96px; --bh: 28px; }
+.present .cap-bars .brow { padding: 9px 0 26px; }
+.present .rd-bars { --namecol: 220px; --valcol: 70px; --bh: 32px; }
+.present .rd-bars .brow { padding: 14px 0; }
+.present .bkey { padding-top: 12px; }
+.present .s10 .body { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 56px; align-items: start; }
+.present .strips { gap: 24px; }
+.present .strip-h b { font-size: 21px; }
+.present .strip-b { height: 58px; }
+.present .seg { font-size: 18px; padding: 0 14px; }
+.present .strip-k { font-size: 15px; }
+.present .chan { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px 26px; }
+.present .ch { padding: 20px 24px; gap: 10px; }
+.present .ch .fig { font-size: 48px; }
+.present .ch p:not(.fig):not(.refs-in) { font-size: 19px; line-height: 1.42; }
+.present .ch .refs-in { font-size: 14.5px; }
+.present .rail { grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 22px; padding: 34px 0 0; }
+.present .rail::before { left: 0; right: 0; top: 0; bottom: auto; width: auto; height: 9px;
+  background: repeating-linear-gradient(90deg, var(--ink) 0 40px, var(--card) 40px 80px); }
+.present .st { padding-top: 0; }
+.present .st::before { left: 0; top: -40px; width: 21px; height: 21px; }
+.present .s12 .body { gap: 48px; }
+.present .st-d { font-size: 15px; }
+.present .st-t { font-size: 21px; }
+.present .st-x { font-size: 18px; line-height: 1.42; }
+.present .verdict { font-size: 27px; }
+.present .s13 .body { display: grid; grid-template-columns: 500px minmax(0, 1fr); gap: 60px; align-items: start; }
+.present .concl-list li { padding: 13px 0; }
+.present .s14 .inner { grid-template-rows: auto minmax(0, 1fr); }
+.present .s14 .body { display: grid; grid-template-rows: minmax(0, 1fr); }
+
+/* пульт */
+.present .hud { display: flex; gap: 6px; position: absolute; z-index: 20; right: 46px; bottom: 9px; }
+.hud button, .hud .count { height: 32px; border: 1.5px solid var(--ink); background: var(--card); color: var(--ink); display: grid; place-items: center; }
+.hud button { width: 40px; cursor: pointer; padding: 0; }
+.hud button:hover { background: var(--h2); }
+.hud button:disabled { opacity: .35; cursor: default; background: var(--card); }
+.hud svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.hud .count { padding: 0 12px; font-family: var(--f-label); font-size: 15px; font-weight: 600; letter-spacing: .08em; font-variant-numeric: lining-nums tabular-nums; min-width: 84px; }
+
+.present .toc {
+  display: flex; flex-direction: column; gap: 14px; position: absolute; z-index: 30; top: 0; right: 0; bottom: 0; width: 500px;
+  background: var(--card); color: var(--ink); padding: 40px 40px; border-left: 3px solid var(--ink); box-shadow: -24px 0 48px rgba(20, 37, 47, .18);
+}
+.toc-head { display: flex; justify-content: space-between; align-items: center; }
+.toc-head .lbl { color: var(--border); }
+.toc-close { width: 40px; height: 34px; border: 1.5px solid var(--ink); background: var(--card); color: var(--ink); cursor: pointer; font-size: 22px; line-height: 1; }
+.toc-close:hover { background: var(--h2); }
+.toc ol { display: flex; flex-direction: column; overflow-y: auto; border-top: 2px solid var(--ink); }
+.toc a { display: grid; grid-template-columns: 70px minmax(0, 1fr); gap: 10px; align-items: baseline; padding: 9px 8px; text-decoration: none; font-size: 17px; line-height: 1.3; border-bottom: 1px solid var(--line); }
+.toc a span { font-family: var(--f-label); font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); font-size: 13px; font-variant-numeric: lining-nums tabular-nums; }
+.toc a:hover, .toc a[aria-current="true"] { background: var(--h1); }
+
+/* ========== ПО ОДНОМУ ЛИСТУ (телефоны, узкие окна) ========== */
+html.paged, html.paged body { height: 100%; overflow: hidden; }
+.paged .deck { position: fixed; inset: 0; background: var(--paper); }
+.paged .stage { position: absolute; inset: 0; }
+.paged .slide {
+  position: absolute; inset: 0; display: none; border-bottom: 0;
+  overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain;
+  padding-bottom: calc(84px + env(safe-area-inset-bottom, 0px));
+}
+.paged .slide.is-active { display: flex; }
+.paged .marg.top { position: sticky; top: 0; z-index: 2; background: var(--paper); }
+.paged .only-present { display: inline; }
+.paged .hud {
+  display: flex; justify-content: center; gap: 8px; position: fixed; z-index: 20; left: 0; right: 0; bottom: 0;
+  padding: 10px 12px calc(10px + env(safe-area-inset-bottom, 0px)); background: var(--card); border-top: 2px solid var(--ink);
+}
+.paged .hud button { width: 52px; height: 46px; }
+.paged .hud .count { height: 46px; min-width: 92px; }
+.paged .toc { display: flex; flex-direction: column; gap: 14px; position: fixed; z-index: 30; inset: 0; background: var(--card); color: var(--ink); padding: 20px 16px calc(20px + env(safe-area-inset-bottom, 0px)); }
+.paged .toc a { font-size: 16px; padding: 11px 6px; }
+
+@media (min-width: 560px) {
+  .syms { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .pairs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .chan { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 420px) {
+  .hyps { position: static; width: auto; margin-top: 10px; }
+  .cap-bars .gdp span { font-size: 13px; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .present .slide.is-active .b, .present .slide.is-active .bar-scale i { animation: grow .9s cubic-bezier(.25, .7, .2, 1) .12s both; transform-origin: left center; }
+  .present .slide.is-active .ridge { stroke-dasharray: 1400; animation: draw 1.4s ease-out .1s both; }
+  @keyframes grow { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+  @keyframes draw { from { stroke-dashoffset: 1400; } to { stroke-dashoffset: 0; } }
+}
+</style>
+</head>
+<body>
+<main class="deck" id="deck">
+<div class="stage" id="stage">
+<svg class="graticule" viewBox="0 0 1600 900" aria-hidden="true" focusable="false"><defs><clipPath id="gclip"><rect x="60" y="60" width="1480" height="780"/></clipPath></defs><g clip-path="url(#gclip)"><circle cx="800" cy="-1500" r="1610"/><circle cx="800" cy="-1500" r="1706"/><circle cx="800" cy="-1500" r="1802"/><circle cx="800" cy="-1500" r="1898"/><circle cx="800" cy="-1500" r="1994"/><circle cx="800" cy="-1500" r="2090"/><circle cx="800" cy="-1500" r="2186"/><circle cx="800" cy="-1500" r="2282"/><circle cx="800" cy="-1500" r="2378"/><line x1="262.4" y1="-99.6" x2="-95.9" y2="834"/><line x1="336.5" y1="-73.4" x2="27.5" y2="877.6"/><line x1="411.8" y1="-51.1" x2="153" y2="914.8"/><line x1="488.1" y1="-32.8" x2="280.2" y2="945.4"/><line x1="565.3" y1="-18.5" x2="408.9" y2="969.2"/><line x1="643.2" y1="-8.2" x2="538.7" y2="986.3"/><line x1="721.5" y1="-2.1" x2="669.2" y2="996.6"/><line x1="800" y1="0" x2="800" y2="1000"/><line x1="878.5" y1="-2.1" x2="930.8" y2="996.6"/><line x1="956.8" y1="-8.2" x2="1061.3" y2="986.3"/><line x1="1034.7" y1="-18.5" x2="1191.1" y2="969.2"/><line x1="1111.9" y1="-32.8" x2="1319.8" y2="945.4"/><line x1="1188.2" y1="-51.1" x2="1447" y2="914.8"/><line x1="1263.5" y1="-73.4" x2="1572.5" y2="877.6"/><line x1="1337.6" y1="-99.6" x2="1695.9" y2="834"/></g></svg>
+
+<!-- 01 титул -->
+<section class="slide cover" id="s1" data-title="Титульный лист" data-sec="Семинар 3 · вопрос 1">
+  <div class="frame" aria-hidden="true"></div>
+  <header class="marg top"><span>Семинар 3. ТНК и МНК как ключевые субъекты мировой экономики и МЭО</span><span class="sheet"></span></header>
+  <div class="inner cv">
+    <div class="cv-text">
+      <p class="kick">Доклад-презентация · вопрос 1</p>
+      <h1 class="cv-title">Рост экономической мощи и влияния ТНК в современной мировой экономике</h1>
+      <p class="cv-lead">Атлас в 14 листах: как транснациональные корпорации сравнялись по масштабу с государствами и как это меняет мировую экономику.</p>
+      <p class="cv-author"><span class="lbl">Выполнил:</span><b>Татьянченко Иван Сергеевич</b> (МЭиМБ24-1)</p>
+    </div>
+    <figure class="cv-fig">
+      <svg class="globe" viewBox="0 0 520 520" role="img" aria-label="Глобус с градусной сеткой"><circle class="g-sea" cx="260" cy="260" r="236"/><g class="g-grid"><g></g><g><polyline points="178,481.3 182.6,482.9 187.4,484.3 192.3,485.7 197.5,487 202.8,488.2 208.3,489.2 213.9,490.2 219.6,491 225.5,491.8 231.5,492.4 237.5,492.9 243.6,493.3 249.7,493.5 255.9,493.7 262.1,493.7 268.2,493.6 274.4,493.4 280.5,493 286.5,492.6 292.5,492 298.4,491.3 304.2,490.5 309.9,489.6 315.4,488.5 320.8,487.4 326,486.1 331,484.8 335.8,483.4 340.5,481.8"/></g><g><polyline points="108.8,441.1 112.7,444.1 117,446.9 121.7,449.7 126.7,452.3 132.2,454.9 138,457.4 144.1,459.7 150.5,461.9 157.3,464 164.3,465.9 171.6,467.7 179.1,469.4 186.8,470.9 194.8,472.3 202.9,473.5 211.2,474.5 219.6,475.4 228.2,476.1 236.8,476.6 245.5,477 254.2,477.2 262.9,477.2 271.6,477.1 280.3,476.8 289,476.3 297.5,475.6 306,474.8 314.3,473.8 322.5,472.7 330.5,471.4 338.3,469.9 345.9,468.3 353.3,466.6 360.4,464.7 367.3,462.6 373.8,460.4 380,458.2 385.9,455.7 391.5,453.2 396.7,450.6 401.5,447.9 406,445 410,442.1"/></g><g><polyline points="63.5,390.5 66.8,394.3 70.5,398.1 74.8,401.8 79.5,405.4 84.8,408.8 90.6,412.2 96.8,415.5 103.4,418.6 110.5,421.6 118,424.5 125.9,427.2 134.2,429.7 142.8,432.1 151.7,434.3 160.9,436.4 170.4,438.2 180.1,439.9 190.1,441.4 200.2,442.6 210.6,443.7 221,444.6 231.6,445.2 242.2,445.7 252.9,445.9 263.6,446 274.3,445.8 284.9,445.4 295.5,444.8 306,444 316.3,443 326.5,441.8 336.6,440.4 346.4,438.8 356,437 365.3,435 374.3,432.9 383,430.6 391.4,428.1 399.4,425.4 407,422.6 414.2,419.6 421.1,416.5 427.4,413.3 433.3,410 438.8,406.5 443.7,403 448.1,399.3 452.1,395.6 455.5,391.8 458.3,387.9"/></g><g><polyline points="33.7,327 35.5,331.5 37.9,335.8 40.9,340.2 44.5,344.4 48.6,348.6 53.4,352.7 58.7,356.7 64.6,360.6 71,364.4 77.9,368 85.4,371.5 93.3,374.9 101.6,378.1 110.4,381.1 119.7,383.9 129.2,386.6 139.2,389.1 149.5,391.3 160.1,393.4 170.9,395.2 182,396.9 193.4,398.3 204.9,399.5 216.5,400.5 228.3,401.2 240.1,401.7 252,402 264,402 275.9,401.8 287.8,401.4 299.6,400.7 311.3,399.8 322.8,398.7 334.2,397.4 345.4,395.8 356.3,394 367,392 377.4,389.8 387.5,387.4 397.2,384.8 406.5,382 415.5,379.1 424,376 432,372.7 439.6,369.2 446.7,365.6 453.3,361.9 459.4,358 464.9,354.1 469.8,350 474.2,345.8 478,341.6 481.2,337.3 483.8,332.9 485.7,328.5"/></g><g class="eq"><polyline points="24,261.5 24.6,266.2 25.8,270.8 27.6,275.4 30,279.9 33.1,284.4 36.9,288.8 41.2,293.1 46.1,297.4 51.6,301.5 57.7,305.5 64.3,309.4 71.5,313.2 79.2,316.8 87.4,320.3 96.1,323.6 105.2,326.7 114.7,329.7 124.6,332.4 134.9,335 145.6,337.3 156.5,339.5 167.8,341.4 179.3,343.1 191,344.5 202.9,345.8 215,346.8 227.2,347.5 239.4,348.1 251.8,348.4 264.1,348.4 276.5,348.2 288.8,347.7 301,347.1 313.1,346.1 325.1,345 336.8,343.6 348.4,342 359.7,340.1 370.8,338.1 381.5,335.8 392,333.3 402,330.6 411.7,327.7 421,324.7 429.8,321.4 438.1,318 446,314.4 453.3,310.7 460.1,306.8 466.4,302.9 472.1,298.8 477.2,294.5 481.8,290.2 485.7,285.8 489,281.4 491.7,276.9 493.7,272.3 495.1,267.7 495.9,263.1"/></g><g><polyline points="32.9,195.9 32.2,200.4 32.1,204.9 32.6,209.3 33.7,213.8 35.5,218.2 37.9,222.6 40.9,226.9 44.5,231.2 48.6,235.4 53.4,239.5 58.7,243.5 64.6,247.3 71,251.1 77.9,254.8 85.4,258.3 93.3,261.6 101.6,264.8 110.4,267.8 119.7,270.7 129.2,273.3 139.2,275.8 149.5,278.1 160.1,280.1 170.9,282 182,283.6 193.4,285 204.9,286.2 216.5,287.2 228.3,287.9 240.1,288.4 252,288.7 264,288.7 275.9,288.6 287.8,288.1 299.6,287.5 311.3,286.6 322.8,285.5 334.2,284.1 345.4,282.5 356.3,280.8 367,278.8 377.4,276.6 387.5,274.2 397.2,271.6 406.5,268.8 415.5,265.8 424,262.7 432,259.4 439.6,255.9 446.7,252.3 453.3,248.6 459.4,244.8 464.9,240.8 469.8,236.7 474.2,232.6 478,228.3 481.2,224 483.8,219.7 485.7,215.3 487.1,210.8 487.8,206.3 487.9,201.9 487.4,197.4"/></g><g><polyline points="59.4,136 57.6,139.9 56.4,143.9 55.7,147.9 55.6,151.9 56.1,155.9 57.1,159.9 58.7,163.9 60.9,167.8 63.5,171.7 66.8,175.5 70.5,179.3 74.8,182.9 79.5,186.5 84.8,190 90.6,193.4 96.8,196.7 103.4,199.8 110.5,202.8 118,205.7 125.9,208.4 134.2,210.9 142.8,213.3 151.7,215.5 160.9,217.6 170.4,219.4 180.1,221.1 190.1,222.5 200.2,223.8 210.6,224.9 221,225.7 231.6,226.4 242.2,226.9 252.9,227.1 263.6,227.1 274.3,227 284.9,226.6 295.5,226 306,225.2 316.3,224.2 326.5,223 336.6,221.6 346.4,220 356,218.2 365.3,216.2 374.3,214.1 383,211.7 391.4,209.2 399.4,206.6 407,203.8 414.2,200.8 421.1,197.7 427.4,194.5 433.3,191.2 438.8,187.7 443.7,184.2 448.1,180.5 452.1,176.8 455.5,173 458.3,169.1 460.6,165.2 462.4,161.2 463.6,157.3 464.3,153.3 464.4,149.3 463.9,145.3 462.9,141.3 461.3,137.3 459.1,133.4"/></g><g><polyline points="106.4,80.8 103.2,83.9 100.4,87 98.1,90.2 96.2,93.3 94.7,96.6 93.8,99.8 93.2,103.1 93.1,106.4 93.5,109.6 94.4,112.9 95.7,116.1 97.4,119.3 99.6,122.5 102.2,125.6 105.3,128.7 108.8,131.7 112.7,134.6 117,137.5 121.7,140.2 126.7,142.9 132.2,145.5 138,147.9 144.1,150.2 150.5,152.5 157.3,154.5 164.3,156.5 171.6,158.3 179.1,159.9 186.8,161.5 194.8,162.8 202.9,164 211.2,165.1 219.6,165.9 228.2,166.6 236.8,167.2 245.5,167.5 254.2,167.7 262.9,167.8 271.6,167.6 280.3,167.3 289,166.8 297.5,166.2 306,165.4 314.3,164.4 322.5,163.2 330.5,161.9 338.3,160.5 345.9,158.9 353.3,157.1 360.4,155.2 367.3,153.2 373.8,151 380,148.7 385.9,146.3 391.5,143.8 396.7,141.1 401.5,138.4 406,135.6 410,132.7 413.6,129.7 416.8,126.7 419.6,123.6 421.9,120.4 423.8,117.2 425.3,114 426.2,110.7 426.8,107.5 426.9,104.2 426.5,100.9 425.6,97.7 424.3,94.4 422.6,91.2 420.4,88 417.8,84.9 414.7,81.9"/></g><g><polyline points="175.1,39.8 170.9,41.5 167,43.3 163.3,45.1 159.9,47.1 156.8,49.1 153.9,51.1 151.4,53.2 149.1,55.4 147.2,57.6 145.5,59.8 144.2,62.1 143.1,64.3 142.4,66.6 142.1,69 142,71.3 142.3,73.6 142.9,75.9 143.8,78.2 145,80.4 146.6,82.7 148.4,84.9 150.6,87.1 153.1,89.2 155.8,91.3 158.9,93.3 162.2,95.2 165.8,97.1 169.6,98.9 173.7,100.6 178,102.3 182.6,103.9 187.4,105.3 192.3,106.7 197.5,108 202.8,109.2 208.3,110.2 213.9,111.2 219.6,112 225.5,112.8 231.5,113.4 237.5,113.9 243.6,114.3 249.7,114.5 255.9,114.7 262.1,114.7 268.2,114.6 274.4,114.4 280.5,114 286.5,113.6 292.5,113 298.4,112.3 304.2,111.5 309.9,110.6 315.4,109.5 320.8,108.4 326,107.1 331,105.8 335.8,104.4 340.5,102.8 344.9,101.2 349.1,99.5 353,97.7 356.7,95.9 360.1,93.9 363.2,91.9 366.1,89.9 368.6,87.8 370.9,85.6 372.8,83.4 374.5,81.2 375.8,78.9 376.9,76.7 377.6,74.4 377.9,72 378,69.7 377.7,67.4 377.1,65.1 376.2,62.8 375,60.6 373.4,58.3 371.6,56.1 369.4,53.9 366.9,51.8 364.2,49.7 361.1,47.7 357.8,45.8 354.2,43.9 350.4,42.1 346.3,40.4"/></g><g><polyline points="295,29.9 292.4,29.2 289.6,28.6 286.8,28.1 283.9,27.6 280.9,27.1 277.9,26.8 274.8,26.4 271.7,26.2 268.5,26 265.3,25.8 262.1,25.8 258.9,25.8 255.7,25.8 252.6,25.9 249.4,26.1 246.3,26.3 243.2,26.6 240.1,27 237.1,27.4 234.2,27.9 231.3,28.4 228.5,29 225.8,29.7 223.2,30.4 220.7,31.1 218.3,31.9 216.1,32.7 213.9,33.6 211.9,34.6 210,35.5 208.2,36.5 206.6,37.5 205.1,38.6 203.8,39.7 202.6,40.8 201.6,42 200.7,43.1 200,44.3 199.5,45.5 199.2,46.6 199,47.8 198.9,49 199.1,50.2 199.4,51.4 199.8,52.6 200.5,53.8 201.3,54.9 202.2,56.1 203.4,57.2 204.6,58.3 206.1,59.4 207.6,60.4 209.4,61.4 211.2,62.4 213.2,63.3 215.3,64.2 217.6,65.1 219.9,65.9 222.4,66.7 225,67.4 227.6,68 230.4,68.7 233.2,69.2 236.1,69.7 239.1,70.1 242.1,70.5 245.2,70.8 248.3,71.1 251.5,71.3 254.7,71.4 257.9,71.5 261.1,71.5 264.3,71.5 267.4,71.4 270.6,71.2 273.7,70.9 276.8,70.6 279.9,70.3 282.9,69.9 285.8,69.4 288.7,68.8 291.5,68.3 294.2,67.6 296.8,66.9 299.3,66.2 301.7,65.4 303.9,64.5 306.1,63.7 308.1,62.7 310,61.8 311.8,60.8 313.4,59.7 314.9,58.7 316.2,57.6 317.4,56.5 318.4,55.3 319.3,54.2 320,53 320.5,51.8 320.8,50.6 321,49.4 321.1,48.2 320.9,47 320.6,45.9 320.2,44.7 319.5,43.5 318.7,42.3 317.8,41.2 316.6,40.1 315.4,39 313.9,37.9 312.4,36.9 310.6,35.8 308.8,34.9 306.8,33.9 304.7,33 302.4,32.2 300.1,31.4 297.6,30.6 295,29.9"/></g><polyline points="315.1,30.6 308.5,29.8 301.8,29.5 295,29.9 288.1,30.9 281.2,32.5 274.1,34.8 267.1,37.7 260,41.2"/><polyline points="288.9,25.9 284.9,26.2 280.9,27.1 276.8,28.7 272.6,30.9 268.4,33.7 264.2,37.1 260,41.2"/><polyline points="267.4,24.2 266.4,24.7 265.3,25.8 264.3,27.7 263.2,30.1 262.2,33.2 261.1,36.9 260,41.2"/><polyline points="245.3,24.5 247.3,25 249.4,26.1 251.5,27.9 253.6,30.3 255.7,33.3 257.9,36.9 260,41.2"/><polyline points="219.4,27.5 224.3,27 229.2,27.1 234.2,27.9 239.3,29.3 244.4,31.3 249.6,34 254.8,37.3 260,41.2"/><polyline points="191.1,34.3 198.3,32.6 205.6,31.4 213.1,31 220.7,31.1 228.5,31.9 236.3,33.3 244.1,35.3 252.1,37.9 260,41.2"/><polyline points="154.7,48.9 163.3,45.1 172.2,42 181.4,39.5 190.7,37.5 200.3,36.2 210,35.5 219.8,35.4 229.8,35.9 239.8,37.1 249.9,38.8 260,41.2"/><polyline points="95.2,91.1 103.2,83.9 111.6,77.2 120.4,70.9 129.6,65.2 139.2,60 149.1,55.4 159.3,51.3 169.8,47.8 180.5,44.9 191.5,42.6 202.6,40.8 213.9,39.7 225.3,39.1 236.8,39.2 248.4,39.9 260,41.2"/><polyline points="32.9,195.9 36.4,185.1 40.5,174.4 45.2,164 50.5,153.8 56.4,143.9 62.8,134.4 69.8,125.1 77.3,116.3 85.3,107.9 93.8,99.8 102.7,92.2 112,85.1 121.8,78.4 132,72.3 142.4,66.6 153.3,61.5 164.4,57 175.7,53 187.3,49.5 199.2,46.6 211.1,44.4 223.2,42.7 235.4,41.6 247.7,41.1 260,41.2"/><polyline points="43,352.7 39,342.2 35.5,331.5 32.7,320.5 30.4,309.4 28.9,298.1 27.9,286.8 27.6,275.4 27.9,263.9 28.9,252.4 30.4,240.9 32.7,229.5 35.5,218.2 39,207 43,195.9 47.7,185 52.9,174.3 58.7,163.9 65.1,153.7 72,143.8 79.4,134.2 87.3,125 95.7,116.1 104.5,107.7 113.7,99.6 123.4,92 133.4,84.8 143.8,78.2 154.5,72 165.5,66.3 176.7,61.2 188.2,56.6 199.8,52.6 211.7,49.2 223.6,46.3 235.7,44 247.8,42.3 260,41.2"/><polyline points="108.8,441.1 101,434.2 93.8,426.7 87,418.8 80.6,410.5 74.8,401.8 69.4,392.6 64.6,383.1 60.3,373.3 56.6,363.2 53.4,352.7 50.8,342 48.7,331.1 47.3,320 46.4,308.8 46.1,297.4 46.4,285.9 47.3,274.3 48.7,262.7 50.8,251.1 53.4,239.5 56.6,227.9 60.3,216.5 64.6,205.1 69.4,194 74.8,182.9 80.6,172.2 87,161.6 93.8,151.3 101,141.3 108.8,131.7 116.9,122.4 125.4,113.5 134.3,104.9 143.5,96.8 153.1,89.2 162.9,82 173,75.3 183.3,69.1 193.9,63.4 204.6,58.3 215.5,53.7 226.5,49.7 237.6,46.3 248.8,43.4 260,41.2"/><polyline points="161.5,474.5 153.7,470.4 146.2,465.8 139,460.6 132.2,454.9 125.6,448.6 119.5,441.9 113.7,434.6 108.4,426.8 103.4,418.6 98.9,410 94.8,400.9 91.2,391.5 88.1,381.7 85.4,371.5 83.2,361.1 81.4,350.4 80.2,339.4 79.5,328.2 79.2,316.8 79.5,305.3 80.2,293.6 81.4,281.9 83.2,270.1 85.4,258.3 88.1,246.4 91.2,234.6 94.8,222.9 98.9,211.3 103.4,199.8 108.4,188.5 113.7,177.4 119.5,166.5 125.6,155.8 132.2,145.5 139,135.4 146.2,125.7 153.7,116.4 161.5,107.4 169.6,98.9 177.9,90.8 186.5,83.2 195.2,76.1 204.1,69.5 213.2,63.3 222.4,57.8 231.7,52.8 241.1,48.3 250.5,44.5 260,41.2"/><polyline points="198.5,487.8 192.3,485.7 186.3,483 180.4,479.6 174.8,475.6 169.4,471.1 164.3,465.9 159.4,460.2 154.8,454 150.5,447.2 146.5,439.9 142.8,432.1 139.4,423.9 136.3,415.2 133.6,406 131.3,396.5 129.2,386.6 127.6,376.3 126.3,365.8 125.4,354.9 124.8,343.8 124.6,332.4 124.8,320.9 125.4,309.1 126.3,297.3 127.6,285.3 129.2,273.3 131.3,261.3 133.6,249.2 136.3,237.2 139.4,225.2 142.8,213.3 146.5,201.6 150.5,190 154.8,178.6 159.4,167.4 164.3,156.5 169.4,145.8 174.8,135.5 180.4,125.5 186.3,115.9 192.3,106.7 198.5,97.9 204.9,89.6 211.5,81.7 218.2,74.3 225,67.4 231.9,61 238.8,55.2 245.9,50 252.9,45.3 260,41.2"/><polyline points="227.2,493.7 223.4,492.7 219.6,491 216,488.8 212.6,485.9 209.2,482.3 206,478.2 202.9,473.5 200,468.2 197.3,462.3 194.7,455.8 192.3,448.8 190.1,441.4 188.1,433.4 186.3,424.9 184.6,416 183.2,406.6 182,396.9 181,386.8 180.3,376.3 179.7,365.5 179.4,354.4 179.3,343.1 179.4,331.5 179.7,319.7 180.3,307.8 181,295.8 182,283.6 183.2,271.4 184.6,259.1 186.3,246.9 188.1,234.7 190.1,222.5 192.3,210.5 194.7,198.6 197.3,186.9 200,175.3 202.9,164 206,153 209.2,142.2 212.6,131.8 216,121.7 219.6,112 223.4,102.7 227.2,93.9 231.1,85.5 235.1,77.6 239.1,70.1 243.2,63.2 247.4,56.9 251.6,51.1 255.8,45.8 260,41.2"/><polyline points="251.6,495.7 250.7,494.9 249.7,493.5 248.8,491.5 247.9,488.8 247.1,485.5 246.2,481.5 245.5,477 244.7,471.9 244,466.1 243.4,459.9 242.7,453 242.2,445.7 241.7,437.8 241.2,429.5 240.8,420.6 240.4,411.4 240.1,401.7 239.9,391.6 239.7,381.2 239.5,370.5 239.5,359.4 239.4,348.1 239.5,336.5 239.5,324.7 239.7,312.8 239.9,300.7 240.1,288.4 240.4,276.1 240.8,263.8 241.2,251.5 241.7,239.1 242.2,226.9 242.7,214.7 243.4,202.6 244,190.7 244.7,179 245.5,167.5 246.2,156.3 247.1,145.4 247.9,134.7 248.8,124.5 249.7,114.5 250.7,105 251.6,95.9 252.6,87.3 253.6,79.1 254.7,71.4 255.7,64.3 256.8,57.7 257.8,51.6 258.9,46.1 260,41.2"/><polyline points="276.7,495.3 278.6,494.5 280.5,493 282.3,490.9 284.1,488.2 285.8,484.8 287.4,480.9 289,476.3 290.5,471.1 291.8,465.4 293.2,459.1 294.4,452.2 295.5,444.8 296.5,436.9 297.4,428.5 298.3,419.7 299,410.4 299.6,400.7 300.1,390.7 300.5,380.2 300.8,369.5 300.9,358.4 301,347.1 300.9,335.5 300.8,323.7 300.5,311.8 300.1,299.7 299.6,287.5 299,275.2 298.3,262.9 297.4,250.5 296.5,238.2 295.5,226 294.4,213.8 293.2,201.8 291.8,190 290.5,178.3 289,166.8 287.4,155.6 285.8,144.7 284.1,134.1 282.3,123.9 280.5,114 278.6,104.6 276.7,95.5 274.7,86.9 272.7,78.8 270.6,71.2 268.5,64.1 266.4,57.5 264.3,51.5 262.1,46 260,41.2"/><polyline points="305.3,491.3 309.9,489.6 314.3,487.2 318.6,484.1 322.8,480.5 326.7,476.2 330.5,471.4 334.1,466 337.5,460 340.7,453.4 343.6,446.4 346.4,438.8 348.9,430.7 351.1,422.2 353.1,413.2 354.9,403.8 356.3,394 357.6,383.9 358.5,373.4 359.2,362.6 359.6,351.5 359.7,340.1 359.6,328.6 359.2,316.8 358.5,304.9 357.6,292.9 356.3,280.8 354.9,268.6 353.1,256.4 351.1,244.2 348.9,232.1 346.4,220 343.6,208 340.7,196.2 337.5,184.6 334.1,173.1 330.5,161.9 326.7,151 322.8,140.4 318.6,130.1 314.3,120.1 309.9,110.6 305.3,101.4 300.6,92.7 295.7,84.4 290.8,76.7 285.8,69.4 280.7,62.6 275.6,56.4 270.4,50.8 265.2,45.7 260,41.2"/><polyline points="335.8,483.4 342.6,480.4 349.2,476.8 355.5,472.7 361.5,467.9 367.3,462.6 372.7,456.7 377.9,450.3 382.7,443.4 387.2,436 391.4,428.1 395.2,419.7 398.6,410.9 401.6,401.6 404.3,392 406.5,382 408.4,371.7 409.8,361.1 410.9,350.2 411.5,339.1 411.7,327.7 411.5,316.2 410.9,304.5 409.8,292.7 408.4,280.7 406.5,268.8 404.3,256.8 401.6,244.8 398.6,232.9 395.2,221 391.4,209.2 387.2,197.6 382.7,186.2 377.9,174.9 372.7,163.9 367.3,153.2 361.5,142.7 355.5,132.6 349.2,122.8 342.6,113.4 335.8,104.4 328.9,95.8 321.7,87.6 314.4,80 306.9,72.8 299.3,66.2 291.5,60 283.7,54.5 275.9,49.5 267.9,45 260,41.2"/><polyline points="373.6,466.8 381.7,462 389.4,456.5 396.7,450.6 403.7,444.1 410.2,437.1 416.4,429.6 422.1,421.7 427.4,413.3 432.2,404.5 436.6,395.3 440.5,385.8 443.9,375.8 446.7,365.6 449.1,355.1 450.9,344.3 452.3,333.3 453.1,322.1 453.3,310.7 453.1,299.2 452.3,287.6 450.9,275.9 449.1,264.1 446.7,252.3 443.9,240.6 440.5,228.9 436.6,217.3 432.2,205.8 427.4,194.5 422.1,183.4 416.4,172.4 410.2,161.7 403.7,151.3 396.7,141.1 389.4,131.3 381.7,121.9 373.6,112.8 365.3,104.1 356.7,95.9 347.8,88.1 338.6,80.7 329.3,73.9 319.7,67.6 310,61.8 300.2,56.5 290.2,51.8 280.2,47.7 270.1,44.1 260,41.2"/><polyline points="432.3,421.2 439.4,413.1 446,404.5 452.1,395.6 457.6,386.3 462.6,376.6 467,366.6 470.9,356.4 474.2,345.8 476.9,335.1 479,324.1 480.6,312.9 481.5,301.6 481.8,290.2 481.5,278.7 480.6,267.2 479,255.6 476.9,244.1 474.2,232.6 470.9,221.1 467,209.8 462.6,198.6 457.6,187.6 452.1,176.8 446,166.2 439.4,155.8 432.3,145.8 424.8,136.1 416.8,126.7 408.4,117.6 399.6,109 390.4,100.7 380.8,93 370.9,85.6 360.7,78.8 350.2,72.4 339.5,66.6 328.5,61.2 317.4,56.5 306.1,52.3 294.7,48.6 283.2,45.5 271.6,43.1 260,41.2"/><polyline points="490,313 492.2,301.8 493.8,290.5 494.8,279.1 495.1,267.7 494.8,256.2 493.8,244.8 492.2,233.4 490,222 487.1,210.8 483.6,199.7 479.5,188.8 474.8,178 469.5,167.5 463.6,157.3 457.2,147.3 450.2,137.6 442.7,128.3 434.7,119.3 426.2,110.7 417.3,102.5 408,94.8 398.2,87.5 388,80.7 377.6,74.4 366.7,68.5 355.6,63.2 344.3,58.5 332.7,54.3 320.8,50.6 308.9,47.6 296.8,45.1 284.6,43.2 272.3,41.9 260,41.2"/><polyline points="472.3,157 467.1,147 461.3,137.3 454.9,127.9 448,119 440.6,110.4 432.7,102.2 424.3,94.4 415.5,87.1 406.3,80.3 396.6,74 386.6,68.1 376.2,62.8 365.5,58.1 354.5,53.9 343.3,50.2 331.8,47.2 320.2,44.7 308.3,42.8 296.4,41.5 284.3,40.8 272.2,40.7 260,41.2"/><polyline points="403.1,72.4 394.6,66.4 385.7,61 376.5,56.1 366.9,51.8 357.1,48.1 347,44.9 336.7,42.3 326.1,40.3 315.4,39 304.5,38.2 293.5,38 282.4,38.5 271.2,39.5 260,41.2"/><polyline points="350.4,42.1 342.1,39.2 333.5,37 324.8,35.4 315.9,34.3 306.8,33.9 297.6,34.2 288.3,35 278.9,36.4 269.5,38.5 260,41.2"/></g><circle class="g-rim" cx="260" cy="260" r="236"/></svg>
+      <figcaption class="hyps">
+        <span class="lbl">Накопленные ПИИ в мире, трлн&nbsp;$</span>
+        <ol>
+          <li><span class="h1"></span><b>2,2</b>1990</li>
+          <li><span class="h2"></span><b>7,4</b>2000</li>
+          <li><span class="h3"></span><b>20,9</b>2010</li>
+          <li><span class="h4"></span><b>41,3</b>2020</li>
+          <li><span class="h5"></span><b>57,8</b>2025</li>
+        </ol>
+      </figcaption>
+    </figure>
+  </div>
+  <footer class="marg bot"><span class="cv-foot only-present">Листать: стрелки ← → или свайп</span></footer>
+</section>
+
+<!-- 02 содержание -->
+<section class="slide" id="s2" data-title="Содержание атласа" data-sec="Введение">
+  <div class="frame" aria-hidden="true"></div>
+  <header class="marg top"><span>Введение</span><span class="sheet"></span></header>
+  <div class="inner">
+    <div class="hd"><p class="kick">Содержание атласа</p><h2 class="ttl">От участника мирового рынка к его архитектору</h2></div>
+    <div class="body plan">
+      <div class="thesis">
+        <p class="lbl">Главная мысль доклада</p>
+        <p class="thesis-t">За 35 лет транснациональные корпорации сравнялись с государствами по ресурсам и всё сильнее влияют на правила мировой экономики.</p>
+        <p class="thesis-n">Рост показан в цифрах: число филиалов и прямые инвестиции, выручка и капитализация, технологии и доли рынков. В конце — каналы влияния ТНК и ответ государств.</p>
+      </div>
+      <ol class="sheets" aria-label="Разделы и листы">
+        <li><span class="g">I</span><div><span class="gname">Понятие</span><div class="links"><a href="#s3"><b>03</b><span>ТНК и измерители мощи</span></a></div></div></li>
+        <li><span class="g">II</span><div><span class="gname">Масштаб роста</span><div class="links"><a href="#s4"><b>04</b><span>Число ТНК и филиалов</span></a><a href="#s5"><b>05</b><span>Накопленные ПИИ</span></a><a href="#s6"><b>06</b><span>Доля в мировой экономике</span></a></div></div></li>
+        <li><span class="g">III</span><div><span class="gname">Корпорации и государства</span><div class="links"><a href="#s7"><b>07</b><span>Выручка и ВВП</span></a><a href="#s8"><b>08</b><span>Капитализация</span></a></div></div></li>
+        <li><span class="g">IV</span><div><span class="gname">Технологии и рынки</span><div class="links"><a href="#s9"><b>09</b><span>НИОКР</span></a><a href="#s10"><b>10</b><span>Олигополии</span></a></div></div></li>
+        <li><span class="g">V</span><div><span class="gname">Влияние и его пределы</span><div class="links"><a href="#s11"><b>11</b><span>Каналы влияния</span></a><a href="#s12"><b>12</b><span>Ответ государств</span></a></div></div></li>
+        <li><span class="g">—</span><div><span class="gname">Итоги</span><div class="links"><a href="#s13"><b>13</b><span>Выводы</span></a><a href="#s14"><b>14</b><span>Список источников</span></a></div></div></li>
+      </ol>
+    </div>
+  </div>
+  <footer class="marg bot"><p class="src">Источники: <a href="#r1">[1]</a>, <a href="#r5">[5]</a>, <a href="#r8">[8]</a></p></footer>
+</section>
+
+<!-- 03 понятие -->
+<section class="slide s3" id="s3" data-title="Понятие ТНК и измерители мощи" data-sec="I · Понятие">
+  <div class="frame" aria-hidden="true"></div>
+  <header class="marg top"><span>I · Понятие</span><span class="sheet"></span></header>
+  <div class="inner">
+    <div class="hd"><p class="kick">I · Понятие</p><h2 class="ttl">Что такое ТНК и чем измерять её мощь</h2></div>
+    <div class="body">
+      <div class="defn">
+        <p class="defn-term">Транснациональная корпорация</p>
+        <p class="defn-text">— компания (группа компаний), которая владеет или управляет производственными, сбытовыми и научными подразделениями в двух и более странах и подчиняет их единой стратегии головного центра.</p>
+        <div class="defn-pair">
+          <p><b>Экономическая мощь</b> — объём ресурсов под единым управлением: выручка, активы, капитал, технологии, доли рынков.</p>
+          <p><b>Влияние</b> — способность менять поведение рынков, правительств и международных институтов в своих интересах.</p>
+        </div>
+      </div>
+      <div class="inset">
+        <p class="lbl">Условные обозначения: измерители мощи</p>
+        <ul class="legend-list">
+          <li><svg viewBox="0 0 44 26" aria-hidden="true"><circle class="sym-o h2" cx="22" cy="13" r="11"/><circle class="sym-i" cx="22" cy="13" r="5"/></svg><div><b>Число ТНК и филиалов</b><span>охват международного производства</span></div><a href="#s4">лист 04</a></li>
+          <li><svg viewBox="0 0 44 26" aria-hidden="true"><path d="M2 24 L12 12 L20 16 L30 5 L42 2 L42 24 Z" class="h3"/><path d="M2 24 L12 12 L20 16 L30 5 L42 2" class="lg-stroke"/></svg><div><b>Прямые иностранные инвестиции</b><span>капитал ТНК, вложенный за рубежом</span></div><a href="#s5">лист 05</a></li>
+          <li><svg viewBox="0 0 44 26" aria-hidden="true"><rect x="3" y="4" width="38" height="18" class="h3"/><rect x="3" y="4" width="38" height="18" class="lg-stroke"/></svg><div><b>Выручка и доля в мировом ВВП</b><span>масштаб текущей деятельности</span></div><a href="#s6">листы 06–07</a></li>
+          <li><svg viewBox="0 0 44 26" aria-hidden="true"><rect x="2" y="7" width="34" height="12" class="h4"/><rect x="2" y="7" width="34" height="12" class="lg-stroke"/><line x1="40" y1="2" x2="40" y2="24" class="lg-gdp"/></svg><div><b>Рыночная капитализация</b><span>оценка инвесторами будущих доходов</span></div><a href="#s8">лист 08</a></li>
+          <li><svg viewBox="0 0 44 26" aria-hidden="true"><path d="M22 2 L40 24 L4 24 Z" class="h5"/><path d="M22 2 L40 24 L4 24 Z" class="lg-stroke"/></svg><div><b>НИОКР и доли рынков</b><span>технологический задел и рыночная власть</span></div><a href="#s9">листы 09–10</a></li>
+          <li><svg viewBox="0 0 44 26" aria-hidden="true"><path d="M3 20 C 14 20, 16 6, 28 8 S 38 16, 41 6" class="lg-red"/></svg><div><b>Влияние на правила</b><span>лоббизм, налоги, стандарты</span></div><a href="#s11">листы 11–12</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <footer class="marg bot"><p class="src">Источники: <a href="#r1">[1]</a>, <a href="#r3">[3]</a>, <a href="#r4">[4]</a>, <a href="#r9">[9]</a></p></footer>
+</section>
+
+<!-- 04 число ТНК -->
+<section class="slide s4" id="s4" data-title="Число ТНК и их филиалов" data-sec="II · Масштаб роста">
+  <div class="frame" aria-hidden="true"></div>
+  <header class="marg top"><span>II · Масштаб роста</span><span class="sheet"></span></header>
+  <div class="inner">
+    <div class="hd"><p class="kick">II · Масштаб роста</p><h2 class="ttl">За 20 лет ТНК стало почти втрое больше, а их зарубежных филиалов — в пять раз</h2></div>
+    <div class="body">
+      <div class="fdi-wrap">
+        <ul class="syms" aria-label="Число материнских компаний и зарубежных филиалов по годам"><li class="sym"><div class="sym-fig"><svg viewBox="0 0 250 250" aria-hidden="true" focusable="false"><circle class="sym-o h1" cx="125" cy="192.5" r="51.5"/><circle class="sym-i" cx="125" cy="220" r="24"/></svg></div><p class="sym-y">1990</p><p class="sym-t"><span class="k-in"></span><b>≈37 тыс.</b> ТНК</p><p class="sym-t"><span class="k-out h1"></span><b>≈170 тыс.</b> филиалов</p><p class="sym-r"><a href="#r27">[27]</a></p></li><li class="sym"><div class="sym-fig"><svg viewBox="0 0 250 250" aria-hidden="true" focusable="false"><circle class="sym-o h2" cx="125" cy="140.2" r="103.8"/><circle class="sym-i" cx="125" cy="212.6" r="31.4"/></svg></div><p class="sym-y">2000</p><p class="sym-t"><span class="k-in"></span><b>≈63 тыс.</b> ТНК</p><p class="sym-t"><span class="k-out h2"></span><b>≈690 тыс.</b> филиалов</p><p class="sym-r"><a href="#r28">[28]</a></p></li><li class="sym"><div class="sym-fig"><svg viewBox="0 0 250 250" aria-hidden="true" focusable="false"><circle class="sym-o h3" cx="125" cy="131.6" r="112.4"/><circle class="sym-i" cx="125" cy="208.2" r="35.8"/></svg></div><p class="sym-y">2008</p><p class="sym-t"><span class="k-in"></span><b>≈82 тыс.</b> ТНК</p><p class="sym-t"><span class="k-out h3"></span><b>≈810 тыс.</b> филиалов</p><p class="sym-r"><a href="#r29">[29]</a></p></li><li class="sym"><div class="sym-fig"><svg viewBox="0 0 250 250" aria-hidden="true" focusable="false"><circle class="sym-o h4" cx="125" cy="126" r="118"/><circle class="sym-i" cx="125" cy="203.7" r="40.3"/></svg></div><p class="sym-y">2010</p><p class="sym-t"><span class="k-in"></span><b>свыше 100 тыс.</b> ТНК</p><p class="sym-t"><span class="k-out h4"></span><b>≈890 тыс.</b> филиалов</p><p class="sym-r"><a href="#r30">[30]</a></p></li></ul>
+        <p class="note">Площадь внешнего кружка — число зарубежных филиалов, внутреннего — материнских компаний, в одном масштабе. После 2011&nbsp;г. ЮНКТАД не публикует общий подсчёт.</p>
+      </div>
+      <div class="inset">
+        <p class="lbl">Что ускорило рост</p>
+        <ul class="drivers">
+          <li><span><b>Либерализация.</b> Страны снимали ограничения для иностранного капитала и приватизировали госкомпании.</span></li>
+          <li><span><b>Новые рынки.</b> В мировое хозяйство вошли Китай, Центральная и Восточная Европа, страны СНГ.</span></li>
+          <li><span><b>Технологии.</b> ИКТ и контейнерные перевозки удешевили управление филиалами на расстоянии.</span></li>
+          <li><span><b>Слияния и поглощения.</b> Купить готовый бизнес за рубежом оказалось быстрее, чем строить новый.</span></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <footer class="marg bot"><p class="src">Источники: <a href="#r3">[3]</a>, <a href="#r4">[4]</a>, <a href="#r27">[27]</a>, <a href="#r28">[28]</a>, <a href="#r29">[29]</a>, <a href="#r30">[30]</a></p></footer>
+</section>
+
+<!-- 05 ПИИ -->
+<section class="slide s5" id="s5" data-title="Накопленные прямые иностранные инвестиции" data-sec="II · Масштаб роста">
+  <div class="frame" aria-hidden="true"></div>
+  <header class="marg top"><span>II · Масштаб роста</span><span class="sheet"></span></header>
+  <div class="inner">
+    <div class="hd"><p class="kick">II · Масштаб роста · профиль 1990–2025</p><h2 class="ttl">Накопленные ПИИ выросли в 26 раз и достигли половины мирового ВВП</h2></div>
+    <div class="body">
+      <div class="fdi-wrap">
+        <div class="scroll-x"><svg class="fdi" viewBox="0 0 900 460" role="img" aria-label="Накопленные прямые иностранные инвестиции в мире, 1990–2025 годы: рост с 2,2 до 57,8 триллиона долларов"><defs><clipPath id="fdiArea"><path d="M70,412 L70,399.3 L93.3,397.7 L116.5,397.5 L139.8,396.3 L163,394.8 L186.3,391.3 L209.5,388 L232.8,384.6 L256.1,377.7 L279.3,370.9 L302.6,369.2 L325.8,368.8 L349.1,369.6 L372.3,359.2 L395.6,350.7 L418.9,345.6 L442.1,330.1 L465.4,308.1 L488.6,325.8 L511.9,303 L535.1,290.6 L558.4,286 L581.7,272.2 L604.9,259.9 L628.2,258.5 L651.4,254.6 L674.7,244.8 L697.9,217 L721.2,219.2 L744.5,196.9 L767.7,172.6 L791,142 L814.2,158.5 L837.5,135.3 L860.7,118.9 L884,76.6 L884,412 Z"/></clipPath></defs><line class="iso" x1="70" x2="884" y1="354" y2="354"/><text class="iso-t" x="60" y="359" text-anchor="end">10</text><line class="iso" x1="70" x2="884" y1="296" y2="296"/><text class="iso-t" x="60" y="301" text-anchor="end">20</text><line class="iso" x1="70" x2="884" y1="238" y2="238"/><text class="iso-t" x="60" y="243" text-anchor="end">30</text><line class="iso" x1="70" x2="884" y1="180" y2="180"/><text class="iso-t" x="60" y="185" text-anchor="end">40</text><line class="iso" x1="70" x2="884" y1="122" y2="122"/><text class="iso-t" x="60" y="127" text-anchor="end">50</text><line class="iso" x1="70" x2="884" y1="64" y2="64"/><text class="iso-t" x="60" y="69" text-anchor="end">60</text><text class="iso-t" x="60" y="417" text-anchor="end">0</text><g clip-path="url(#fdiArea)"><rect class="h1" x="70" y="354" width="814" height="58"/><rect class="h2" x="70" y="296" width="814" height="58"/><rect class="h3" x="70" y="238" width="814" height="58"/><rect class="h4" x="70" y="180" width="814" height="58"/><rect class="h5" x="70" y="122" width="814" height="58"/><rect class="h6" x="70" y="64" width="814" height="58"/></g><line class="iso iso-over" x1="70" x2="884" y1="354" y2="354"/><line class="iso iso-over" x1="70" x2="884" y1="296" y2="296"/><line class="iso iso-over" x1="70" x2="884" y1="238" y2="238"/><line class="iso iso-over" x1="70" x2="884" y1="180" y2="180"/><line class="iso iso-over" x1="70" x2="884" y1="122" y2="122"/><line class="iso iso-over" x1="70" x2="884" y1="64" y2="64"/><polyline class="ridge" points="70,399.3 93.3,397.7 116.5,397.5 139.8,396.3 163,394.8 186.3,391.3 209.5,388 232.8,384.6 256.1,377.7 279.3,370.9 302.6,369.2 325.8,368.8 349.1,369.6 372.3,359.2 395.6,350.7 418.9,345.6 442.1,330.1 465.4,308.1 488.6,325.8 511.9,303 535.1,290.6 558.4,286 581.7,272.2 604.9,259.9 628.2,258.5 651.4,254.6 674.7,244.8 697.9,217 721.2,219.2 744.5,196.9 767.7,172.6 791,142 814.2,158.5 837.5,135.3 860.7,118.9 884,76.6"/><line class="base" x1="70" x2="884" y1="412" y2="412"/><line class="tick" x1="70" x2="70" y1="412" y2="419"/><text class="yr" x="70" y="442" text-anchor="middle">1990</text><line class="tick" x1="186.3" x2="186.3" y1="412" y2="419"/><text class="yr" x="186.3" y="442" text-anchor="middle">1995</text><line class="tick" x1="302.6" x2="302.6" y1="412" y2="419"/><text class="yr" x="302.6" y="442" text-anchor="middle">2000</text><line class="tick" x1="418.9" x2="418.9" y1="412" y2="419"/><text class="yr" x="418.9" y="442" text-anchor="middle">2005</text><line class="tick" x1="535.1" x2="535.1" y1="412" y2="419"/><text class="yr" x="535.1" y="442" text-anchor="middle">2010</text><line class="tick" x1="651.4" x2="651.4" y1="412" y2="419"/><text class="yr" x="651.4" y="442" text-anchor="middle">2015</text><line class="tick" x1="767.7" x2="767.7" y1="412" y2="419"/><text class="yr" x="767.7" y="442" text-anchor="middle">2020</text><line class="tick" x1="884" x2="884" y1="412" y2="419"/><text class="yr" x="884" y="442" text-anchor="middle">2025</text><text class="note-t" x="488.6" y="359.8" text-anchor="middle">2008: −17%</text><circle class="spot" cx="70" cy="399.3" r="5"/><text class="spot-v" x="70" y="361.3" text-anchor="start">2,2</text><text class="spot-s" x="70" y="383.3" text-anchor="start">9,5% ВВП</text><circle class="spot" cx="302.6" cy="369.2" r="5"/><text class="spot-v" x="302.6" y="329.2" text-anchor="middle">7,4</text><text class="spot-s" x="302.6" y="351.2" text-anchor="middle">22% ВВП</text><circle class="spot" cx="535.1" cy="290.6" r="5"/><text class="spot-v" x="521.1" y="262.6" text-anchor="end">20,9</text><text class="spot-s" x="521.1" y="284.6" text-anchor="end">31% ВВП</text><circle class="spot" cx="767.7" cy="172.6" r="5"/><text class="spot-v" x="753.7" y="144.6" text-anchor="end">41,3</text><text class="spot-s" x="753.7" y="166.6" text-anchor="end">48% ВВП</text><circle class="spot" cx="884" cy="76.6" r="5"/><text class="spot-v" x="884" y="36.6" text-anchor="end">57,8</text><text class="spot-s" x="884" y="58.6" text-anchor="end">49% ВВП</text><text class="unit" x="60" y="50" text-anchor="end">трлн $</text></svg></div>
+        <div class="hlegend"><span>Послойная окраска, трлн&nbsp;$:</span><ol><li><span class="sw h1"></span>0–10</li><li><span class="sw h2"></span>10–20</li><li><span class="sw h3"></span>20–30</li><li><span class="sw h4"></span>30–40</li><li><span class="sw h5"></span>40–50</li><li><span class="sw h6"></span>50–60</li></ol><span class="it">отметки — запас ПИИ и его доля в мировом ВВП</span></div>
+      </div>
+      <div class="marks">
+        <div class="mark"><p class="fig">$57,8<small> трлн</small></p><p>запас прямых иностранных инвестиций в мире на конец 2025&nbsp;г. В 1990&nbsp;г. было $2,2&nbsp;трлн.</p></div>
+        <div class="mark"><p class="fig">49%</p><p>мирового ВВП — так соотносится запас ПИИ с мировым продуктом. В 1990&nbsp;г. — 9,5%.</p></div>
+        <div class="mark"><p class="fig">$1,6<small> трлн</small></p><p>новых ПИИ за 2025&nbsp;г. (+6%). Рекорд — $2,2&nbsp;трлн в 2015&nbsp;г. ПИИ — главный канал выхода ТНК за рубеж.</p></div>
+      </div>
+    </div>
+  </div>
+  <footer class="marg bot"><p class="src">Источники: <a href="#r7">[7]</a>, <a href="#r32">[32]</a>, <a href="#r33">[33]</a></p></footer>
+</section>
+
+<!-- 06 доля -->
+<section class="slide s6" id="s6" data-title="Доля ТНК в мировой экономике" data-sec="II · Масштаб роста">
+  <div class="frame" aria-hidden="true"></div>
+  <header class="marg top"><span>II · Масштаб роста</span><span class="sheet"></span></header>
+  <div class="inner">
+    <div class="hd"><p class="kick">II · Масштаб роста</p><h2 class="ttl">ТНК создают почти треть мирового ВВП и держат в своих сетях большую часть торговли</h2></div>
+    <div class="body">
+      <div class="rulers" aria-label="Доли ТНК в мировой экономике">
+        <div class="ruler">
+          <div class="ruler-h"><p class="fig">80%</p><p>мировой торговли связано с производственными сетями ТНК <span class="refs-in"><a href="#r31">[31]</a></span></p></div>
+          <div class="bar-scale alt"><i style="--w:80%"></i></div>
+        </div>
+        <div class="ruler">
+          <div class="ruler-h"><p class="fig">50%</p><p>мирового экспорта приходится на ТНК <span class="refs-in"><a href="#r20">[20]</a></span></p></div>
+          <div class="bar-scale"><i style="--w:50%"></i></div>
+        </div>
+        <div class="ruler">
+          <div class="ruler-h"><p class="fig">28%</p><p>мирового ВВП создают ТНК — материнские компании и филиалы <span class="refs-in"><a href="#r20">[20]</a></span></p></div>
+          <div class="bar-scale"><i style="--w:28%"></i></div>
+        </div>
+        <div class="ruler">
+          <div class="ruler-h"><p class="fig">25%</p><p>мировой занятости обеспечивают ТНК <span class="refs-in"><a href="#r20">[20]</a></span></p></div>
+          <div class="bar-scale"><i style="--w:25%"></i></div>
+          <div class="ruler-ticks" aria-hidden="true"><span>0</span><span>25</span><span>50</span><span>75</span><span>100%</span></div>
+        </div>
+      </div>
+      <div class="inset passport">
+        <p class="lbl">Fortune Global 500 · итоги 2025&nbsp;г.</p>
+        <dl>
+          <dt>Выручка 500 крупнейших компаний мира</dt><dd>$43,1&nbsp;трлн<small>+3%</small></dd>
+          <dt>Прибыль</dt><dd>$3,4&nbsp;трлн<small>+14%</small></dd>
+          <dt>Занятые</dt><dd>70,2&nbsp;млн</dd>
+          <dt>Компании из США / Большого Китая</dt><dd>141 / 122</dd>
+        </dl>
+        <p class="foot">Выручка пятисот компаний равна 36% мирового ВВП 2025&nbsp;г. ($118,2&nbsp;трлн). Это условное сравнение: выручка включает стоимость закупок, а ВВП — только добавленную стоимость.</p>
+      </div>
+    </div>
+  </div>
+  <footer class="marg bot"><p class="src">Источники: <a href="#r2">[2]</a>, <a href="#r16">[16]</a>, <a href="#r18">[18]</a>, <a href="#r20">[20]</a>, <a href="#r31">[31]</a> · доли — оценки ОЭСР (2018) и ЮНКТАД (2013)</p></footer>
+</section>
+
+<!-- 07 картограмма -->
+<section class="slide s7" id="s7" data-title="Выручка ТНК и ВВП государств" data-sec="III · Корпорации и государства">
+  <div class="frame" aria-hidden="true"></div>
+  <header class="marg top"><span>III · Корпорации и государства</span><span class="sheet"></span></header>
+  <div class="inner">
+    <div class="hd"><p class="kick">III · Картограмма · млрд $, 2025&nbsp;г.</p><h2 class="ttl">Выручка крупнейших ТНК сопоставима с ВВП целых стран</h2></div>
+    <div class="body">
+      <p class="carto-key">
+        <span><svg viewBox="0 0 24 24" aria-hidden="true"><circle class="c-corp" cx="12" cy="12" r="10"/></svg>выручка компании (Fortune Global 500)</span>
+        <span><svg viewBox="0 0 24 24" aria-hidden="true"><circle class="c-ctry" cx="12" cy="12" r="10"/></svg>ВВП страны (МВФ)</span>
+        <span class="it">площадь кружка пропорциональна величине</span>
+      </p>
+      <ul class="pairs"><li class="pair"><div class="pair-fig"><svg viewBox="0 0 460 228" role="img" aria-label="Amazon: выручка 716,9 млрд долларов; Ирландия: ВВП 718,1 млрд долларов"><circle class="c-corp" cx="123" cy="120.1" r="103.9"/><circle class="c-ctry" cx="336.9" cy="120" r="104"/><text class="c-n" x="123" y="116.1" text-anchor="middle">Amazon</text><text class="c-v" x="123" y="144.1" text-anchor="middle">716,9</text><text class="c-n ctry" x="336.9" y="116" text-anchor="middle">Ирландия</text><text class="c-v ctry" x="336.9" y="144" text-anchor="middle">718,1</text></svg></div><p class="pair-cap">Выручка Amazon равна ВВП Ирландии</p></li><li class="pair"><div class="pair-fig"><svg viewBox="0 0 460 228" role="img" aria-label="Walmart: выручка 713,2 млрд долларов; Аргентина: ВВП 681,5 млрд долларов"><circle class="c-corp" cx="125.7" cy="120.4" r="103.6"/><circle class="c-ctry" cx="336.6" cy="122.7" r="101.3"/><text class="c-n" x="125.7" y="116.4" text-anchor="middle">Walmart</text><text class="c-v" x="125.7" y="144.4" text-anchor="middle">713,2</text><text class="c-n ctry" x="336.6" y="118.7" text-anchor="middle">Аргентина</text><text class="c-v ctry" x="336.6" y="146.7" text-anchor="middle">681,5</text></svg></div><p class="pair-cap">Walmart больше Аргентины</p></li><li class="pair"><div class="pair-fig"><svg viewBox="0 0 460 228" role="img" aria-label="State Grid: выручка 555,4 млрд долларов; Норвегия: ВВП 530,8 млрд долларов"><circle class="c-corp" cx="137.6" cy="132.5" r="91.5"/><circle class="c-ctry" cx="324.5" cy="134.6" r="89.4"/><text class="c-n" x="137.6" y="128.5" text-anchor="middle">State Grid</text><text class="c-v" x="137.6" y="156.5" text-anchor="middle">555,4</text><text class="c-n ctry" x="324.5" y="130.6" text-anchor="middle">Норвегия</text><text class="c-v ctry" x="324.5" y="158.6" text-anchor="middle">530,8</text></svg></div><p class="pair-cap">State Grid больше Норвегии</p></li><li class="pair"><div class="pair-fig"><svg viewBox="0 0 460 228" role="img" aria-label="UnitedHealth: выручка 447,6 млрд долларов; ЮАР: ВВП 427,1 млрд долларов"><circle class="c-corp" cx="146.8" cy="141.9" r="82.1"/><circle class="c-ctry" cx="315.1" cy="143.8" r="80.2"/><text class="c-n" x="146.8" y="137.9" text-anchor="middle">UnitedHealth</text><text class="c-v" x="146.8" y="165.9" text-anchor="middle">447,6</text><text class="c-n ctry" x="315.1" y="139.8" text-anchor="middle">ЮАР</text><text class="c-v ctry" x="315.1" y="167.8" text-anchor="middle">427,1</text></svg></div><p class="pair-cap">UnitedHealth больше ЮАР</p></li><li class="pair"><div class="pair-fig"><svg viewBox="0 0 460 228" role="img" aria-label="Saudi Aramco: выручка 445,5 млрд долларов; Египет: ВВП 364,6 млрд долларов"><circle class="c-corp" cx="152.9" cy="142.1" r="81.9"/><circle class="c-ctry" cx="314.9" cy="149.9" r="74.1"/><text class="c-n" x="152.9" y="138.1" text-anchor="middle">Saudi Aramco</text><text class="c-v" x="152.9" y="166.1" text-anchor="middle">445,5</text><text class="c-n ctry" x="314.9" y="145.9" text-anchor="middle">Египет</text><text class="c-v ctry" x="314.9" y="173.9" text-anchor="middle">364,6</text></svg></div><p class="pair-cap">Saudi Aramco больше Египта</p></li><li class="pair"><div class="pair-fig"><svg viewBox="0 0 460 228" role="img" aria-label="Apple: выручка 416,2 млрд долларов; Пакистан: ВВП 407,8 млрд долларов"><circle class="c-corp" cx="148.6" cy="144.8" r="79.2"/><circle class="c-ctry" cx="312.2" cy="145.6" r="78.4"/><text class="c-n" x="148.6" y="140.8" text-anchor="middle">Apple</text><text class="c-v" x="148.6" y="168.8" text-anchor="middle">416,2</text><text class="c-n ctry" x="312.2" y="141.6" text-anchor="middle">Пакистан</text><text class="c-v ctry" x="312.2" y="169.6" text-anchor="middle">407,8</text></svg></div><p class="pair-cap">Apple больше Пакистана</p></li></ul>
+    </div>
+  </div>
+  <footer class="marg bot"><p class="src">Источники: <a href="#r5">[5]</a>, <a href="#r17">[17]</a>, <a href="#r18">[18]</a> · сравнение условное: ВВП — добавленная стоимость, выручка — оборот</p></footer>
+</section>
+
+<!-- 08 капитализация -->
+<section class="slide s8" id="s8" data-title="Капитализация и ВВП" data-sec="III · Корпорации и государства">
+  <div class="frame" aria-hidden="true"></div>
+  <header class="marg top"><span>III · Корпорации и государства</span><span class="sheet"></span></header>
+  <div class="inner">
+    <div class="hd"><p class="kick">III · Корпорации и государства · трлн $</p><h2 class="ttl">Рыночная стоимость лидеров больше ВВП Германии и Японии</h2></div>
+    <div class="body">
+      <div class="bars cap-bars" role="img" aria-label="Капитализация шести крупнейших компаний на 1 октября 2026 года в сравнении с ВВП стран за 2025 год">
+        <div class="bars-axis" aria-hidden="true"><span></span><div class="ax"><span style="left:0">0</span><span style="left:16.667%">1</span><span style="left:33.333%">2</span><span style="left:50%">3</span><span style="left:66.667%">4</span><span style="left:83.333%">5</span><span style="left:100%">6</span></div><span></span></div>
+        <div class="brow"><span class="nm">NVIDIA<small>США</small></span><span class="tr"><i class="b" style="--w:91.9%"></i><i class="gdp" style="--g:84.1%"><span>Германия 5,05</span></i></span><span class="v">5,51</span></div>
+        <div class="brow"><span class="nm">Apple<small>США</small></span><span class="tr"><i class="b" style="--w:81%"></i><i class="gdp" style="--g:73.9%"><span>Япония 4,44</span></i></span><span class="v">4,86</span></div>
+        <div class="brow"><span class="nm">Alphabet<small>США</small></span><span class="tr"><i class="b" style="--w:69.45%"></i><i class="gdp" style="--g:66.7%"><span>Великобритания 4,00</span></i></span><span class="v">4,17</span></div>
+        <div class="brow"><span class="nm">Microsoft<small>США</small></span><span class="tr"><i class="b" style="--w:63.5%"></i><i class="gdp" style="--g:65.3%"><span>Индия 3,92</span></i></span><span class="v">3,81</span></div>
+        <div class="brow"><span class="nm">Amazon<small>США</small></span><span class="tr"><i class="b" style="--w:44.8%"></i><i class="gdp" style="--g:43.1%"><span>Россия 2,59</span></i></span><span class="v">2,69</span></div>
+        <div class="brow"><span class="nm">TSMC<small>Тайвань (Китай)</small></span><span class="tr"><i class="b oth" style="--w:39.4%"></i><i class="gdp" style="--g:38%"><span>Бразилия 2,28</span></i></span><span class="v">2,37</span></div>
+        <p class="bkey"><span><i class="h4"></i>капитализация на 01.10.2026</span><span><i class="gd"></i>ВВП страны за 2025&nbsp;г.</span></p>
+      </div>
+      <div class="marks">
+        <div class="mark"><p class="fig">$30,5<small> трлн</small></p><p>стоят 10 крупнейших компаний мира вместе — почти столько же, сколько весь ВВП США за 2025&nbsp;г. ($30,8&nbsp;трлн).</p></div>
+        <div class="mark"><p class="fig">×5<small> за 2,5 года</small></p><p>NVIDIA: $1&nbsp;трлн в мае 2023&nbsp;г., $5&nbsp;трлн в октябре 2025&nbsp;г. Каждая из 15 крупнейших компаний мира стоит дороже $1&nbsp;трлн.</p></div>
+        <p class="note">Капитализация — оценка будущих доходов, а ВВП — годовой поток. Сравнение показывает порядок величин, а не равенство.</p>
+      </div>
+    </div>
+  </div>
+  <footer class="marg bot"><p class="src">Источники: <a href="#r13">[13]</a>, <a href="#r18">[18]</a></p></footer>
+</section>
+
+<!-- 09 НИОКР -->
+<section class="slide s9" id="s9" data-title="Технологическая мощь: НИОКР" data-sec="IV · Технологии и рынки">
+  <div class="frame" aria-hidden="true"></div>
+  <header class="marg top"><span>IV · Технологии и рынки</span><span class="sheet"></span></header>
+  <div class="inner">
+    <div class="hd"><p class="kick">IV · Технологии и рынки · млрд €, 2024&nbsp;г.</p><h2 class="ttl">Крупнейшие ТНК — главные инвесторы в технологии</h2></div>
+    <div class="body">
+      <div class="bars rd-bars" role="img" aria-label="Затраты на НИОКР восьми крупнейших компаний-инвесторов в 2024 году, млрд евро">
+        <div class="bars-axis" aria-hidden="true"><span></span><div class="ax"><span style="left:0">0</span><span style="left:14.286%">10</span><span style="left:28.571%">20</span><span style="left:42.857%">30</span><span style="left:57.143%">40</span><span style="left:71.429%">50</span><span style="left:85.714%">60</span><span style="left:100%">70</span></div><span></span></div>
+        <div class="brow"><span class="nm">Amazon<small>США · оценка JRC</small></span><span class="tr"><i class="b" style="--w:93.3%"></i></span><span class="v">65,3</span></div>
+        <div class="brow"><span class="nm">Alphabet<small>США</small></span><span class="tr"><i class="b" style="--w:65.9%"></i></span><span class="v">46,1</span></div>
+        <div class="brow"><span class="nm">Meta<small>США</small></span><span class="tr"><i class="b" style="--w:60%"></i></span><span class="v">42,0</span></div>
+        <div class="brow"><span class="nm">Microsoft<small>США</small></span><span class="tr"><i class="b" style="--w:44.7%"></i></span><span class="v">31,3</span></div>
+        <div class="brow"><span class="nm">Apple<small>США</small></span><span class="tr"><i class="b" style="--w:43.1%"></i></span><span class="v">30,2</span></div>
+        <div class="brow"><span class="nm">Huawei<small>Китай</small></span><span class="tr"><i class="b oth" style="--w:32.7%"></i></span><span class="v">22,9</span></div>
+        <div class="brow"><span class="nm">Samsung Electronics<small>Респ. Корея</small></span><span class="tr"><i class="b oth" style="--w:32.6%"></i></span><span class="v">22,8</span></div>
+        <div class="brow"><span class="nm">Volkswagen<small>Германия</small></span><span class="tr"><i class="b oth" style="--w:29.9%"></i></span><span class="v">20,9</span></div>
+        <p class="bkey"><span><i class="h4"></i>компании США</span><span><i class="h2 oth"></i>компании других стран</span></p>
+      </div>
+      <div class="marks">
+        <div class="mark"><p class="fig">€1,44<small> трлн</small></p><p>вложили в НИОКР 2000 крупнейших компаний-инвесторов мира в 2024&nbsp;г.</p></div>
+        <div class="mark"><p class="fig">&gt;90%</p><p>всех корпоративных НИОКР мира приходится на эти 2000 компаний.</p></div>
+        <div class="mark"><p class="fig">15%</p><p>общих затрат дают пять лидеров: Amazon, Alphabet, Meta, Microsoft, Apple. Доля компаний США — 47,1%.</p></div>
+      </div>
+    </div>
+  </div>
+  <footer class="marg bot"><p class="src">Источники: <a href="#r10">[10]</a>, <a href="#r25">[25]</a></p></footer>
+</section>
+
+<!-- 10 олигополии -->
+<section class="slide s10" id="s10" data-title="Олигополии на ключевых рынках" data-sec="IV · Технологии и рынки">
+  <div class="frame" aria-hidden="true"></div>
+  <header class="marg top"><span>IV · Технологии и рынки</span><span class="sheet"></span></header>
+  <div class="inner">
+    <div class="hd"><p class="kick">IV · Технологии и рынки · доли мирового рынка</p><h2 class="ttl">На ключевых рынках цифровой эпохи доминируют одна–три корпорации</h2></div>
+    <div class="body">
+      <div class="strips">
+        <div class="strip">
+          <div class="strip-h"><b>Контрактное производство чипов</b><span>II кв. 2026&nbsp;г.</span></div>
+          <div class="strip-b" role="img" aria-label="TSMC 72,5%, Samsung 5,9%, прочие 21,6%"><span class="seg h5" style="--w:72.5%"><span class="sn">TSMC</span><b>72,5%</b></span><span class="seg h3 tiny" style="--w:5.9%"></span><span class="seg rest" style="--w:21.6%">прочие</span></div>
+          <p class="strip-k">TSMC — 72,5%, Samsung — 5,9%, прочие — 21,6%</p>
+        </div>
+        <div class="strip">
+          <div class="strip-h"><b>Облачная инфраструктура</b><span>II кв. 2026&nbsp;г.</span></div>
+          <div class="strip-b" role="img" aria-label="AWS 28%, Microsoft 20%, Google 15%, прочие 37%"><span class="seg h5" style="--w:28%"><span class="sn">AWS</span><b>28%</b></span><span class="seg h4" style="--w:20%"><span class="sn">Microsoft</span><b>20%</b></span><span class="seg h3" style="--w:15%"><span class="sn">Google</span><b>15%</b></span><span class="seg rest" style="--w:37%">прочие</span></div>
+          <p class="strip-k">AWS (Amazon), Microsoft и Google вместе — 67% рынка объёмом $143&nbsp;млрд за квартал</p>
+        </div>
+        <div class="strip">
+          <div class="strip-h"><b>Мобильные операционные системы</b><span>сентябрь 2026&nbsp;г.</span></div>
+          <div class="strip-b" role="img" aria-label="Android 69,2%, iOS 30,8%"><span class="seg h5" style="--w:69.2%"><span class="sn">Android (Alphabet)</span><b>69,2%</b></span><span class="seg h3" style="--w:30.8%"><span class="sn">iOS (Apple)</span><b>30,8%</b></span></div>
+          <p class="strip-k">Android (Alphabet) — 69,2%, iOS (Apple) — 30,8%, остальные — меньше 0,1%</p>
+        </div>
+        <div class="strip">
+          <div class="strip-h"><b>Интернет-поиск</b><span>август 2026&nbsp;г.</span></div>
+          <div class="strip-b" role="img" aria-label="Google 91,1%, Bing 4,5%, прочие 4,4%"><span class="seg h5" style="--w:91.1%"><span class="sn">Google</span><b>91,1%</b></span><span class="seg h3 tiny" style="--w:4.5%"></span><span class="seg rest tiny" style="--w:4.4%"></span></div>
+          <p class="strip-k">Google — 91,1%, Bing (Microsoft) — 4,5%, остальные — 4,4%</p>
+        </div>
+      </div>
+      <div class="marks">
+        <div class="mark"><p class="fig">1–3</p><p>компании контролируют от двух третей до 99% этих рынков.</p></div>
+        <p class="note">Рыночная власть позволяет ТНК влиять на цены и технические стандарты, а слияния и поглощения закрепляют олигопольное положение. Регуляторы ЕС и США уже признали часть этих позиций доминирующими (лист 12).</p>
+      </div>
+    </div>
+  </div>
+  <footer class="marg bot"><p class="src">Источники: <a href="#r4">[4]</a>, <a href="#r14">[14]</a>, <a href="#r23">[23]</a>, <a href="#r24">[24]</a>, <a href="#r26">[26]</a></p></footer>
+</section>
+
+<!-- 11 каналы влияния -->
+<section class="slide s11" id="s11" data-title="Каналы влияния ТНК" data-sec="V · Влияние и его пределы">
+  <div class="frame" aria-hidden="true"></div>
+  <header class="marg top"><span>V · Влияние и его пределы</span><span class="sheet"></span></header>
+  <div class="inner">
+    <div class="hd"><p class="kick">V · Влияние и его пределы</p><h2 class="ttl">Как экономическая мощь превращается во влияние</h2></div>
+    <div class="body chan">
+      <article class="ch">
+        <div class="ch-h"><svg viewBox="0 0 38 22" aria-hidden="true"><path class="route" d="M4 18 L18 6 L34 14"/><circle class="route-dot" cx="4" cy="18" r="3.5"/><circle class="route-dot" cx="34" cy="14" r="3.5"/></svg><h3>Торг за размещение капитала</h3></div>
+        <p class="fig">&gt;80% ПИИ</p>
+        <p>получают 20 крупнейших принимающих экономик. ТНК выбирают, где строить заводы и центры обработки данных, а страны соревнуются за них налоговыми льготами и субсидиями.</p>
+        <p class="refs-in"><a href="#r5">[5]</a>, <a href="#r32">[32]</a></p>
+      </article>
+      <article class="ch">
+        <div class="ch-h"><svg viewBox="0 0 38 22" aria-hidden="true"><path class="route" d="M4 11 C 12 2, 26 20, 34 11"/><circle class="route-dot" cx="4" cy="11" r="3.5"/><circle class="route-dot" cx="34" cy="11" r="3.5"/></svg><h3>Налоговый арбитраж</h3></div>
+        <p class="fig">$1&nbsp;трлн</p>
+        <p>прибыли ТНК перевели в офшоры в 2022&nbsp;г. — 35% всей прибыли, полученной за пределами страны базирования. Потери — почти 10% мировых поступлений налога на прибыль.</p>
+        <p class="refs-in"><a href="#r15">[15]</a>, <a href="#r7">[7]</a></p>
+      </article>
+      <article class="ch">
+        <div class="ch-h"><svg viewBox="0 0 38 22" aria-hidden="true"><path class="route" d="M4 18 L4 6 L34 6"/><circle class="route-dot" cx="4" cy="18" r="3.5"/><circle class="route-dot" cx="34" cy="6" r="3.5"/></svg><h3>Лоббирование</h3></div>
+        <p class="fig">&gt;$5&nbsp;млрд</p>
+        <p>потратили на лоббирование федеральной власти США в 2025&nbsp;г. — впервые больше $5&nbsp;млрд и самый быстрый рост с 2008&nbsp;г.</p>
+        <p class="refs-in"><a href="#r22">[22]</a>, <a href="#r8">[8]</a></p>
+      </article>
+      <article class="ch">
+        <div class="ch-h"><svg viewBox="0 0 38 22" aria-hidden="true"><path class="route" d="M4 11 L34 11 M19 3 L19 19"/><circle class="route-dot" cx="19" cy="11" r="4"/></svg><h3>Цепочки и стандарты</h3></div>
+        <p class="fig">80% торговли</p>
+        <p>проходит через производственные сети ТНК. Головная компания решает, где производить, у кого закупать и по каким стандартам; платформы задают правила для миллионов продавцов и разработчиков.</p>
+        <p class="refs-in"><a href="#r31">[31]</a>, <a href="#r9">[9]</a></p>
+      </article>
+    </div>
+  </div>
+  <footer class="marg bot"><p class="src">Источники: <a href="#r5">[5]</a>, <a href="#r7">[7]</a>, <a href="#r8">[8]</a>, <a href="#r9">[9]</a>, <a href="#r15">[15]</a>, <a href="#r22">[22]</a>, <a href="#r31">[31]</a>, <a href="#r32">[32]</a></p></footer>
+</section>
+
+<!-- 12 ответ государств -->
+<section class="slide s12" id="s12" data-title="Ответ государств" data-sec="V · Влияние и его пределы">
+  <div class="frame" aria-hidden="true"></div>
+  <header class="marg top"><span>V · Влияние и его пределы</span><span class="sheet"></span></header>
+  <div class="inner">
+    <div class="hd"><p class="kick">V · Влияние и его пределы · хроника 2021–2026</p><h2 class="ttl">Государства ограничивают ТНК, но правила подстраиваются под сильнейших</h2></div>
+    <div class="body">
+      <ol class="rail">
+        <li class="st"><p class="st-d">Октябрь 2021</p><p class="st-t">Глобальный минимальный налог 15%</p><p class="st-x">Более 130 стран договорились облагать по ставке не ниже 15% группы с выручкой от €750&nbsp;млн (Pillar Two).</p></li>
+        <li class="st"><p class="st-d">Сентябрь 2023</p><p class="st-t">Шесть «привратников» в ЕС</p><p class="st-x">По закону о цифровых рынках (DMA) особые обязанности получили Alphabet, Amazon, Apple, ByteDance, Meta и Microsoft.</p></li>
+        <li class="st"><p class="st-d">2024</p><p class="st-t">Налог вступает в силу</p><p class="st-x">Правила Pillar Two применяют ЕС, Великобритания, Япония, Республика Корея и другие страны.</p></li>
+        <li class="st"><p class="st-d">Апрель 2025</p><p class="st-t">Первые штрафы по DMA</p><p class="st-x">Apple — €500&nbsp;млн, Meta — €200&nbsp;млн за нарушение правил цифрового рынка.</p></li>
+        <li class="st"><p class="st-d">Сентябрь 2025</p><p class="st-t">Google — €2,95&nbsp;млрд</p><p class="st-x">Еврокомиссия наказала компанию за злоупотребление доминированием в рекламных технологиях.</p></li>
+        <li class="st us"><p class="st-d">Январь 2026</p><p class="st-t">Исключение для ТНК США</p><p class="st-x">Пакет ОЭСР «side-by-side» освободил группы с головной компанией в США от ключевых правил минимального налога.</p></li>
+      </ol>
+      <p class="verdict">Мощь ТНК сдерживают прежде всего крупные юрисдикции — ЕС и США. Сильнейшая страна базирования способна изменить даже согласованные многосторонние правила в пользу своих корпораций.</p>
+    </div>
+  </div>
+  <footer class="marg bot"><p class="src">Источники: <a href="#r6">[6]</a>, <a href="#r9">[9]</a>, <a href="#r11">[11]</a>, <a href="#r12">[12]</a>, <a href="#r19">[19]</a>, <a href="#r21">[21]</a></p></footer>
+</section>
+
+<!-- 13 выводы -->
+<section class="slide s13" id="s13" data-title="Выводы" data-sec="Итоги">
+  <div class="frame" aria-hidden="true"></div>
+  <header class="marg top"><span>Итоги</span><span class="sheet"></span></header>
+  <div class="inner">
+    <div class="hd"><p class="kick">Итоги</p><h2 class="ttl">Выводы</h2></div>
+    <div class="body">
+      <p class="concl-big">ТНК стали самостоятельными центрами силы мировой экономики: по ресурсам они сопоставимы с государствами, а по влиянию на рынки и правила всё чаще их опережают.</p>
+      <ul class="concl-list">
+        <li><span><b>Масштаб.</b> С 1990 по 2025&nbsp;г. накопленные ПИИ выросли в 26 раз, до $57,8&nbsp;трлн, или 49% мирового ВВП. Число филиалов ТНК за 1990–2010&nbsp;гг. выросло в пять раз.</span></li>
+        <li><span><b>Сопоставимость с государствами.</b> Выручка Amazon равна ВВП Ирландии, капитализация NVIDIA больше ВВП Германии.</span></li>
+        <li><span><b>Технологии и рынки.</b> 2000 компаний обеспечивают более 90% корпоративных НИОКР мира; на рынках чипов, облаков, мобильных ОС и поиска сложились олигополии.</span></li>
+        <li><span><b>Влияние.</b> Мощь превращается во влияние через торг за инвестиции, налоговый арбитраж, лоббизм и контроль цепочек поставок.</span></li>
+        <li><span><b>Пределы.</b> Государства отвечают минимальным налогом, цифровым и антимонопольным регулированием, но исход зависит от силы страны базирования.</span></li>
+      </ul>
+    </div>
+  </div>
+  <footer class="marg bot"><p class="src">Источники: <a href="#r1">[1]</a>, <a href="#r5">[5]</a>, <a href="#r8">[8]</a></p></footer>
+</section>
+
+<!-- 14 источники -->
+<section class="slide s14" id="s14" data-title="Список источников" data-sec="Итоги">
+  <div class="frame" aria-hidden="true"></div>
+  <header class="marg top"><span>Итоги</span><span class="sheet"></span></header>
+  <div class="inner">
+    <div class="hd"><h2 class="ttl">Список источников</h2></div>
+    <div class="body scroll" tabindex="0" aria-label="Список источников, прокручивается">
+      <div class="refs">
+        <h3>Основная литература</h3>
+        <ol>
+          <li id="r1">Мировая экономика и МЭО: учебник (под общей редакцией проф., д.э.н. Перской В.В., проф., д.э.н., академика РАО Эскиндарова М.А.), Том 1.</li>
+          <li id="r2">Мировая экономика и МЭО: учебник (под общей редакцией проф., д.э.н. Перской В.В., проф., д.э.н., академика РАО Эскиндарова М.А.), Том 2.</li>
+          <li id="r3">Зубенко, В.В. Мировая экономика и международные экономические отношения: учебник для направления бакалавриата «Экономика» / В.В. Зубенко, В.А. Зубенко; Финуниверситет; под ред. В.В. Зубенко. — Москва: Кнорус, 2021. — 318 с. — Бакалавриат. — Текст: непосредственный. — То же. — 2023. — ЭБС BOOK.ru. — URL: <a href="https://book.ru/book/945961" target="_blank" rel="noopener">https://book.ru/book/945961</a> (дата обращения: 01.10.2026). — Текст: электронный.</li>
+          <li id="r4">Мировая экономика и международные экономические отношения: учебник для студентов, обучающихся по направлению подготовки «Экономика» (квалификация (степень) «бакалавр») / М.А. Эскиндаров, Б.М. Смитиенко, Н.В. Лукьянович [и др.]; Финуниверситет; под ред. В.К. Поспелова. — Москва: Инфра-М, 2018, 2021. — 370 с. — Высшее образование: Бакалавриат. — Текст: непосредственный. — То же. — 2024. — DOI 10.12737/835. — ЭБС ZNANIUM. — URL: <a href="https://znanium.com/catalog/product/2073483" target="_blank" rel="noopener">https://znanium.com/catalog/product/2073483</a> (дата обращения: 01.10.2026). — Текст: электронный.</li>
+        </ol>
+        <h3>Дополнительная литература</h3>
+        <ol start="5">
+          <li id="r5">Акторы и субъекты международных экономических отношений на современном этапе развития мирового сообщества. Часть 2. Трансформационные процессы в системе международных экономических отношений: современность и будущее: монография / под ред. В.В. Перской, Н.С. Ревенко, А.А. Ткаченко. — Москва: ИНФРА-М, 2024. — 239 с. — (Научная мысль). — DOI 10.12737/2086351. — ISBN 978-5-16-019095-2. — ЭБС ZNANIUM. — URL: <a href="https://znanium.ru/catalog/product/2086351" target="_blank" rel="noopener">https://znanium.ru/catalog/product/2086351</a> (дата обращения: 01.10.2026). — Текст: электронный.</li>
+          <li id="r6">Внешнеэкономическая политика России в условиях глобальных вызовов: монография / под ред. А.А. Ткаченко. — Москва: Вузовский учебник: ИНФРА-М, 2023. — 231 с. — (Научная книга). — ISBN 978-5-9558-0651-8. — ЭБС ZNANIUM. — URL: <a href="https://znanium.ru/catalog/product/2019751" target="_blank" rel="noopener">https://znanium.ru/catalog/product/2019751</a> (дата обращения: 01.10.2026). — Текст: электронный.</li>
+          <li id="r7">Международные валютно-кредитные и финансовые отношения: учебник для вузов / Л.Н. Красавина [и др.]; ответственный редактор Л.Н. Красавина. — 5-е изд., перераб. и доп. — Москва: Издательство Юрайт, 2024. — 534 с. — (Высшее образование). — ISBN 978-5-534-08791-8. — Образовательная платформа Юрайт [сайт]. — URL: <a href="https://urait.ru/bcode/556501" target="_blank" rel="noopener">https://urait.ru/bcode/556501</a> (дата обращения: 01.10.2026). — Текст: электронный.</li>
+          <li id="r8">Перская, В.В. Многополярность: институты и механизмы согласования национальных интересов: монография / В.В. Перская, М.А. Эскиндаров; Финуниверситет. — Москва: Кнорус, 2018. — 537 с. — Текст: непосредственный. — То же. — 2021. — ЭБС BOOK.ru. — URL: <a href="https://book.ru/book/936974" target="_blank" rel="noopener">https://book.ru/book/936974</a> (дата обращения: 01.10.2026). — Текст: электронный.</li>
+          <li id="r9">Современные международные отношения: учебник и практикум для вузов / В.К. Белозёров [и др.]; под редакцией В.К. Белозёрова, М.М. Васильевой, А.И. Позднякова. — 3-е изд., перераб. и доп. — Москва: Издательство Юрайт, 2024. — 379 с. — (Высшее образование). — ISBN 978-5-534-15880-9. — Образовательная платформа Юрайт [сайт]. — URL: <a href="https://urait.ru/bcode/535906" target="_blank" rel="noopener">https://urait.ru/bcode/535906</a> (дата обращения: 01.10.2026). — Текст: электронный.</li>
+          <li id="r10">Тесленко, И.Б. Экономика в условиях глобальных вызовов современности: монография / И.Б. Тесленко; под ред. И.Б. Тесленко. — Москва: Русайнс, 2020. — 206 с. — ISBN 978-5-4365-1271-6. — ЭБС BOOK.ru. — URL: <a href="https://book.ru/book/934761" target="_blank" rel="noopener">https://book.ru/book/934761</a> (дата обращения: 01.10.2026). — Текст: электронный.</li>
+        </ol>
+        <h3>Статистические и аналитические материалы</h3>
+        <ol start="11">
+          <li id="r11">Commission finds Apple and Meta in breach of the Digital Markets Act: press release IP/25/1085 / European Commission. — Brussels, 2025. — 23 April. — URL: <a href="https://ec.europa.eu/commission/presscorner/detail/en/ip_25_1085" target="_blank" rel="noopener">https://ec.europa.eu/commission/presscorner/detail/en/ip_25_1085</a> (access date: 01.10.2026). — Text: electronic.</li>
+          <li id="r12">Commission fines Google €2.95 billion over abusive practices in online advertising technology: press release IP/25/1992 / European Commission. — Brussels, 2025. — 5 September. — URL: <a href="https://ec.europa.eu/commission/presscorner/detail/en/ip_25_1992" target="_blank" rel="noopener">https://ec.europa.eu/commission/presscorner/detail/en/ip_25_1992</a> (access date: 01.10.2026). — Text: electronic.</li>
+          <li id="r13">CompaniesMarketCap. Largest Companies by Market Cap. — URL: <a href="https://companiesmarketcap.com/" target="_blank" rel="noopener">https://companiesmarketcap.com/</a> (access date: 01.10.2026). — Text: electronic.</li>
+          <li id="r14">Enterprise cloud infrastructure uptake shows no sign of slowing. — Text: electronic // The Register: [site]. — 2026. — 1 August. — URL: <a href="https://www.theregister.com/off-prem/2026/08/01/enterprise-cloud-infrastructure-uptake-shows-no-sign-of-slowing/5281835" target="_blank" rel="noopener">https://www.theregister.com/off-prem/2026/08/01/enterprise-cloud-infrastructure-uptake-shows-no-sign-of-slowing/5281835</a> (access date: 01.10.2026).</li>
+          <li id="r15">EU Tax Observatory. Global Tax Evasion Report 2024 / foreword by J. Stiglitz. — Paris: EU Tax Observatory, 2023. — URL: <a href="https://www.taxobservatory.eu/publication/global-tax-evasion-report-2024/" target="_blank" rel="noopener">https://www.taxobservatory.eu/publication/global-tax-evasion-report-2024/</a> (access date: 01.10.2026). — Text: electronic.</li>
+          <li id="r16">Fortune Announces 2026 Fortune Global 500 List. — Text: electronic // Fortune Media: [site]. — 2026. — 28 July. — URL: <a href="https://fortunemedia.mediaroom.com/2026-07-28-Fortune-Announces-2026-Fortune-Global-500-List" target="_blank" rel="noopener">https://fortunemedia.mediaroom.com/2026-07-28-Fortune-Announces-2026-Fortune-Global-500-List</a> (access date: 01.10.2026).</li>
+          <li id="r17">Fortune Global 500: 2026. — Text: electronic // Fortune: [site]. — 2026. — URL: <a href="https://fortune.com/ranking/global500/2026/" target="_blank" rel="noopener">https://fortune.com/ranking/global500/2026/</a> (access date: 01.10.2026).</li>
+          <li id="r18">IMF. World Economic Outlook, April 2026: GDP, current prices. — Washington, DC: International Monetary Fund, 2026. — URL: <a href="https://www.imf.org/external/datamapper/NGDPD@WEO" target="_blank" rel="noopener">https://www.imf.org/external/datamapper/NGDPD@WEO</a> (access date: 01.10.2026). — Text: electronic.</li>
+          <li id="r19">OECD. Global Anti-Base Erosion Model Rules (Pillar Two). — Text: electronic // OECD: [site]. — URL: <a href="https://www.oecd.org/en/topics/sub-issues/global-minimum-tax/global-anti-base-erosion-model-rules-pillar-two.html" target="_blank" rel="noopener">https://www.oecd.org/en/topics/sub-issues/global-minimum-tax/global-anti-base-erosion-model-rules-pillar-two.html</a> (access date: 01.10.2026).</li>
+          <li id="r20">OECD. Multinational Enterprises in the Global Economy: Heavily Debated but Hardly Measured: Policy Note. — Paris: OECD, 2018. — URL: <a href="https://www.oecd.org/industry/ind/MNEs-in-the-global-economy-policy-note.pdf" target="_blank" rel="noopener">https://www.oecd.org/industry/ind/MNEs-in-the-global-economy-policy-note.pdf</a> (access date: 01.10.2026). — Text: electronic.</li>
+          <li id="r21">OECD side-by-side Pillar 2 deal: Relief for U.S. multinationals. — Text: electronic // Grant Thornton: [site]. — 2026. — January. — URL: <a href="https://www.grantthornton.com/insights/alerts/tax/2026/flash/oecd-side-by-side-pillar-2" target="_blank" rel="noopener">https://www.grantthornton.com/insights/alerts/tax/2026/flash/oecd-side-by-side-pillar-2</a> (access date: 01.10.2026).</li>
+          <li id="r22">OpenSecrets. Federal Lobbying. — Text: electronic // OpenSecrets: [site]. — URL: <a href="https://www.opensecrets.org/federal-lobbying" target="_blank" rel="noopener">https://www.opensecrets.org/federal-lobbying</a> (access date: 01.10.2026).</li>
+          <li id="r23">StatCounter Global Stats. Mobile Operating System Market Share Worldwide. — URL: <a href="https://gs.statcounter.com/os-market-share/mobile/worldwide" target="_blank" rel="noopener">https://gs.statcounter.com/os-market-share/mobile/worldwide</a> (access date: 01.10.2026). — Text: electronic.</li>
+          <li id="r24">StatCounter Global Stats. Search Engine Market Share Worldwide. — URL: <a href="https://gs.statcounter.com/search-engine-market-share" target="_blank" rel="noopener">https://gs.statcounter.com/search-engine-market-share</a> (access date: 01.10.2026). — Text: electronic.</li>
+          <li id="r25">The 2025 EU Industrial R&amp;D Investment Scoreboard / European Commission, Joint Research Centre. — Luxembourg: Publications Office of the European Union, 2025. — URL: <a href="https://publications.jrc.ec.europa.eu/repository/bitstream/JRC144638/JRC144638_01.pdf" target="_blank" rel="noopener">https://publications.jrc.ec.europa.eu/repository/bitstream/JRC144638/JRC144638_01.pdf</a> (access date: 01.10.2026). — Text: electronic.</li>
+          <li id="r26">TSMC’s market share edges higher. — Text: electronic // Taipei Times: [site]. — 2026. — 10 September. — URL: <a href="https://www.taipeitimes.com/News/biz/archives/2026/09/10/2003863979" target="_blank" rel="noopener">https://www.taipeitimes.com/News/biz/archives/2026/09/10/2003863979</a> (access date: 01.10.2026).</li>
+          <li id="r27">UNCTAD. World Investment Report 1993. Transnational Corporations and Integrated International Production. — New York: United Nations, 1993. — Text: unmediated.</li>
+          <li id="r28">UNCTAD. World Investment Report 2000. Cross-border Mergers and Acquisitions and Development. — New York; Geneva: United Nations, 2000. — Text: unmediated.</li>
+          <li id="r29">UNCTAD. World Investment Report 2009. Transnational Corporations, Agricultural Production and Development. — New York; Geneva: United Nations, 2009. — Text: unmediated.</li>
+          <li id="r30">UNCTAD. World Investment Report 2011. Non-Equity Modes of International Production and Development. — New York; Geneva: United Nations, 2011. — Text: unmediated.</li>
+          <li id="r31">UNCTAD. World Investment Report 2013. Global Value Chains: Investment and Trade for Development. — New York; Geneva: United Nations, 2013. — URL: <a href="https://unctad.org/publication/world-investment-report-2013" target="_blank" rel="noopener">https://unctad.org/publication/world-investment-report-2013</a> (access date: 01.10.2026). — Text: electronic.</li>
+          <li id="r32">UNCTAD. World Investment Report 2026. International Investment in a Turbulent Era. — Geneva: United Nations, 2026. — URL: <a href="https://investmentpolicy.unctad.org/publications/1324/world-investment-report-2026-international-investment-in-a-turbulent-era" target="_blank" rel="noopener">https://investmentpolicy.unctad.org/publications/1324/world-investment-report-2026-international-investment-in-a-turbulent-era</a> (access date: 01.10.2026). — Text: electronic.</li>
+          <li id="r33">UNCTADstat. Foreign Direct Investment: Inward and Outward Flows and Stock, Annual. — Geneva: UNCTAD, 2026. — URL: <a href="https://unctadstat.unctad.org/datacentre/dataviewer/US.FdiFlowsStock" target="_blank" rel="noopener">https://unctadstat.unctad.org/datacentre/dataviewer/US.FdiFlowsStock</a> (access date: 01.10.2026). — Text: electronic.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  <footer class="marg bot"></footer>
+</section>
+
+<div class="hud" id="hud" role="toolbar" aria-label="Управление презентацией">
+  <button type="button" id="prev" aria-label="Предыдущий лист"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
+  <span class="count" id="count" aria-live="polite">01 / 14</span>
+  <button type="button" id="next" aria-label="Следующий лист"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>
+  <button type="button" id="tocBtn" aria-label="Содержание" aria-controls="toc" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+  <button type="button" id="fsBtn" aria-label="Во весь экран"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
+</div>
+
+<nav class="toc" id="toc" hidden aria-label="Содержание">
+  <div class="toc-head"><p class="lbl">Содержание атласа</p><button type="button" class="toc-close" id="tocClose" aria-label="Закрыть содержание">×</button></div>
+  <ol id="tocList"></ol>
+</nav>
+
+</div>
+</main>
+
+<script>
+(function () {
+  var root = document.documentElement;
+  var slides = Array.prototype.slice.call(document.querySelectorAll(".slide"));
+  var N = slides.length;
+  var cur = -1;
+  var mq = window.matchMedia("(min-width: 900px) and (min-height: 500px) and (min-aspect-ratio: 5/4)");
+  var count = document.getElementById("count");
+  var prevBtn = document.getElementById("prev");
+  var nextBtn = document.getElementById("next");
+  var toc = document.getElementById("toc");
+  var tocBtn = document.getElementById("tocBtn");
+  var tocList = document.getElementById("tocList");
+  var fsBtn = document.getElementById("fsBtn");
+
+  function pad(n) { return (n < 10 ? "0" : "") + n; }
+  function isPresent() { return root.classList.contains("present"); }
+
+  slides.forEach(function (s, i) {
+    s.setAttribute("role", "group");
+    s.setAttribute("aria-roledescription", "лист");
+    s.setAttribute("aria-label", (i + 1) + " из " + N + ": " + s.getAttribute("data-title"));
+    var sh = s.querySelector(".sheet");
+    if (sh) sh.textContent = "Лист " + pad(i + 1) + " · " + pad(N);
+
+    var li = document.createElement("li");
+    var a = document.createElement("a");
+    a.href = "#" + s.id;
+    a.innerHTML = "<span>Лист " + pad(i + 1) + "</span>";
+    a.appendChild(document.createTextNode(s.getAttribute("data-title")));
+    li.appendChild(a);
+    tocList.appendChild(li);
+  });
+  var tocLinks = tocList.querySelectorAll("a");
+
+  function fit() {
+    var k = Math.min(window.innerWidth / 1600, window.innerHeight / 900);
+    root.style.setProperty("--k", String(k));
+  }
+
+  function show(i) {
+    i = Math.max(0, Math.min(N - 1, i));
+    var changed = i !== cur;
+    cur = i;
+    slides.forEach(function (s, j) {
+      var on = j === i;
+      s.classList.toggle("is-active", on);
+      if (!on) { s.setAttribute("aria-hidden", "true"); s.inert = true; }
+      else { s.removeAttribute("aria-hidden"); s.inert = false; }
+    });
+    if (changed) slides[i].scrollTop = 0;
+    count.textContent = pad(i + 1) + " / " + N;
+    prevBtn.disabled = i === 0;
+    nextBtn.disabled = i === N - 1;
+    for (var t = 0; t < tocLinks.length; t++) tocLinks[t].setAttribute("aria-current", t === i ? "true" : "false");
+    try { history.replaceState(null, "", "#" + slides[i].id); } catch (e) {}
+  }
+
+  function openToc(open) {
+    toc.hidden = !open;
+    tocBtn.setAttribute("aria-expanded", open ? "true" : "false");
+    if (open && tocLinks[cur]) tocLinks[cur].focus();
+  }
+
+  function setMode() {
+    root.classList.toggle("present", mq.matches);
+    root.classList.toggle("paged", !mq.matches);
+    fit();
+    show(cur);
+  }
+
+  function indexOfTarget(id) {
+    var el = id && document.getElementById(id);
+    if (!el) return null;
+    var s = el.closest(".slide");
+    return s ? { i: slides.indexOf(s), el: el, slide: s } : null;
+  }
+
+  function flash(el) {
+    if (!el || el.tagName !== "LI" || !el.closest(".refs")) return;
+    el.classList.add("flash");
+    setTimeout(function () { el.classList.remove("flash"); }, 1600);
+  }
+
+  document.addEventListener("click", function (e) {
+    var a = e.target.closest && e.target.closest('a[href^="#"]');
+    if (!a) return;
+    var hit = indexOfTarget(a.getAttribute("href").slice(1));
+    if (!hit) return;
+    e.preventDefault();
+    openToc(false);
+    show(hit.i);
+    if (hit.el !== hit.slide) hit.el.scrollIntoView({ block: "center" });
+    flash(hit.el);
+  });
+
+  prevBtn.addEventListener("click", function () { show(cur - 1); });
+  nextBtn.addEventListener("click", function () { show(cur + 1); });
+  tocBtn.addEventListener("click", function () { openToc(toc.hidden); });
+  document.getElementById("tocClose").addEventListener("click", function () { openToc(false); tocBtn.focus(); });
+
+  if (document.fullscreenEnabled) {
+    fsBtn.addEventListener("click", function () {
+      try {
+        if (document.fullscreenElement) { document.exitFullscreen(); }
+        else {
+          var p = root.requestFullscreen();
+          if (p && p.catch) p.catch(function () {});
+        }
+      } catch (e) {}
+    });
+  } else {
+    fsBtn.hidden = true;
+  }
+
+  document.addEventListener("keydown", function (e) {
+    if (e.altKey || e.ctrlKey || e.metaKey) return;
+    var k = e.key;
+    var inScroll = e.target.closest && e.target.closest(".scroll");
+    if (k === "Escape" && !toc.hidden) { openToc(false); tocBtn.focus(); return; }
+    if (!toc.hidden) return;
+    if (k === "ArrowRight" || k === "PageDown" || (k === " " && !inScroll && !(e.target.closest && e.target.closest("button, a")))) {
+      e.preventDefault(); show(cur + 1);
+    } else if (k === "ArrowLeft" || k === "PageUp") {
+      e.preventDefault(); show(cur - 1);
+    } else if (k === "Home" && !inScroll) {
+      e.preventDefault(); show(0);
+    } else if (k === "End" && !inScroll) {
+      e.preventDefault(); show(N - 1);
+    }
+  });
+
+  var sx = null, sy = null;
+  document.addEventListener("touchstart", function (e) {
+    if (e.touches.length !== 1 || !toc.hidden) return;
+    if (e.target.closest && e.target.closest(".scroll-x") && !isPresent()) return;
+    sx = e.touches[0].clientX; sy = e.touches[0].clientY;
+  }, { passive: true });
+  document.addEventListener("touchend", function (e) {
+    if (sx === null) return;
+    var dx = e.changedTouches[0].clientX - sx, dy = e.changedTouches[0].clientY - sy;
+    sx = sy = null;
+    if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.3) show(cur + (dx < 0 ? 1 : -1));
+  }, { passive: true });
+
+  window.addEventListener("resize", fit);
+  if (mq.addEventListener) mq.addEventListener("change", setMode);
+  else if (mq.addListener) mq.addListener(setMode);
+
+  var start = indexOfTarget(location.hash.slice(1));
+  setMode();
+  show(start ? start.i : 0);
+  if (start && start.el !== start.slide) start.el.scrollIntoView({ block: "center" });
+})();
+</script>
+</body>
+</html>
