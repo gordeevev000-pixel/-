@@ -13,6 +13,8 @@
     document.documentElement.lang = "ru";
     if (window.matchMedia("(min-width: 900px) and (min-height: 500px) and (min-aspect-ratio: 5/4)").matches) {
       document.documentElement.classList.add("present");
+    } else {
+      document.documentElement.classList.add("paged");
     }
   } catch (e) {}
 </script>
@@ -361,6 +363,33 @@ html.present, html.present body { height: 100%; overflow: hidden; background: va
 }
 .toc a span { color: var(--brass-ink); font-weight: 600; font-size: 14px; font-variant-numeric: lining-nums tabular-nums; }
 .toc a:hover, .toc a[aria-current="true"] { background: var(--green-tint); }
+
+/* ================= ПО ОДНОМУ СЛАЙДУ (телефоны и узкие окна) ================= */
+html.paged, html.paged body { height: 100%; overflow: hidden; }
+.paged .deck { position: fixed; inset: 0; background: var(--paper); }
+.paged .stage { position: absolute; inset: 0; }
+.paged .slide {
+  position: absolute; inset: 0; display: none; border-bottom: 0;
+  overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain;
+  padding-bottom: calc(86px + env(safe-area-inset-bottom, 0px));
+}
+.paged .slide.is-active { display: flex; }
+.paged .only-present { display: inline; }
+.paged .hud {
+  display: flex; justify-content: center; gap: 8px;
+  position: fixed; z-index: 20; left: 0; right: 0; bottom: 0;
+  padding: 10px 12px calc(10px + env(safe-area-inset-bottom, 0px));
+  background: var(--card); border-top: 1px solid var(--line);
+}
+.paged .hud button { width: 52px; height: 46px; }
+.paged .hud .count { height: 46px; min-width: 92px; font-size: 15px; }
+.paged .toc {
+  display: flex; flex-direction: column; gap: 14px;
+  position: fixed; z-index: 30; inset: 0;
+  background: var(--card); color: var(--ink);
+  padding: 20px 16px calc(20px + env(safe-area-inset-bottom, 0px));
+}
+.paged .toc a { font-size: 16px; padding: 11px 6px; }
 
 @media (prefers-reduced-motion: no-preference) {
   .present .slide.is-active .fill { animation: grow .9s cubic-bezier(.25, .7, .2, 1) .15s both; }
@@ -883,7 +912,7 @@ html.present, html.present body { height: 100%; overflow: hidden; background: va
   var root = document.documentElement;
   var slides = Array.prototype.slice.call(document.querySelectorAll(".slide"));
   var N = slides.length;
-  var cur = 0;
+  var cur = -1;
   var SECTIONS = ["Понятия", "Направления МЭО", "Тенденция и кейс", "Выводы"];
   var mq = window.matchMedia("(min-width: 900px) and (min-height: 500px) and (min-aspect-ratio: 5/4)");
   var count = document.getElementById("count");
@@ -940,21 +969,20 @@ html.present, html.present body { height: 100%; overflow: hidden; background: va
 
   function show(i) {
     i = Math.max(0, Math.min(N - 1, i));
+    var changed = i !== cur;
     cur = i;
-    var present = isPresent();
     slides.forEach(function (s, j) {
       var on = j === i;
       s.classList.toggle("is-active", on);
-      if (present && !on) { s.setAttribute("aria-hidden", "true"); s.inert = true; }
+      if (!on) { s.setAttribute("aria-hidden", "true"); s.inert = true; }
       else { s.removeAttribute("aria-hidden"); s.inert = false; }
     });
+    if (changed) slides[i].scrollTop = 0;
     count.textContent = pad(i + 1) + " / " + N;
     prevBtn.disabled = i === 0;
     nextBtn.disabled = i === N - 1;
     for (var t = 0; t < tocLinks.length; t++) tocLinks[t].setAttribute("aria-current", t === i ? "true" : "false");
-    if (present) {
-      try { history.replaceState(null, "", "#" + slides[i].id); } catch (e) {}
-    }
+    try { history.replaceState(null, "", "#" + slides[i].id); } catch (e) {}
   }
 
   function openToc(open) {
@@ -965,8 +993,8 @@ html.present, html.present body { height: 100%; overflow: hidden; background: va
 
   function setMode() {
     root.classList.toggle("present", mq.matches);
+    root.classList.toggle("paged", !mq.matches);
     fit();
-    if (!mq.matches) openToc(false);
     show(cur);
   }
 
@@ -988,13 +1016,11 @@ html.present, html.present body { height: 100%; overflow: hidden; background: va
     if (!a) return;
     var hit = indexOfTarget(a.getAttribute("href").slice(1));
     if (!hit) return;
-    if (isPresent()) {
-      e.preventDefault();
-      openToc(false);
-      show(hit.i);
-      if (hit.el !== hit.slide) {
-        hit.el.scrollIntoView({ block: hit.el.tagName === "H3" ? "start" : "center" });
-      }
+    e.preventDefault();
+    openToc(false);
+    show(hit.i);
+    if (hit.el !== hit.slide) {
+      hit.el.scrollIntoView({ block: hit.el.tagName === "H3" ? "start" : "center" });
     }
     flash(hit.el);
   });
@@ -1019,7 +1045,7 @@ html.present, html.present body { height: 100%; overflow: hidden; background: va
   }
 
   document.addEventListener("keydown", function (e) {
-    if (!isPresent() || e.altKey || e.ctrlKey || e.metaKey) return;
+    if (e.altKey || e.ctrlKey || e.metaKey) return;
     var k = e.key;
     var inScroll = e.target.closest && e.target.closest(".scroll");
     if (k === "Escape" && !toc.hidden) { openToc(false); tocBtn.focus(); return; }
@@ -1037,7 +1063,8 @@ html.present, html.present body { height: 100%; overflow: hidden; background: va
 
   var sx = null, sy = null;
   document.addEventListener("touchstart", function (e) {
-    if (!isPresent() || e.touches.length !== 1) return;
+    if (e.touches.length !== 1 || !toc.hidden) return;
+    if (e.target.closest && e.target.closest(".scroll-x") && !isPresent()) return;
     sx = e.touches[0].clientX; sy = e.touches[0].clientY;
   }, { passive: true });
   document.addEventListener("touchend", function (e) {
@@ -1052,9 +1079,9 @@ html.present, html.present body { height: 100%; overflow: hidden; background: va
   else if (mq.addListener) mq.addListener(setMode);
 
   var start = indexOfTarget(location.hash.slice(1));
-  cur = start ? start.i : 0;
   setMode();
-  if (start && start.el !== start.slide && isPresent()) start.el.scrollIntoView({ block: "center" });
+  show(start ? start.i : 0);
+  if (start && start.el !== start.slide) start.el.scrollIntoView({ block: "center" });
 })();
 </script>
 </body>
