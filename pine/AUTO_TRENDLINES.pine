@@ -1,0 +1,430 @@
+//@version=6
+// ═════════════════════════════════════════════════════════════════════════════
+//  АВТО-НАКЛОНКИ
+//  Строит наклонные линии по тем же правилам, по которым их рисует автор
+//  разметки (розовые / зелёные / чёрные наклонки на минутках):
+//      1. Линия идёт по теням через экстремумы: сопротивление — по хаям,
+//         поддержка — по лоям.
+//      2. Первая точка — экстремум, с которого началось движение: самый
+//         высокий хай для нисходящей линии, самый низкий лой для восходящей.
+//      3. Между точками цена линию не пересекает: ни одна тень не выходит за
+//         неё дальше допуска и ни одна свеча не закрывается за ней.
+//      4. Линия рисуется, когда у неё набралось минимум 3 касания.
+//      5. Линия продлевается вправо и остаётся после пробоя: дальше она
+//         работает как зеркальная (пробой → ретест с другой стороны).
+//      6. Цвет: главные нисходящие — розовые, главные восходящие — зелёные,
+//         локальные (от ближних свингов) — чёрные.
+//      7. Если главные линии сверху и снизу смотрят в одну сторону и почти
+//         параллельны — это канал, рисуется пунктирная середина. Если сходятся —
+//         это клин, середины нет.
+//  Без перерисовки: вершина фиксируется через N баров справа, линия строится
+//  только по уже закрытым барам, пробой и ретест — по закрытию свечи.
+// ═════════════════════════════════════════════════════════════════════════════
+indicator("Авто-наклонки", shorttitle = "AUTO-TL", overlay = true, max_lines_count = 500, max_labels_count = 500)
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 0. ГРУППЫ НАСТРОЕК
+// ─────────────────────────────────────────────────────────────────────────────
+const string GR_MAJ  = "Главные линии (розовые / зелёные)"
+const string GR_LOC  = "Локальные линии (чёрные)"
+const string GR_RULE = "Правила построения"
+const string GR_SIG  = "Пробой и ретест"
+const string GR_VIS  = "Отображение"
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 1. НАСТРОЙКИ
+// ─────────────────────────────────────────────────────────────────────────────
+// Главные линии
+bool  majOn    = input.bool(true, "Строить главные линии", group = GR_MAJ)
+int   majLeft  = input.int(15, "Свинг: баров слева", minval = 2, maxval = 100, group = GR_MAJ, tooltip = "Вершина считается главной, если она выше (лой — ниже) стольких баров слева. Это же минимальное расстояние между касаниями линии.")
+int   majRight = input.int(8, "Свинг: баров справа", minval = 1, maxval = 50, group = GR_MAJ, tooltip = "Сколько баров ждать подтверждения вершины. Линия появляется с этой задержкой.")
+int   majLb    = input.int(600, "Макс. длина линии, баров", minval = 50, maxval = 1500, group = GR_MAJ, tooltip = "Насколько далеко назад искать первую точку линии. 600 баров на 1m — это 10 часов.")
+int   majMax   = input.int(2, "Линий на сторону", minval = 1, maxval = 5, group = GR_MAJ, tooltip = "Сколько главных линий держать сверху и сколько снизу. Лишняя уходит та, к которой цена дольше всего не подходила.")
+string counterMode = input.string("Только в канале / клине", "Встречные линии: ↑ по хаям, ↓ по лоям", options = ["Только в канале / клине", "Всегда", "Нет"], group = GR_MAJ, tooltip = "Трендовые линии — ↓ по хаям и ↑ по лоям — строятся всегда. Встречная линия (например, ↓ по лоям) по умолчанию строится, только если с другой стороны уже есть живая главная линия того же направления: тогда она — вторая граница канала или клина.")
+color colDown  = input.color(#F0347A, "Нисходящие", inline = "mc", group = GR_MAJ)
+color colUp    = input.color(#4CAF50, "Восходящие", inline = "mc", group = GR_MAJ)
+int   majWidth = input.int(2, "Толщина", minval = 1, maxval = 4, inline = "mc", group = GR_MAJ)
+
+// Локальные линии
+bool  locOn    = input.bool(true, "Строить локальные линии", group = GR_LOC)
+int   locLeft  = input.int(5, "Свинг: баров слева", minval = 2, maxval = 50, group = GR_LOC)
+int   locRight = input.int(3, "Свинг: баров справа", minval = 1, maxval = 20, group = GR_LOC)
+int   locLb    = input.int(200, "Макс. длина линии, баров", minval = 20, maxval = 500, group = GR_LOC)
+int   locMax   = input.int(1, "Линий на сторону", minval = 1, maxval = 5, group = GR_LOC)
+bool  locTrend = input.bool(true, "Только трендовые: ↓ по хаям, ↑ по лоям", group = GR_LOC, tooltip = "Локальные линии строятся только как классические трендовые: нисходящее сопротивление и восходящая поддержка.")
+color colLoc   = input.color(#000000, "Цвет", inline = "lc", group = GR_LOC)
+int   locWidth = input.int(2, "Толщина", minval = 1, maxval = 4, inline = "lc", group = GR_LOC)
+
+// Правила построения
+string srcMode  = input.string("Тени", "Строить по", options = ["Тени", "Тела"], group = GR_RULE)
+int    minTouch = input.int(3, "Минимум касаний", minval = 2, maxval = 10, group = GR_RULE, tooltip = "Включая две опорные точки. Касания считаются, только если между ними не меньше «баров слева» своего уровня линий.")
+float  tolAtr   = input.float(0.25, "Допуск касания, × ATR", minval = 0.0, step = 0.05, group = GR_RULE, tooltip = "Тень ближе этого расстояния к линии — касание. Тень за линией дальше этого — линия не годится.")
+float  maxSlope = input.float(0.25, "Макс. наклон, × ATR за бар", minval = 0.01, step = 0.05, group = GR_RULE, tooltip = "Слишком крутые линии от одного импульса отбрасываются.")
+int    atrLen   = input.int(50, "ATR, период", minval = 1, group = GR_RULE)
+bool   showMid  = input.bool(true, "Середина канала (пунктир)", group = GR_RULE)
+float  parTol   = input.float(0.3, "Канал: наклоны различаются не больше, доля", minval = 0.0, maxval = 1.0, step = 0.05, group = GR_RULE, tooltip = "0.3 — наклоны верхней и нижней главных линий различаются не больше чем на 30 %. Иначе это клин, и середина не рисуется.")
+int    calcBars = input.int(5000, "Считать на последних N барах", minval = 500, maxval = 20000, group = GR_RULE, tooltip = "Ограничивает расчёт, чтобы скрипт не упирался в лимит времени TradingView.")
+
+// Пробой и ретест
+float  breakAtr   = input.float(0.1, "Пробой: закрытие за линией дальше, × ATR", minval = 0.0, step = 0.05, group = GR_SIG)
+int    keepBroken = input.int(240, "Держать пробитую линию, баров", minval = 1, maxval = 5000, group = GR_SIG, tooltip = "Пробитая линия остаётся на графике как зеркальная, потом удаляется.")
+int    retestBars = input.int(30, "Ждать ретест, баров", minval = 1, maxval = 500, group = GR_SIG, tooltip = "Ретест — после пробоя цена вернулась к линии (в пределах допуска) и закрылась с новой стороны.")
+string sigTiers   = input.string("Главные и локальные", "Сигналы от линий", options = ["Главные и локальные", "Только главные", "Нет"], group = GR_SIG)
+bool   showRetest = input.bool(true, "Отмечать ретест", group = GR_SIG)
+color  colBull    = input.color(#089981, "Вверх", inline = "sc", group = GR_SIG)
+color  colBear    = input.color(#F23645, "Вниз", inline = "sc", group = GR_SIG)
+
+// Отображение
+bool dimBroken = input.bool(false, "Пробитые линии бледнее", group = GR_VIS)
+bool showTouch = input.bool(false, "Число касаний у линии", group = GR_VIS)
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 2. ДАННЫЕ
+// ─────────────────────────────────────────────────────────────────────────────
+float hiS = srcMode == "Тела" ? math.max(open, close) : high
+float loS = srcMode == "Тела" ? math.min(open, close) : low
+float atr = ta.atr(atrLen)
+
+// Свинг: вершина выше всех баров слева и не ниже баров справа; значение
+// приходит через N баров справа. Из нескольких равных вершин подряд берётся
+// первая. Правило задано явно, а не отдано ta.pivothigh: на крупном шаге цены
+// (палладий, какао) и в режиме «Тела» равные вершины идут на каждом шагу.
+// ta.* вынесены из условия: в v6 «and» ленивый, и вызов во втором операнде
+// пропускал бы бары.
+swingHi(float src, int left, int right) =>
+    float hiLeft  = ta.highest(src, left)[right + 1]
+    float hiRight = ta.highest(src, right)
+    float v       = src[right]
+    v > hiLeft and v >= hiRight ? v : na
+
+swingLo(float src, int left, int right) =>
+    float loLeft  = ta.lowest(src, left)[right + 1]
+    float loRight = ta.lowest(src, right)
+    float v       = src[right]
+    v < loLeft and v <= loRight ? v : na
+
+float phMaj = swingHi(hiS, majLeft, majRight)
+float plMaj = swingLo(loS, majLeft, majRight)
+float phLoc = swingHi(hiS, locLeft, locRight)
+float plLoc = swingLo(loS, locLeft, locRight)
+
+bool  ready = bar_index >= last_bar_index - calcBars and not na(atr)
+float tol   = tolAtr * atr
+
+// Кольцевой буфер закрытых баров: бар b лежит в ячейке b % BUF. Линия
+// проверяется по нему, а не через history-оператор внутри функции.
+// BUF больше максимальной длины линии плюс задержки свинга.
+const int BUF = 2000
+var array<float> bufH = array.new<float>(BUF, na)
+var array<float> bufL = array.new<float>(BUF, na)
+var array<float> bufC = array.new<float>(BUF, na)
+if barstate.isconfirmed
+    bufH.set(bar_index % BUF, hiS)
+    bufL.set(bar_index % BUF, loS)
+    bufC.set(bar_index % BUF, close)
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 3. ТИПЫ И ХРАНИЛИЩА
+// ─────────────────────────────────────────────────────────────────────────────
+type TL
+    int   uid
+    int   side          // 1 — по хаям (сверху), -1 — по лоям (снизу)
+    int   tier          // 1 — главная, 0 — локальная
+    int   x1
+    float y1
+    float slope         // цена за бар
+    int   touches
+    int   lastTouch
+    int   brokenAt = na
+    bool  retested = false
+    line  ln
+    label lb
+
+type PivStore
+    array<int>   xs
+    array<float> ys
+
+method val(TL t, int x) =>
+    t.y1 + t.slope * (x - t.x1)
+
+// Когда цена последний раз имела дело с линией: касание или пробой
+method relevance(TL t) =>
+    na(t.brokenAt) ? t.lastTouch : math.max(t.lastTouch, t.brokenAt)
+
+var array<TL> lines = array.new<TL>()
+var array<int> uidSeq = array.from(0)
+var PivStore majH = PivStore.new(array.new<int>(), array.new<float>())
+var PivStore majL = PivStore.new(array.new<int>(), array.new<float>())
+var PivStore locH = PivStore.new(array.new<int>(), array.new<float>())
+var PivStore locL = PivStore.new(array.new<int>(), array.new<float>())
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 4. ПОИСК ЛИНИИ
+//    Вызывается, когда подтвердилась новая вершина (px, py). Перебирает
+//    прошлые вершины того же уровня как первую точку и проверяет каждый бар
+//    между ними и до текущего: тень не дальше допуска за линией, закрытие не
+//    за линией. Из годных берётся линия с наибольшим числом касаний, при
+//    равенстве — самая длинная (от главного экстремума).
+//    Возвращает [x1, y1, наклон, касаний, последнее касание]; x1 = na — нет.
+// ─────────────────────────────────────────────────────────────────────────────
+findLine(int side, PivStore st, int px, float py, int left, int lb, bool trendOnly, float slopeCap) =>
+    int   bestX = na
+    float bestY = na
+    float bestS = na
+    int   bestT = 0
+    int   bestL = na
+    int   n     = st.xs.size()
+    if n > 0
+        for k = 0 to n - 1
+            int   cx   = st.xs.get(k)
+            float cy   = st.ys.get(k)
+            int   span = px - cx
+            if span >= left and span <= lb
+                float s       = (py - cy) / span
+                bool  dirOk   = not trendOnly or (side == 1 ? s < 0 : s > 0)
+                if math.abs(s) <= slopeCap and dirOk
+                    int  touches = 0
+                    int  last    = -1000000
+                    bool bad     = false
+                    for b = cx to bar_index
+                        int   k2  = b % BUF
+                        float v   = cy + s * (b - cx)
+                        bool  tch = false
+                        if side == 1
+                            if bufH.get(k2) > v + tol or bufC.get(k2) > v
+                                bad := true
+                                break
+                            tch := bufH.get(k2) >= v - tol
+                        else
+                            if bufL.get(k2) < v - tol or bufC.get(k2) < v
+                                bad := true
+                                break
+                            tch := bufL.get(k2) <= v + tol
+                        if tch
+                            if b - last > left
+                                touches += 1
+                            last := b
+                    if not bad and touches >= minTouch
+                        if touches > bestT or (touches == bestT and cx < bestX)
+                            bestX := cx
+                            bestY := cy
+                            bestS := s
+                            bestT := touches
+                            bestL := last
+    [bestX, bestY, bestS, bestT, bestL]
+
+lineColor(int tier, int side, float s) =>
+    tier == 0 ? colLoc : (s < 0 or (s == 0 and side == 1)) ? colDown : colUp
+
+dropLine(int j) =>
+    TL t = lines.get(j)
+    t.ln.delete()
+    t.lb.delete()
+    lines.remove(j)
+    true
+
+// Совпадает ли живая линия t с новой (x1, y1, s) на всём отрезке новой
+isDup(TL t, int cx, float cy, float s) =>
+    na(t.brokenAt) and math.abs(t.val(cx) - cy) <= 2 * tol and math.abs(t.val(bar_index) - (cy + s * (bar_index - cx))) <= 2 * tol
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 5. НОВАЯ ВЕРШИНА → НОВАЯ ЛИНИЯ
+// ─────────────────────────────────────────────────────────────────────────────
+processPivot(int tier, int side, float pv, PivStore st, int left, int right, int lb, bool trendOnly, int maxN) =>
+    if not na(pv)
+        int px = bar_index - right
+        // Вершина уже лежит на живой линии той же стороны — линия просто получила касание
+        bool explained = false
+        for t in lines
+            if t.side == side and na(t.brokenAt) and (t.tier == tier or t.tier == 1) and math.abs(pv - t.val(px)) <= tol
+                explained := true
+                break
+        if not explained
+            // Встречная главная линия — только вторая граница канала / клина
+            bool onlyTrend = trendOnly
+            if tier == 1
+                if counterMode == "Всегда"
+                    onlyTrend := false
+                else if counterMode == "Нет"
+                    onlyTrend := true
+                else
+                    bool opp = false
+                    for t in lines
+                        if t.tier == 1 and t.side == -side and na(t.brokenAt) and (side == 1 ? t.slope > 0 : t.slope < 0)
+                            opp := true
+                            break
+                    onlyTrend := not opp
+            [cx, cy, s, touches, last] = findLine(side, st, px, pv, left, lb, onlyTrend, maxSlope * atr)
+            if not na(cx)
+                // Дубль живой линии того же или старшего уровня — не рисуем
+                bool skip = false
+                for t in lines
+                    if t.side == side and t.tier >= tier and not (t.tier == tier and t.x1 == cx) and isDup(t, cx, cy, s)
+                        skip := true
+                        break
+                if not skip
+                    // Та же первая точка — линия перестраивается; дубль младшего уровня — уходит
+                    int j = lines.size() - 1
+                    while j >= 0
+                        TL t = lines.get(j)
+                        if t.side == side and ((t.tier == tier and t.x1 == cx) or (t.tier < tier and isDup(t, cx, cy, s)))
+                            dropLine(j)
+                        j -= 1
+                    // Лимит линий на сторону: уходит та, к которой цена дольше всего не подходила
+                    int cnt = 0
+                    for t in lines
+                        if t.side == side and t.tier == tier
+                            cnt += 1
+                    while cnt >= maxN
+                        int vi = -1
+                        int vr = 0
+                        for [i, t] in lines
+                            if t.side == side and t.tier == tier
+                                if vi < 0 or t.relevance() < vr
+                                    vi := i
+                                    vr := t.relevance()
+                        dropLine(vi)
+                        cnt -= 1
+                    uidSeq.set(0, uidSeq.get(0) + 1)
+                    color c  = lineColor(tier, side, s)
+                    line  ln = line.new(cx, cy, px, pv, xloc = xloc.bar_index, extend = extend.right, color = c, style = line.style_solid, width = tier == 1 ? majWidth : locWidth)
+                    lines.push(TL.new(uidSeq.get(0), side, tier, cx, cy, s, touches, last, na, false, ln, na))
+        st.xs.push(px)
+        st.ys.push(pv)
+        while st.xs.size() > 0 and st.xs.first() < bar_index - lb - right
+            st.xs.shift()
+            st.ys.shift()
+    true
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 6. КАСАНИЯ, ПРОБОИ, РЕТЕСТЫ
+// ─────────────────────────────────────────────────────────────────────────────
+bool   sigBreakUp = false
+bool   sigBreakDn = false
+bool   sigRetL    = false
+bool   sigRetS    = false
+string sigText    = ""
+
+if ready and barstate.isconfirmed
+    int i = lines.size() - 1
+    while i >= 0
+        TL    t     = lines.get(i)
+        float v     = t.val(bar_index)
+        bool  sigOk = sigTiers == "Главные и локальные" or (sigTiers == "Только главные" and t.tier == 1)
+        string kind = t.tier == 1 ? "главной" : "локальной"
+        bool  drop  = false
+        if na(t.brokenAt)
+            if t.side == 1 and close > v + breakAtr * atr
+                t.brokenAt := bar_index
+                if sigOk
+                    sigBreakUp := true
+                    sigText    += "пробой " + kind + " наклонки вверх у " + str.tostring(v, format.mintick) + "; "
+            else if t.side == -1 and close < v - breakAtr * atr
+                t.brokenAt := bar_index
+                if sigOk
+                    sigBreakDn := true
+                    sigText    += "пробой " + kind + " наклонки вниз у " + str.tostring(v, format.mintick) + "; "
+            else
+                bool tch = t.side == 1 ? hiS >= v - tol : loS <= v + tol
+                if tch
+                    if bar_index - t.lastTouch > (t.tier == 1 ? majLeft : locLeft)
+                        t.touches += 1
+                    t.lastTouch := bar_index
+            if not na(t.brokenAt) and dimBroken
+                t.ln.set_color(color.new(lineColor(t.tier, t.side, t.slope), 60))
+        else
+            int age = bar_index - t.brokenAt
+            if not t.retested and age > 0 and age <= retestBars
+                if t.side == 1 and loS <= v + tol and close > v
+                    t.retested := true
+                    if sigOk
+                        sigRetL := true
+                        sigText += "ретест " + kind + " наклонки сверху у " + str.tostring(v, format.mintick) + "; "
+                else if t.side == -1 and hiS >= v - tol and close < v
+                    t.retested := true
+                    if sigOk
+                        sigRetS := true
+                        sigText += "ретест " + kind + " наклонки снизу у " + str.tostring(v, format.mintick) + "; "
+            drop := age >= keepBroken
+        if drop
+            dropLine(i)
+        i -= 1
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 7. НОВЫЕ ВЕРШИНЫ: сначала главные, потом локальные (чтобы локальная не
+//    дублировала главную), у каждого уровня — сначала хаи, потом лои
+// ─────────────────────────────────────────────────────────────────────────────
+if ready and barstate.isconfirmed
+    if majOn
+        processPivot(1, 1, phMaj, majH, majLeft, majRight, majLb, false, majMax)
+        processPivot(1, -1, plMaj, majL, majLeft, majRight, majLb, false, majMax)
+    if locOn
+        processPivot(0, 1, phLoc, locH, locLeft, locRight, locLb, locTrend, locMax)
+        processPivot(0, -1, plLoc, locL, locLeft, locRight, locLb, locTrend, locMax)
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 8. СЕРЕДИНА КАНАЛА
+//    Берутся самые свежие главные линии сверху и снизу. Если обе смотрят в
+//    одну сторону и почти параллельны — между ними пунктир.
+// ─────────────────────────────────────────────────────────────────────────────
+var line midLn = na
+var int  midU  = na
+var int  midD  = na
+
+if ready and barstate.isconfirmed
+    TL u = na
+    TL d = na
+    for t in lines
+        if t.tier == 1
+            if t.side == 1
+                u := t
+            else
+                d := t
+    bool want = false
+    if showMid and not na(u) and not na(d)
+        float su = u.slope
+        float sd = d.slope
+        want := su != 0 and sd != 0 and (su > 0) == (sd > 0) and math.abs(su - sd) <= parTol * math.max(math.abs(su), math.abs(sd))
+    bool changed = not na(midU)
+    if want
+        changed := na(midU) or u.uid != midU or d.uid != midD
+    if changed
+        midLn.delete()
+        midLn := na
+        midU  := na
+        midD  := na
+        if want
+            int   x0 = math.max(u.x1, d.x1)
+            float y0 = (u.val(x0) + d.val(x0)) / 2
+            float sm = (u.slope + d.slope) / 2
+            midLn := line.new(x0, y0, bar_index, y0 + sm * (bar_index - x0), xloc = xloc.bar_index, extend = extend.right, color = sm > 0 ? colUp : colDown, style = line.style_dashed, width = 1)
+            midU  := u.uid
+            midD  := d.uid
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 9. ЧИСЛО КАСАНИЙ У ЛИНИЙ
+// ─────────────────────────────────────────────────────────────────────────────
+if showTouch and barstate.islast
+    for t in lines
+        string txt = str.tostring(t.touches) + (na(t.brokenAt) ? "" : " · пробита")
+        if na(t.lb)
+            t.lb := label.new(bar_index, t.val(bar_index), txt, xloc = xloc.bar_index, style = label.style_label_left, color = color.new(color.black, 100), textcolor = lineColor(t.tier, t.side, t.slope), size = size.small)
+        else
+            t.lb.set_xy(bar_index, t.val(bar_index))
+            t.lb.set_text(txt)
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 10. СИГНАЛЫ И АЛЕРТЫ
+// ─────────────────────────────────────────────────────────────────────────────
+plotshape(sigBreakUp, "Пробой наклонки вверх", shape.triangleup, location.belowbar, colBull, size = size.tiny)
+plotshape(sigBreakDn, "Пробой наклонки вниз", shape.triangledown, location.abovebar, colBear, size = size.tiny)
+plotshape(showRetest and sigRetL, "Ретест сверху (лонг)", shape.circle, location.belowbar, colBull, size = size.tiny)
+plotshape(showRetest and sigRetS, "Ретест снизу (шорт)", shape.circle, location.abovebar, colBear, size = size.tiny)
+
+alertcondition(sigBreakUp, "Пробой наклонки вверх", "{{ticker}}: пробой наклонки вверх, close {{close}}")
+alertcondition(sigBreakDn, "Пробой наклонки вниз", "{{ticker}}: пробой наклонки вниз, close {{close}}")
+alertcondition(sigRetL, "Ретест пробитой наклонки сверху", "{{ticker}}: ретест пробитой наклонки сверху, close {{close}}")
+alertcondition(sigRetS, "Ретест пробитой наклонки снизу", "{{ticker}}: ретест пробитой наклонки снизу, close {{close}}")
+
+if sigText != ""
+    alert(syminfo.ticker + ": " + sigText + "close " + str.tostring(close, format.mintick), alert.freq_once_per_bar_close)
