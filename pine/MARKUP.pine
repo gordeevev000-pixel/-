@@ -5,7 +5,8 @@
 //  Повторяет ручную технику разметки:
 //    • каналы тренда — линия тренда от экстремума через следующие свинги того же типа,
 //      параллель через противоположную сторону, пунктир посередине;
-//      нисходящий — оранжевый, восходящий — зелёный, несколько масштабов сразу
+//      каждый новый канал — новым цветом из палитры (или по направлению:
+//      нисходящий — оранжевый, восходящий — зелёный), несколько масштабов сразу
 //    • белые горизонтальные уровни от значимых свингов: тянутся вправо и живут
 //      после пробоя — поддержка становится сопротивлением
 //    • лента средних рабочего ТФ и те же периоды со старших ТФ тонкими линиями
@@ -71,9 +72,24 @@ extOld  = input.bool(false, "Продлевать сломанные канал�
      tooltip = "Выключено — сломанный канал обрывается на баре слома.")
 showBuild = input.bool(true, "Показывать построение: пунктир от якоря до подтверждения", group = gCh,
      tooltip = "Канал становится известен в момент подтверждения (точка). Пунктир до точки — как он строился, торговать можно только сплошную часть после неё.")
+C_NEW   = "Новый цвет для каждого канала"
+C_DIR   = "По направлению"
+colMode = input.string(C_NEW, "Цвет каналов", options = [C_NEW, C_DIR], group = gCh,
+     tooltip = "Новый цвет — каждый следующий канал берёт следующий цвет палитры, которого сейчас нет у каналов на графике; цвет закрепляется за каналом и потом не меняется. По направлению — восходящий и нисходящий цветами ниже.")
 cUp     = input.color(#4CAF50, "Восходящий", group = gCh, inline = "cc")
 cDn     = input.color(#FF9800, "Нисходящий", group = gCh, inline = "cc")
 fillTr  = input.int(93, "Заливка, прозрачность", minval = 0, maxval = 100, group = gCh)
+
+gPal = "Палитра каналов: цвета идут по кругу"
+pc1 = input.color(#FF9800, "", group = gPal, inline = "pa")
+pc2 = input.color(#4CAF50, "", group = gPal, inline = "pa")
+pc3 = input.color(#E040FB, "", group = gPal, inline = "pa")
+pc4 = input.color(#00BCD4, "", group = gPal, inline = "pa")
+pc5 = input.color(#FFEB3B, "", group = gPal, inline = "pb")
+pc6 = input.color(#2196F3, "", group = gPal, inline = "pb")
+pc7 = input.color(#FF5252, "", group = gPal, inline = "pb")
+pc8 = input.color(#B2FF59, "", group = gPal, inline = "pb",
+     tooltip = "Восемь цветов — столько каналов помещается на график при настройках по умолчанию (старший и рабочий масштабы, по текущему и три прошлых), поэтому одинаковых среди них не бывает.")
 
 gSc = "Масштабы каналов: свинг, толщина, сколько прошлых каналов держать"
 s1On  = input.bool(true, "Старший ", group = gSc, inline = "s1")
@@ -190,6 +206,7 @@ type Chan
     int      tc            // бар подтверждения
     int      minX          // линия тренда должна пройти через свинг не раньше этого бара (веер)
     float    refY          // ориентир слома, унаследованный от пробитой линии (веер)
+    int      ci = -1       // номер цвета в палитре; −1 — канал ещё не рисовался
     line     lb            // рабочая часть: от подтверждения вправо
     line     lo
     line     lm
@@ -207,6 +224,39 @@ type Scale
     array<Pt>   fl
     Chan        cur
     array<Chan> old
+
+// ── цвета каналов ─────────────────────────────────────────────────────────────
+var array<color> pal = array.from(pc1, pc2, pc3, pc4, pc5, pc6, pc7, pc8)
+var array<int>   palNext = array.from(0)          // с какого цвета начинать поиск следующему каналу
+var array<Scale> allSc = array.new<Scale>()       // все масштабы: чьи цвета сейчас на графике
+
+f_inUse(int k) =>
+    bool u = false
+    for s in allSc
+        if s.cur.ci == k
+            u := true
+        for o in s.old
+            if o.ci == k
+                u := true
+    u
+
+// канал получает цвет один раз, когда рисуется впервые: следующий по кругу,
+// которого нет у каналов на графике. Если заняты все — просто следующий
+method colorize(Chan c) =>
+    if c.ci < 0
+        int n = pal.size()
+        int start = palNext.get(0)
+        int pick = start
+        for k = 0 to n - 1
+            int ix = (start + k) % n
+            if not f_inUse(ix)
+                pick := ix
+                break
+        c.ci := pick
+        palNext.set(0, (pick + 1) % n)
+    c.ci
+
+method chCol(Chan c) => colMode == C_DIR or c.ci < 0 ? (c.dir > 0 ? cUp : cDn) : pal.get(c.ci)
 
 method yAt(Chan c, int x) => c.ay + c.slope * (x - c.ax)
 
@@ -408,7 +458,8 @@ method updateLive(Scale s, bool newFine, int keepOld) =>
 method drawLive(Scale s, int w, bool hide) =>
     Chan c = s.cur
     if c.ready() and not hide
-        color col = c.dir > 0 ? cUp : cDn
+        c.colorize()
+        color col = c.chCol()
         int x1 = math.max(c.ax, bar_index - BUF + 1)
         float y1 = c.yAt(x1)
         float y2 = c.yAt(bar_index)
@@ -518,7 +569,8 @@ method paint(Scale s, int w, bool hide) =>
     if c.fixed and not c.painted
         c.painted := true
         if not hide
-            color col = c.dir > 0 ? cUp : cDn
+            c.colorize()
+            color col = c.chCol()
             int t = c.tc
             float yb = c.yAt(t)
             c.lb := line.new(t, yb, t + 1, c.yAt(t + 1), color = col, width = w, extend = extend.right)
@@ -549,6 +601,10 @@ f3 = math.max(2, math.floor(s3Len / fDiv))
 var Scale sc1 = f_newScale(s1Len, f1)
 var Scale sc2 = f_newScale(s2Len, f2)
 var Scale sc3 = f_newScale(s3Len, f3)
+if barstate.isfirst
+    allSc.push(sc1)
+    allSc.push(sc2)
+    allSc.push(sc3)
 
 ph1  = ta.pivothigh(high, s1Len, s1Len)
 pl1  = ta.pivotlow(low, s1Len, s1Len)
