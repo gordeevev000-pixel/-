@@ -405,9 +405,24 @@ html.present .ctrl .pn { display: inline-flex; }
   font: 400 13px/1.4 var(--f-body); font-variant-numeric: tabular-nums;
   padding: 7px 10px; border-radius: 8px; max-width: 260px;
 }
+
+/* ---------- ход кризиса: четыре волны ---------- */
+.waves { list-style: none; display: grid; grid-template-columns: minmax(0, 1fr); gap: 22px; border-top: 1px solid var(--hair); }
+@media (min-width: 600px) { .waves { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 760px) { .waves { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 30px; } }
+.wave { position: relative; padding-top: 26px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.wave::before { content: ""; position: absolute; top: -7px; left: 0; width: 13px; height: 13px; border-radius: 50%; background: var(--gold); box-shadow: 0 0 0 4px var(--bg); }
+.wave.peak::before { background: var(--coral); }
+.wave h3 { font-weight: 500; font-size: calc(var(--t-body) * 1.15); }
+.wave ul { list-style: none; display: flex; flex-direction: column; gap: 14px; font-size: var(--t-small); color: var(--cream-2); }
+.wave li .d { display: block; font-size: var(--t-label); color: var(--cream-3); font-variant-numeric: tabular-nums; margin-bottom: 2px; }
+.wave li .tag { margin-left: 4px; }
+.lessons.two { gap: 22px 32px; }
+@media (min-width: 760px) { .lessons.two { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 </style>
 </head>
 <body>
+
 
 <div class="deck" id="deck">
 <div class="stage" id="stage">
@@ -420,142 +435,58 @@ html.present .ctrl .pn { display: inline-flex; }
   <div class="body">
     <div class="hero-text">
       <h1>Кризис Европейской валютной системы <span class="yr">1992–1993</span></h1>
-      <p class="lead">Как система фиксированных курсов, больше пяти лет обходившаяся без пересмотров, за одиннадцать месяцев потеряла фунт и лиру и расширила коридор с ±2,25% до ±15%.</p>
+      <p class="lead">Как механизм фиксированных курсов ERM не выдержал давления рынка: Великобритания и Италия вышли из системы, а коридор колебаний расширили с ±2,25% до ±15%.</p>
     </div>
     <div class="team">
       <article class="member">
-        <span class="role">Раздел I · Предпосылки</span>
+        <span class="role">I · Причины кризиса</span>
         <h3 class="name">Аверьянов Никита Романович</h3>
         <ul>
-          <li>история ЕВС и механизм курсов ERM</li>
-          <li>объединение Германии и политика Бундесбанка</li>
-          <li>Маастрихтский договор и «невозможная троица»</li>
-          <li>план доклада</li>
+          <li>устройство ЕВС и механизма курсов ERM</li>
+          <li>объединение Германии и ставки Бундесбанка</li>
+          <li>Маастрихт и свободное движение капитала</li>
         </ul>
-        <span class="range">Слайды 02–08</span>
+        <span class="range">Слайды 02–03</span>
       </article>
       <article class="member">
-        <span class="role">Раздел II · Ход кризиса</span>
+        <span class="role">II · Ход кризиса</span>
         <h3 class="name">Гордеев Егор Александрович</h3>
         <ul>
-          <li>хронология событий 1992–1993 гг.</li>
-          <li>«чёрная среда» и роль Джорджа Сороса</li>
-          <li>таблица девальваций, коридор ±15%</li>
+          <li>хронология кризиса 1992–1993 гг.</li>
+          <li>«чёрная среда» и выход Великобритании</li>
+          <li>девальвации и коридор ±15%</li>
           <li>вёрстка сайта-презентации</li>
         </ul>
-        <span class="range">Слайды 09–14</span>
+        <span class="range">Слайды 04–06</span>
       </article>
       <article class="member">
-        <span class="role">Раздел III · Анализ</span>
+        <span class="role">III · Последствия и выводы</span>
         <h3 class="name">Татьянченко Иван Сергеевич</h3>
         <ul>
-          <li>теоретические модели валютных кризисов</li>
-          <li>последствия для Великобритании, Италии и ЕС</li>
-          <li>выводы и уроки кризиса</li>
-          <li>статистика и список источников</li>
+          <li>последствия для Великобритании и Италии</li>
+          <li>итоги для Европы и выводы</li>
+          <li>список источников</li>
         </ul>
-        <span class="range">Слайды 15–19</span>
+        <span class="range">Слайды 07–09</span>
       </article>
     </div>
   </div>
-  <footer class="bot"><span class="num">01</span><span>/ 19</span><span class="name">Кризис ЕВС · 1992–1993</span></footer>
+  <footer class="bot"><span class="num">01</span><span>/ 09</span><span class="name">Кризис ЕВС · 1992–1993</span></footer>
 </section>
 
-<!-- 02 · План -->
-<section class="slide sec-0" id="s2" data-sec="0" data-short="План доклада">
-  <header class="top"><span class="sec">Введение</span><span>Докладчик · Н. Р. Аверьянов</span></header>
+<!-- 02 · ЕВС и ERM -->
+<section class="slide sec-1" id="s2" data-sec="1" data-short="ЕВС и механизм ERM">
+  <header class="top"><span class="sec">I · Причины кризиса</span><span>Докладчик · Н. Р. Аверьянов</span></header>
   <div class="body">
-    <h2 class="title">План доклада</h2>
-    <div class="question">
-      <span class="label">Главный вопрос</span>
-      <p>Почему система, в которой курсы европейских валют почти шесть лет не пересматривались, за одиннадцать месяцев лишилась двух крупных участников и фактически стала плавающей?</p>
-    </div>
-    <div class="plan">
-      <div>
-        <div class="ph"><span class="chip" style="background:var(--sec1)"></span><span class="part">I. Предпосылки</span></div>
-        <p class="by">Н. Р. Аверьянов</p>
-        <ol>
-          <li><a href="#s3"><span>03</span><span>Зачем создали ЕВС</span></a></li>
-          <li><a href="#s4"><span>04</span><span>Механизм ERM</span></a></li>
-          <li><a href="#s5"><span>05</span><span>«Твёрдая» ЕВС 1987–1992</span></a></li>
-          <li><a href="#s6"><span>06</span><span>Объединение Германии</span></a></li>
-          <li><a href="#s7"><span>07</span><span>Маастрихт и референдумы</span></a></li>
-          <li><a href="#s8"><span>08</span><span>«Невозможная троица»</span></a></li>
-        </ol>
-      </div>
-      <div>
-        <div class="ph"><span class="chip" style="background:var(--sec2)"></span><span class="part">II. Ход кризиса</span></div>
-        <p class="by">Е. А. Гордеев</p>
-        <ol>
-          <li><a href="#s9"><span>09</span><span>Хронология 1992–1993</span></a></li>
-          <li><a href="#s10"><span>10</span><span>Сентябрь 1992: трещины</span></a></li>
-          <li><a href="#s11"><span>11</span><span>«Чёрная среда»</span></a></li>
-          <li><a href="#s12"><span>12</span><span>Сорос и одностороннее пари</span></a></li>
-          <li><a href="#s13"><span>13</span><span>Волна девальваций</span></a></li>
-          <li><a href="#s14"><span>14</span><span>Лето 1993: коридор ±15%</span></a></li>
-        </ol>
-      </div>
-      <div>
-        <div class="ph"><span class="chip" style="background:var(--sec3)"></span><span class="part">III. Анализ</span></div>
-        <p class="by">И. С. Татьянченко</p>
-        <ol>
-          <li><a href="#s15"><span>15</span><span>Объяснения экономистов</span></a></li>
-          <li><a href="#s16"><span>16</span><span>Великобритания и Италия</span></a></li>
-          <li><a href="#s17"><span>17</span><span>Путь к евро</span></a></li>
-          <li><a href="#s18"><span>18</span><span>Уроки кризиса</span></a></li>
-          <li><a href="#s19"><span>19</span><span>Источники</span></a></li>
-        </ol>
-      </div>
-    </div>
-  </div>
-  <footer class="bot"><span class="num">02</span><span>/ 19</span><span class="name">Кризис ЕВС · 1992–1993</span></footer>
-</section>
-
-<!-- 03 · ЕВС -->
-<section class="slide sec-1" id="s3" data-sec="1" data-short="Зачем создали ЕВС">
-  <header class="top"><span class="sec">I · Предпосылки кризиса</span><span>Докладчик · Н. Р. Аверьянов</span></header>
-  <div class="body">
-    <div class="head">
-      <h2 class="title">Европейская валютная система: зона стабильности после Бреттон-Вудса</h2>
-      <p class="lead">После распада Бреттон-Вудской системы курсы европейских валют резко колебались, а «валютная змея» 1972&nbsp;г. распалась. По инициативе Гельмута Шмидта и Валери Жискар д’Эстена <b>13&nbsp;марта 1979&nbsp;г.</b> заработала ЕВС.</p>
-    </div>
-    <div class="trio">
-      <div class="tile">
-        <span class="code">ECU</span>
-        <h3>ЭКЮ</h3>
-        <p>Расчётная единица-корзина из валют стран ЕЭС, взвешенных по экономическому весу. Самая большая доля — у немецкой марки, около 30%.</p>
-      </div>
-      <div class="tile">
-        <span class="code">ERM</span>
-        <h3>Механизм обменных курсов</h3>
-        <p>Ядро системы: у каждой валюты центральный курс и коридор колебаний. На границе коридора центральные банки обязаны вмешаться.</p>
-      </div>
-      <div class="tile">
-        <span class="code">VSTF</span>
-        <h3>Кредитные механизмы</h3>
-        <p>Очень краткосрочное финансирование интервенций между центральными банками через Европейский фонд валютного сотрудничества.</p>
-      </div>
-    </div>
-    <p class="note">Основатели ERM в 1979&nbsp;г.: ФРГ, Франция, Италия, Нидерланды, Бельгия, Люксембург, Дания и Ирландия. Великобритания входила в ЕВС, но не в механизм курсов.</p>
-  </div>
-  <footer class="bot"><span class="num">03</span><span>/ 19</span><span class="name">Кризис ЕВС · 1992–1993</span></footer>
-</section>
-
-<!-- 04 · ERM -->
-<section class="slide sec-1" id="s4" data-sec="1" data-short="Механизм ERM">
-  <header class="top"><span class="sec">I · Предпосылки кризиса</span><span>Докладчик · Н. Р. Аверьянов</span></header>
-  <div class="body">
-    <h2 class="title">Как работал механизм ERM</h2>
+    <h2 class="title">Что такое ЕВС и механизм ERM</h2>
     <div class="cols">
       <div class="stack">
         <ul class="points">
-          <li>Из центральных курсов к ЭКЮ выводилась <b>сетка двусторонних паритетов</b> для каждой пары валют.</li>
-          <li><b>Узкий коридор ±2,25%</b> — для большинства валют; <b>широкий ±6%</b> — для лиры до 1990&nbsp;г., песеты, фунта и эскудо.</li>
-          <li>У границы оба центральных банка обязаны проводить <b>неограниченные интервенции</b>: покупать слабую валюту за сильную.</li>
-          <li>Базельско-Нюборгское соглашение 1987&nbsp;г. разрешило вмешиваться и внутри коридора.</li>
-          <li>Если курс не удержать, страны проводят <b>реалайнмент</b>: пересматривают центральные курсы.</li>
+          <li>Европейская валютная система создана <b>13 марта 1979 г.</b>, чтобы ограничить колебания курсов валют стран ЕЭС.</li>
+          <li>Её ядро — механизм обменных курсов <b>ERM</b>: у каждой валюты центральный курс и коридор <b>±2,25%</b>, для части валют <b>±6%</b>.</li>
+          <li>На границе коридора центральные банки обязаны <b>без ограничений покупать слабую валюту</b>.</li>
+          <li>С 1987 по 1992 г. курсы ни разу не пересматривали. К 1992 г. в ERM входили валюты 11 из 12 стран ЕС, в том числе фунт — с октября 1990 г., по курсу 2,95 марки.</li>
         </ul>
-        <p class="note">Пример: фунт вошёл в ERM в 1990&nbsp;г. с центральным курсом 2,95 марки; допустимый диапазон — от 2,7780 до 3,1320&nbsp;DM.</p>
       </div>
       <figure class="chart-fig">
         <div id="ermChart" class="chart" role="img" aria-label="Схема коридоров ERM: центральный курс, узкий коридор плюс-минус 2,25 процента и широкий плюс-минус 6 процентов; курс касается границ, и в этих точках проводятся интервенции"></div>
@@ -568,336 +499,135 @@ html.present .ctrl .pn { display: inline-flex; }
       </figure>
     </div>
   </div>
-  <footer class="bot"><span class="num">04</span><span>/ 19</span><span class="name">Кризис ЕВС · 1992–1993</span></footer>
+  <footer class="bot"><span class="num">02</span><span>/ 09</span><span class="name">Кризис ЕВС · 1992–1993</span></footer>
 </section>
 
-<!-- 05 · Твёрдая ЕВС -->
-<section class="slide sec-1" id="s5" data-sec="1" data-short="«Твёрдая» ЕВС 1987–1992">
-  <header class="top"><span class="sec">I · Предпосылки кризиса</span><span>Докладчик · Н. Р. Аверьянов</span></header>
+<!-- 03 · Причины -->
+<section class="slide sec-1" id="s3" data-sec="1" data-short="Причины кризиса">
+  <header class="top"><span class="sec">I · Причины кризиса</span><span>Докладчик · Н. Р. Аверьянов</span></header>
   <div class="body">
-    <h2 class="title">От гибкой к «твёрдой» ЕВС: 1979–1992</h2>
-    <div class="cols even">
-      <div class="stack">
-        <div class="rule stack" style="gap:8px">
-          <span class="kicker">1979 — январь 1987</span>
-          <h3 class="h3">11 пересмотров курсов</h3>
-          <p style="color:var(--cream-2);font-size:var(--t-small)">Разница в инфляции между странами компенсировалась регулярными реалайнментами. Система была «фиксированной, но регулируемой».</p>
-        </div>
-        <div class="rule stack" style="gap:8px">
-          <span class="kicker">1987 — сентябрь 1992</span>
-          <h3 class="h3">Ни одного общего пересмотра</h3>
-          <p style="color:var(--cream-2);font-size:var(--t-small)">Курсы стали восприниматься как почти неизменные, ставки сблизились. Исключение — технический перевод лиры в узкий коридор в январе 1990&nbsp;г.</p>
-        </div>
-        <p class="note">С 1 июля 1990&nbsp;г. директива 88/361/ЕЭС обязала большинство стран снять ограничения на движение капитала. Рынки получили свободу играть против курсов.</p>
+    <h2 class="title">Причины кризиса</h2>
+    <div class="trio">
+      <div class="tile">
+        <span class="code">8,75%</span>
+        <span class="kicker">Объединение Германии</span>
+        <p>Расходы на восточные земли разогнали инфляцию, и Бундесбанк в июле 1992 г. поднял учётную ставку до 8,75%. Партнёрам по ERM пришлось держать такие же высокие ставки в разгар спада.</p>
       </div>
-      <div class="stack">
-        <span class="label">Новые участники ERM</span>
-        <div class="table-wrap">
-          <table>
-            <thead><tr><th>Валюта</th><th>Вступление</th><th>Коридор</th></tr></thead>
-            <tbody>
-              <tr><td>Испанская песета<span class="ccy">ESP</span></td><td class="num">19.06.1989</td><td class="num">±6%</td></tr>
-              <tr><td>Итальянская лира<span class="ccy">ITL</span></td><td class="num">08.01.1990</td><td class="num">±6% → ±2,25%</td></tr>
-              <tr><td>Фунт стерлингов<span class="ccy">GBP</span></td><td class="num">08.10.1990</td><td class="num">±6%</td></tr>
-              <tr><td>Португальское эскудо<span class="ccy">PTE</span></td><td class="num">06.04.1992</td><td class="num">±6%</td></tr>
-            </tbody>
-          </table>
-        </div>
-        <p class="note">К апрелю 1992&nbsp;г. в ERM участвовали валюты 11 из 12 стран ЕС; вне механизма оставалась только Греция.</p>
+      <div class="tile">
+        <span class="code">50,7%</span>
+        <span class="kicker">Сомнения в Маастрихте</span>
+        <p>В июне 1992 г. Дания отвергла Маастрихтский договор, Франция в сентябре одобрила его лишь 51,04% голосов. Рынок усомнился, что страны будут защищать курсы ради единой валюты.</p>
+      </div>
+      <div class="tile">
+        <span class="code">1990</span>
+        <span class="kicker">Свободный капитал</span>
+        <p>С 1990 г. капитал в ЕС движется свободно. Инфляция в Италии, Испании и Великобритании выше немецкой, а курсы не менялись, поэтому их валюты оказались переоценены.</p>
       </div>
     </div>
+    <p class="verdict">Фиксированный курс, свободный капитал и собственная денежная политика несовместимы. Участники ERM пожертвовали своей политикой, и в 1992 г. это стало невыносимо.</p>
   </div>
-  <footer class="bot"><span class="num">05</span><span>/ 19</span><span class="name">Кризис ЕВС · 1992–1993</span></footer>
+  <footer class="bot"><span class="num">03</span><span>/ 09</span><span class="name">Кризис ЕВС · 1992–1993</span></footer>
 </section>
 
-<!-- 06 · Германия -->
-<section class="slide sec-1" id="s6" data-sec="1" data-short="Объединение Германии">
-  <header class="top"><span class="sec">I · Предпосылки кризиса</span><span>Докладчик · Н. Р. Аверьянов</span></header>
-  <div class="body">
-    <h2 class="title">Причина 1. Объединение Германии и высокие ставки Бундесбанка</h2>
-    <div class="cols">
-      <div class="stack">
-        <p>1&nbsp;июля 1990&nbsp;г. восточную марку обменяли на западную по курсу 1:1 для зарплат и цен. Восстановление востока финансировали из бюджета: трансферты превысили 100 млрд марок в год.</p>
-        <p>Получилось сочетание <b>мягкой бюджетной и жёсткой денежной политики</b>. Инфляция в Западной Германии поднялась примерно до 4%, и Бундесбанк, отвечавший только за цены в Германии, повышал ставки.</p>
-        <p>Партнёрам по ERM приходилось держать ставки не ниже немецких, хотя их экономики были в спаде: в Великобритании шла рецессия. ФРС США тем временем снижала ставку, доллар дешевел, капитал перетекал в марку.</p>
-      </div>
-      <div class="figs">
-        <div class="fig"><span class="v">1 : 1</span><span class="k">обмен восточной марки на западную для зарплат и цен, июль 1990</span></div>
-        <div class="fig"><span class="v">100+</span><span class="k">млрд марок в год — трансферты в новые земли</span></div>
-        <div class="fig"><span class="v">8,75%</span><span class="k">учётная ставка Бундесбанка с 16 июля 1992; ломбардная — 9,75%</span></div>
-        <div class="fig"><span class="v">3%</span><span class="k">ставка ФРС США с сентября 1992: доллар слабеет, марка дорожает</span></div>
-      </div>
-    </div>
-  </div>
-  <footer class="bot"><span class="num">06</span><span>/ 19</span><span class="name">Кризис ЕВС · 1992–1993</span></footer>
-</section>
-
-<!-- 07 · Маастрихт -->
-<section class="slide sec-1" id="s7" data-sec="1" data-short="Маастрихт и референдумы">
-  <header class="top"><span class="sec">I · Предпосылки кризиса</span><span>Докладчик · Н. Р. Аверьянов</span></header>
-  <div class="body">
-    <h2 class="title">Причина 2. Маастрихтский договор и кризис доверия</h2>
-    <div class="cols">
-      <ul class="points">
-        <li><b>7 февраля 1992&nbsp;г.</b> подписан Маастрихтский договор: курс на экономический и валютный союз и единую валюту.</li>
-        <li>Критерий конвергенции — два года в ERM без девальвации. Пересматривать курсы стало политически невозможно, и перекосы копились.</li>
-        <li>Рынок рассуждал так: пока впереди единая валюта, курсы будут защищать любой ценой. Если договор провалится, девальвации станут вероятными.</li>
-        <li>Референдумы показали, что поддержка договора висит на волоске.</li>
-      </ul>
-      <figure class="chart-fig">
-        <span class="label">Референдумы по договору, % голосов</span>
-        <div class="key-row">
-          <span><i style="background:var(--c1)"></i>за</span>
-          <span><i style="background:var(--c2)"></i>против</span>
-        </div>
-        <div class="bars">
-          <div class="bar-row">
-            <div class="cap"><span><b>Дания</b>, 2 июня 1992</span><span class="val">49,3 / 50,7</span></div>
-            <div class="track">
-              <div class="stackbar">
-                <span class="seg-yes" style="width:49.3%" data-tip="Дания, 02.06.1992 — за: 49,3%"></span>
-                <span class="seg-no" style="width:50.7%" data-tip="Дания, 02.06.1992 — против: 50,7%"></span>
-              </div>
-              <span class="half" aria-hidden="true"></span>
-            </div>
-          </div>
-          <div class="bar-row">
-            <div class="cap"><span><b>Франция</b>, 20 сентября 1992</span><span class="val">51,04 / 48,96</span></div>
-            <div class="track">
-              <div class="stackbar">
-                <span class="seg-yes" style="width:51.04%" data-tip="Франция, 20.09.1992 — за: 51,04%"></span>
-                <span class="seg-no" style="width:48.96%" data-tip="Франция, 20.09.1992 — против: 48,96%"></span>
-              </div>
-              <span class="half" aria-hidden="true"></span>
-            </div>
-          </div>
-        </div>
-        <figcaption class="note">Светлая черта — 50%. Французское «маленькое да» пришлось на разгар кризиса, через четыре дня после «чёрной среды».</figcaption>
-      </figure>
-    </div>
-  </div>
-  <footer class="bot"><span class="num">07</span><span>/ 19</span><span class="name">Кризис ЕВС · 1992–1993</span></footer>
-</section>
-
-<!-- 08 · Трилемма -->
-<section class="slide sec-1" id="s8" data-sec="1" data-short="«Невозможная троица»">
-  <header class="top"><span class="sec">I · Предпосылки кризиса</span><span>Докладчик · Н. Р. Аверьянов</span></header>
-  <div class="body">
-    <h2 class="title">Причина 3. «Невозможная троица» и накопленные перекосы</h2>
-    <div class="cols wide-right">
-      <figure class="trinity" style="margin:0">
-        <svg viewBox="0 0 440 350" role="img" aria-label="Треугольник невозможной троицы: фиксированный курс, свободное движение капитала, независимая денежная политика. ERM 1990–1992 выбрал первые две вершины и отказался от независимой денежной политики.">
-          <line x1="220" y1="62" x2="360" y2="268" stroke="var(--hair)" stroke-width="1.5"/>
-          <line x1="80" y1="268" x2="360" y2="268" stroke="var(--hair)" stroke-width="1.5"/>
-          <line x1="220" y1="62" x2="80" y2="268" stroke="var(--c1)" stroke-width="3" stroke-linecap="round"/>
-          <circle cx="220" cy="62" r="8" fill="var(--c1)" stroke="var(--sec1)" stroke-width="2"/>
-          <circle cx="80" cy="268" r="8" fill="var(--c1)" stroke="var(--sec1)" stroke-width="2"/>
-          <circle cx="360" cy="268" r="7" fill="var(--sec1)" stroke="var(--coral)" stroke-width="2"/>
-          <text class="lab" x="220" y="24" text-anchor="middle">Фиксированный</text>
-          <text class="lab" x="220" y="43" text-anchor="middle">курс</text>
-          <text class="lab" x="80" y="298" text-anchor="middle">Свободное</text>
-          <text class="lab" x="80" y="317" text-anchor="middle">движение капитала</text>
-          <text class="lab" x="360" y="298" text-anchor="middle">Независимая</text>
-          <text class="lab" x="360" y="317" text-anchor="middle">денежная политика</text>
-          <text class="lost" x="360" y="338" text-anchor="middle">от неё отказались</text>
-          <text class="edge on" x="136" y="158" text-anchor="end">ERM</text>
-          <text class="edge on" x="136" y="176" text-anchor="end">1990–1992</text>
-          <text class="edge" x="302" y="158" text-anchor="start">Бреттон-</text>
-          <text class="edge" x="302" y="176" text-anchor="start">Вудс</text>
-          <text class="edge" x="220" y="256" text-anchor="middle">плавающий курс</text>
-        </svg>
-      </figure>
-      <div class="stack">
-        <p>Страна может выбрать только две цели из трёх. Участники ERM после снятия контроля над капиталом выбрали фиксированный курс и свободный капитал и фактически следовали за Бундесбанком.</p>
-        <p>Пока все боролись с инфляцией, это работало. В 1992&nbsp;г. цели разошлись: Германии нужны были высокие ставки, партнёрам в рецессии — низкие.</p>
-        <ul class="points">
-          <li>Инфляция в Италии, Испании и Великобритании была выше немецкой при неизменных курсах: их валюты <b>реально дорожали</b>.</li>
-          <li>Фунт вошёл в ERM по курсу 2,95 марки, который многие считали завышенным.</li>
-          <li>Госдолг Италии превышал 100% ВВП.</li>
-        </ul>
-      </div>
-    </div>
-  </div>
-  <footer class="bot"><span class="num">08</span><span>/ 19</span><span class="name">Кризис ЕВС · 1992–1993</span></footer>
-</section>
-
-<!-- 09 · Хронология -->
-<section class="slide sec-2" id="s9" data-sec="2" data-short="Хронология 1992–1993">
+<!-- 04 · Ход кризиса -->
+<section class="slide sec-2" id="s4" data-sec="2" data-short="Ход кризиса">
   <header class="top"><span class="sec">II · Ход кризиса</span><span>Докладчик · Е. А. Гордеев</span></header>
   <div class="body">
     <div class="head" style="gap:14px">
-      <h2 class="title">Хронология кризиса</h2>
+      <h2 class="title">Ход кризиса: четыре волны</h2>
       <div class="legend">
-        <span class="tag exit">выход / плавание</span>
+        <span class="tag exit">выход из ERM</span>
         <span class="tag deval">девальвация</span>
         <span class="tag policy">решение властей</span>
       </div>
     </div>
-    <div class="tl">
-      <div>
-        <div class="yr">1992</div>
-        <ol>
-          <li><span class="d">02.06</span><span>Дания отвергает Маастрихтский договор</span><span class="tag policy">референдум</span></li>
-          <li><span class="d">16.07</span><span>Бундесбанк: учётная ставка 8,75%</span><span class="tag policy">ставка</span></li>
-          <li><span class="d">08.09</span><span>Финляндия отпускает марку</span><span class="tag exit">плавание</span></li>
-          <li><span class="d">13.09</span><span>Лира девальвирована на 7%</span><span class="tag deval">−7%</span></li>
-          <li><span class="d">16.09</span><span>«Чёрная среда»: фунт выходит из ERM</span><span class="tag exit">выход</span></li>
-          <li><span class="d">17.09</span><span>Италия выходит; песета −5%</span><span class="tag exit">выход</span></li>
-          <li><span class="d">20.09</span><span>Франция: 51,04% «за» договор</span><span class="tag policy">референдум</span></li>
-          <li><span class="d">19.11</span><span>Швеция отпускает крону</span><span class="tag exit">плавание</span></li>
-          <li><span class="d">22.11</span><span>Песета и эскудо −6%</span><span class="tag deval">−6%</span></li>
-          <li><span class="d">10.12</span><span>Норвегия отпускает крону</span><span class="tag exit">плавание</span></li>
-        </ol>
-      </div>
-      <div>
-        <div class="yr">1993</div>
-        <ol>
-          <li><span class="d">30.01</span><span>Ирландский фунт −10%</span><span class="tag deval">−10%</span></li>
-          <li><span class="d">13.05</span><span>Песета −8%, эскудо −6,5%</span><span class="tag deval">−8%</span></li>
-          <li><span class="d">июль</span><span>Атака на французский франк</span><span class="tag exit">атака</span></li>
-          <li><span class="d">29.07</span><span>Бундесбанк не снижает учётную ставку</span><span class="tag policy">ставка</span></li>
-          <li><span class="d">02.08</span><span>Коридор ERM расширен до ±15%</span><span class="tag policy">решение ЕС</span></li>
-          <li><span class="d">01.11</span><span>Маастрихтский договор вступает в силу</span><span class="tag policy">договор</span></li>
-        </ol>
-        <p class="note" style="margin-top:18px">Финляндия, Швеция и Норвегия не входили в ERM, но в одностороннем порядке привязывали валюты к ЭКЮ. Их падение показало рынку, что привязку можно сломать.</p>
-      </div>
-    </div>
+    <ol class="waves">
+      <li class="wave">
+        <span class="kicker">Июнь — июль 1992</span>
+        <h3>Предвестники</h3>
+        <ul>
+          <li><span class="d">02.06</span>Дания отвергает Маастрихтский договор <span class="tag policy">референдум</span></li>
+          <li><span class="d">16.07</span>Бундесбанк поднимает ставку до 8,75% <span class="tag policy">ставка</span></li>
+        </ul>
+      </li>
+      <li class="wave peak">
+        <span class="kicker">Сентябрь 1992</span>
+        <h3>Обвал</h3>
+        <ul>
+          <li><span class="d">13.09</span>Лира девальвирована на 7% <span class="tag deval">−7%</span></li>
+          <li><span class="d">16.09</span>«Чёрная среда»: фунт выходит из ERM <span class="tag exit">выход</span></li>
+          <li><span class="d">17.09</span>Италия выходит из ERM <span class="tag exit">выход</span></li>
+        </ul>
+      </li>
+      <li class="wave">
+        <span class="kicker">Ноябрь 1992 — май 1993</span>
+        <h3>Цепная реакция</h3>
+        <ul>
+          <li><span class="d">22.11</span>Песета и эскудо −6% <span class="tag deval">−6%</span></li>
+          <li><span class="d">30.01</span>Ирландский фунт −10% <span class="tag deval">−10%</span></li>
+          <li><span class="d">13.05</span>Песета −8%, эскудо −6,5% <span class="tag deval">−8%</span></li>
+        </ul>
+      </li>
+      <li class="wave peak">
+        <span class="kicker">Июль — август 1993</span>
+        <h3>Развязка</h3>
+        <ul>
+          <li><span class="d">июль</span>Атака на французский франк <span class="tag exit">атака</span></li>
+          <li><span class="d">02.08</span>Коридор ERM расширен до ±15% <span class="tag policy">решение ЕС</span></li>
+        </ul>
+      </li>
+    </ol>
   </div>
-  <footer class="bot"><span class="num">09</span><span>/ 19</span><span class="name">Кризис ЕВС · 1992–1993</span></footer>
+  <footer class="bot"><span class="num">04</span><span>/ 09</span><span class="name">Кризис ЕВС · 1992–1993</span></footer>
 </section>
 
-<!-- 10 · Сентябрь 1992 -->
-<section class="slide sec-2" id="s10" data-sec="2" data-short="Сентябрь 1992: трещины">
+<!-- 05 · Чёрная среда -->
+<section class="slide sec-2" id="s5" data-sec="2" data-short="«Чёрная среда»">
   <header class="top"><span class="sec">II · Ход кризиса</span><span>Докладчик · Е. А. Гордеев</span></header>
   <div class="body">
-    <div class="head">
-      <h2 class="title">Сентябрь 1992: первые трещины</h2>
-      <p class="lead">С 8 по 15 сентября рынок проверил на прочность все слабые привязки к ЭКЮ и немецкой марке.</p>
-    </div>
-    <div class="trio">
-      <div class="tile">
-        <span class="kicker">8 сентября · Скандинавия</span>
-        <h3>Финляндия и Швеция</h3>
-        <p>Финляндия отпускает марку в плавание. Риксбанк Швеции защищает крону ставкой 75%, а 16 сентября поднимает её до 500% годовых.</p>
-      </div>
-      <div class="tile">
-        <span class="kicker">13–14 сентября · Италия</span>
-        <h3>Лира: −7%</h3>
-        <p>Первая вынужденная девальвация в ERM с 1987&nbsp;г. Бундесбанк символически снижает ставки: учётную до 8,25%, ломбардную до 9,5%. Рынок счёл уступку слишком малой.</p>
-      </div>
-      <div class="tile">
-        <span class="kicker">15 сентября · Германия</span>
-        <h3>Интервью Шлезингера</h3>
-        <p>Президент Бундесбанка Гельмут Шлезингер заявил, что более широкий пересмотр курсов был бы лучше. Рынок прочитал это так: фунт будет следующим.</p>
-      </div>
-    </div>
-  </div>
-  <footer class="bot"><span class="num">10</span><span>/ 19</span><span class="name">Кризис ЕВС · 1992–1993</span></footer>
-</section>
-
-<!-- 11 · Чёрная среда -->
-<section class="slide sec-2" id="s11" data-sec="2" data-short="«Чёрная среда»">
-  <header class="top"><span class="sec">II · Ход кризиса</span><span>Докладчик · Е. А. Гордеев</span></header>
-  <div class="body">
-    <h2 class="title">«Чёрная среда», 16&nbsp;сентября 1992&nbsp;г.</h2>
+    <h2 class="title">«Чёрная среда»: выход Великобритании, 16&nbsp;сентября 1992&nbsp;г.</h2>
     <div class="cols">
       <ol class="day">
         <li><span class="t">утро</span><span class="e">Массовые продажи фунта. Банк Англии скупает фунты за счёт резервов, но курс не отходит от нижней границы 2,7780&nbsp;DM.</span></li>
         <li><span class="t">11:00</span><span class="e">Базовая ставка поднята с 10% до 12%. Реакции рынка почти нет.</span></li>
         <li><span class="t">14:15</span><span class="e">Объявлено повышение до 15% со следующего дня. Продажи продолжаются.</span></li>
-        <li class="key"><span class="t">19:30</span><span class="e">Канцлер казначейства Норман Ламонт объявляет о приостановке членства Великобритании в ERM.</span></li>
-        <li><span class="t">17.09</span><span class="e">Ставка возвращена к 10%, 15% так и не введены. Италия тоже выходит из ERM.</span></li>
+        <li class="key"><span class="t">19:30</span><span class="e">Министр финансов Норман Ламонт объявляет о выходе Великобритании из ERM.</span></li>
       </ol>
       <div class="stack" style="gap:28px">
         <div class="figs">
-          <div class="fig"><span class="v">2,7780</span><span class="k">марки за фунт — нижняя граница коридора</span></div>
           <div class="fig"><span class="v">12→15%</span><span class="k">ставка за один день; 15% только объявили</span></div>
           <div class="fig"><span class="v">£3,3&nbsp;млрд</span><span class="k">потери казначейства по оценке 2005&nbsp;г.</span></div>
-          <div class="fig"><span class="v red">19:30</span><span class="k">фунт покидает ERM и больше не возвращается</span></div>
+          <div class="fig"><span class="v">$10&nbsp;млрд</span><span class="k">позиция фонда Джорджа Сороса против фунта</span></div>
+          <div class="fig"><span class="v">$1&nbsp;млрд+</span><span class="k">прибыль фонда Сороса</span></div>
         </div>
-        <p class="note">Ставка не убедила рынок: при рецессии и ипотеке с плавающей ставкой правительство не могло долго держать 12–15%, и все это понимали.</p>
+        <p class="note">Рынок не поверил ставкам: в рецессии, при ипотеке с плавающей ставкой, правительство не могло долго держать 12–15%. Для спекулянтов это была почти беспроигрышная ставка.</p>
       </div>
     </div>
   </div>
-  <footer class="bot"><span class="num">11</span><span>/ 19</span><span class="name">Кризис ЕВС · 1992–1993</span></footer>
+  <footer class="bot"><span class="num">05</span><span>/ 09</span><span class="name">Кризис ЕВС · 1992–1993</span></footer>
 </section>
 
-<!-- 12 · Сорос -->
-<section class="slide sec-2" id="s12" data-sec="2" data-short="Сорос и одностороннее пари">
+<!-- 06 · Цепная реакция и ±15% -->
+<section class="slide sec-2" id="s6" data-sec="2" data-short="Девальвации и коридор ±15%">
   <header class="top"><span class="sec">II · Ход кризиса</span><span>Докладчик · Е. А. Гордеев</span></header>
   <div class="body">
-    <h2 class="title">Джордж Сорос и логика «одностороннего пари»</h2>
+    <div class="head">
+      <h2 class="title">Цепная реакция и коридор ±15%</h2>
+      <p class="lead">После фунта давление перешло на другие валюты. Летом 1993 г. рынок атаковал французский франк, и 2 августа министры финансов ЕС расширили коридор до ±15%.</p>
+    </div>
     <div class="cols">
-      <div class="stack">
-        <p>Фонд Quantum Джорджа Сороса и Стэнли Дракенмиллера открыл короткую позицию по фунту примерно на <b>10 млрд долларов</b> и заработал больше <b>1 млрд</b>. Сороса прозвали «человеком, который сломал Банк Англии».</p>
-        <p>Против фунта играли и банки, пенсионные фонды, компании, страховавшие валютный риск. Их общий объём многократно превышал резервы Банка Англии.</p>
-        <ul class="points">
-          <li>Спекулянт занимает фунты и продаёт их за марки у нижней границы.</li>
-          <li>Курс удержат — он теряет немного: разницу ставок за несколько дней.</li>
-          <li>Фунт девальвируют — выкупает его дешевле и получает прибыль.</li>
-        </ul>
-      </div>
-      <div class="tile bet">
-        <span class="kicker">Условный пример: продажа £1 млрд по 2,78 DM</span>
-        <div class="calc">
-          <div class="line"><span>Получено от продажи</span><span class="v">2,78 млрд DM</span></div>
-          <div class="line"><span>Курс удержан: потеря за неделю</span><span class="v">≈ 0,05%</span></div>
-          <div class="line"><span>Фунт упал до 2,50 DM: выкуп £1 млрд</span><span class="v">2,50 млрд DM</span></div>
-          <div class="line total"><span>Прибыль</span><span class="v">0,28 млрд DM ≈ 10%</span></div>
-        </div>
-        <div class="row">
-          <div class="cap"><span>Риск, если курс удержат</span><span>≈ 0,05%</span></div>
-          <div class="track"><span style="width:0.5%;min-width:4px;background:var(--c2)" data-tip="Возможная потеря ≈ 0,05%"></span></div>
-        </div>
-        <div class="row">
-          <div class="cap"><span>Выигрыш при девальвации</span><span>≈ 10%</span></div>
-          <div class="track"><span style="width:100%;background:var(--c1)" data-tip="Возможный выигрыш ≈ 10%"></span></div>
-        </div>
-        <p class="note">Шкала 0–10% от суммы сделки. Цифры условные.</p>
-      </div>
-    </div>
-  </div>
-  <footer class="bot"><span class="num">12</span><span>/ 19</span><span class="name">Кризис ЕВС · 1992–1993</span></footer>
-</section>
-
-<!-- 13 · Волна девальваций -->
-<section class="slide sec-2" id="s13" data-sec="2" data-short="Волна девальваций">
-  <header class="top"><span class="sec">II · Ход кризиса</span><span>Докладчик · Е. А. Гордеев</span></header>
-  <div class="body">
-    <h2 class="title">Волна девальваций: сентябрь 1992 — май 1993</h2>
-    <div class="table-wrap">
-      <table>
-        <thead><tr><th>Валюта</th><th>Что произошло</th><th>Даты</th><th>Итог</th></tr></thead>
-        <tbody>
-          <tr><td>Фунт стерлингов<span class="ccy">GBP</span></td><td>Выход из ERM после «чёрной среды»</td><td class="num">16.09.1992</td><td><span class="tag exit">вышла</span></td></tr>
-          <tr><td>Итальянская лира<span class="ccy">ITL</span></td><td>Девальвация на 7%, затем выход из ERM</td><td class="num">13.09 · 17.09.1992</td><td><span class="tag exit">вышла</span></td></tr>
-          <tr><td>Испанская песета<span class="ccy">ESP</span></td><td>Три девальвации: −5%, −6%, −8%</td><td class="num">17.09.92 · 22.11.92 · 13.05.93</td><td><span class="tag deval">×3</span></td></tr>
-          <tr><td>Португальское эскудо<span class="ccy">PTE</span></td><td>Две девальвации: −6%, −6,5%</td><td class="num">22.11.1992 · 13.05.1993</td><td><span class="tag deval">×2</span></td></tr>
-          <tr><td>Ирландский фунт<span class="ccy">IEP</span></td><td>−10% после месяцев защиты высокими ставками</td><td class="num">30.01.1993</td><td><span class="tag deval">×1</span></td></tr>
-          <tr><td>Французский франк<span class="ccy">FRF</span></td><td>Удержан интервенциями Банка Франции и Бундесбанка</td><td class="num">сент. 1992 · янв. 1993</td><td><span class="tag policy">удержан</span></td></tr>
-          <tr><td>Датская крона, бельг. франк<span class="ccy">DKK · BEF</span></td><td>Сильное давление, курс удержан</td><td class="num">1992–1993</td><td><span class="tag policy">удержан</span></td></tr>
-        </tbody>
-      </table>
-    </div>
-    <p class="note">23 сентября 1992&nbsp;г. Банк Франции и Бундесбанк совместно заявили, что курс франка к марке соответствует экономике, и вместе провели интервенции. В 1992&nbsp;г. франк устоял.</p>
-  </div>
-  <footer class="bot"><span class="num">13</span><span>/ 19</span><span class="name">Кризис ЕВС · 1992–1993</span></footer>
-</section>
-
-<!-- 14 · Лето 1993 -->
-<section class="slide sec-2" id="s14" data-sec="2" data-short="Лето 1993: коридор ±15%">
-  <header class="top"><span class="sec">II · Ход кризиса</span><span>Докладчик · Е. А. Гордеев</span></header>
-  <div class="body">
-    <h2 class="title">Лето 1993: атака на франк и коридор ±15%</h2>
-    <div class="cols">
-      <div class="stack">
-        <p>Инфляция во Франции была ниже немецкой, но безработица превышала 10%. Рынок ставил на то, что Франция снизит ставки и откажется от привязки к марке.</p>
-        <ul class="points">
-          <li><b>29 июля</b> Бундесбанк снизил лишь ломбардную ставку, оставив учётную. Рынки ждали большего.</li>
-          <li><b>30 июля</b> продажи франка, датской кроны, бельгийского франка, песеты и эскудо; интервенции — десятки миллиардов марок.</li>
-          <li><b>1–2 августа</b> министры финансов ЕС в Брюсселе расширяют коридор до <b>±15%</b>, центральные курсы не меняются.</li>
-          <li>Марка и гульден по двустороннему соглашению сохраняют ±2,25%.</li>
-        </ul>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Валюта</th><th>Что произошло</th><th>Итог</th></tr></thead>
+          <tbody>
+            <tr><td>Фунт<span class="ccy">GBP</span></td><td>Выход из ERM, 16.09.1992</td><td><span class="tag exit">вышла</span></td></tr>
+            <tr><td>Лира<span class="ccy">ITL</span></td><td>−7%, затем выход из ERM, 17.09.1992</td><td><span class="tag exit">вышла</span></td></tr>
+            <tr><td>Песета<span class="ccy">ESP</span></td><td>Три девальвации: −5%, −6%, −8%</td><td><span class="tag deval">×3</span></td></tr>
+            <tr><td>Эскудо<span class="ccy">PTE</span></td><td>Две девальвации: −6%, −6,5%</td><td><span class="tag deval">×2</span></td></tr>
+            <tr><td>Ирл. фунт<span class="ccy">IEP</span></td><td>−10%, 30.01.1993</td><td><span class="tag deval">×1</span></td></tr>
+            <tr><td>Франк<span class="ccy">FRF</span></td><td>Удержан, но в 1993 г. коридор расширили</td><td><span class="tag policy">±15%</span></td></tr>
+          </tbody>
+        </table>
       </div>
       <figure class="chart-fig">
         <span class="label">Ширина коридора, % от центрального курса</span>
@@ -914,10 +644,6 @@ html.present .ctrl .pn { display: inline-flex; }
             <div class="cap"><span><b>С 2 августа 1993</b></span><span class="val">±15%</span></div>
             <div class="band-track"><span class="fill" style="left:0;width:100%" data-tip="Новый коридор: от −15% до +15%"></span><span class="mid"></span></div>
           </div>
-          <div class="bar-row">
-            <div class="cap"><span>Марка — гульден</span><span class="val">±2,25%</span></div>
-            <div class="band-track"><span class="fill" style="left:42.5%;width:15%" data-tip="Марка — гульден: от −2,25% до +2,25%"></span><span class="mid"></span></div>
-          </div>
           <div class="band-axis" aria-hidden="true">
             <span style="left:0">−15%</span>
             <span style="left:30%">−6%</span>
@@ -926,45 +652,16 @@ html.present .ctrl .pn { display: inline-flex; }
             <span style="left:100%">+15%</span>
           </div>
         </div>
-        <figcaption class="note">Формально ERM сохранился, но коридор шириной 30% сделал систему почти плавающей.</figcaption>
+        <figcaption class="note">Формально ERM сохранился, но коридор шириной 30% сделал курсы почти плавающими.</figcaption>
       </figure>
     </div>
   </div>
-  <footer class="bot"><span class="num">14</span><span>/ 19</span><span class="name">Кризис ЕВС · 1992–1993</span></footer>
+  <footer class="bot"><span class="num">06</span><span>/ 09</span><span class="name">Кризис ЕВС · 1992–1993</span></footer>
 </section>
 
-<!-- 15 · Теория -->
-<section class="slide sec-3" id="s15" data-sec="3" data-short="Объяснения экономистов">
-  <header class="top"><span class="sec">III · Анализ и последствия</span><span>Докладчик · И. С. Татьянченко</span></header>
-  <div class="body">
-    <div class="head">
-      <h2 class="title">Как экономисты объясняют кризис</h2>
-      <p class="lead">Кризис ЕВС стал главным примером, на котором проверяли две группы моделей валютных кризисов.</p>
-    </div>
-    <div class="cols even">
-      <div class="tile gen">
-        <span class="kicker">Первое поколение</span>
-        <h3>Кризис неизбежен при плохих фундаментальных показателях</h3>
-        <span class="cite">П. Кругман, 1979</span>
-        <p>Если бюджетная и денежная политика несовместима с фиксированным курсом, резервы тают. Атака лишь ускоряет неизбежную девальвацию.</p>
-        <p class="apply"><b>Подходит для</b> Италии с госдолгом выше 100% ВВП и высокой инфляцией, отчасти для Испании и завышенного курса фунта.</p>
-      </div>
-      <div class="tile gen">
-        <span class="kicker">Второе поколение</span>
-        <h3>Ожидания рынка сбываются сами</h3>
-        <span class="cite">М. Обстфельд, 1994–1996</span>
-        <p>Правительство сравнивает цену защиты курса — высокие ставки при безработице — с ценой отказа от него. Если рынок ждёт девальвации, защита дорожает, и девальвация становится выгодной.</p>
-        <p class="apply"><b>Подходит для</b> Великобритании в рецессии и Франции 1993&nbsp;г. с низкой инфляцией, но безработицей выше 10%.</p>
-      </div>
-    </div>
-    <p class="note">Б. Эйхенгрин и Ч. Виплош (1993): после отмены контроля над капиталом даже здоровая экономика уязвима, если рынок сомневается в политической воле правительства.</p>
-  </div>
-  <footer class="bot"><span class="num">15</span><span>/ 19</span><span class="name">Кризис ЕВС · 1992–1993</span></footer>
-</section>
-
-<!-- 16 · Последствия для стран -->
-<section class="slide sec-3" id="s16" data-sec="3" data-short="Великобритания и Италия">
-  <header class="top"><span class="sec">III · Анализ и последствия</span><span>Докладчик · И. С. Татьянченко</span></header>
+<!-- 07 · Последствия для стран -->
+<section class="slide sec-3" id="s7" data-sec="3" data-short="Последствия для Великобритании и Италии">
+  <header class="top"><span class="sec">III · Последствия и выводы</span><span>Докладчик · И. С. Татьянченко</span></header>
   <div class="body">
     <h2 class="title">Последствия для Великобритании и Италии</h2>
     <div class="cols wide-left">
@@ -994,66 +691,53 @@ html.present .ctrl .pn { display: inline-flex; }
         <div class="rule stack" style="gap:10px">
           <h3 class="h3">Великобритания</h3>
           <ul class="points" style="font-size:var(--t-small);gap:8px">
-            <li>Ставки снижены с 10% до 6% за четыре месяца, спад закончился в 1993&nbsp;г.</li>
-            <li>С октября 1992&nbsp;г. — таргетирование инфляции (цель 1–4%), в 1997&nbsp;г. — независимость Банка Англии.</li>
-            <li>Ламонт ушёл в отставку в мае 1993&nbsp;г., консерваторы проиграли выборы 1997&nbsp;г.</li>
+            <li>Без привязки ставку снизили с 10% до 6% к январю 1993 г., спад закончился.</li>
+            <li>С октября 1992 г. — таргетирование инфляции, с 1997 г. — независимость Банка Англии.</li>
+            <li>В ERM страна так и не вернулась и не перешла на евро.</li>
           </ul>
         </div>
         <div class="rule stack" style="gap:10px">
           <h3 class="h3">Италия</h3>
           <ul class="points" style="font-size:var(--t-small);gap:8px">
-            <li>Девальвация поддержала экспорт; правительство Амато провело жёсткую бюджетную консолидацию.</li>
-            <li>Лира вернулась в ERM в ноябре 1996&nbsp;г., с 1999&nbsp;г. Италия в зоне евро.</li>
+            <li>Девальвация поддержала экспорт, правительство резко сократило бюджетный дефицит.</li>
+            <li>Лира вернулась в ERM в ноябре 1996 г.</li>
           </ul>
         </div>
       </div>
     </div>
   </div>
-  <footer class="bot"><span class="num">16</span><span>/ 19</span><span class="name">Кризис ЕВС · 1992–1993</span></footer>
+  <footer class="bot"><span class="num">07</span><span>/ 09</span><span class="name">Кризис ЕВС · 1992–1993</span></footer>
 </section>
 
-<!-- 17 · Путь к евро -->
-<section class="slide sec-3" id="s17" data-sec="3" data-short="Путь к евро">
-  <header class="top"><span class="sec">III · Анализ и последствия</span><span>Докладчик · И. С. Татьянченко</span></header>
+<!-- 08 · Итоги и выводы -->
+<section class="slide sec-3" id="s8" data-sec="3" data-short="Итоги и выводы">
+  <header class="top"><span class="sec">III · Последствия и выводы</span><span>Докладчик · И. С. Татьянченко</span></header>
   <div class="body">
-    <div class="head">
-      <h2 class="title">Последствия для Европы: от широкого коридора к евро</h2>
-      <p class="lead">«Фиксированные, но пересматриваемые» курсы при свободном капитале оказались неустойчивы. Выбор был между плаванием и единой валютой, и ЕС выбрал единую валюту.</p>
+    <h2 class="title">Итоги кризиса и выводы</h2>
+    <div class="cols wide-right">
+      <div class="tile stack" style="gap:12px">
+        <span class="kicker">Итог для Европы</span>
+        <p style="font-size:var(--t-small);color:var(--cream-2)">Кризис показал: при свободном движении капитала остаётся выбор только между плавающими курсами и единой валютой. ЕС выбрал единую валюту.</p>
+        <ul class="points" style="font-size:var(--t-small);gap:8px">
+          <li>1993–1998 — ERM с коридором ±15%</li>
+          <li>1998 — создан Европейский центральный банк</li>
+          <li>1999 — евро в 11 странах</li>
+        </ul>
+      </div>
+      <div class="lessons two">
+        <div><h3>Трилемму не обойти</h3><p>Фиксированный курс, свободный капитал и разное положение экономик несовместимы.</p></div>
+        <div><h3>Доверие не купить ставкой</h3><p>В рецессии угроза держать ставку 15% неубедительна: рынок знает, что правительство не выдержит.</p></div>
+        <div><h3>Резервы конечны</h3><p>Рынок может мобилизовать больше средств, чем любой центральный банк.</p></div>
+        <div><h3>Пересмотр нельзя откладывать</h3><p>Перекосы, копившиеся в 1987–1992 гг., разрядились разом.</p></div>
+      </div>
     </div>
-    <ol class="path">
-      <li><span class="d">02.08.1993</span><b>Коридор ±15%</b><span>Атаки на курсы теряют смысл</span></li>
-      <li><span class="d">01.11.1993</span><b>Маастрихт в силе</b><span>Критерий курса толкуют по новому коридору</span></li>
-      <li><span class="d">01.01.1994</span><b>Европейский валютный институт</b><span>Второй этап ЭВС, Франкфурт</span></li>
-      <li><span class="d">12.1995</span><b>Название «евро»</b><span>Решение саммита в Мадриде</span></li>
-      <li><span class="d">1996</span><b>Возвращения в ERM</b><span>Финляндия — октябрь, Италия — ноябрь</span></li>
-      <li><span class="d">01.06.1998</span><b>Создан ЕЦБ</b><span>Общая денежная политика вместо «якоря» Бундесбанка</span></li>
-      <li><span class="d">01.01.1999</span><b>Евро в 11 странах</b><span>Безналичный евро и ERM II с коридором ±15%</span></li>
-      <li><span class="d">01.01.2002</span><b>Наличный евро</b><span>Национальные валюты уходят из обращения</span></li>
-    </ol>
+    <p class="verdict">Кризис ЕВС вызвали не спекулянты, а противоречие между общей валютной привязкой и национальной экономической политикой. Спекулянты лишь первыми это заметили.</p>
   </div>
-  <footer class="bot"><span class="num">17</span><span>/ 19</span><span class="name">Кризис ЕВС · 1992–1993</span></footer>
+  <footer class="bot"><span class="num">08</span><span>/ 09</span><span class="name">Кризис ЕВС · 1992–1993</span></footer>
 </section>
 
-<!-- 18 · Уроки -->
-<section class="slide sec-3" id="s18" data-sec="3" data-short="Уроки кризиса">
-  <header class="top"><span class="sec">III · Анализ и последствия</span><span>Докладчик · И. С. Татьянченко</span></header>
-  <div class="body">
-    <h2 class="title">Выводы: уроки кризиса ЕВС</h2>
-    <div class="lessons">
-      <div><h3>Трилемму не обойти</h3><p>Фиксированный курс, свободный капитал и разное положение экономик несовместимы.</p></div>
-      <div><h3>Доверие не купить ставкой</h3><p>В рецессии угроза держать 15% или 500% неубедительна: рынок знает, что правительство не выдержит.</p></div>
-      <div><h3>Резервы конечны</h3><p>Частный капитал может мобилизовать больше средств, чем любой центральный банк.</p></div>
-      <div><h3>Якорь работает на себя</h3><p>Бундесбанк отвечал за цены в Германии, а не за стабильность ERM. Нужна общая денежная политика.</p></div>
-      <div><h3>Отложенный пересмотр опасен</h3><p>Отказ от реалайнментов в 1987–1992&nbsp;гг. накопил перекосы, которые разрядились разом.</p></div>
-      <div><h3>Кризис ускорил евро</h3><p>Опыт 1992–1993&nbsp;гг. подтолкнул к ЕЦБ и пригодился при анализе кризисов в Мексике, Азии и России.</p></div>
-    </div>
-    <p class="verdict">Кризис вызвали не спекулянты, а противоречие между общей валютной привязкой и национальной экономической политикой. Спекулянты лишь первыми это заметили.</p>
-  </div>
-  <footer class="bot"><span class="num">18</span><span>/ 19</span><span class="name">Кризис ЕВС · 1992–1993</span></footer>
-</section>
-
-<!-- 19 · Источники -->
-<section class="slide sec-0" id="s19" data-sec="0" data-short="Источники и вопросы">
+<!-- 09 · Источники -->
+<section class="slide sec-0" id="s9" data-sec="0" data-short="Источники и вопросы">
   <canvas class="rosette end-rosette" aria-hidden="true"></canvas>
   <header class="top"><span class="sec">Заключение</span><span>Докладчик · И. С. Татьянченко</span></header>
   <div class="body">
@@ -1064,8 +748,6 @@ html.present .ctrl .pn { display: inline-flex; }
           <li>Эйхенгрин Б. Глобализация капитала: история международной денежной системы / пер. с англ. — М.: Дело, 2009.</li>
           <li>Eichengreen B., Wyplosz C. The Unstable EMS // Brookings Papers on Economic Activity. — 1993. — № 1. — P. 51–143.</li>
           <li>Buiter W., Corsetti G., Pesenti P. Financial Markets and European Monetary Cooperation: The Lessons of the 1992–93 Exchange Rate Mechanism Crisis. — Cambridge University Press, 1998.</li>
-          <li>Krugman P. A Model of Balance-of-Payments Crises // Journal of Money, Credit and Banking. — 1979. — Vol. 11, № 3. — P. 311–325.</li>
-          <li>Obstfeld M. Models of Currency Crises with Self-Fulfilling Features // European Economic Review. — 1996. — Vol. 40. — P. 1037–1047.</li>
           <li>HM Treasury. Документы о выходе Великобритании из ERM, раскрытые в 2005 г.</li>
           <li>Bank of England. Quarterly Bulletin, 1992–1993.</li>
           <li>Deutsche Bundesbank. Annual Report 1992. — Frankfurt am Main, 1993.</li>
@@ -1078,7 +760,7 @@ html.present .ctrl .pn { display: inline-flex; }
       </div>
     </div>
   </div>
-  <footer class="bot"><span class="num">19</span><span>/ 19</span><span class="name">Кризис ЕВС · 1992–1993</span></footer>
+  <footer class="bot"><span class="num">09</span><span>/ 09</span><span class="name">Кризис ЕВС · 1992–1993</span></footer>
 </section>
 
 </div>
