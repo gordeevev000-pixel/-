@@ -419,6 +419,20 @@ html.present .ctrl .pn { display: inline-flex; }
 .wave li .tag { margin-left: 4px; }
 .lessons.two { gap: 22px 32px; }
 @media (min-width: 760px) { .lessons.two { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* ---------- что такое кризис ---------- */
+.define { font-family: var(--f-quote); font-style: italic; font-weight: 300; font-size: calc(var(--t-quote) * .86); line-height: 1.35; max-width: 52ch; }
+.define b { font-weight: 400; color: var(--gold); }
+.passport { display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px 0; border-top: 1px solid var(--hair); }
+@media (min-width: 600px) { .passport { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 760px) { .passport { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
+.passport > div { padding: 16px 22px 0 0; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.passport strong { font-weight: 500; font-size: var(--t-body); color: var(--cream); line-height: 1.25; }
+.passport p { font-size: var(--t-small); color: var(--cream-2); line-height: 1.4; }
+.glossary { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; }
+@media (min-width: 760px) { .glossary { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 22px; } }
+.glossary > div { background: var(--tile); border: 1px solid var(--hair-2); border-radius: 14px; padding: 16px 20px; font-size: var(--t-small); color: var(--cream-2); line-height: 1.45; }
+.glossary b { color: var(--gold); font-weight: 500; }
 </style>
 </head>
 <body>
@@ -439,14 +453,15 @@ html.present .ctrl .pn { display: inline-flex; }
     </div>
     <div class="team">
       <article class="member">
-        <span class="role">I · Причины кризиса</span>
+        <span class="role">I · Суть и причины кризиса</span>
         <h3 class="name">Аверьянов Никита Романович</h3>
         <ul>
+          <li>определение и суть кризиса</li>
           <li>устройство ЕВС и механизма курсов ERM</li>
           <li>объединение Германии и ставки Бундесбанка</li>
           <li>Маастрихт и свободное движение капитала</li>
         </ul>
-        <span class="range">Слайды 02–03</span>
+        <span class="range">Слайды 02–04</span>
       </article>
       <article class="member">
         <span class="role">II · Ход кризиса</span>
@@ -457,7 +472,7 @@ html.present .ctrl .pn { display: inline-flex; }
           <li>девальвации и коридор ±15%</li>
           <li>вёрстка сайта-презентации</li>
         </ul>
-        <span class="range">Слайды 04–06</span>
+        <span class="range">Слайды 05–07</span>
       </article>
       <article class="member">
         <span class="role">III · Последствия и выводы</span>
@@ -467,16 +482,38 @@ html.present .ctrl .pn { display: inline-flex; }
           <li>итоги для Европы и выводы</li>
           <li>список источников</li>
         </ul>
-        <span class="range">Слайды 07–09</span>
+        <span class="range">Слайды 08–10</span>
       </article>
     </div>
   </div>
-  <footer class="bot"><span class="num">01</span><span>/ 09</span><span class="name">Кризис ЕВС · 1992–1993</span></footer>
+  <footer class="bot"><span class="num">01</span><span>/ 10</span><span class="name">Кризис ЕВС · 1992–1993</span></footer>
 </section>
 
-<!-- 02 · ЕВС и ERM -->
-<section class="slide sec-1" id="s2" data-sec="1" data-short="ЕВС и механизм ERM">
-  <header class="top"><span class="sec">I · Причины кризиса</span><span>Докладчик · Н. Р. Аверьянов</span></header>
+<!-- 02 · Что такое кризис ЕВС -->
+<section class="slide sec-1" id="s2" data-sec="1" data-short="Что такое кризис ЕВС">
+  <header class="top"><span class="sec">I · Суть и причины кризиса</span><span>Докладчик · Н. Р. Аверьянов</span></header>
+  <div class="body">
+    <h2 class="title">Что такое кризис ЕВС</h2>
+    <p class="define">Кризис ЕВС 1992–1993 гг. — это <b>валютный кризис</b>: серия спекулятивных атак на европейские валюты, курсы которых были жёстко привязаны друг к другу в механизме ERM. Центральные банки не смогли удержать курсы, и система фиксированных курсов в Европе фактически распалась.</p>
+    <div class="passport">
+      <div><span class="kicker">Тип</span><strong>Валютный кризис</strong><p>Пострадали курсы валют, а не банки и не государственный долг</p></div>
+      <div><span class="kicker">Где</span><strong>Механизм ERM</strong><p>Страны ЕС, валюты которых были привязаны друг к другу</p></div>
+      <div><span class="kicker">Когда</span><strong>1992–1993</strong><p>Острая фаза — с сентября 1992 по август 1993</p></div>
+      <div><span class="kicker">Как</span><strong>Атаки на курсы</strong><p>Рынок продаёт переоценённые валюты; ЦБ тратят резервы и поднимают ставки, но сдаются</p></div>
+      <div><span class="kicker">Итог</span><strong>Конец жёстких курсов</strong><p>Фунт и лира вышли из ERM, коридор расширен до ±15%</p></div>
+    </div>
+    <div class="glossary">
+      <div><b>Спекулятивная атака</b> — массовая продажа валюты в расчёте на то, что её курс скоро понизят.</div>
+      <div><b>Девальвация</b> — официальное снижение курса национальной валюты.</div>
+      <div><b>Коридор колебаний</b> — допустимое отклонение курса от центрального: в ERM ±2,25% или ±6%.</div>
+    </div>
+  </div>
+  <footer class="bot"><span class="num">02</span><span>/ 10</span><span class="name">Кризис ЕВС · 1992–1993</span></footer>
+</section>
+
+<!-- 03 · ЕВС и ERM -->
+<section class="slide sec-1" id="s3" data-sec="1" data-short="ЕВС и механизм ERM">
+  <header class="top"><span class="sec">I · Суть и причины кризиса</span><span>Докладчик · Н. Р. Аверьянов</span></header>
   <div class="body">
     <h2 class="title">Что такое ЕВС и механизм ERM</h2>
     <div class="cols">
@@ -499,12 +536,12 @@ html.present .ctrl .pn { display: inline-flex; }
       </figure>
     </div>
   </div>
-  <footer class="bot"><span class="num">02</span><span>/ 09</span><span class="name">Кризис ЕВС · 1992–1993</span></footer>
+  <footer class="bot"><span class="num">03</span><span>/ 10</span><span class="name">Кризис ЕВС · 1992–1993</span></footer>
 </section>
 
-<!-- 03 · Причины -->
-<section class="slide sec-1" id="s3" data-sec="1" data-short="Причины кризиса">
-  <header class="top"><span class="sec">I · Причины кризиса</span><span>Докладчик · Н. Р. Аверьянов</span></header>
+<!-- 04 · Причины -->
+<section class="slide sec-1" id="s4" data-sec="1" data-short="Причины кризиса">
+  <header class="top"><span class="sec">I · Суть и причины кризиса</span><span>Докладчик · Н. Р. Аверьянов</span></header>
   <div class="body">
     <h2 class="title">Причины кризиса</h2>
     <div class="trio">
@@ -526,11 +563,11 @@ html.present .ctrl .pn { display: inline-flex; }
     </div>
     <p class="verdict">Фиксированный курс, свободный капитал и собственная денежная политика несовместимы. Участники ERM пожертвовали своей политикой, и в 1992 г. это стало невыносимо.</p>
   </div>
-  <footer class="bot"><span class="num">03</span><span>/ 09</span><span class="name">Кризис ЕВС · 1992–1993</span></footer>
+  <footer class="bot"><span class="num">04</span><span>/ 10</span><span class="name">Кризис ЕВС · 1992–1993</span></footer>
 </section>
 
-<!-- 04 · Ход кризиса -->
-<section class="slide sec-2" id="s4" data-sec="2" data-short="Ход кризиса">
+<!-- 05 · Ход кризиса -->
+<section class="slide sec-2" id="s5" data-sec="2" data-short="Ход кризиса">
   <header class="top"><span class="sec">II · Ход кризиса</span><span>Докладчик · Е. А. Гордеев</span></header>
   <div class="body">
     <div class="head" style="gap:14px">
@@ -578,11 +615,11 @@ html.present .ctrl .pn { display: inline-flex; }
       </li>
     </ol>
   </div>
-  <footer class="bot"><span class="num">04</span><span>/ 09</span><span class="name">Кризис ЕВС · 1992–1993</span></footer>
+  <footer class="bot"><span class="num">05</span><span>/ 10</span><span class="name">Кризис ЕВС · 1992–1993</span></footer>
 </section>
 
-<!-- 05 · Чёрная среда -->
-<section class="slide sec-2" id="s5" data-sec="2" data-short="«Чёрная среда»">
+<!-- 06 · Чёрная среда -->
+<section class="slide sec-2" id="s6" data-sec="2" data-short="«Чёрная среда»">
   <header class="top"><span class="sec">II · Ход кризиса</span><span>Докладчик · Е. А. Гордеев</span></header>
   <div class="body">
     <h2 class="title">«Чёрная среда»: выход Великобритании, 16&nbsp;сентября 1992&nbsp;г.</h2>
@@ -604,11 +641,11 @@ html.present .ctrl .pn { display: inline-flex; }
       </div>
     </div>
   </div>
-  <footer class="bot"><span class="num">05</span><span>/ 09</span><span class="name">Кризис ЕВС · 1992–1993</span></footer>
+  <footer class="bot"><span class="num">06</span><span>/ 10</span><span class="name">Кризис ЕВС · 1992–1993</span></footer>
 </section>
 
-<!-- 06 · Цепная реакция и ±15% -->
-<section class="slide sec-2" id="s6" data-sec="2" data-short="Девальвации и коридор ±15%">
+<!-- 07 · Цепная реакция и ±15% -->
+<section class="slide sec-2" id="s7" data-sec="2" data-short="Девальвации и коридор ±15%">
   <header class="top"><span class="sec">II · Ход кризиса</span><span>Докладчик · Е. А. Гордеев</span></header>
   <div class="body">
     <div class="head">
@@ -656,11 +693,11 @@ html.present .ctrl .pn { display: inline-flex; }
       </figure>
     </div>
   </div>
-  <footer class="bot"><span class="num">06</span><span>/ 09</span><span class="name">Кризис ЕВС · 1992–1993</span></footer>
+  <footer class="bot"><span class="num">07</span><span>/ 10</span><span class="name">Кризис ЕВС · 1992–1993</span></footer>
 </section>
 
-<!-- 07 · Последствия для стран -->
-<section class="slide sec-3" id="s7" data-sec="3" data-short="Последствия для Великобритании и Италии">
+<!-- 08 · Последствия для стран -->
+<section class="slide sec-3" id="s8" data-sec="3" data-short="Последствия для Великобритании и Италии">
   <header class="top"><span class="sec">III · Последствия и выводы</span><span>Докладчик · И. С. Татьянченко</span></header>
   <div class="body">
     <h2 class="title">Последствия для Великобритании и Италии</h2>
@@ -706,11 +743,11 @@ html.present .ctrl .pn { display: inline-flex; }
       </div>
     </div>
   </div>
-  <footer class="bot"><span class="num">07</span><span>/ 09</span><span class="name">Кризис ЕВС · 1992–1993</span></footer>
+  <footer class="bot"><span class="num">08</span><span>/ 10</span><span class="name">Кризис ЕВС · 1992–1993</span></footer>
 </section>
 
-<!-- 08 · Итоги и выводы -->
-<section class="slide sec-3" id="s8" data-sec="3" data-short="Итоги и выводы">
+<!-- 09 · Итоги и выводы -->
+<section class="slide sec-3" id="s9" data-sec="3" data-short="Итоги и выводы">
   <header class="top"><span class="sec">III · Последствия и выводы</span><span>Докладчик · И. С. Татьянченко</span></header>
   <div class="body">
     <h2 class="title">Итоги кризиса и выводы</h2>
@@ -733,11 +770,11 @@ html.present .ctrl .pn { display: inline-flex; }
     </div>
     <p class="verdict">Кризис ЕВС вызвали не спекулянты, а противоречие между общей валютной привязкой и национальной экономической политикой. Спекулянты лишь первыми это заметили.</p>
   </div>
-  <footer class="bot"><span class="num">08</span><span>/ 09</span><span class="name">Кризис ЕВС · 1992–1993</span></footer>
+  <footer class="bot"><span class="num">09</span><span>/ 10</span><span class="name">Кризис ЕВС · 1992–1993</span></footer>
 </section>
 
-<!-- 09 · Источники -->
-<section class="slide sec-0" id="s9" data-sec="0" data-short="Источники и вопросы">
+<!-- 10 · Источники -->
+<section class="slide sec-0" id="s10" data-sec="0" data-short="Источники и вопросы">
   <canvas class="rosette end-rosette" aria-hidden="true"></canvas>
   <header class="top"><span class="sec">Заключение</span><span>Докладчик · И. С. Татьянченко</span></header>
   <div class="body">
@@ -760,7 +797,7 @@ html.present .ctrl .pn { display: inline-flex; }
       </div>
     </div>
   </div>
-  <footer class="bot"><span class="num">09</span><span>/ 09</span><span class="name">Кризис ЕВС · 1992–1993</span></footer>
+  <footer class="bot"><span class="num">10</span><span>/ 10</span><span class="name">Кризис ЕВС · 1992–1993</span></footer>
 </section>
 
 </div>
