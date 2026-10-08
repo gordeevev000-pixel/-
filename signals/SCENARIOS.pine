@@ -1,0 +1,375 @@
+//@version=6
+// ═════════════════════════════════════════════════════════════════════════════
+//  СЦЕНАРИИ ДНЯ — внутридневные сигналы для товаров и индексов (1–15 минут)
+//
+//  На графике только итог: ЛОНГ или ШОРТ, вход, стоп и выход. Анализ спрятан.
+//
+//  Как индикатор думает. Каждая сессия может пойти по одному из сценариев:
+//    • трендовый день вверх или вниз — цена уходит от диапазона открытия и
+//      держится там до закрытия;
+//    • двусторонний день (ротация) — пробой одной стороны, затем возврат
+//      и пробой другой; трендовые входы в такие дни теряют.
+//  Минутные данные 2018–2026 и исследования (Крэбел, Zarattini–Aziz, Baltussen и др.)
+//  показали: направление остатка дня по свечам не угадывается, а вот ВЕРОЯТНОСТЬ
+//  трендового сценария поднимают четыре условия, известные к моменту пробоя:
+//      1. сжатие накануне — вчерашний диапазон самый узкий из 4 или из 7 дней;
+//      2. гэп в сторону пробоя;
+//      3. открытие за вчерашним максимумом (минимумом) в сторону пробоя;
+//      4. дневной тренд — вчерашнее закрытие по ту же сторону от средней 20 закрытий.
+//  Сигнал: первое закрытие за диапазоном первых 15/30 минут, если сценарий
+//  «трендовый день» набрал нужное число условий и издержки не съедают риск.
+//  Стоп — противоположная граница диапазона открытия, выход — в конце сессии.
+//
+//  Проверка (README): небольшой плюс после издержек на 2018–2022 и на 2023–2026,
+//  на нефти — минус на новых данных. Преимущество маленькое и статистически
+//  не доказано. Без перерисовки: всё решается на закрытой свече.
+// ═════════════════════════════════════════════════════════════════════════════
+indicator("Сценарии дня — внутридневные сигналы", shorttitle = "Сценарии дня", overlay = true, max_labels_count = 500, max_lines_count = 500, max_boxes_count = 500)
+
+// ─────────────────────────────────────────────────────────────────────────────
+// НАСТРОЙКИ
+// ─────────────────────────────────────────────────────────────────────────────
+const string G1 = "Рынок"
+const string G2 = "Сценарий"
+const string G3 = "Отображение"
+
+const string M_AUTO = "Авто"
+const string M_OWN  = "Своя сессия"
+
+string mktIn   = input.string(M_AUTO, "Рынок", options = [M_AUTO, "S&P 500", "Nasdaq 100", "Dow", "DAX", "Золото", "Серебро", "Нефть WTI", "Нефть Brent", "Газ", M_OWN], group = G1, tooltip = "Авто — по тикеру (ES, MES, SPX, US500, NQ, NAS100, US100, YM, US30, FDAX, GER40, DE40, GC, XAUUSD, SI, XAGUSD, CL, USOIL, WTI, BRENT, UKOIL, NG, NATGAS).\nОт рынка зависят часы основной сессии и типичные издержки.")
+string ownSess = input.session("0930-1600", "Своя сессия", group = G1, tooltip = "Для «Своя сессия» и нераспознанных тикеров. Сессия должна умещаться в одни сутки.")
+string ownTz   = input.string("America/New_York", "Часовой пояс своей сессии", group = G1)
+float  costIn  = input.float(0.0, "Издержки на круг, пункты", minval = 0.0, step = 0.01, group = G1, tooltip = "Спред + комиссия + проскальзывание за вход и выход вместе, в пунктах цены.\n0 — типичные значения: S&P 500 0.75 · Nasdaq 2.5 · Dow 4 · DAX 2 · золото 0.40 · серебро 0.03 · WTI 0.04 · Brent 0.05 · газ 0.008.")
+
+string orIn     = input.string("30 минут", "Диапазон открытия", options = ["15 минут", "30 минут"], group = G2)
+string strictIn = input.string("Сбалансированный", "Строгость отбора", options = ["Агрессивный", "Сбалансированный", "Консервативный"], group = G2, tooltip = "Сколько из 4 условий трендового дня нужно для сигнала: 2 / 3 / 4.")
+float  costPct  = input.float(10.0, "Издержки не больше, % риска", minval = 1.0, maxval = 50.0, step = 1.0, group = G2, tooltip = "Если спред и комиссия больше этой доли от расстояния до стопа — сигнал пропускается. Главный фильтр для маленьких таймфреймов.")
+int    cutoff   = input.int(240, "Пробой не позже, минут после открытия", minval = 30, step = 30, group = G2)
+bool   allowL   = input.bool(true, "Лонги", inline = "dir", group = G2)
+bool   allowS   = input.bool(true, "Шорты", inline = "dir", group = G2)
+
+bool   showLv   = input.bool(true, "Вход и стоп открытой сделки", group = G3)
+bool   showExit = input.bool(true, "Метки выхода", group = G3)
+bool   showStat = input.bool(false, "Статистика по истории", group = G3)
+string sizeIn   = input.string("Обычный", "Размер меток", options = ["Мелкий", "Обычный", "Крупный"], group = G3)
+color  cBuy     = input.color(#089981, "Лонг", inline = "col", group = G3)
+color  cSell    = input.color(#F23645, "Шорт", inline = "col", group = G3)
+
+// ─────────────────────────────────────────────────────────────────────────────
+// РЫНОК: часы основной сессии в часовом поясе биржи и типичные издержки
+// ─────────────────────────────────────────────────────────────────────────────
+detectMarket() =>
+    string t = str.upper(syminfo.ticker)
+    string r = str.upper(syminfo.root)
+    string res = M_OWN
+    if str.contains(t, "XAU") or str.contains(t, "GOLD") or r == "GC" or r == "MGC"
+        res := "Золото"
+    else if str.contains(t, "XAG") or str.contains(t, "SILVER") or r == "SI" or r == "SIL"
+        res := "Серебро"
+    else if str.contains(t, "BRENT") or str.contains(t, "UKOIL") or str.contains(t, "XBR") or r == "BZ" or r == "BRN"
+        res := "Нефть Brent"
+    else if str.contains(t, "WTI") or str.contains(t, "USOIL") or str.contains(t, "XTI") or str.contains(t, "CRUDE") or r == "CL" or r == "MCL" or r == "QM"
+        res := "Нефть WTI"
+    else if str.contains(t, "NATGAS") or str.contains(t, "XNG") or r == "NG" or r == "QG"
+        res := "Газ"
+    else if str.contains(t, "NAS100") or str.contains(t, "NDX") or str.contains(t, "US100") or str.contains(t, "USTEC") or str.contains(t, "NSX") or r == "NQ" or r == "MNQ"
+        res := "Nasdaq 100"
+    else if str.contains(t, "US30") or str.contains(t, "DJI") or str.contains(t, "WS30") or r == "YM" or r == "MYM"
+        res := "Dow"
+    else if str.contains(t, "DAX") or str.contains(t, "DE40") or str.contains(t, "GER40") or str.contains(t, "DE30") or str.contains(t, "GER30") or r == "FDAX" or r == "FDXM" or r == "FDXS"
+        res := "DAX"
+    else if str.contains(t, "SPX") or str.contains(t, "US500") or str.contains(t, "SP500") or r == "ES" or r == "MES"
+        res := "S&P 500"
+    res
+
+mktParams(string m) =>
+    string s = ownSess
+    string z = ownTz
+    float  k = 0.0
+    switch m
+        "S&P 500" =>
+            s := "0930-1600"
+            z := "America/New_York"
+            k := 0.75
+        "Nasdaq 100" =>
+            s := "0930-1600"
+            z := "America/New_York"
+            k := 2.5
+        "Dow" =>
+            s := "0930-1600"
+            z := "America/New_York"
+            k := 4.0
+        "DAX" =>
+            s := "0900-1730"
+            z := "Europe/Berlin"
+            k := 2.0
+        "Золото" =>
+            s := "0820-1330"
+            z := "America/New_York"
+            k := 0.40
+        "Серебро" =>
+            s := "0825-1325"
+            z := "America/New_York"
+            k := 0.03
+        "Нефть WTI" =>
+            s := "0900-1430"
+            z := "America/New_York"
+            k := 0.04
+        "Нефть Brent" =>
+            s := "0900-1430"
+            z := "America/New_York"
+            k := 0.05
+        "Газ" =>
+            s := "0900-1430"
+            z := "America/New_York"
+            k := 0.008
+    [s, z, k]
+
+string mkt = mktIn == M_AUTO ? detectMarket() : mktIn
+[sessStr, tzStr, defCost] = mktParams(mkt)
+
+int   openMin  = int(str.tonumber(str.substring(sessStr, 0, 2))) * 60 + int(str.tonumber(str.substring(sessStr, 2, 4)))
+int   closeMin = int(str.tonumber(str.substring(sessStr, 5, 7))) * 60 + int(str.tonumber(str.substring(sessStr, 7, 9)))
+int   orW      = orIn == "15 минут" ? 15 : 30
+int   minScore = strictIn == "Агрессивный" ? 2 : strictIn == "Консервативный" ? 4 : 3
+float cost     = costIn > 0 ? costIn : defCost
+int   step     = math.max(1, int(timeframe.in_seconds() / 60))
+string lblSize = sizeIn == "Мелкий" ? size.small : sizeIn == "Крупный" ? size.large : size.normal
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ВРЕМЯ БАРА В ЧАСОВОМ ПОЯСЕ БИРЖИ
+// ─────────────────────────────────────────────────────────────────────────────
+int  tod  = hour(time, tzStr) * 60 + minute(time, tzStr)
+int  dow  = dayofweek(time, tzStr)
+int  dKey = year(time, tzStr) * 10000 + month(time, tzStr) * 100 + dayofmonth(time, tzStr)
+bool inS  = timeframe.isintraday and tod >= openMin and tod < closeMin and dow >= dayofweek.monday and dow <= dayofweek.friday
+
+// ─────────────────────────────────────────────────────────────────────────────
+// СОСТОЯНИЕ
+// ─────────────────────────────────────────────────────────────────────────────
+var array<float> ranges = array.new<float>()     // диапазоны завершённых сессий
+var array<float> closes = array.new<float>()     // закрытия завершённых сессий
+var float pH = na
+var float pL = na
+var float pC = na
+var float sOpen = na
+var float sH = na
+var float sL = na
+var float sC = na
+var float orH = na
+var float orL = na
+var bool  orReady = false
+var bool  done = false
+var bool  comp = false
+var int   curKey = -1
+
+var int   pos = 0
+var int   eBar = na
+var float entry = na
+var float stop = na
+var float risk = na
+
+var int   nTr = 0
+var int   nWin = 0
+var float sumR = 0.0
+var float grW = 0.0
+var float grL = 0.0
+
+var box   bxRisk = na
+var line  lnE = na
+var line  lnS = na
+var label lbE = na
+var label lbS = na
+
+fmt(float p) =>
+    str.tostring(p, format.mintick)
+
+hhmm(int mins) =>
+    str.format("{0}:{1}", str.tostring(int(mins / 60), "00"), str.tostring(mins % 60, "00"))
+
+mark(bool ok) =>
+    ok ? "✓ " : "✗ "
+
+// статистика сигналов по числу условий на 2018–2022 (7 рынков, ТФ 1/5/15 мин, после издержек)
+histLine(int sc, int w) =>
+    string res = ""
+    if w == 30
+        res := sc == 2 ? "в плюс 45%, средний +0.01R" : sc == 3 ? "в плюс 47%, средний +0.06R" : "в плюс 45%, средний +0.04R"
+    else
+        res := sc == 2 ? "в плюс 41%, средний 0.00R" : sc == 3 ? "в плюс 45%, средний +0.07R" : "в плюс 39%, средний −0.01R"
+    res
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ГЛАВНЫЙ ЦИКЛ — только на закрытой свече
+// ─────────────────────────────────────────────────────────────────────────────
+int    sig    = 0
+int    exitD  = 0
+float  exitR  = na
+float  exitPx = na
+string exitWhy = ""
+
+closeTrade(float px, string why) =>
+    [(px - entry) * pos / risk, px, why]
+
+if barstate.isconfirmed
+    // ── 0. Сессия кончилась раньше обычного — выход по открытию бара
+    if pos != 0 and (not inS or dKey != curKey)
+        [r0, p0, w0] = closeTrade(open, "Конец сессии")
+        exitR   := r0
+        exitPx  := p0
+        exitWhy := w0
+        exitD   := pos
+        pos     := 0
+
+    if inS
+        // ── 1. Новая сессия: итоги вчерашней, условия сжатия
+        if dKey != curKey
+            if curKey != -1
+                ranges.push(sH - sL)
+                closes.push(sC)
+                if ranges.size() > 30
+                    ranges.shift()
+                    closes.shift()
+                pH := sH
+                pL := sL
+                pC := sC
+            curKey  := dKey
+            sOpen   := open
+            sH      := high
+            sL      := low
+            orH     := high
+            orL     := low
+            orReady := false
+            done    := false
+            int nR = ranges.size()
+            comp := false
+            if nR >= 7
+                float last = ranges.get(nR - 1)
+                comp := last <= ranges.slice(nR - 4, nR).min() or last <= ranges.slice(nR - 7, nR).min()
+        else
+            sH := math.max(sH, high)
+            sL := math.min(sL, low)
+        sC := close
+        int  m    = tod - openMin
+        bool skip = false
+
+        // ── 2. Диапазон открытия
+        if not orReady
+            if m < orW
+                orH := math.max(orH, high)
+                orL := math.min(orL, low)
+            if m + step >= orW
+                orReady := true
+                skip    := true                       // бар, закрывший окно, сам сигналом не бывает
+
+        if not skip
+            bool isLast = tod + step >= closeMin
+            // ── 3. Сопровождение: стоп или конец сессии
+            if pos != 0
+                float S  = stop * pos
+                float lo = pos == 1 ? low : -high
+                if lo <= S
+                    [r1, p1, w1] = closeTrade(math.min(S, open * pos) * pos, "Стоп")
+                    exitR   := r1
+                    exitPx  := p1
+                    exitWhy := w1
+                    exitD   := pos
+                    pos     := 0
+                else if isLast
+                    [r2, p2, w2] = closeTrade(close, "Конец сессии")
+                    exitR   := r2
+                    exitPx  := p2
+                    exitWhy := w2
+                    exitD   := pos
+                    pos     := 0
+            // ── 4. Оценка сценария на первом пробое диапазона открытия
+            else if not done and orReady and m <= cutoff and not isLast
+                int d = close > orH ? 1 : close < orL ? -1 : 0
+                if d != 0
+                    done := true
+                    if closes.size() >= 20
+                        float sma20   = closes.slice(closes.size() - 20, closes.size()).avg()
+                        bool  gapAl   = math.sign(sOpen - pC) == d
+                        bool  openAl  = d == 1 ? sOpen > pH : sOpen < pL
+                        bool  trendAl = math.sign(pC - sma20) == d
+                        int   score   = (comp ? 1 : 0) + (gapAl ? 1 : 0) + (openAl ? 1 : 0) + (trendAl ? 1 : 0)
+                        float st      = d == 1 ? orL : orH
+                        float rk      = (close - st) * d
+                        bool  okDir   = d == 1 ? allowL : allowS
+                        if okDir and score >= minScore and rk > 0 and cost <= costPct / 100 * rk
+                            pos   := d
+                            eBar  := bar_index
+                            entry := close
+                            stop  := st
+                            risk  := rk
+                            sig   := d
+                            bool   L   = d == 1
+                            string up  = L ? "вверх" : "вниз"
+                            string tip = "Сценарий: трендовый день " + up + " (" + mkt + ")" + "\nУсловия: " + str.tostring(score) + " из 4" + "\n  " + mark(comp) + "сжатие накануне (NR4/NR7)" + "\n  " + mark(gapAl) + "гэп " + up + "\n  " + mark(openAl) + "открытие " + (L ? "выше вчерашнего максимума" : "ниже вчерашнего минимума") + "\n  " + mark(trendAl) + "дневной тренд " + up + "\nНа истории такие сигналы: " + histLine(score, orW) + "\n\nВход: " + fmt(entry) + "\nСтоп: " + fmt(stop) + " — граница диапазона первых " + str.tostring(orW) + " минут" + "\nВыход: в конце сессии, " + hhmm(closeMin) + " (" + tzStr + ")" + "\nИздержки: " + str.tostring(cost / rk * 100, "0.0") + "% риска"
+                            label.new(bar_index, close, L ? "ЛОНГ" : "ШОРТ", yloc = L ? yloc.belowbar : yloc.abovebar, style = L ? label.style_label_up : label.style_label_down, color = L ? cBuy : cSell, textcolor = color.white, size = lblSize, tooltip = tip)
+                            if showLv
+                                int x2 = bar_index + 10
+                                bxRisk := box.new(bar_index, L ? entry : stop, x2, L ? stop : entry, border_width = 0, bgcolor = color.new(cSell, 85))
+                                lnE := line.new(bar_index, entry, x2, entry, color = color.gray, width = 1)
+                                lnS := line.new(bar_index, stop, x2, stop, color = cSell, width = 2)
+                                lbE := label.new(x2, entry, "Вход " + fmt(entry), style = label.style_label_left, color = color.new(color.gray, 20), textcolor = color.white, size = size.small)
+                                lbS := label.new(x2, stop, "Стоп " + fmt(stop), style = label.style_label_left, color = cSell, textcolor = color.white, size = size.small)
+                            alert((L ? "ЛОНГ " : "ШОРТ ") + syminfo.ticker + " | трендовый день " + up + ", условий " + str.tostring(score) + " из 4 | Вход " + fmt(entry) + " | Стоп " + fmt(stop) + " | Выход в " + hhmm(closeMin), alert.freq_once_per_bar_close)
+
+    // ── 5. Закрытие сделки: статистика, метка, уборка уровней
+    if not na(exitR)
+        nTr  += 1
+        nWin += exitR > 0 ? 1 : 0
+        sumR += exitR
+        grW  += math.max(exitR, 0.0)
+        grL  += math.max(-exitR, 0.0)
+        string res = str.tostring(exitR, "+0.0;-0.0") + "R"
+        if showExit
+            label.new(bar_index, exitPx, "✕ " + res, yloc = exitD == 1 ? yloc.abovebar : yloc.belowbar, style = label.style_none, textcolor = exitR > 0 ? cBuy : exitR < 0 ? cSell : color.gray, size = size.small, tooltip = "Выход: " + exitWhy + "\nЦена: " + fmt(exitPx) + "\nИтог без издержек: " + res)
+        alert((exitD == 1 ? "ЛОНГ " : "ШОРТ ") + syminfo.ticker + " — выход: " + exitWhy + " " + fmt(exitPx) + ", итог " + res, alert.freq_once_per_bar_close)
+        box.delete(bxRisk)
+        line.delete(lnE)
+        line.delete(lnS)
+        label.delete(lbE)
+        label.delete(lbS)
+
+    // Уровни открытой сделки тянутся за ценой
+    if pos != 0 and showLv and bar_index > eBar
+        int x2 = bar_index + 10
+        box.set_right(bxRisk, x2)
+        line.set_x2(lnE, x2)
+        line.set_x2(lnS, x2)
+        label.set_x(lbE, x2)
+        label.set_x(lbS, x2)
+
+// ─────────────────────────────────────────────────────────────────────────────
+// АЛЕРТЫ, ПОДСКАЗКИ, СТАТИСТИКА
+// ─────────────────────────────────────────────────────────────────────────────
+alertcondition(sig == 1, "Сценарии дня: лонг", "ЛОНГ {{ticker}} {{interval}}, вход ≈ {{close}}")
+alertcondition(sig == -1, "Сценарии дня: шорт", "ШОРТ {{ticker}} {{interval}}, вход ≈ {{close}}")
+alertcondition(not na(exitR), "Сценарии дня: выход", "Выход {{ticker}} {{interval}} ≈ {{close}}")
+
+if barstate.islast
+    string warn = ""
+    if not timeframe.isintraday or timeframe.in_seconds() > 900
+        warn := "Индикатор рассчитан на таймфреймы 1–15 минут"
+    else if mkt == M_OWN and mktIn == M_AUTO
+        warn := "Рынок не распознан по тикеру — выберите его в настройках или задайте свою сессию"
+    else if mkt == "Нефть WTI" or mkt == "Нефть Brent"
+        warn := "Нефть: на данных 2023–2026 сигналы были в минусе"
+    if warn != ""
+        var table tw = table.new(position.bottom_right, 1, 1)
+        table.cell(tw, 0, 0, warn, text_color = color.gray, text_size = size.small)
+
+if barstate.islast and showStat
+    var table tb = table.new(position.top_right, 2, 5, bgcolor = color.new(color.black, 20), border_width = 1)
+    table.cell(tb, 0, 0, "Сделок", text_color = color.white, text_size = size.small)
+    table.cell(tb, 1, 0, str.tostring(nTr), text_color = color.white, text_size = size.small)
+    table.cell(tb, 0, 1, "В плюс", text_color = color.white, text_size = size.small)
+    table.cell(tb, 1, 1, nTr > 0 ? str.tostring(100.0 * nWin / nTr, "0") + "%" : "—", text_color = color.white, text_size = size.small)
+    table.cell(tb, 0, 2, "Средняя, R", text_color = color.white, text_size = size.small)
+    table.cell(tb, 1, 2, nTr > 0 ? str.tostring(sumR / nTr, "+0.00;-0.00") : "—", text_color = color.white, text_size = size.small)
+    table.cell(tb, 0, 3, "Итого, R", text_color = color.white, text_size = size.small)
+    table.cell(tb, 1, 3, str.tostring(sumR, "+0.0;-0.0"), text_color = sumR >= 0 ? cBuy : cSell, text_size = size.small)
+    table.cell(tb, 0, 4, "Профит-фактор", text_color = color.white, text_size = size.small)
+    table.cell(tb, 1, 4, grL > 0 ? str.tostring(grW / grL, "0.00") : "—", text_color = color.white, text_size = size.small)
