@@ -1,0 +1,428 @@
+//@version=6
+// ═════════════════════════════════════════════════════════════════════════════
+//  КОНФЛЮЭНС — торговые сигналы
+//
+//  На графике только итог: ЛОНГ или ШОРТ, вход, стоп и выход. Анализ спрятан.
+//
+//  Сигнал = фильтр направления + один из трёх сетапов.
+//
+//  Фильтр направления (торговать только по «приливу», Элдер, Мэрфи):
+//      • старший ТФ: цена над EMA 50 и EMA 50 растёт (для шорта — наоборот);
+//      • текущий ТФ: цена над EMA 200 (для шорта — под ней).
+//
+//  Сетапы:
+//      1. Откат по тренду      — EMA 20 > 50 > 200, структура HH/HL, откат к
+//                                EMA 20–50 без слома минимума, RSI остыл < 50,
+//                                свеча закрылась выше максимума предыдущей
+//                                (Элдер «Три экрана», Брукс H2, Кардвелл).
+//      2. Пробой после сжатия  — Болинджер внутри Кельтнера, затем закрытие
+//                                за 20-барным диапазоном на объёме ≥ 1.2×
+//                                (Болинджер, Картер TTM Squeeze, «Черепахи»).
+//      3. Ложный пробой уровня — вынос стопов за свинговым минимумом и возврат
+//                                за 1–3 свечи на объёме ≥ 1.2×
+//                                (Вайкофф spring/upthrust, Рашке «Turtle Soup»).
+//
+//  Стоп — за экстремумом сетапа + 0.2 ATR (не ближе 0.5 ATR и не дальше 3 ATR).
+//  Выход — трейлинг-стоп Chandelier (Ле Бо): максимум с момента входа − 3 ATR.
+//  Прибыль не режется фиксированной целью — так и работает следование тренду.
+//  Можно переключить на фиксированные цели 1R / 2R.
+//
+//  Проверка на истории (README): ниже 4 часов — в минусе после комиссий;
+//  на 4ч и дне по трендовым рынкам — небольшой плюс, но на новых данных он
+//  статистически не доказан. Это инструмент отбора сделок, а не гарантия.
+//  Без перерисовки: всё на закрытой свече, старший ТФ — только по закрытым барам.
+// ═════════════════════════════════════════════════════════════════════════════
+indicator("Конфлюэнс — торговые сигналы", shorttitle = "Конфлюэнс", overlay = true, max_labels_count = 500, max_lines_count = 500, max_boxes_count = 500)
+
+// ─────────────────────────────────────────────────────────────────────────────
+// НАСТРОЙКИ
+// ─────────────────────────────────────────────────────────────────────────────
+const string G1 = "Сигналы"
+const string G2 = "Сетапы"
+const string G3 = "Выход из сделки"
+const string G4 = "Отображение"
+const string EX_TRAIL = "Трейлинг-стоп"
+const string EX_FIXED = "Цели 1 и 2"
+
+string htfIn  = input.timeframe("", "Старший таймфрейм", group = G1, tooltip = "Пусто — подбирается сам: 1м → 15м, 5м → 1ч, 15м и 1ч → 4ч, 4ч → день, день → неделя, неделя → месяц.")
+bool   allowL = input.bool(true, "Лонги", inline = "dir", group = G1)
+bool   allowS = input.bool(true, "Шорты", inline = "dir", group = G1)
+
+bool useTrend = input.bool(true, "Откат по тренду", group = G2)
+bool useBreak = input.bool(true, "Пробой после сжатия", group = G2)
+bool useSweep = input.bool(true, "Ложный пробой уровня", group = G2)
+
+string exitIn  = input.string(EX_TRAIL, "Способ выхода", options = [EX_TRAIL, EX_FIXED], group = G3, tooltip = "Трейлинг-стоп: стоп подтягивается за ценой на расстоянии 3 ATR от лучшей цены с момента входа. На истории он заметно лучше фиксированных целей.\nЦели 1 и 2: выход на заданном числе R.")
+float  trailK  = input.float(3.0, "Трейлинг, ATR", minval = 0.5, step = 0.5, group = G3)
+float  tp1R    = input.float(1.0, "Цель 1, R", minval = 0.3, step = 0.1, group = G3, tooltip = "R — расстояние от входа до стопа. 1R — прибыль, равная риску.")
+float  tp2R    = input.float(2.0, "Цель 2, R", minval = 0.3, step = 0.1, group = G3, tooltip = "Только для способа «Цели 1 и 2».")
+bool   partial = input.bool(false, "На Цели 1 закрыть половину, стоп в безубыток", group = G3)
+float  maxStop = input.float(3.0, "Максимальный стоп, ATR", minval = 0.5, step = 0.5, group = G3, tooltip = "Если логичный стоп дальше — сигнал пропускается.")
+int    maxBars = input.int(0, "Выход по времени, баров", minval = 0, group = G3, tooltip = "0 — выключено.")
+
+bool   showLv   = input.bool(true, "Вход и стоп открытой сделки", group = G4)
+bool   showExit = input.bool(true, "Метки выхода", group = G4)
+bool   showHist = input.bool(false, "Зоны прошлых сделок", group = G4)
+bool   showStat = input.bool(false, "Статистика по истории", group = G4)
+bool   showWarn = input.bool(true, "Предупреждать о ТФ ниже 4 часов", group = G4)
+string sizeIn   = input.string("Обычный", "Размер меток", options = ["Мелкий", "Обычный", "Крупный"], group = G4)
+color  cBuy     = input.color(#089981, "Лонг", inline = "col", group = G4)
+color  cSell    = input.color(#F23645, "Шорт", inline = "col", group = G4)
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ВНУТРЕННИЕ ПАРАМЕТРЫ (классические значения)
+// ─────────────────────────────────────────────────────────────────────────────
+const int   ATR_LEN  = 14
+const int   PV_L     = 5      // свинг: 5 баров слева
+const int   PV_R     = 3      //        и 3 бара справа (подтверждение)
+const int   PB_WIN   = 6      // окно отката, баров
+const int   SW_WIN   = 2      // на возврат после выноса — до 2 баров
+const int   WARMUP   = 250    // прогрев EMA 200
+const float STOP_BUF = 0.2    // запас за экстремумом, ATR
+const float MIN_STOP = 0.5    // стоп не ближе, ATR
+const float VOL_K    = 1.2    // «повышенный объём», раз от среднего
+
+bool   trail   = exitIn == EX_TRAIL
+float  tp2     = math.max(tp2R, tp1R)
+string lblSize = sizeIn == "Мелкий" ? size.small : sizeIn == "Крупный" ? size.large : size.normal
+
+// ─────────────────────────────────────────────────────────────────────────────
+// БАЗОВЫЕ РЯДЫ
+// ─────────────────────────────────────────────────────────────────────────────
+float atr    = ta.atr(ATR_LEN)
+float ema20  = ta.ema(close, 20)
+float ema50  = ta.ema(close, 50)
+float ema200 = ta.ema(close, 200)
+float rsi    = ta.rsi(close, 14)
+
+float vol    = nz(volume)
+float volAvg = ta.sma(vol, 20)
+bool  hasVol = volAvg > 0
+float relVol = hasVol ? vol / volAvg : 0.0
+float rv3    = ta.highest(relVol, 3)
+
+float rng    = high - low
+float clv    = rng > 0 ? (close - low) / rng : 0.5
+
+float rsiMin = ta.lowest(rsi, PB_WIN)
+float rsiMax = ta.highest(rsi, PB_WIN)
+float pbLow  = ta.lowest(low, PB_WIN)
+float pbHigh = ta.highest(high, PB_WIN)
+float low3   = ta.lowest(low, 3)
+float high3  = ta.highest(high, 3)
+float dcHi   = ta.highest(high, 20)[1]
+float dcLo   = ta.lowest(low, 20)[1]
+
+// Сжатие: полосы Болинджера внутри каналов Кельтнера
+float bbDev  = 2.0 * ta.stdev(close, 20)
+float bbMid  = ta.sma(close, 20)
+float kcRng  = 1.5 * ta.ema(ta.tr(true), 20)
+bool  sqz    = bbMid + bbDev < ema20 + kcRng and bbMid - bbDev > ema20 - kcRng
+float sqzN   = math.sum(sqz ? 1.0 : 0.0, 20)
+int   sqzAgo = nz(ta.barssince(sqz), 1000)
+
+// Свинги: строгий экстремум справа, нестрогий слева — без дублей на равных вершинах
+float rHi  = ta.highest(high, PV_R)
+float lHi  = ta.highest(high, PV_L)[PV_R + 1]
+float rLo  = ta.lowest(low, PV_R)
+float lLo  = ta.lowest(low, PV_L)[PV_R + 1]
+bool  isPH = high[PV_R] > rHi and high[PV_R] >= lHi
+bool  isPL = low[PV_R] < rLo and low[PV_R] <= lLo
+
+// ─────────────────────────────────────────────────────────────────────────────
+// СТАРШИЙ ТАЙМФРЕЙМ: сторона и наклон EMA 50
+// ─────────────────────────────────────────────────────────────────────────────
+autoHtf() =>
+    int s = timeframe.in_seconds()
+    s <= 60 ? "15" : s <= 300 ? "60" : s <= 3600 ? "240" : s <= 14400 ? "D" : s <= 86400 ? "W" : "M"
+
+string htf = htfIn == "" ? autoHtf() : timeframe.in_seconds(htfIn) <= timeframe.in_seconds() ? autoHtf() : htfIn
+
+htfTide() =>
+    float e = ta.ema(close, 50)
+    int   d = close > e and e > e[1] ? 1 : close < e and e < e[1] ? -1 : 0
+    d[1]
+
+// d[1] + lookahead_on = значение последнего ЗАКРЫТОГО бара старшего ТФ
+int htfDir = nz(request.security(syminfo.tickerid, htf, htfTide(), lookahead = barmerge.lookahead_on))
+
+// ─────────────────────────────────────────────────────────────────────────────
+// СОСТОЯНИЕ
+// ─────────────────────────────────────────────────────────────────────────────
+var float lastPH = na
+var float lastPL = na
+var bool  phBrk  = false
+var bool  plBrk  = false
+var int   ms     = 0           // структура: 1 — последним пробит максимум, -1 — минимум
+
+var bool  phSwp  = false
+var bool  plSwp  = false
+var int   swHBar = na
+var float swHLvl = na
+var bool  swHUse = false
+var int   swLBar = na
+var float swLLvl = na
+var bool  swLUse = false
+
+var int   tDir   = 0
+var int   tBar   = na
+var float tEntry = na
+var float tStop  = na
+var float tStop0 = na
+var float tRisk  = na
+var float tTp1   = na
+var float tTp2   = na
+var float tExt   = na
+var bool  tT1    = false
+
+var int   nTr  = 0
+var int   nWin = 0
+var float sumR = 0.0
+var float grW  = 0.0
+var float grL  = 0.0
+
+var box   bxRisk = na
+var box   bxGain = na
+var line  lnE    = na
+var line  lnS    = na
+var line  lnT1   = na
+var line  lnT2   = na
+var label lbE    = na
+var label lbS    = na
+var label lbT1   = na
+var label lbT2   = na
+
+setupName(int s) =>
+    s == 1 ? "Откат по тренду" : s == 2 ? "Пробой после сжатия" : "Ложный пробой уровня"
+
+fmt(float p) =>
+    str.tostring(p, format.mintick)
+
+side(int d) =>
+    d == 1 ? "ЛОНГ" : "ШОРТ"
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ГЛАВНЫЙ ЦИКЛ — только на закрытой свече
+// ─────────────────────────────────────────────────────────────────────────────
+int    sigDir  = 0
+int    sigSet  = 0
+float  sigExt  = na
+float  exitR   = na
+float  exitPx  = na
+string exitWhy = ""
+
+if barstate.isconfirmed
+    // ── 1. Свинги и структура рынка (Доу)
+    if isPH
+        lastPH := high[PV_R]
+        phBrk  := false
+        phSwp  := false
+    if isPL
+        lastPL := low[PV_R]
+        plBrk  := false
+        plSwp  := false
+    if not phBrk and not na(lastPH) and close > lastPH
+        phBrk := true
+        ms    := 1
+    if not plBrk and not na(lastPL) and close < lastPL
+        plBrk := true
+        ms    := -1
+
+    // ── 2. Выносы ликвидности за свинги
+    if not phSwp and not na(lastPH) and high > lastPH
+        phSwp  := true
+        swHBar := bar_index
+        swHLvl := lastPH
+        swHUse := false
+    if not plSwp and not na(lastPL) and low < lastPL
+        plSwp  := true
+        swLBar := bar_index
+        swLLvl := lastPL
+        swLUse := false
+
+    // ── 3. Сопровождение открытой сделки. Всё в «координатах лонга»: у шорта цены × −1
+    if tDir != 0 and bar_index > tBar
+        int   d     = tDir
+        float hi    = d == 1 ? high : -low
+        float lo    = d == 1 ? low : -high
+        float op    = open * d
+        float E     = tEntry * d
+        float S     = tStop * d
+        float bank  = partial and tT1 ? 0.5 * tp1R : 0.0
+        float share = partial and tT1 ? 0.5 : 1.0
+        if lo <= S
+            float px = math.min(S, op)                 // гэп за стоп — выход по открытию
+            exitR   := bank + share * (px - E) / tRisk
+            exitPx  := px * d
+            exitWhy := partial and tT1 and S <= E ? "Безубыток" : S > tStop0 * d ? "Трейлинг-стоп" : "Стоп"
+        else if not trail and hi >= tTp2 * d
+            exitR   := partial ? 0.5 * tp1R + 0.5 * tp2 : tp2
+            exitPx  := tTp2
+            exitWhy := "Цель 2"
+        else
+            if not tT1 and hi >= tTp1 * d
+                tT1 := true
+                if partial
+                    S := math.max(S, E)
+                if partial or not trail
+                    alert(side(d) + " " + syminfo.ticker + ": Цель 1 " + fmt(tTp1) + (partial ? " — закрыть половину, стоп в безубыток" : ""), alert.freq_once_per_bar_close)
+            if trail
+                tExt := math.max(tExt * d, hi) * d
+                S    := math.max(S, tExt * d - trailK * atr)
+            tStop := S * d
+            if maxBars > 0 and bar_index - tBar >= maxBars
+                exitR   := bank + share * (close * d - E) / tRisk
+                exitPx  := close
+                exitWhy := "Время"
+
+        if not na(exitR)
+            nTr  += 1
+            nWin += exitR > 0 ? 1 : 0
+            sumR += exitR
+            grW  += math.max(exitR, 0.0)
+            grL  += math.max(-exitR, 0.0)
+            string res = str.tostring(exitR, "+0.0;-0.0") + "R"
+            alert(side(d) + " " + syminfo.ticker + " — выход: " + exitWhy + " " + fmt(exitPx) + ", итог " + res, alert.freq_once_per_bar_close)
+            if showExit
+                label.new(bar_index, exitPx, "✕ " + res, yloc = d == 1 ? yloc.abovebar : yloc.belowbar, style = label.style_none, textcolor = exitR > 0 ? cBuy : exitR < 0 ? cSell : color.gray, size = size.small, tooltip = "Выход: " + exitWhy + "\nЦена: " + fmt(exitPx) + "\nИтог: " + res)
+            for bx in array.from(bxRisk, bxGain)
+                if not na(bx)
+                    if showHist
+                        box.set_right(bx, bar_index)
+                    else
+                        box.delete(bx)
+            for ln in array.from(lnE, lnS, lnT1, lnT2)
+                if not na(ln)
+                    line.delete(ln)
+            for lb in array.from(lbE, lbS, lbT1, lbT2)
+                if not na(lb)
+                    label.delete(lb)
+            bxRisk := na
+            bxGain := na
+            lnT1   := na
+            lnT2   := na
+            lbT1   := na
+            lbT2   := na
+            tDir   := 0
+
+    // ── 4. Фильтр направления и сетапы
+    bool gateL   = htfDir == 1 and close > ema200
+    bool gateS   = htfDir == -1 and close < ema200
+    bool trendUp = ema20 > ema50 and ema50 > ema200
+    bool trendDn = ema20 < ema50 and ema50 < ema200
+
+    bool pbL = useTrend and gateL and trendUp and ms == 1 and pbLow <= ema20 and pbLow >= ema50 - 0.5 * atr and (na(lastPL) or pbLow >= lastPL) and rsiMin < 50 and close > high[1] and close > open and close > ema20 and close - ema20 <= atr
+    bool pbS = useTrend and gateS and trendDn and ms == -1 and pbHigh >= ema20 and pbHigh <= ema50 + 0.5 * atr and (na(lastPH) or pbHigh <= lastPH) and rsiMax > 50 and close < low[1] and close < open and close < ema20 and ema20 - close <= atr
+
+    bool volOk = not hasVol or relVol >= VOL_K
+    bool boL = useBreak and gateL and sqzN >= 5 and sqzAgo <= 3 and close > dcHi and close > open and clv >= 0.6 and volOk
+    bool boS = useBreak and gateS and sqzN >= 5 and sqzAgo <= 3 and close < dcLo and close < open and clv <= 0.4 and volOk
+
+    bool swVol  = not hasVol or rv3 >= VOL_K
+    bool swLOn  = not na(swLBar) and bar_index - swLBar <= SW_WIN and not swLUse
+    bool swHOn  = not na(swHBar) and bar_index - swHBar <= SW_WIN and not swHUse
+    bool swLRet = swLOn and close > swLLvl and close > open
+    bool swHRet = swHOn and close < swHLvl and close < open
+    bool swL = useSweep and gateL and swLRet and swLLvl - low3 <= atr and swVol
+    bool swS = useSweep and gateS and swHRet and high3 - swHLvl <= atr and swVol
+    // один вынос — одна попытка: оценивается только первая свеча возврата
+    if swLRet
+        swLUse := true
+    if swHRet
+        swHUse := true
+
+    // ── 5. Сигнал
+    if tDir == 0 and bar_index > WARMUP and atr > 0
+        if allowL and (pbL or boL or swL)
+            sigDir := 1
+            sigSet := pbL ? 1 : boL ? 2 : 3
+            sigExt := pbL ? pbLow : low3
+        else if allowS and (pbS or boS or swS)
+            sigDir := -1
+            sigSet := pbS ? 1 : boS ? 2 : 3
+            sigExt := pbS ? pbHigh : high3
+
+    // ── 6. Стоп и цели
+    if sigDir != 0
+        float stopLvl = sigExt - sigDir * STOP_BUF * atr
+        float risk    = (close - stopLvl) * sigDir
+        if risk < MIN_STOP * atr
+            risk    := MIN_STOP * atr
+            stopLvl := close - sigDir * risk
+        if risk > maxStop * atr
+            sigDir := 0
+        else
+            tDir   := sigDir
+            tBar   := bar_index
+            tEntry := close
+            tStop  := stopLvl
+            tStop0 := stopLvl
+            tRisk  := risk
+            tExt   := close
+            tTp1   := close + sigDir * tp1R * risk
+            tTp2   := close + sigDir * tp2 * risk
+            tT1    := false
+
+    // ── 7. Метка сигнала и уровни сделки
+    if sigDir != 0
+        bool   L    = sigDir == 1
+        color  c    = L ? cBuy : cSell
+        string how  = trail ? "трейлинг-стоп " + str.tostring(trailK) + " ATR" + (partial ? ", половина на " + fmt(tTp1) : "") : "Цель 1 " + fmt(tTp1) + ", Цель 2 " + fmt(tTp2)
+        string tip  = setupName(sigSet) + "\nВход: " + fmt(tEntry) + "\nСтоп: " + fmt(tStop) + "  (" + str.tostring(tRisk / tEntry * 100, "0.00") + "%)" + "\nВыход: " + how
+        label.new(bar_index, close, side(sigDir), yloc = L ? yloc.belowbar : yloc.abovebar, style = L ? label.style_label_up : label.style_label_down, color = c, textcolor = color.white, size = lblSize, tooltip = tip)
+        if showLv
+            int x2 = bar_index + 8
+            bxRisk := box.new(bar_index, L ? tEntry : tStop, x2, L ? tStop : tEntry, border_width = 0, bgcolor = color.new(cSell, 85))
+            lnE := line.new(bar_index, tEntry, x2, tEntry, color = color.gray, width = 1)
+            lbE := label.new(x2, tEntry, "Вход " + fmt(tEntry), style = label.style_label_left, color = color.new(color.gray, 20), textcolor = color.white, size = size.small)
+            lnS := line.new(bar_index, tStop, x2, tStop, color = cSell, width = 2)
+            lbS := label.new(x2, tStop, "Стоп " + fmt(tStop), style = label.style_label_left, color = cSell, textcolor = color.white, size = size.small)
+            if not trail or partial
+                lnT1 := line.new(bar_index, tTp1, x2, tTp1, color = cBuy, width = 1, style = line.style_dashed)
+                lbT1 := label.new(x2, tTp1, "Цель 1 " + fmt(tTp1), style = label.style_label_left, color = color.new(cBuy, 30), textcolor = color.white, size = size.small)
+            if not trail
+                bxGain := box.new(bar_index, L ? tTp2 : tEntry, x2, L ? tEntry : tTp2, border_width = 0, bgcolor = color.new(cBuy, 85))
+                lnT2 := line.new(bar_index, tTp2, x2, tTp2, color = cBuy, width = 1)
+                lbT2 := label.new(x2, tTp2, "Цель 2 " + fmt(tTp2), style = label.style_label_left, color = cBuy, textcolor = color.white, size = size.small)
+        alert(side(sigDir) + " " + syminfo.ticker + " " + timeframe.period + " | " + setupName(sigSet) + " | Вход " + fmt(tEntry) + " | Стоп " + fmt(tStop) + " | Выход: " + how, alert.freq_once_per_bar_close)
+
+    // Уровни открытой сделки тянутся за ценой, стоп — за трейлингом
+    if tDir != 0 and showLv and bar_index > tBar
+        int x2 = bar_index + 8
+        for bx in array.from(bxRisk, bxGain)
+            if not na(bx)
+                box.set_right(bx, x2)
+        for ln in array.from(lnE, lnS, lnT1, lnT2)
+            if not na(ln)
+                line.set_x2(ln, x2)
+        for lb in array.from(lbE, lbS, lbT1, lbT2)
+            if not na(lb)
+                label.set_x(lb, x2)
+        line.set_y1(lnS, tStop)
+        line.set_y2(lnS, tStop)
+        label.set_y(lbS, tStop)
+        label.set_text(lbS, (tStop * tDir > tStop0 * tDir ? "Трейлинг-стоп " : "Стоп ") + fmt(tStop))
+
+// ─────────────────────────────────────────────────────────────────────────────
+// АЛЕРТЫ, ПРЕДУПРЕЖДЕНИЕ, СТАТИСТИКА
+// ─────────────────────────────────────────────────────────────────────────────
+alertcondition(sigDir == 1, "Конфлюэнс: лонг", "ЛОНГ {{ticker}} {{interval}}, вход ≈ {{close}}")
+alertcondition(sigDir == -1, "Конфлюэнс: шорт", "ШОРТ {{ticker}} {{interval}}, вход ≈ {{close}}")
+alertcondition(not na(exitR), "Конфлюэнс: выход", "Выход из сделки {{ticker}} {{interval}} ≈ {{close}}")
+
+if barstate.islast and showWarn and timeframe.in_seconds() < 14400
+    var table tw = table.new(position.bottom_right, 1, 1)
+    table.cell(tw, 0, 0, "Ниже 4ч сигналы на истории были в минусе после комиссий", text_color = color.gray, text_size = size.small)
+
+if barstate.islast and showStat
+    var table tb = table.new(position.top_right, 2, 5, bgcolor = color.new(color.black, 20), border_width = 1)
+    table.cell(tb, 0, 0, "Сделок", text_color = color.white, text_size = size.small)
+    table.cell(tb, 1, 0, str.tostring(nTr), text_color = color.white, text_size = size.small)
+    table.cell(tb, 0, 1, "В плюс", text_color = color.white, text_size = size.small)
+    table.cell(tb, 1, 1, nTr > 0 ? str.tostring(100.0 * nWin / nTr, "0") + "%" : "—", text_color = color.white, text_size = size.small)
+    table.cell(tb, 0, 2, "Средняя, R", text_color = color.white, text_size = size.small)
+    table.cell(tb, 1, 2, nTr > 0 ? str.tostring(sumR / nTr, "+0.00;-0.00") : "—", text_color = color.white, text_size = size.small)
+    table.cell(tb, 0, 3, "Итого, R", text_color = color.white, text_size = size.small)
+    table.cell(tb, 1, 3, str.tostring(sumR, "+0.0;-0.0"), text_color = sumR >= 0 ? cBuy : cSell, text_size = size.small)
+    table.cell(tb, 0, 4, "Профит-фактор", text_color = color.white, text_size = size.small)
+    table.cell(tb, 1, 4, grL > 0 ? str.tostring(grW / grL, "0.00") : "—", text_color = color.white, text_size = size.small)
