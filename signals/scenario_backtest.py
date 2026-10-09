@@ -79,6 +79,7 @@ def htf_context(df: pd.DataFrame, mk: L.Market) -> tuple[np.ndarray, np.ndarray]
     rr: list[float] = []
     cc: list[float] = []
     key, live, hh, ll, cl, nb = -1, False, np.nan, np.nan, np.nan, 0
+    prev_t = None
     comp = np.zeros(len(d30), dtype=bool)
     sma = np.full(len(d30), np.nan)
 
@@ -88,6 +89,11 @@ def htf_context(df: pd.DataFrame, mk: L.Market) -> tuple[np.ndarray, np.ndarray]
             cc.append(cl)
 
     for j in range(len(d30)):
+        # дыра в данных больше недели — история до неё не годится (как MAX_GAP для вчерашней сессии)
+        if ins[j] and prev_t is not None and d30.index[j] - prev_t > MAX_GAP:
+            rr.clear()
+            cc.clear()
+            live = False
         if live and (k[j] != key or not ins[j]):
             finish()
             live = False
@@ -98,6 +104,7 @@ def htf_context(df: pd.DataFrame, mk: L.Market) -> tuple[np.ndarray, np.ndarray]
                 hh, ll = max(hh, h3[j]), min(ll, l3[j])
             cl = c3[j]
             nb += 1
+            prev_t = d30.index[j]
             if t[j] + 30 >= c_min:
                 finish()
                 live = False

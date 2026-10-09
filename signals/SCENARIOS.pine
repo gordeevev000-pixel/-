@@ -178,6 +178,7 @@ htfContext() =>
     var int   key  = -1
     var bool  live = false
     var int   nb   = 0
+    var int   lastT = na
     var float h = na
     var float l = na
     var float c = na
@@ -186,6 +187,11 @@ htfContext() =>
     int  dw  = dayofweek(time, tzStr)
     int  k   = year(time, tzStr) * 10000 + month(time, tzStr) * 100 + dayofmonth(time, tzStr)
     bool ins = t < closeMin and t + 30 > openMin and dw >= dayofweek.monday and dw <= dayofweek.friday
+    // дыра в данных больше недели — история до неё не годится
+    if ins and not na(lastT) and time - lastT > 6 * 86400000
+        rr.clear()
+        cc.clear()
+        live := false
     if live and (k != key or not ins)
         if nb >= 0.9 * slots
             rr.push(h - l)
@@ -203,6 +209,7 @@ htfContext() =>
             l := math.min(l, low)
         c  := close
         nb += 1
+        lastT := time
         if t + 30 >= closeMin
             if nb >= 0.9 * slots
                 rr.push(h - l)

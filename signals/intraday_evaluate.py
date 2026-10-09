@@ -91,7 +91,7 @@ if __name__ == "__main__":
 
     t0 = run_grid(folder, tfs=(5,), windows=(30,), scores=(0,))
     t0 = t0[~t0.bad]
-    print("\n=== Средний R ДО издержек по числу выполненных условий (5 минут, 30 минут, без фильтра) ===")
+    print("\n=== Средний R ДО издержек по числу выполненных условий (5 минут, окно 30 минут, любое число условий, фильтр издержек включён) ===")
     print(t0.pivot_table(index="score", columns="oos", values="r", aggfunc=["mean", "size"]).round(3).to_string())
 
     for k in (0.5, 1.5):
