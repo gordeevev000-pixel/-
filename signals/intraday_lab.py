@@ -18,25 +18,37 @@ class Market:
     tz: str
     open: str          # открытие основной сессии, местное время биржи
     close: str         # закрытие основной сессии
-    cost: float        # издержки на круг (спред + комиссия + проскальзывание), в пунктах цены
+    cost_pct: float    # издержки на круг (спред + комиссия + проскальзывание) в долях цены
     tick: float
 
 
-# Основная (самая ликвидная) сессия и реалистичные издержки на круг для CFD/микрофьючерса.
+# Основная (самая ликвидная) сессия и издержки на круг для CFD или микрофьючерса.
+# Издержки — в долях цены, чтобы не зависеть от уровня цен за 2018–2026 (золото выросло
+# с 1 300 до 4 500 $). Значения — по спредам брокеров и комиссиям бирж на уровнях цен 2026 года:
+# S&P 0.9 п. при 7 400, Nasdaq 2.5 п. при 28 600, DAX 2.5 п. при 25 000, золото 0.60 $ при 4 500,
+# серебро 0.05 $ при 73, WTI 0.06 $ при 84, Brent 0.065 $ при 91.
 MARKETS = {
-    "SP500":  Market("America/New_York", "09:30", "16:00", 0.75, 0.25),
-    "NASDAQ": Market("America/New_York", "09:30", "16:00", 2.5, 0.25),
-    "DAX":    Market("Europe/Berlin",    "09:00", "17:30", 2.0, 0.5),
-    "GOLD":   Market("America/New_York", "08:20", "13:30", 0.40, 0.1),
-    "SILVER": Market("America/New_York", "08:25", "13:25", 0.030, 0.005),
-    "WTI":    Market("America/New_York", "09:00", "14:30", 0.04, 0.01),
-    "BRENT":  Market("America/New_York", "09:00", "14:30", 0.05, 0.01),
+    "SP500":  Market("America/New_York", "09:30", "16:00", 0.9 / 7400, 0.25),
+    "NASDAQ": Market("America/New_York", "09:30", "16:00", 2.5 / 28600, 0.25),
+    "DAX":    Market("Europe/Berlin",    "09:00", "17:30", 2.5 / 25000, 0.5),
+    "GOLD":   Market("America/New_York", "08:20", "13:30", 0.60 / 4500, 0.1),
+    "SILVER": Market("America/New_York", "08:25", "13:25", 0.05 / 73, 0.005),
+    "WTI":    Market("America/New_York", "09:00", "14:30", 0.06 / 84, 0.01),
+    "BRENT":  Market("America/New_York", "09:00", "14:30", 0.065 / 91, 0.01),
 }
+
+# Испорченные куски источника. В файле GRXEUR (DAX) с 2020-06-15 по 2023-12-03 лежат котировки
+# другого индекса (уровень 3 300–4 400 — Euro Stoxx 50, а не DAX 10 000–17 000): на границах
+# скачки цены ×0.27 и ×3.7 за день.
+BAD_RANGES = {"DAX": [("2020-06-15", "2023-12-04")]}
 
 
 def load(folder: Path, name: str) -> pd.DataFrame:
     df = pd.read_parquet(folder / f"{name}_1m.parquet")
-    return df[~df.index.duplicated()].sort_index()
+    df = df[~df.index.duplicated()].sort_index()
+    for a, b in BAD_RANGES.get(name, []):
+        df = df[(df.index < pd.Timestamp(a, tz="UTC")) | (df.index >= pd.Timestamp(b, tz="UTC"))]
+    return df
 
 
 def resample(df: pd.DataFrame, minutes: int) -> pd.DataFrame:

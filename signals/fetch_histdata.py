@@ -1,9 +1,12 @@
 """Минутные свечи histdata.com для товаров и индексов (бесплатно, без регистрации).
 
 Прошлые годы отдаются одним архивом на год, текущий — по месяцам.
-Время в файлах — нью-йоркское С переходом на летнее (сайт пишет «EST без DST»,
-но выход NFP в 8:30 и решения ФРС в 14:00 стоят на одном и том же времени
-и зимой, и летом, а суточный перерыв CME — всегда 17:00–18:00). Переводим в UTC.
+Время в файлах — «нью-йоркское зимнее (UTC−5) плюс летнее время по ЕВРОПЕЙСКИМ датам»
+(с 2019 года; в 2018-м — по американским). Сайт пишет «EST без DST», но это не так.
+Проверено по событиям: NFP в 8:30 и решения ФРС в 14:00 по Нью-Йорку стоят на своём месте
+и зимой, и летом, а в недели, когда США уже перешли на летнее время, а Европа ещё нет
+(конец марта, конец октября — начало ноября), с 2019 года оказываются на час раньше
+(ФРС 2019-03-20 — в 13:00 по времени файла). Переводим в UTC по этим правилам.
 Объёма в этих данных нет.
 
 Запуск:  python signals/fetch_histdata.py <папка> [первый год]
@@ -17,6 +20,7 @@ import time
 import zipfile
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 import requests
 
@@ -29,11 +33,19 @@ SYMBOLS = {"GOLD": "XAUUSD", "SILVER": "XAGUSD", "WTI": "WTIUSD", "BRENT": "BCOU
 
 
 def to_utc(df: pd.DataFrame) -> pd.DataFrame:
-    """Нью-йоркское локальное время → UTC; повтор часа осенью и пропуск весной выбрасываются."""
-    idx = df.index.tz_localize("America/New_York", ambiguous="NaT", nonexistent="NaT")
-    df = df[~idx.isna()]
-    df.index = idx[~idx.isna()].tz_convert("UTC")
-    return df
+    """Время файла → UTC. До 2019 года — нью-йоркское с американским переходом на летнее время;
+    с 2019-го — UTC−5 плюс европейское летнее время, то есть (время + 5 ч) по Лондону.
+    Неоднозначные часы перевода (ночь на воскресенье, рынки закрыты) выбрасываются."""
+    naive = df.index
+    old = naive < pd.Timestamp("2019-01-01")
+    ny = naive[old].tz_localize("America/New_York", ambiguous="NaT", nonexistent="NaT")
+    ld = (naive[~old] + pd.Timedelta(hours=5)).tz_localize("Europe/London", ambiguous="NaT", nonexistent="NaT")
+    idx = ny.tz_convert("UTC").append(ld.tz_convert("UTC"))
+    order = np.r_[np.flatnonzero(old), np.flatnonzero(~old)]
+    out = df.iloc[order].copy()
+    out.index = idx
+    out = out[~out.index.isna()]
+    return out[~out.index.duplicated()].sort_index()
 
 
 def fetch(pair: str, year: int, month: int | None) -> pd.DataFrame | None:
@@ -72,9 +84,15 @@ def main(out: Path, first: int) -> None:
         for y in range(first, now.year + 1):
             if y < now.year:
                 d = fetch(pair, y, None)
+                if d is None:
+                    print(f"  {name}: на histdata нет данных за {y}", flush=True)
                 parts.append(d)
             else:
-                parts += [fetch(pair, y, m) for m in range(1, now.month + 1)]
+                for m in range(1, now.month + 1):
+                    d = fetch(pair, y, m)
+                    if d is None:
+                        print(f"  {name}: на histdata нет данных за {y}-{m:02d}", flush=True)
+                    parts.append(d)
         df = pd.concat([p for p in parts if p is not None]).sort_index()
         df = df[~df.index.duplicated()]
         df.to_parquet(f)
